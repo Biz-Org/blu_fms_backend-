@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="module_category_apartment" model="ir.module.category">
+        <field name="name">Apartment Management</field>
+        <field name="sequence">26</field>
+    </record>
+
+    <record id="group_apartment_user" model="res.groups">
+        <field name="name">Tenant</field>
+        <field name="category_id" ref="module_category_apartment"/>
+    </record>
+
+    <record id="group_apartment_manager" model="res.groups">
+        <field name="name">Manager</field>
+        <field name="category_id" ref="module_category_apartment"/>
+        <field name="implied_ids" eval="[(4, ref('group_apartment_user'))]"/>
+    </record>
+</odoo>

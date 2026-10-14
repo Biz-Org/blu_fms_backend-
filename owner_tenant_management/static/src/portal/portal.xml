@@ -1,0 +1,623 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="owner_tenant_management.Portal">
+        <div class="o_ot_portal">
+            <aside class="ot-sidebar">
+                <div class="ot-brand">
+                    <div class="ot-brand-icon">PM</div>
+                    <div>
+                        <div class="ot-brand-title">PropManage</div>
+                        <div class="ot-brand-sub">Admin Portal</div>
+                    </div>
+                </div>
+                <nav class="ot-nav">
+                    <t t-foreach="navItems" t-as="item" t-key="item.id">
+                        <button type="button" class="ot-nav-item" t-att-class="{ 'is-active': state.page === item.id }" t-on-click="() => this.onNav(item.id)">
+                            <i t-attf-class="fa #{item.icon}"/>
+                            <span t-esc="item.label"/>
+                        </button>
+                    </t>
+                </nav>
+                <button type="button" class="ot-logout" t-on-click="() => this.logout()"><i class="fa fa-sign-out"/> Log Out</button>
+            </aside>
+            <main class="ot-main">
+                <input type="file" class="d-none" t-ref="docInput" t-on-change="(ev) => this.onDocFile(ev)"/>
+                <t t-if="state.loading"><div class="ot-empty">Loading owner / tenant portal...</div></t>
+                <t t-elif="state.page === 'dashboard'" t-call="owner_tenant_management.Dashboard"/>
+                <t t-elif="state.page === 'property' and state.view === 'unit'" t-call="owner_tenant_management.UnitDetail"/>
+                <t t-elif="state.page === 'property' and state.view === 'tenant'" t-call="owner_tenant_management.TenantDetail"/>
+                <t t-elif="state.page === 'property'" t-call="owner_tenant_management.MyProperty"/>
+                <t t-elif="state.page === 'lease' and state.view === 'viewer'" t-call="owner_tenant_management.LeaseViewer"/>
+                <t t-elif="state.page === 'lease' and state.view === 'history'" t-call="owner_tenant_management.LeaseHistory"/>
+                <t t-elif="state.page === 'lease' and state.view === 'renewal'" t-call="owner_tenant_management.Renewal"/>
+                <t t-elif="state.page === 'lease' and state.view === 'new'" t-call="owner_tenant_management.NewLease"/>
+                <t t-elif="state.page === 'lease'" t-call="owner_tenant_management.Lease"/>
+                <t t-elif="state.page === 'payments' and state.view === 'history'" t-call="owner_tenant_management.PayHistory"/>
+                <t t-elif="state.page === 'payments' and state.view === 'new'" t-call="owner_tenant_management.NewPay"/>
+                <t t-elif="state.page === 'payments'" t-call="owner_tenant_management.Payments"/>
+                <t t-elif="state.page === 'ledger'" t-call="owner_tenant_management.Ledger"/>
+                <t t-elif="state.page === 'maintenance' and state.view === 'create'" t-call="owner_tenant_management.MaintCreate"/>
+                <t t-elif="state.page === 'maintenance' and state.view === 'detail'" t-call="owner_tenant_management.MaintDetail"/>
+                <t t-elif="state.page === 'maintenance'" t-call="owner_tenant_management.Maintenance"/>
+                <t t-elif="state.page === 'messages' and state.view === 'compose'" t-call="owner_tenant_management.MsgCompose"/>
+                <t t-elif="state.page === 'messages'" t-call="owner_tenant_management.Messages"/>
+                <t t-elif="state.page === 'documents' and state.view === 'viewer'" t-call="owner_tenant_management.DocViewer"/>
+                <t t-elif="state.page === 'documents'" t-call="owner_tenant_management.Documents"/>
+                <t t-elif="state.page === 'notifications'" t-call="owner_tenant_management.Notifications"/>
+                <t t-elif="state.page === 'profile'" t-call="owner_tenant_management.Profile"/>
+            </main>
+        </div>
+    </t>
+
+    <t t-name="owner_tenant_management.Dashboard">
+        <t t-set="u" t-value="unit()"/><t t-set="l" t-value="lease()"/><t t-set="p" t-value="state.data.pay_kpis || {}"/><t t-set="m" t-value="state.data.maint_kpis || {}"/>
+        <div class="ot-head"><h1>Dashboard</h1><p>Overview of your property, lease, payments and recent activity.</p></div>
+        <section class="ot-kpis">
+            <article class="ot-card"><span>PROPERTY / UNIT</span><strong t-esc="u.property"/><em t-esc="'Apt ' + u.name"/></article>
+            <article class="ot-card"><span>LEASE STATUS</span><strong t-esc="l.status_label or 'Active'"/><em class="is-ok">In Good Standing</em></article>
+            <article class="ot-card"><span>CURRENT BALANCE</span><strong t-esc="p.balance_label"/><em>Paid in full</em></article>
+            <article class="ot-card"><span>NEXT PAYMENT DUE</span><strong t-esc="p.next_due"/><em t-esc="l.rent_label"/></article>
+        </section>
+        <section class="ot-grid-3">
+            <article class="ot-card">
+                <h2>Lease Summary <span class="ot-pill is-ok">Eligible</span></h2>
+                <div class="ot-meta"><span>START DATE<b t-esc="l.start"/></span><span>END DATE<b t-esc="l.end"/></span><span>MONTHLY RENT<b t-esc="l.rent_label"/></span><span>LEASE TERM<b t-esc="l.term"/></span></div>
+            </article>
+            <article class="ot-card">
+                <h2>Payment Status</h2>
+                <p>LAST PAYMENT <b t-esc="p.last_label"/></p>
+                <div class="ot-paybox">NEXT PAYMENT <strong t-esc="p.due_label"/><button class="ot-btn is-primary" t-on-click="() => this.payNow()">Pay Now</button></div>
+            </article>
+            <article class="ot-card">
+                <h2>Alerts</h2>
+                <div class="ot-alert is-warn">Rent Due — Due in 5 days.</div>
+                <div class="ot-alert">Renewal — Review options.</div>
+            </article>
+        </section>
+        <section class="ot-grid-2">
+            <article class="ot-card">
+                <div class="ot-card-head"><h2>Maintenance</h2><button class="ot-link" t-on-click="() => this.onNav('maintenance')">View All</button></div>
+                <div class="ot-mini">
+                    <div class="is-warn"><b t-esc="m.open"/> OPEN</div>
+                    <div><b t-esc="m.progress"/> PROGRESS</div>
+                    <div><b t-esc="m.done"/> DONE</div>
+                </div>
+            </article>
+            <article class="ot-card">
+                <div class="ot-card-head"><h2>Activity</h2><button class="ot-link" t-on-click="() => this.onNav('notifications')">View All</button></div>
+                <t t-foreach="(state.data.notifications || []).slice(0,3)" t-as="n" t-key="n.id">
+                    <p><b t-esc="n.name"/></p>
+                </t>
+            </article>
+        </section>
+    </t>
+
+    <t t-name="owner_tenant_management.MyProperty">
+        <t t-set="u" t-value="unit()"/>
+        <div class="ot-head"><h1>My Property</h1><p>View and manage details for your assigned property and unit.</p></div>
+        <article class="ot-hero ot-card">
+            <div class="ot-hero-photo"><span class="ot-pill is-ok" t-esc="u.status"/></div>
+            <div>
+                <h2 t-esc="u.property"/>
+                <p t-esc="u.address"/>
+                <div class="ot-actions"><button class="ot-btn is-primary" t-on-click="() => this.openPropertyDetail()">View Full Property</button><button class="ot-btn" t-on-click="() => this.messageTenant()">Contact Management</button></div>
+            </div>
+            <aside>
+                <p class="ot-muted">Owner: <b t-esc="u.owner"/></p>
+                <div class="ot-meta"><span>UNIT<b t-esc="u.name"/></span><span>FLOOR<b t-esc="u.floor"/></span><span>LAYOUT<b t-esc="u.layout"/></span><span>AREA<b t-esc="u.area"/></span></div>
+            </aside>
+        </article>
+        <article class="ot-card">
+            <div class="ot-card-head"><h2>Property Documents</h2><button class="ot-link" t-on-click="() => this.onNav('documents')">View All</button></div>
+            <t t-foreach="(state.data.docs || []).slice(0,3)" t-as="d" t-key="d.id">
+                <div class="ot-doc-row"><span t-esc="d.name"/><button class="ot-link" t-on-click="() => this.openDoc(d)">Open</button></div>
+            </t>
+        </article>
+    </t>
+
+    <t t-name="owner_tenant_management.UnitDetail">
+        <t t-set="u" t-value="unit()"/><t t-set="l" t-value="lease()"/><t t-set="tnt" t-value="tenant()"/>
+        <div class="ot-head">
+            <div><h1 t-esc="u.property"/> <span class="ot-pill is-ok">Occupied</span><p>Unit <t t-esc="u.name"/></p></div>
+            <div class="ot-actions"><button class="ot-btn" t-on-click="() => this.state.view = 'list'">Back</button><button class="ot-btn is-primary" t-on-click="() => this.messageTenant()">Message Tenant</button></div>
+        </div>
+        <section class="ot-grid-2">
+            <article class="ot-card">
+                <div class="ot-card-head"><h2>Financial Summary</h2><button class="ot-link" t-on-click="() => this.onNav('ledger')">View Ledger</button></div>
+                <div class="ot-mini"><div>MONTHLY RENT<strong t-esc="l.rent_label"/></div><div>OUTSTANDING<strong>$0</strong></div><div>LAST PAYMENT<strong t-esc="state.data.pay_kpis.last_date"/></div></div>
+            </article>
+            <article class="ot-card">
+                <h2>Tenant Info</h2>
+                <p><b t-esc="tnt.name"/></p>
+                <p t-esc="tnt.phone"/><p t-esc="tnt.email"/>
+                <button class="ot-link" t-on-click="() => this.openTenant()">Open tenant details</button>
+            </article>
+        </section>
+        <section class="ot-grid-3">
+            <article class="ot-card"><h2>Lease Details</h2><p>LEASE ID <b t-esc="l.name"/></p><p>TERM <b t-esc="l.term"/></p><p>EXPIRATION <b t-esc="l.end"/></p></article>
+            <article class="ot-card"><h2>Maintenance</h2><p><b t-esc="state.data.maint_kpis.open"/> Open</p><button class="ot-link" t-on-click="() => this.onNav('maintenance')">View</button></article>
+            <article class="ot-card"><h2>Documents</h2>
+                <t t-foreach="(state.data.docs || []).slice(0,2)" t-as="d" t-key="d.id"><div class="ot-doc-row" t-esc="d.name"/></t>
+            </article>
+        </section>
+    </t>
+
+    <t t-name="owner_tenant_management.TenantDetail">
+        <t t-set="tnt" t-value="tenant()"/><t t-set="l" t-value="lease()"/><t t-set="u" t-value="unit()"/>
+        <div class="ot-head">
+            <div><h1 t-esc="tnt.name"/><p>Unit <t t-esc="u.name"/> · Active</p></div>
+            <div class="ot-actions"><button class="ot-btn" t-on-click="() => this.messageTenant()">Message</button><button class="ot-btn is-primary" t-on-click="() => this.onNav('profile')">Edit Details</button></div>
+        </div>
+        <section class="ot-kpis">
+            <article class="ot-card"><span>MONTHLY RENT</span><strong t-esc="l.rent_label"/></article>
+            <article class="ot-card"><span>PAYMENT STATUS</span><strong>Paid in Full</strong></article>
+            <article class="ot-card"><span>LEASE PERIOD</span><strong t-esc="l.start"/> to <t t-esc="l.end"/></article>
+        </section>
+        <section class="ot-grid-2">
+            <article class="ot-card">
+                <div class="ot-card-head"><h2>Lease Details</h2><button class="ot-link" t-on-click="() => this.openLeaseDoc()">View Agreement</button></div>
+                <p>LEASE ID <b t-esc="l.name"/></p><p>TERM <b t-esc="l.term"/></p><p>SECURITY DEPOSIT <b t-esc="l.deposit_label"/></p>
+            </article>
+            <article class="ot-card">
+                <h2>Maintenance</h2>
+                <t t-foreach="(state.data.maints || []).slice(0,3)" t-as="row" t-key="row.id">
+                    <div class="ot-doc-row"><span t-esc="row.name"/><span t-attf-class="ot-pill is-#{badge(row.state)}" t-esc="row.state_label"/></div>
+                </t>
+            </article>
+        </section>
+        <article class="ot-card">
+            <div class="ot-card-head"><h2>Financial Overview</h2><button class="ot-link" t-on-click="() => this.onNav('ledger')">View Ledger</button></div>
+            <p>OUTSTANDING BALANCE <b class="is-ok" t-esc="state.data.pay_kpis.balance_label"/></p>
+        </article>
+    </t>
+
+    <t t-name="owner_tenant_management.Lease">
+        <t t-set="l" t-value="lease()"/>
+        <div class="ot-head">
+            <div><h1>Lease</h1><span class="ot-pill is-ok">ACTIVE</span></div>
+            <div class="ot-actions">
+                <button class="ot-btn" t-on-click="() => this.openHistory()">View History</button>
+                <button class="ot-btn" t-on-click="() => this.openLeaseDoc()">Download Lease</button>
+                <button class="ot-btn is-primary" t-on-click="() => this.openLeaseDoc()">View Full Lease</button>
+            </div>
+        </div>
+        <div class="ot-banner" t-if="l.renewal_state === 'awaiting'">
+            Renewal Action Required — this lease is approaching expiration.
+            <button class="ot-btn" t-on-click="() => this.openRenewal()">Initiate Renewal</button>
+        </div>
+        <section class="ot-grid-2">
+            <article class="ot-card">
+                <h2>Lease Information</h2>
+                <p>ID <b t-esc="l.name"/></p>
+                <p>PROPERTY <b t-esc="l.property"/></p>
+                <p>UNIT <b t-esc="l.unit"/></p>
+                <p>OWNER <b t-esc="l.owner"/></p>
+                <p>PRIMARY TENANT <b t-esc="l.tenant"/></p>
+                <p t-esc="l.tenant_email"/> · <t t-esc="l.tenant_phone"/>
+            </article>
+            <article class="ot-card">
+                <h2>Financial Overview</h2>
+                <p>MONTHLY RENT <strong t-esc="l.rent_label"/></p>
+                <p>SECURITY DEPOSIT <b t-esc="l.deposit_label"/> (Held)</p>
+                <p>PAYMENT FREQ. <b t-esc="l.payment_day"/></p>
+                <p>LATE FEE RULE <b t-esc="l.late_fee"/></p>
+                <button class="ot-btn" t-on-click="() => this.onNav('ledger')">View Ledger</button>
+            </article>
+        </section>
+        <article class="ot-card">
+            <h2>Lease Terms &amp; Timeline</h2>
+            <p><t t-esc="l.start"/> → <t t-esc="l.end"/> · <b t-esc="l.term"/></p>
+            <p>LEASE TYPE Fixed Term · NOTICE PERIOD <t t-esc="l.notice_days"/> Days</p>
+        </article>
+        <article class="ot-card">
+            <h2>Quick Files</h2>
+            <button class="ot-link" t-on-click="() => this.openLeaseDoc()" t-esc="l.document or 'Lease agreement'"/>
+        </article>
+    </t>
+
+    <t t-name="owner_tenant_management.LeaseViewer">
+        <t t-set="l" t-value="lease()"/>
+        <div class="ot-head"><button class="ot-btn" t-on-click="() => this.state.view = 'list'">Back</button><h1>Lease Document Viewer</h1></div>
+        <div class="ot-split">
+            <article class="ot-paper">
+                <h2>RESIDENTIAL LEASE AGREEMENT</h2>
+                <p>This Residential Lease Agreement is entered into between <b t-esc="l.owner"/> (Landlord) and <b t-esc="l.tenant"/> (Tenant).</p>
+                <p>Premises: Unit <t t-esc="l.unit"/> at <t t-esc="l.property"/>.</p>
+                <p>Term: <t t-esc="l.start"/> to <t t-esc="l.end"/>. Rent <t t-esc="l.rent_label"/> per month.</p>
+            </article>
+            <aside class="ot-card">
+                <h3>Document Details</h3>
+                <p t-esc="l.document"/><p>Lease Agreement</p>
+                <span class="ot-pill is-ok">Fully Executed</span>
+                <button class="ot-btn is-primary ot-block" t-on-click="() => this.openLeaseDoc()">Download</button>
+                <button class="ot-btn ot-block" t-on-click="() => this.printDoc()">Print</button>
+            </aside>
+        </div>
+    </t>
+
+    <t t-name="owner_tenant_management.LeaseHistory">
+        <div class="ot-head">
+            <h1>Lease History</h1>
+            <button class="ot-btn is-primary" t-on-click="() => this.state.view = 'new'">+ New Lease</button>
+        </div>
+        <div class="ot-filters">
+            <input placeholder="Search by Lease ID or Tenant Name..." t-on-input="(ev) => this.state.search = ev.target.value"/>
+            <select t-on-change="(ev) => this.state.leaseFilter = ev.target.value">
+                <option value="all">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="expired">Expired</option>
+                <option value="renewed">Renewed</option>
+                <option value="terminated">Terminated</option>
+            </select>
+        </div>
+        <article class="ot-card">
+            <table class="ot-table">
+                <thead><tr><th>LEASE ID</th><th>TENANT</th><th>START</th><th>END</th><th>RENT</th><th>STATUS</th><th>DOCUMENT</th></tr></thead>
+                <tbody>
+                    <t t-foreach="filteredLeases()" t-as="row" t-key="row.id">
+                        <tr t-on-click="() => this.openLeaseDoc()">
+                            <td t-esc="row.name"/><td t-esc="row.tenant"/><td t-esc="row.start"/><td t-esc="row.end"/><td t-esc="row.rent_label"/>
+                            <td><span t-attf-class="ot-pill is-#{badge(row.status)}" t-esc="row.status_label"/></td>
+                            <td t-esc="row.document"/>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </article>
+    </t>
+
+    <t t-name="owner_tenant_management.NewLease">
+        <div class="ot-card ot-form">
+            <h1>New Lease</h1>
+            <label>Lease ID<input t-on-input="(ev) => this.state.leaseForm.name = ev.target.value"/></label>
+            <label>Unit<select t-on-change="(ev) => this.state.leaseForm.unit_id = ev.target.value"><option value="">Select</option><t t-foreach="state.data.units || []" t-as="u" t-key="u.id"><option t-att-value="u.id" t-esc="u.label"/></t></select></label>
+            <label>Rent<input t-on-input="(ev) => this.state.leaseForm.rent = ev.target.value"/></label>
+            <label>Start<input type="date" t-on-input="(ev) => this.state.leaseForm.start = ev.target.value"/></label>
+            <label>End<input type="date" t-on-input="(ev) => this.state.leaseForm.end = ev.target.value"/></label>
+            <div class="ot-actions"><button class="ot-btn" t-on-click="() => this.state.view = 'history'">Cancel</button><button class="ot-btn is-primary" t-on-click="() => this.createLease()">Save</button></div>
+        </div>
+    </t>
+
+    <t t-name="owner_tenant_management.Renewal">
+        <t t-set="l" t-value="lease()"/>
+        <div class="ot-head"><button class="ot-btn" t-on-click="() => this.state.view = 'list'">Back</button><h1>Lease Renewal</h1><p>APT <t t-esc="l.unit"/> · TENANT: <t t-esc="l.tenant"/></p></div>
+        <article class="ot-card">
+            <span class="ot-pill is-info">AWAITING RESPONSE</span>
+            <h2>Renewal Proposal for Unit <t t-esc="l.unit"/></h2>
+            <div class="ot-grid-2">
+                <div>CURRENT LEASE<p>Ends On <b t-esc="l.end"/></p><p>Term <b t-esc="l.term"/></p><p>Monthly Rent <b t-esc="l.rent_label"/></p></div>
+                <div>PROPOSED RENEWAL<p>Starts On <b t-esc="l.proposed_start"/></p><p>Term 12 Months</p><p>Monthly Rent <b t-esc="l.proposed_rent_label"/></p></div>
+            </div>
+            <p t-esc="l.renewal_note"/>
+            <div class="ot-actions">
+                <button class="ot-btn is-primary" t-on-click="() => this.doRenew('accept')">Accept Renewal</button>
+                <button class="ot-btn" t-on-click="() => this.openLeaseDoc()">Review Document</button>
+                <button class="ot-btn" t-on-click="() => this.messageTenant()">Clarify</button>
+                <button class="ot-btn is-bad" t-on-click="() => this.doRenew('decline')">Decline</button>
+            </div>
+        </article>
+    </t>
+
+    <t t-name="owner_tenant_management.Payments">
+        <t t-set="k" t-value="state.data.pay_kpis || {}"/>
+        <div class="ot-head">
+            <div><h1>Payments</h1><p>Manage and track your property finances seamlessly.</p></div>
+            <button class="ot-btn is-primary" t-on-click="() => this.payNow()">Make Payment</button>
+        </div>
+        <section class="ot-kpis">
+            <article class="ot-card"><span>AMOUNT DUE</span><strong t-esc="k.due_label"/></article>
+            <article class="ot-card"><span>NEXT DUE DATE</span><strong t-esc="k.next_due"/></article>
+            <article class="ot-card"><span>CURRENT BALANCE</span><strong t-esc="k.balance_label"/></article>
+            <article class="ot-card"><span>LAST PAYMENT</span><strong t-esc="k.last_label"/></article>
+        </section>
+        <article class="ot-card">
+            <div class="ot-card-head"><h2>Payment History</h2>
+                <button class="ot-link" t-on-click="() => this.state.view = 'history'">Full history</button>
+            </div>
+            <table class="ot-table">
+                <thead><tr><th>DATE</th><th>DESCRIPTION</th><th>AMOUNT</th><th>METHOD</th><th>STATUS</th></tr></thead>
+                <tbody>
+                    <t t-foreach="(state.data.payments || []).slice(0,6)" t-as="row" t-key="row.id">
+                        <tr><td t-esc="row.date"/><td t-esc="row.description"/><td t-esc="row.amount_label"/><td t-esc="row.method"/><td><span t-attf-class="ot-pill is-#{badge(row.status)}" t-esc="row.status_label"/></td></tr>
+                    </t>
+                </tbody>
+            </table>
+        </article>
+    </t>
+
+    <t t-name="owner_tenant_management.PayHistory">
+        <div class="ot-head">
+            <h1>Payment History</h1>
+            <div class="ot-actions">
+                <button class="ot-btn" t-on-click="() => this.exportKind('payments')">Export CSV</button>
+                <button class="ot-btn is-primary" t-on-click="() => this.state.view = 'new'">+ New Record</button>
+            </div>
+        </div>
+        <div class="ot-filters">
+            <select t-on-change="(ev) => this.state.payFilter = ev.target.value">
+                <option value="all">All Statuses</option>
+                <option value="paid">Paid</option>
+                <option value="pending">Pending</option>
+                <option value="failed">Failed</option>
+            </select>
+        </div>
+        <article class="ot-card">
+            <table class="ot-table">
+                <thead><tr><th>DATE</th><th>REFERENCE</th><th>PROPERTY / UNIT</th><th>METHOD</th><th>AMOUNT</th><th>STATUS</th></tr></thead>
+                <tbody>
+                    <t t-foreach="filteredPays()" t-as="row" t-key="row.id">
+                        <tr>
+                            <td t-esc="row.date"/><td t-esc="row.reference"/><td><t t-esc="row.property"/> <t t-esc="row.unit"/></td>
+                            <td t-esc="row.method"/><td t-esc="row.amount_label"/>
+                            <td><span t-attf-class="ot-pill is-#{badge(row.status)}" t-esc="row.status_label"/></td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </article>
+    </t>
+
+    <t t-name="owner_tenant_management.NewPay">
+        <div class="ot-card ot-form">
+            <h1>New Payment Record</h1>
+            <label>Description<input t-on-input="(ev) => this.state.payForm.description = ev.target.value"/></label>
+            <label>Amount<input t-on-input="(ev) => this.state.payForm.amount = ev.target.value"/></label>
+            <label>Method<input t-on-input="(ev) => this.state.payForm.method = ev.target.value"/></label>
+            <label>Status<select t-on-change="(ev) => this.state.payForm.status = ev.target.value"><option value="paid">Paid</option><option value="pending">Pending</option><option value="failed">Failed</option></select></label>
+            <div class="ot-actions"><button class="ot-btn" t-on-click="() => this.state.view = 'history'">Cancel</button><button class="ot-btn is-primary" t-on-click="() => this.addPayment()">Save</button></div>
+        </div>
+    </t>
+
+    <t t-name="owner_tenant_management.Ledger">
+        <t t-set="k" t-value="state.data.ledger_kpis || {}"/>
+        <div class="ot-head"><div><h1>Ledger</h1><p>Review comprehensive transaction history and account balances.</p></div>
+            <button class="ot-btn is-primary" t-on-click="() => this.exportKind('ledger')">Export Ledger</button></div>
+        <section class="ot-kpis">
+            <article class="ot-card"><span>OPENING BALANCE</span><strong t-esc="k.opening_label"/></article>
+            <article class="ot-card"><span>TOTAL CHARGES</span><strong class="is-bad" t-esc="k.charges_label"/></article>
+            <article class="ot-card"><span>TOTAL PAYMENTS</span><strong class="is-ok" t-esc="k.payments_label"/></article>
+            <article class="ot-card"><span>CURRENT BALANCE</span><strong t-esc="k.current_label"/></article>
+        </section>
+        <article class="ot-card">
+            <h2>Transaction Ledger</h2>
+            <table class="ot-table">
+                <thead><tr><th>DATE</th><th>TYPE</th><th>DESCRIPTION</th><th>DEBIT</th><th>CREDIT</th><th>BALANCE</th></tr></thead>
+                <tbody>
+                    <t t-foreach="state.data.ledger || []" t-as="row" t-key="row.id">
+                        <tr>
+                            <td t-esc="row.date"/><td><span class="ot-pill" t-esc="row.type_label"/></td><td t-esc="row.description"/>
+                            <td class="is-bad" t-esc="row.debit_label"/><td class="is-ok" t-esc="row.credit_label"/><td t-esc="row.balance_label"/>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </article>
+    </t>
+
+    <t t-name="owner_tenant_management.Maintenance">
+        <t t-set="k" t-value="state.data.maint_kpis || {}"/>
+        <div class="ot-head"><div><h1>Maintenance</h1><p>Manage and track maintenance requests.</p></div>
+            <button class="ot-btn is-primary" t-on-click="() => this.state.view = 'create'">+ New Maintenance Request</button></div>
+        <section class="ot-kpis">
+            <article class="ot-card"><span>Open</span><strong t-esc="k.open"/></article>
+            <article class="ot-card"><span>In Progress</span><strong t-esc="k.progress"/></article>
+            <article class="ot-card"><span>Scheduled</span><strong t-esc="k.scheduled"/></article>
+            <article class="ot-card"><span>Completed</span><strong t-esc="k.done"/></article>
+        </section>
+        <article class="ot-card">
+            <h2>Recent Requests</h2>
+            <table class="ot-table">
+                <thead><tr><th>REQUEST ID</th><th>ISSUE</th><th>CATEGORY</th><th>PRIORITY</th><th>STATUS</th><th/></tr></thead>
+                <tbody>
+                    <t t-foreach="state.data.maints || []" t-as="row" t-key="row.id">
+                        <tr>
+                            <td t-esc="row.code"/><td t-esc="row.name"/><td t-esc="row.category"/><td t-esc="row.priority"/>
+                            <td><span t-attf-class="ot-pill is-#{badge(row.state)}" t-esc="row.state_label"/></td>
+                            <td><button class="ot-link" t-on-click="() => this.openMaint(row)">View</button></td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </article>
+    </t>
+
+    <t t-name="owner_tenant_management.MaintCreate">
+        <div class="ot-head"><h1>Create Maintenance Request</h1></div>
+        <div class="ot-split">
+            <div class="ot-card ot-form">
+                <h2>Issue Details</h2>
+                <label>Location / Unit<select t-on-change="(ev) => this.state.maintForm.unit_id = ev.target.value"><option value="">Select</option><t t-foreach="state.data.units || []" t-as="u" t-key="u.id"><option t-att-value="u.id" t-esc="u.label"/></t></select></label>
+                <label>Issue Category<input t-on-input="(ev) => this.state.maintForm.category = ev.target.value" placeholder="HVAC, Plumbing..."/></label>
+                <label>Issue Title<input t-on-input="(ev) => this.state.maintForm.title = ev.target.value"/></label>
+                <label>Detailed Description<textarea rows="4" t-on-input="(ev) => this.state.maintForm.description = ev.target.value"/></label>
+                <label>Preferred access date<input type="date" t-on-input="(ev) => this.state.maintForm.access_date = ev.target.value"/></label>
+                <label>Notes<textarea t-on-input="(ev) => this.state.maintForm.notes = ev.target.value"/></label>
+            </div>
+            <aside class="ot-card">
+                <h2>Priority Level</h2>
+                <t t-foreach="[['low','Low Priority'],['medium','Medium Priority'],['high','High Priority'],['emergency','Emergency']]" t-as="p" t-key="p_index">
+                    <button class="ot-prio" t-att-class="{ 'is-on': state.maintForm.priority === p[0] }" t-on-click="() => this.state.maintForm.priority = p[0]" t-esc="p[1]"/>
+                </t>
+                <button class="ot-btn is-primary ot-block" t-on-click="() => this.submitMaint()">Submit Request</button>
+                <button class="ot-btn ot-block" t-on-click="() => this.state.view = 'list'">Cancel</button>
+            </aside>
+        </div>
+    </t>
+
+    <t t-name="owner_tenant_management.MaintDetail">
+        <t t-set="m" t-value="selectedMaint()"/>
+        <div class="ot-head">
+            <div><p class="ot-muted"><t t-esc="m.code"/> · <t t-esc="m.priority"/></p><h1 t-esc="m.name"/><p>Unit <t t-esc="m.unit"/></p></div>
+            <div class="ot-actions">
+                <button class="ot-btn" t-on-click="() => this.state.view = 'list'">Back</button>
+                <button class="ot-btn" t-on-click="() => this.setMaintState('scheduled')">Schedule</button>
+                <button class="ot-btn is-primary" t-on-click="() => this.setMaintState('done')">Mark Complete</button>
+            </div>
+        </div>
+        <div class="ot-steps">
+            <span t-att-class="{ 'is-on': true }">Submitted</span>
+            <span t-att-class="{ 'is-on': m.state !== 'open' }">In Progress</span>
+            <span t-att-class="{ 'is-on': m.state === 'scheduled' or m.state === 'done' }">Scheduled</span>
+            <span t-att-class="{ 'is-on': m.state === 'done' }">Completed</span>
+        </div>
+        <div class="ot-split">
+            <div>
+                <article class="ot-card"><h2>Issue Description</h2><p t-esc="m.description"/></article>
+                <article class="ot-card">
+                    <h2>Communication Log</h2>
+                    <t t-foreach="m.messages || []" t-as="msg" t-key="msg.id">
+                        <div t-att-class="{ 'ot-bubble is-mine': msg.mine, 'ot-bubble': !msg.mine }"><b t-esc="msg.author"/><p t-esc="msg.body"/></div>
+                    </t>
+                    <div class="ot-composer">
+                        <input t-att-value="state.maintMsg" t-on-input="(ev) => this.state.maintMsg = ev.target.value" placeholder="Type a message..."/>
+                        <button class="ot-btn is-primary" t-on-click="() => this.sendMaintMsg()">Send</button>
+                    </div>
+                </article>
+            </div>
+            <aside>
+                <article class="ot-card"><h3>Assigned Vendor</h3><p t-esc="m.vendor or 'Unassigned'"/><p t-esc="m.vendor_phone"/></article>
+                <article class="ot-card"><h3>Schedule</h3><p t-esc="m.scheduled"/></article>
+            </aside>
+        </div>
+    </t>
+
+    <t t-name="owner_tenant_management.Messages">
+        <div class="ot-head"><h1>Messages</h1><button class="ot-btn is-primary" t-on-click="() => this.state.view = 'compose'">New Message</button></div>
+        <div class="ot-split">
+            <aside class="ot-card ot-inbox">
+                <t t-foreach="threads()" t-as="th" t-key="th.id">
+                    <button class="ot-thread" t-att-class="{ 'is-on': selectedThread().id === th.id }" t-on-click="() => this.state.selectedThread = th.id">
+                        <b t-esc="th.author"/><span t-esc="th.when"/>
+                        <p t-esc="th.subject"/><em t-esc="th.preview"/>
+                        <span class="ot-pill" t-esc="th.tag"/>
+                    </button>
+                </t>
+            </aside>
+            <article class="ot-card">
+                <t t-set="th" t-value="selectedThread()"/>
+                <div class="ot-card-head"><div><h2 t-esc="th.subject"/><p class="ot-muted"><t t-esc="th.author"/> · <t t-esc="th.email"/></p></div>
+                    <button class="ot-btn" t-on-click="() => this.deleteThread()">Delete</button></div>
+                <t t-foreach="th.messages || []" t-as="msg" t-key="msg.id">
+                    <div t-att-class="{ 'ot-bubble is-mine': msg.mine, 'ot-bubble': !msg.mine }">
+                        <b t-esc="msg.author"/> <span t-esc="msg.when"/><p t-esc="msg.body"/>
+                        <em t-if="msg.attachment" t-esc="msg.attachment"/>
+                    </div>
+                </t>
+                <div class="ot-composer">
+                    <input t-att-value="state.msgBody" t-on-input="(ev) => this.state.msgBody = ev.target.value" placeholder="Type your reply..."/>
+                    <button class="ot-btn is-primary" t-on-click="() => this.sendThread()">Send</button>
+                </div>
+            </article>
+        </div>
+    </t>
+
+    <t t-name="owner_tenant_management.MsgCompose">
+        <div class="ot-card ot-form">
+            <h1>New Message</h1>
+            <label>Subject<input t-on-input="(ev) => this.state.newSubject = ev.target.value"/></label>
+            <label>Message<textarea rows="6" t-on-input="(ev) => this.state.newBody = ev.target.value"/></label>
+            <div class="ot-actions"><button class="ot-btn" t-on-click="() => this.state.view = 'list'">Cancel</button><button class="ot-btn is-primary" t-on-click="() => this.startThread()">Send</button></div>
+        </div>
+    </t>
+
+    <t t-name="owner_tenant_management.Documents">
+        <div class="ot-head"><h1>Documents</h1><button class="ot-btn is-primary" t-on-click="() => this.triggerDoc()">Upload Document</button></div>
+        <div class="ot-tabs">
+            <button t-att-class="{ 'is-on': state.docTab === 'all' }" t-on-click="() => this.state.docTab = 'all'">All</button>
+            <button t-att-class="{ 'is-on': state.docTab === 'lease' }" t-on-click="() => this.state.docTab = 'lease'">Lease Agreements</button>
+            <button t-att-class="{ 'is-on': state.docTab === 'invoice' }" t-on-click="() => this.state.docTab = 'invoice'">Invoices &amp; Receipts</button>
+            <button t-att-class="{ 'is-on': state.docTab === 'maintenance' }" t-on-click="() => this.state.docTab = 'maintenance'">Maintenance Logs</button>
+            <button t-att-class="{ 'is-on': state.docTab === 'property' }" t-on-click="() => this.state.docTab = 'property'">Property Docs</button>
+            <button t-att-class="{ 'is-on': state.docTab === 'notice' }" t-on-click="() => this.state.docTab = 'notice'">Notices</button>
+        </div>
+        <article class="ot-card">
+            <table class="ot-table">
+                <thead><tr><th>DOCUMENT NAME</th><th>PROPERTY</th><th>CATEGORY</th><th>DATE</th><th>STATUS</th></tr></thead>
+                <tbody>
+                    <t t-foreach="filteredDocs()" t-as="row" t-key="row.id">
+                        <tr t-on-click="() => this.openDoc(row)">
+                            <td t-esc="row.name"/><td t-esc="row.property"/><td t-esc="row.category_label"/><td t-esc="row.date"/>
+                            <td><span class="ot-pill is-ok" t-esc="row.status"/></td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </article>
+    </t>
+
+    <t t-name="owner_tenant_management.DocViewer">
+        <t t-set="d" t-value="selectedDoc()"/>
+        <div class="ot-head"><button class="ot-btn" t-on-click="() => this.state.view = 'list'">Back</button><h1>Document Viewer</h1></div>
+        <div class="ot-split">
+            <article class="ot-paper">
+                <t t-if="d.html"><t t-out="d.html"/></t>
+                <t t-else=""><h2 t-esc="d.name"/><p>No preview stored. Download to view the original file.</p></t>
+            </article>
+            <aside class="ot-card">
+                <h3>Document Details</h3>
+                <p t-esc="d.name"/><p t-esc="d.category_label"/><p t-esc="d.date"/><p t-esc="d.uploaded_by"/><p t-esc="d.version"/>
+                <span class="ot-pill is-ok" t-esc="d.status"/>
+                <button class="ot-btn is-primary ot-block" t-on-click="() => this.downloadDoc()">Download PDF</button>
+                <button class="ot-btn ot-block" t-on-click="() => this.printDoc()">Print Document</button>
+            </aside>
+        </div>
+    </t>
+
+    <t t-name="owner_tenant_management.Notifications">
+        <div class="ot-head">
+            <div><h1>Notifications</h1><p>Manage your alerts and communications.</p></div>
+            <button class="ot-btn" t-on-click="() => this.markNotes('all')">Mark all as read</button>
+        </div>
+        <div class="ot-tabs">
+            <button t-att-class="{ 'is-on': state.noteTab === 'all' }" t-on-click="() => this.state.noteTab = 'all'">All</button>
+            <button t-att-class="{ 'is-on': state.noteTab === 'payments' }" t-on-click="() => this.state.noteTab = 'payments'">Payments</button>
+            <button t-att-class="{ 'is-on': state.noteTab === 'lease' }" t-on-click="() => this.state.noteTab = 'lease'">Lease</button>
+            <button t-att-class="{ 'is-on': state.noteTab === 'maintenance' }" t-on-click="() => this.state.noteTab = 'maintenance'">Maintenance</button>
+            <button t-att-class="{ 'is-on': state.noteTab === 'documents' }" t-on-click="() => this.state.noteTab = 'documents'">Documents</button>
+            <button t-att-class="{ 'is-on': state.noteTab === 'messages' }" t-on-click="() => this.state.noteTab = 'messages'">Messages</button>
+        </div>
+        <article class="ot-card">
+            <t t-foreach="filteredNotes()" t-as="n" t-key="n.id">
+                <div class="ot-note" t-att-class="{ 'is-unread': !n.read }">
+                    <div><b t-esc="n.name"/><p t-esc="n.body"/><em t-esc="n.when"/></div>
+                    <div>
+                        <button class="ot-link" t-on-click="() => this.markNotes('read', n.id)">Read</button>
+                        <button class="ot-link" t-on-click="() => this.markNotes('delete', n.id)">Delete</button>
+                    </div>
+                </div>
+            </t>
+        </article>
+    </t>
+
+    <t t-name="owner_tenant_management.Profile">
+        <t t-set="p" t-value="state.profileForm"/>
+        <div class="ot-head"><h1>Profile &amp; Settings</h1><p>Manage your personal information, security preferences, and account settings.</p></div>
+        <div class="ot-split">
+            <article class="ot-card ot-form">
+                <div class="ot-card-head"><h2>Personal Information</h2><button class="ot-link" t-on-click="() => this.state.editingProfile = !state.editingProfile">Edit</button></div>
+                <label>Full Name<input t-att-value="p.name" t-on-input="(ev) => this.state.profileForm.name = ev.target.value"/></label>
+                <label>Email Address<input t-att-value="p.email" t-on-input="(ev) => this.state.profileForm.email = ev.target.value"/></label>
+                <label>Phone Number<input t-att-value="p.phone" t-on-input="(ev) => this.state.profileForm.phone = ev.target.value"/></label>
+                <label>Role<input t-att-value="p.role" t-on-input="(ev) => this.state.profileForm.role = ev.target.value"/></label>
+                <label>Office Address<input t-att-value="p.office" t-on-input="(ev) => this.state.profileForm.office = ev.target.value"/></label>
+                <button class="ot-btn is-primary" t-on-click="() => this.saveProfile()">Save Profile</button>
+                <h2>Communication Preferences</h2>
+                <label class="ot-check"><input type="checkbox" t-att-checked="p.email_on" t-on-change="() => this.togglePref('email_on')"/> Email Notifications</label>
+                <label class="ot-check"><input type="checkbox" t-att-checked="p.sms_on" t-on-change="() => this.togglePref('sms_on')"/> SMS Notifications</label>
+                <label class="ot-check"><input type="checkbox" t-att-checked="p.push_on" t-on-change="() => this.togglePref('push_on')"/> Push Notifications</label>
+            </article>
+            <aside>
+                <article class="ot-card">
+                    <h2>Security</h2>
+                    <p>Two-Factor Auth <span class="ot-pill is-ok" t-esc="p.two_fa ? 'Enabled' : 'Off'"/></p>
+                    <button class="ot-btn" t-on-click="() => this.togglePref('two_fa')">Toggle 2FA</button>
+                </article>
+                <article class="ot-card">
+                    <h2>Account Status</h2>
+                    <p class="is-ok">Active Account</p>
+                    <button class="ot-btn is-bad" t-on-click="() => this.logout()">Secure Logout</button>
+                </article>
+            </aside>
+        </div>
+    </t>
+</templates>

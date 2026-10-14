@@ -1,0 +1,1584 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="apartment_management.Portal">
+        <div class="o_apartment_portal">
+            <aside class="am-sidebar">
+                <div class="am-brand">
+                    <div class="am-brand-icon">AM</div>
+                    <div>
+                        <div class="am-brand-title">Apartment Management</div>
+                        <div class="am-brand-sub">Admin Portal</div>
+                    </div>
+                </div>
+                <nav class="am-nav">
+                    <t t-foreach="navItems" t-as="item" t-key="item.id">
+                        <button type="button"
+                                class="am-nav-item"
+                                t-att-class="{ 'is-active': state.page === item.id }"
+                                t-on-click="() => this.onNav(item.id)">
+                            <i t-attf-class="fa #{item.icon}"/>
+                            <span t-esc="item.label"/>
+                            <em t-if="item.id === 'messages' and inboxUnread()" class="am-nav-dot"/>
+                            <em t-if="item.id === 'notifications' and noticeUnread()" class="am-nav-dot"/>
+                        </button>
+                    </t>
+                </nav>
+                <button type="button" class="am-logout" t-on-click="logout">
+                    <i class="fa fa-sign-out"/> Log Out
+                </button>
+            </aside>
+
+            <main class="am-main">
+                <t t-if="state.loading">
+                    <div class="am-empty">Loading portal...</div>
+                </t>
+                <t t-elif="state.data.empty">
+                    <div class="am-empty">No unit is assigned to this portal yet.</div>
+                </t>
+                <t t-elif="state.page === 'dashboard'">
+                    <div class="am-page-head">
+                        <h1>Dashboard</h1>
+                        <p>Overview of your property, lease, payments and recent activity.</p>
+                    </div>
+
+                    <section class="am-kpis">
+                        <article class="am-card am-kpi">
+                            <div class="am-kpi-label"><i class="fa fa-home"/> PROPERTY / UNIT</div>
+                            <div class="am-kpi-value" t-esc="state.data.property_name"/>
+                            <div class="am-kpi-hint" t-esc="state.data.unit_name"/>
+                        </article>
+                        <article class="am-card am-kpi">
+                            <div class="am-kpi-label"><i class="fa fa-check-circle"/> LEASE STATUS</div>
+                            <div class="am-kpi-value is-ok" t-esc="state.data.lease_status"/>
+                            <div class="am-kpi-hint is-ok" t-esc="state.data.lease_standing"/>
+                        </article>
+                        <article class="am-card am-kpi">
+                            <div class="am-kpi-label"><i class="fa fa-usd"/> CURRENT BALANCE</div>
+                            <div class="am-kpi-value" t-esc="state.data.balance_label"/>
+                            <div class="am-kpi-hint" t-esc="state.data.balance_hint"/>
+                        </article>
+                        <article class="am-card am-kpi">
+                            <div class="am-kpi-label"><i class="fa fa-calendar"/> NEXT PAYMENT DUE</div>
+                            <div class="am-kpi-value" t-esc="state.data.next_due_label"/>
+                            <div class="am-kpi-hint" t-esc="state.data.next_amount_label"/>
+                        </article>
+                    </section>
+
+                    <section class="am-mid">
+                        <article class="am-card am-lease">
+                            <div class="am-card-head">
+                                <h2><i class="fa fa-file-text-o"/> Lease Summary</h2>
+                                <span t-if="state.data.eligible" class="am-badge">Eligible</span>
+                            </div>
+                            <div class="am-lease-grid">
+                                <div>
+                                    <span>START DATE</span>
+                                    <strong t-esc="state.data.lease_start"/>
+                                </div>
+                                <div>
+                                    <span>END DATE</span>
+                                    <strong t-esc="state.data.lease_end"/>
+                                </div>
+                                <div>
+                                    <span>MONTHLY RENT</span>
+                                    <strong t-esc="state.data.monthly_rent"/>
+                                </div>
+                                <div>
+                                    <span>LEASE TERM</span>
+                                    <strong t-esc="state.data.lease_term"/>
+                                </div>
+                            </div>
+                        </article>
+                        <article class="am-card am-pay">
+                            <div class="am-card-head">
+                                <h2><i class="fa fa-credit-card"/> Payment Status</h2>
+                            </div>
+                            <div class="am-pay-last">
+                                <span>LAST PAYMENT</span>
+                                <strong t-esc="state.data.last_amount_label"/>
+                                <em t-esc="state.data.last_date_label"/>
+                            </div>
+                            <div class="am-pay-next">
+                                <div>
+                                    <span>NEXT PAYMENT</span>
+                                    <strong t-esc="state.data.next_amount_label"/>
+                                </div>
+                                <button type="button" class="am-pay-btn" t-att-disabled="state.paying" t-on-click="payNow">Pay Now</button>
+                            </div>
+                        </article>
+                        <article class="am-card am-alerts">
+                            <div class="am-card-head">
+                                <h2><i class="fa fa-bell-o"/> Alerts</h2>
+                            </div>
+                            <t t-foreach="state.data.alerts" t-as="alert" t-key="alert.id">
+                                <div t-attf-class="am-alert is-#{alert.tone}">
+                                    <i t-attf-class="fa #{alert.icon}"/>
+                                    <div>
+                                        <strong t-esc="alert.title"/>
+                                        <span t-esc="alert.note"/>
+                                    </div>
+                                </div>
+                            </t>
+                        </article>
+                    </section>
+
+                    <section class="am-bottom">
+                        <article class="am-card am-maint">
+                            <div class="am-card-head">
+                                <h2><i class="fa fa-wrench"/> Maintenance</h2>
+                                <button type="button" class="am-link" t-on-click="() => this.onNav('maintenance')">View All →</button>
+                            </div>
+                            <div class="am-maint-grid">
+                                <div class="am-maint-tile is-open">
+                                    <strong t-esc="state.data.maintenance.open"/>
+                                    <span>OPEN</span>
+                                </div>
+                                <div class="am-maint-tile is-progress">
+                                    <strong t-esc="state.data.maintenance.progress"/>
+                                    <span>PROGRESS</span>
+                                </div>
+                                <div class="am-maint-tile is-done">
+                                    <strong t-esc="state.data.maintenance.done"/>
+                                    <span>DONE</span>
+                                </div>
+                            </div>
+                        </article>
+                        <article class="am-card am-activity">
+                            <div class="am-card-head">
+                                <h2><i class="fa fa-bolt"/> Activity</h2>
+                                <button type="button" class="am-link" t-on-click="() => this.onNav('notifications')">View All</button>
+                            </div>
+                            <t t-foreach="state.data.activity" t-as="item" t-key="item.id">
+                                <div class="am-activity-row">
+                                    <i t-attf-class="fa #{item.icon} is-#{item.tone}"/>
+                                    <div>
+                                        <strong t-esc="item.title"/>
+                                        <span t-esc="item.note"/>
+                                    </div>
+                                </div>
+                            </t>
+                        </article>
+                    </section>
+                </t>
+                <t t-elif="state.page === 'property'">
+                    <div class="am-topbar">
+                        <div class="am-search">
+                            <i class="fa fa-search"/>
+                            <input type="search" placeholder="Search properties..." t-att-value="state.search" t-on-input="onSearch"/>
+                        </div>
+                        <div class="am-top-avatar" t-esc="state.data.tenant_initials"/>
+                    </div>
+
+                    <t t-if="state.propertyView === 'overview'">
+                        <div class="am-page-head">
+                            <h1>My Property</h1>
+                            <p>View and manage details for your assigned property and unit.</p>
+                        </div>
+                        <section class="am-prop-overview">
+                            <article class="am-card am-hero-card">
+                                <div class="am-hero-photo" t-attf-style="background-image: url('#{state.data.image_url}')">
+                                    <span t-if="state.data.occupied" class="am-pill is-ok">Occupied</span>
+                                </div>
+                                <div class="am-hero-body">
+                                    <div class="am-hero-title-row">
+                                        <div>
+                                            <h2 t-esc="state.data.property_name"/>
+                                            <p t-esc="state.data.address"/>
+                                        </div>
+                                        <span class="am-chip" t-esc="state.data.type_label"/>
+                                    </div>
+                                    <div class="am-hero-actions">
+                                        <button type="button" class="am-btn-primary" t-on-click="() => this.setPropertyView('full')">View Full Property</button>
+                                        <button type="button" class="am-btn-ghost" t-on-click="() => this.setPropertyView('tenant')">Contact Management</button>
+                                    </div>
+                                </div>
+                            </article>
+                            <div class="am-prop-side">
+                                <article class="am-card">
+                                    <div class="am-meta-k">MANAGEMENT</div>
+                                    <div class="am-meta-row">Owner: <strong t-esc="state.data.manager"/></div>
+                                </article>
+                                <article class="am-card">
+                                    <h3>Unit Details</h3>
+                                    <div class="am-unit-metrics">
+                                        <div>
+                                            <span>UNIT</span>
+                                            <strong t-esc="state.data.unit_short"/>
+                                        </div>
+                                        <div>
+                                            <span>FLOOR</span>
+                                            <strong t-esc="state.data.floor_label"/>
+                                        </div>
+                                        <div>
+                                            <span>LAYOUT</span>
+                                            <strong t-esc="state.data.layout"/>
+                                        </div>
+                                        <div>
+                                            <span>AREA</span>
+                                            <strong t-esc="state.data.area_label"/>
+                                        </div>
+                                    </div>
+                                    <div class="am-amenity-row">
+                                        <t t-foreach="state.data.amenities" t-as="item" t-key="item">
+                                            <span class="am-chip" t-esc="item"/>
+                                        </t>
+                                    </div>
+                                </article>
+                            </div>
+                        </section>
+                        <article class="am-card am-docs-card">
+                            <div class="am-card-head">
+                                <h2>Property Documents</h2>
+                                <button type="button" class="am-link" t-on-click="() => this.onNav('documents')">View All</button>
+                            </div>
+                            <div class="am-docs-head">
+                                <span>DOCUMENT NAME</span>
+                                <span>ACTION</span>
+                            </div>
+                            <t t-foreach="filteredDocs()" t-as="doc" t-key="doc.id">
+                                <div class="am-docs-row">
+                                    <div>
+                                        <i class="fa fa-file-text-o"/>
+                                        <span t-esc="doc.name"/>
+                                    </div>
+                                    <button type="button" class="am-icon-btn" t-on-click="() => this.downloadDoc(doc)" title="Download">
+                                        <i class="fa fa-download"/>
+                                    </button>
+                                </div>
+                            </t>
+                        </article>
+                    </t>
+
+                    <t t-elif="state.propertyView === 'full'">
+                        <div class="am-page-head am-head-split">
+                            <div>
+                                <h1>
+                                    <t t-esc="state.data.property_name"/>
+                                    <span t-if="state.data.occupied" class="am-pill is-ok">Occupied</span>
+                                </h1>
+                                <p class="am-unit-tag"><i class="fa fa-th-large"/> Unit <t t-esc="state.data.unit_short"/></p>
+                            </div>
+                            <div class="am-hero-actions">
+                                <button type="button" class="am-btn-ghost" t-on-click="() => this.setPropertyView('overview')">Back</button>
+                                <button type="button" class="am-btn-ghost" t-on-click="startEditUnit">Edit Unit</button>
+                                <button type="button" class="am-btn-primary" t-on-click="() => this.setPropertyView('tenant')">Message Tenant</button>
+                            </div>
+                        </div>
+                        <form t-if="state.editingUnit" class="am-card am-unit-edit" t-on-submit.prevent="saveUnit">
+                            <h2>Edit unit</h2>
+                            <div class="am-unit-edit-grid">
+                                <label>UNIT
+                                    <input class="am-input" t-att-value="state.unitForm.name" t-on-input="(ev) => this.setUnitField('name', ev)" required="required"/>
+                                </label>
+                                <label>LAYOUT
+                                    <input class="am-input" t-att-value="state.unitForm.layout" t-on-input="(ev) => this.setUnitField('layout', ev)"/>
+                                </label>
+                                <label>AREA (SQFT)
+                                    <input class="am-input" type="number" min="0" t-att-value="state.unitForm.area" t-on-input="(ev) => this.setUnitField('area', ev)"/>
+                                </label>
+                            </div>
+                            <div class="am-hero-actions">
+                                <button type="button" class="am-btn-ghost" t-on-click="cancelEditUnit">Cancel</button>
+                                <button type="submit" class="am-btn-primary" t-att-disabled="state.savingUnit">Save</button>
+                            </div>
+                        </form>
+                        <section class="am-full-top">
+                            <article class="am-card">
+                                <div class="am-card-head">
+                                    <h2>Financial Summary</h2>
+                                    <button type="button" class="am-link" t-on-click="() => this.onNav('ledger')">View Ledger</button>
+                                </div>
+                                <div class="am-fin-kpis">
+                                    <div>
+                                        <span>MONTHLY RENT</span>
+                                        <strong t-esc="state.data.monthly_rent"/>
+                                        <em class="is-ok">On Track</em>
+                                    </div>
+                                    <div>
+                                        <span>OUTSTANDING</span>
+                                        <strong t-esc="state.data.balance_label"/>
+                                        <em>Current Balance</em>
+                                    </div>
+                                    <div>
+                                        <span>LAST PAYMENT</span>
+                                        <strong t-esc="state.data.last_date_label"/>
+                                        <em class="is-ok">Paid in full</em>
+                                    </div>
+                                </div>
+                            </article>
+                            <article class="am-card am-tenant-mini">
+                                <h2>Tenant Info</h2>
+                                <button type="button" class="am-tenant-hit" t-on-click="() => this.setPropertyView('tenant')">
+                                    <div class="am-avatar lg" t-esc="state.data.tenant_initials"/>
+                                    <div>
+                                        <strong t-esc="state.data.tenant_name"/>
+                                        <span t-esc="state.data.tenant_role"/>
+                                    </div>
+                                </button>
+                                <div class="am-contact-line"><i class="fa fa-phone"/> <t t-esc="state.data.tenant_phone"/></div>
+                                <div class="am-contact-line"><i class="fa fa-envelope-o"/> <t t-esc="state.data.tenant_email"/></div>
+                                <div class="am-contact-line"><i class="fa fa-calendar-o"/> <t t-esc="state.data.move_in"/></div>
+                            </article>
+                        </section>
+                        <section class="am-full-grid">
+                            <article class="am-card">
+                                <h2>Lease Details</h2>
+                                <span t-att-class="{ 'am-pill': true, 'is-ok': state.data.lease_status === 'Active' }">LEASE STATUS <t t-esc="state.data.lease_status"/></span>
+                                <div class="am-lease-grid am-mt">
+                                    <div>
+                                        <span>LEASE ID</span>
+                                        <strong t-esc="state.data.lease_id"/>
+                                    </div>
+                                    <div>
+                                        <span>TERM</span>
+                                        <strong t-esc="state.data.lease_term"/>
+                                    </div>
+                                </div>
+                                <div class="am-expire-box">
+                                    <span>EXPIRATION DATE</span>
+                                    <strong t-esc="state.data.lease_end"/>
+                                    <em>Auto-renewal: <t t-esc="state.data.auto_renew"/></em>
+                                </div>
+                            </article>
+                            <article class="am-card">
+                                <div class="am-card-head">
+                                    <h2>Maintenance</h2>
+                                    <span class="am-pill is-warn"><t t-esc="state.data.maintenance.open"/> Open</span>
+                                </div>
+                                <div class="am-maint-inline">
+                                    <div>
+                                        <strong t-esc="state.data.maintenance.total"/>
+                                        <span>TOTAL</span>
+                                    </div>
+                                    <div>
+                                        <strong t-esc="state.data.maintenance.done"/>
+                                        <span>RESOLVED</span>
+                                    </div>
+                                </div>
+                                <div class="am-meta-k">CURRENT ISSUES</div>
+                                <t t-foreach="state.data.open_issues" t-as="issue" t-key="issue.id">
+                                    <div class="am-issue">
+                                        <i class="fa fa-exclamation-circle"/>
+                                        <div>
+                                            <strong t-esc="issue.name"/>
+                                            <span t-esc="issue.note"/>
+                                        </div>
+                                    </div>
+                                </t>
+                            </article>
+                            <article class="am-card">
+                                <h2>Documents</h2>
+                                <t t-foreach="state.data.lease_docs" t-as="doc" t-key="doc.id">
+                                    <div class="am-file-row">
+                                        <i class="fa fa-file-pdf-o"/>
+                                        <div>
+                                            <strong t-esc="doc.name"/>
+                                            <span t-esc="doc.meta"/>
+                                        </div>
+                                        <i t-if="doc.ok" class="fa fa-check-circle is-ok"/>
+                                    </div>
+                                </t>
+                            </article>
+                            <article class="am-card">
+                                <h2>Recent Activity</h2>
+                                <t t-foreach="state.data.activity" t-as="item" t-key="item.id">
+                                    <div class="am-activity-row">
+                                        <i t-attf-class="fa #{item.icon} is-#{item.tone}"/>
+                                        <div>
+                                            <strong t-esc="item.title"/>
+                                            <span t-esc="item.note"/>
+                                        </div>
+                                    </div>
+                                </t>
+                            </article>
+                        </section>
+                    </t>
+
+                    <t t-else="">
+                        <div class="am-page-head am-head-split">
+                            <button type="button" class="am-back" t-on-click="() => this.setPropertyView('full')"><i class="fa fa-arrow-left"/> Tenant Details</button>
+                            <div class="am-hero-actions">
+                                <button type="button" class="am-btn-ghost" t-on-click="() => this.ping('Messages', 'Messaging opens from the Messages page.')">Message</button>
+                                <button type="button" class="am-btn-primary" t-on-click="() => this.ping('Tenant', 'Tenant contact details are updated from the partner record.')">Edit Details</button>
+                            </div>
+                        </div>
+                        <article class="am-card am-tenant-hero">
+                            <div class="am-avatar xl" t-esc="state.data.tenant_initials"/>
+                            <div>
+                                <h1 t-esc="state.data.tenant_name"/>
+                                <p><t t-esc="state.data.area_plain"/> · <span class="am-pill is-ok" t-esc="state.data.lease_status"/></p>
+                            </div>
+                        </article>
+                        <section class="am-tenant-kpis">
+                            <article class="am-card am-kpi">
+                                <div class="am-kpi-label"><i class="fa fa-home"/> MONTHLY RENT</div>
+                                <div class="am-kpi-value" t-esc="state.data.monthly_rent"/>
+                            </article>
+                            <article class="am-card am-kpi">
+                                <div class="am-kpi-label"><i class="fa fa-check-circle"/> PAYMENT STATUS</div>
+                                <div class="am-kpi-value is-ok" t-esc="state.data.balance_hint"/>
+                                <div class="am-kpi-hint" t-esc="state.data.last_date_full"/>
+                            </article>
+                            <article class="am-card am-kpi">
+                                <div class="am-kpi-label"><i class="fa fa-calendar"/> LEASE PERIOD</div>
+                                <div class="am-kpi-value" t-esc="state.data.lease_start"/>
+                                <div class="am-kpi-hint">to <t t-esc="state.data.lease_end"/></div>
+                            </article>
+                        </section>
+                        <section class="am-tenant-grid">
+                            <article class="am-card">
+                                <div class="am-card-head">
+                                    <h2>Lease Details</h2>
+                                    <button type="button" class="am-link" t-on-click="() => this.onNav('lease')">View Agreement</button>
+                                </div>
+                                <div class="am-lease-grid">
+                                    <div>
+                                        <span>LEASE ID</span>
+                                        <strong t-esc="state.data.lease_id"/>
+                                    </div>
+                                    <div>
+                                        <span>TERM</span>
+                                        <strong t-esc="state.data.lease_term"/>
+                                    </div>
+                                    <div>
+                                        <span>SECURITY DEPOSIT</span>
+                                        <strong t-esc="state.data.security_deposit"/>
+                                    </div>
+                                    <div>
+                                        <span>MOVE-IN DATE</span>
+                                        <strong t-esc="state.data.move_in"/>
+                                    </div>
+                                </div>
+                                <em class="am-renew">Auto-renew: <t t-esc="state.data.auto_renew"/></em>
+                            </article>
+                            <article class="am-card">
+                                <div class="am-card-head">
+                                    <h2>Maintenance</h2>
+                                    <span class="am-pill is-warn"><t t-esc="state.data.maintenance.open"/> Recent</span>
+                                </div>
+                                <t t-foreach="state.data.open_issues" t-as="issue" t-key="issue.id">
+                                    <div class="am-issue">
+                                        <i class="fa fa-wrench"/>
+                                        <div>
+                                            <strong t-esc="issue.name"/>
+                                            <span t-esc="issue.note"/>
+                                        </div>
+                                    </div>
+                                </t>
+                            </article>
+                            <article class="am-card">
+                                <div class="am-card-head">
+                                    <h2>Financial Overview</h2>
+                                    <button type="button" class="am-link" t-on-click="() => this.onNav('ledger')">View Ledger</button>
+                                </div>
+                                <div class="am-balance-ok">
+                                    <span>OUTSTANDING BALANCE</span>
+                                    <strong t-esc="state.data.balance_label"/>
+                                    <em t-esc="state.data.lease_standing"/>
+                                </div>
+                                <div class="am-fin-list">
+                                    <div><span>Total Paid to Date</span><strong t-esc="state.data.paid_total_label"/></div>
+                                    <div><span>Last Payment Date</span><strong t-esc="state.data.last_date_full"/></div>
+                                    <div><span>Payment Method</span><strong t-esc="state.data.payment_method"/></div>
+                                </div>
+                            </article>
+                            <article class="am-card">
+                                <h2>Documents</h2>
+                                <t t-foreach="state.data.lease_docs" t-as="doc" t-key="doc.id">
+                                    <div class="am-file-row">
+                                        <i class="fa fa-file-text-o"/>
+                                        <div>
+                                            <strong t-esc="doc.name"/>
+                                            <span t-esc="doc.meta"/>
+                                        </div>
+                                        <i t-if="doc.ok" class="fa fa-check-circle is-ok"/>
+                                    </div>
+                                </t>
+                                <div class="am-file-row">
+                                    <i class="fa fa-shield"/>
+                                    <div>
+                                        <strong>Insurance Policy</strong>
+                                        <span t-esc="state.data.insurance_expires"/>
+                                    </div>
+                                </div>
+                            </article>
+                        </section>
+                    </t>
+                </t>
+                <t t-elif="state.page === 'lease'">
+                    <t t-if="state.leaseView === 'overview'">
+                        <div class="am-page-head am-head-split">
+                            <h1>Lease <span t-att-class="{ 'am-pill': true, 'is-ok': state.data.lease_status === 'Active' }" t-esc="state.data.lease_status"/></h1>
+                            <div class="am-hero-actions">
+                                <button type="button" class="am-btn-ghost" t-on-click="() => this.setLeaseView('history')"><i class="fa fa-clock-o"/> View History</button>
+                                <button type="button" class="am-btn-ghost" t-on-click="() => this.ping('Lease', 'The signed agreement is available in the document viewer.')"><i class="fa fa-download"/> Download Lease</button>
+                                <button type="button" class="am-btn-primary" t-on-click="() => this.setLeaseView('viewer')"><i class="fa fa-file-text-o"/> View File / Lease</button>
+                            </div>
+                        </div>
+                        <t t-if="lease().show_banner">
+                            <div class="am-renew-banner">
+                                <div>
+                                    <strong>Renewal Action Required</strong>
+                                    <p>This lease is approaching expiration and expires in exactly <t t-esc="lease().days_to_end"/> days. Please initiate the renewal process or confirm move-out intentions with the tenant.</p>
+                                </div>
+                                <button type="button" class="am-btn-ghost" t-on-click="() => this.setLeaseView('renewal')">Initiate Renewal</button>
+                            </div>
+                        </t>
+                        <t t-elif="lease().renewal_state === 'accepted'">
+                            <div class="am-renew-banner is-ok">
+                                <div>
+                                    <strong>Renewal accepted</strong>
+                                    <p>The lease term was extended. Updated dates appear in Lease Terms below.</p>
+                                </div>
+                            </div>
+                        </t>
+                        <t t-elif="lease().renewal_state === 'declined'">
+                            <div class="am-renew-banner is-stop">
+                                <div>
+                                    <strong>Renewal declined</strong>
+                                    <p>The current term still ends on <t t-esc="state.data.lease_end"/>.</p>
+                                </div>
+                            </div>
+                        </t>
+                        <section class="am-lease-top">
+                            <article class="am-card">
+                                <div class="am-card-head">
+                                    <h2>Lease Information</h2>
+                                    <span class="am-muted">ID: <t t-esc="lease().code"/></span>
+                                </div>
+                                <div class="am-info-grid">
+                                    <div>
+                                        <span>PROPERTY</span>
+                                        <strong t-esc="state.data.property_name"/>
+                                        <em t-esc="state.data.address"/>
+                                    </div>
+                                    <div>
+                                        <span>UNIT / TYPE</span>
+                                        <strong>Unit <t t-esc="state.data.unit_short"/></strong>
+                                        <em t-esc="lease().unit_type"/>
+                                    </div>
+                                    <div>
+                                        <span>PROPERTY OWNER</span>
+                                        <strong t-esc="lease().owner"/>
+                                        <em t-esc="lease().managed_since"/>
+                                    </div>
+                                </div>
+                                <div class="am-meta-k">PRIMARY TENANT</div>
+                                <div class="am-tenant-hit am-static">
+                                    <div class="am-avatar lg" t-esc="state.data.tenant_initials"/>
+                                    <div class="am-tenant-meta">
+                                        <strong t-esc="state.data.tenant_name"/>
+                                        <span><t t-esc="state.data.tenant_email"/> · <t t-esc="state.data.tenant_phone"/></span>
+                                    </div>
+                                </div>
+                            </article>
+                            <article class="am-card">
+                                <h2>Financial Overview</h2>
+                                <div class="am-fin-hero">
+                                    <span>MONTHLY RENT</span>
+                                    <strong t-esc="state.data.monthly_rent"/>
+                                </div>
+                                <div class="am-fin-list">
+                                    <div><span>SECURITY DEPOSIT</span><strong t-esc="state.data.security_deposit"/></div>
+                                    <div><span>PAYMENT DUE</span><strong t-esc="lease().payment_due"/></div>
+                                    <div>
+                                        <span>LATE FEE RULE</span>
+                                        <strong t-esc="lease().late_fee"/>
+                                        <button type="button" class="am-link" t-on-click="() => this.setLeaseView('viewer')">View Terms</button>
+                                    </div>
+                                </div>
+                            </article>
+                        </section>
+                        <section class="am-lease-bottom">
+                            <article class="am-card">
+                                <h2>Lease Terms &amp; Timeline</h2>
+                                <div class="am-terms-grid">
+                                    <div>
+                                        <span>START DATE</span>
+                                        <strong t-esc="state.data.lease_start"/>
+                                    </div>
+                                    <div>
+                                        <span>END DATE</span>
+                                        <strong t-esc="state.data.lease_end"/>
+                                    </div>
+                                    <div class="am-months-tile">
+                                        <strong t-esc="lease().months_total"/>
+                                        <span>MONTHS TOTAL</span>
+                                    </div>
+                                    <div>
+                                        <span>LEASE TYPE</span>
+                                        <strong t-esc="lease().lease_type"/>
+                                    </div>
+                                    <div>
+                                        <span>NOTICE PERIOD</span>
+                                        <strong t-esc="lease().notice"/>
+                                    </div>
+                                    <div>
+                                        <span>MOVE-IN INSP</span>
+                                        <strong t-esc="lease().move_in_score"/>
+                                    </div>
+                                    <div>
+                                        <span>RENT REVIEW</span>
+                                        <strong t-esc="lease().rent_review"/>
+                                    </div>
+                                </div>
+                            </article>
+                            <article class="am-card">
+                                <h2>Quick Files</h2>
+                                <t t-foreach="lease().files" t-as="file" t-key="file.id">
+                                    <button type="button" class="am-file-btn" t-on-click="() => this.setLeaseView('viewer', file.id)">
+                                        <i class="fa fa-file-pdf-o"/>
+                                        <span t-esc="file.name"/>
+                                    </button>
+                                </t>
+                            </article>
+                        </section>
+                    </t>
+
+                    <t t-elif="state.leaseView === 'history'">
+                        <div class="am-page-head am-head-split">
+                            <h1>Lease History</h1>
+                            <button type="button" class="am-btn-primary" t-on-click="() => this.ping('Lease', 'New leases are created from Property Management.')">+ New Lease</button>
+                        </div>
+                        <div class="am-toolbar">
+                            <div class="am-search">
+                                <i class="fa fa-search"/>
+                                <input type="search" placeholder="Search by Lease ID or Tenant Name" t-att-value="state.leaseSearch" t-on-input="onLeaseSearch"/>
+                            </div>
+                            <select class="am-select" t-on-change="onLeaseStatus">
+                                <option value="all">All Statuses</option>
+                                <option value="Active">Active</option>
+                                <option value="Expired">Expired</option>
+                                <option value="Terminated">Terminated</option>
+                            </select>
+                        </div>
+                        <article class="am-card am-table-card">
+                            <div class="am-table-head">
+                                <span>LEASE ID</span>
+                                <span>TENANT</span>
+                                <span>START DATE</span>
+                                <span>END DATE</span>
+                                <span>RENT</span>
+                                <span>STATUS</span>
+                                <span>DOCUMENT</span>
+                                <span>ACTIONS</span>
+                            </div>
+                            <t t-foreach="pagedHistory()" t-as="row" t-key="row.id">
+                                <div class="am-table-row">
+                                    <button type="button" class="am-link" t-on-click="() => this.setLeaseView('overview')" t-esc="row.code"/>
+                                    <span t-esc="row.tenant"/>
+                                    <span t-esc="row.start"/>
+                                    <span t-esc="row.end"/>
+                                    <span t-esc="row.rent"/>
+                                    <span t-att-class="{
+                                        'am-pill': true,
+                                        'is-ok': row.status === 'Active',
+                                        'is-muted': row.status === 'Expired',
+                                        'is-stop': row.status === 'Terminated',
+                                    }" t-esc="row.status"/>
+                                    <button type="button" class="am-link" t-on-click="() => this.setLeaseView('viewer')" t-esc="row.file"/>
+                                    <button type="button" class="am-icon-btn" t-on-click="() => this.setLeaseView('viewer')" title="Download">
+                                        <i class="fa fa-download"/>
+                                    </button>
+                                </div>
+                            </t>
+                            <div class="am-pager">
+                                <div class="am-pager-nav">
+                                    <button type="button" class="am-page-btn" t-on-click="() => this.setHistoryPage(state.leasePage - 1)">‹</button>
+                                    <span class="am-pager-meta">Page <t t-esc="state.leasePage"/> / <t t-esc="historyPages()"/></span>
+                                    <button type="button" class="am-page-btn" t-on-click="() => this.setHistoryPage(state.leasePage + 1)">›</button>
+                                </div>
+                            </div>
+                        </article>
+                    </t>
+
+                    <t t-elif="state.leaseView === 'viewer'">
+                        <div class="am-crumb">
+                            <button type="button" class="am-link" t-on-click="() => this.setLeaseView('overview')">Leases</button>
+                            <span>/ Unit <t t-esc="state.data.unit_short"/></span>
+                            <span>/ Document Viewer</span>
+                        </div>
+                        <div class="am-page-head">
+                            <h1>Lease Document Viewer</h1>
+                        </div>
+                        <section class="am-viewer">
+                            <article class="am-card am-viewer-stage">
+                                <div class="am-viewer-bar">
+                                    <span t-esc="lease().file_name"/>
+                                    <div class="am-zoom">
+                                        <button type="button" t-on-click="() => this.bumpZoom(-10)">−</button>
+                                        <span t-esc="state.leaseZoom"/>%
+                                        <button type="button" t-on-click="() => this.bumpZoom(10)">+</button>
+                                    </div>
+                                </div>
+                                <div class="am-paper-wrap">
+                                    <div class="am-paper" t-attf-style="transform: scale(#{state.leaseZoom / 100});">
+                                        <t t-foreach="lease().pages" t-as="page" t-key="page.id">
+                                            <section class="am-paper-page">
+                                                <h2 t-esc="page.title"/>
+                                                <p class="am-paper-sub">Apartment Management · <t t-esc="state.data.property_name"/></p>
+                                                <t t-foreach="page.lines" t-as="line" t-key="line_index">
+                                                    <p t-esc="line"/>
+                                                </t>
+                                                <em>Page <t t-esc="page.id"/> of <t t-esc="lease().pages.length"/></em>
+                                            </section>
+                                        </t>
+                                    </div>
+                                </div>
+                            </article>
+                            <aside class="am-card am-doc-side">
+                                <h2>Document Details</h2>
+                                <div class="am-fin-list">
+                                    <div><span>FILE NAME</span><strong t-esc="lease().file_name"/></div>
+                                    <div><span>DOCUMENT TYPE</span><strong t-esc="lease().doc_type"/></div>
+                                    <div><span>VERSION</span><strong t-esc="lease().version"/></div>
+                                    <div><span>UPLOADED DATE</span><strong t-esc="lease().uploaded"/></div>
+                                    <div><span>UPLOADED BY</span><strong t-esc="lease().uploaded_by"/></div>
+                                    <div>
+                                        <span>SIGNATURE STATUS</span>
+                                        <strong class="is-ok" t-if="lease().signed">Fully Executed</strong>
+                                    </div>
+                                </div>
+                                <div class="am-side-actions">
+                                    <button type="button" class="am-btn-primary" t-on-click="() => this.ping('Lease', 'Use Print to save a copy of this agreement.')">Download</button>
+                                    <button type="button" class="am-btn-ghost" t-on-click="printLease">Print</button>
+                                    <button type="button" class="am-btn-ghost" t-on-click="() => this.setLeaseView('overview')">Close</button>
+                                </div>
+                            </aside>
+                        </section>
+                    </t>
+
+                    <t t-else="">
+                        <div class="am-crumb">
+                            <span>APT <t t-esc="state.data.unit_short"/> · <t t-esc="state.data.property_name"/></span>
+                            <span>TENANT: <t t-esc="state.data.tenant_name"/></span>
+                        </div>
+                        <div class="am-page-head am-head-split">
+                            <h1>Lease Renewal</h1>
+                            <div class="am-deadline">
+                                <span>DEADLINE</span>
+                                <strong t-esc="lease().deadline_days"/> Days
+                                <em t-esc="lease().deadline_label"/>
+                            </div>
+                        </div>
+                        <article class="am-card am-renew-card">
+                            <h2>Renewal Proposal for Unit <t t-esc="state.data.unit_short"/></h2>
+                            <p>Review the proposed terms for the upcoming lease period.</p>
+                            <div class="am-renew-cols">
+                                <div>
+                                    <span class="am-meta-k">CURRENT LEASE</span>
+                                    <div class="am-fin-list">
+                                        <div><span>Ends On</span><strong t-esc="state.data.lease_end"/></div>
+                                        <div><span>Term Length</span><strong t-esc="state.data.lease_term"/></div>
+                                        <div><span>Monthly Rent</span><strong t-esc="state.data.monthly_rent"/></div>
+                                    </div>
+                                </div>
+                                <div class="am-proposed">
+                                    <span class="am-meta-k">PROPOSED RENEWAL</span>
+                                    <div class="am-fin-list">
+                                        <div><span>Starts On</span><strong t-esc="lease().proposed_start"/></div>
+                                        <div><span>Term Length</span><strong>12 Months</strong></div>
+                                        <div>
+                                            <span>Monthly Rent</span>
+                                            <strong t-esc="lease().proposed_rent"/>
+                                            <em class="am-up" t-esc="lease().proposed_rent_change"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="am-note">The new rent includes all utilities previously covered. A signed copy of the updated community guidelines must be acknowledged alongside this renewal.</p>
+                            <div class="am-hero-actions">
+                                <button type="button" class="am-btn-primary" t-att-disabled="state.renewing" t-on-click="() => this.decideRenewal('accepted')">Accept Renewal</button>
+                                <button type="button" class="am-btn-ghost" t-on-click="() => this.setLeaseView('viewer')">Review Document</button>
+                                <button type="button" class="am-btn-ghost" t-on-click="() => this.ping('Lease', 'A clarification request was sent to property management.')">Clarify</button>
+                                <button type="button" class="am-btn-danger" t-att-disabled="state.renewing" t-on-click="() => this.decideRenewal('declined')">Decline</button>
+                            </div>
+                        </article>
+                    </t>
+                </t>
+                <t t-elif="state.page === 'payments'">
+                    <div class="am-topbar">
+                        <div class="am-search">
+                            <i class="fa fa-search"/>
+                            <input type="search" placeholder="Search transactions..." t-att-value="state.paySearch" t-on-input="onPaySearch"/>
+                        </div>
+                        <div class="am-top-avatar" t-esc="state.data.tenant_initials"/>
+                    </div>
+                    <t t-if="state.payView === 'overview'">
+                        <div class="am-page-head am-head-split">
+                            <div>
+                                <h1>Payments</h1>
+                                <p>Manage and track your property finances seamlessly.</p>
+                            </div>
+                            <button type="button" class="am-btn-primary" t-att-disabled="state.paying" t-on-click="payNow">Make Payment</button>
+                        </div>
+                        <section class="am-pay-kpis">
+                            <article class="am-card">
+                                <span>AMOUNT DUE</span>
+                                <strong class="is-due" t-esc="payments().due_label"/>
+                                <em class="is-due" t-esc="payments().due_hint"/>
+                            </article>
+                            <article class="am-card">
+                                <span>NEXT DUE DATE</span>
+                                <strong t-esc="payments().next_due_label"/>
+                                <em t-esc="payments().days_left"/>
+                            </article>
+                            <article class="am-card">
+                                <span>CURRENT BALANCE</span>
+                                <strong t-esc="payments().balance_label"/>
+                                <em class="is-ok" t-esc="payments().balance_hint"/>
+                            </article>
+                            <article class="am-card">
+                                <span>LAST PAYMENT</span>
+                                <strong t-esc="payments().last_label"/>
+                                <em t-esc="payments().last_date"/>
+                            </article>
+                        </section>
+                        <article class="am-card">
+                            <div class="am-card-head">
+                                <h2>Payment History</h2>
+                                <button type="button" class="am-btn-ghost" t-on-click="() => this.setPayView('history')">Filter</button>
+                            </div>
+                            <div class="am-pay-head">
+                                <span>DATE</span>
+                                <span>DESCRIPTION</span>
+                                <span>AMOUNT</span>
+                                <span>PAYMENT METHOD</span>
+                                <span>STATUS</span>
+                                <span>RECEIPT</span>
+                            </div>
+                            <t t-foreach="pagedPayments()" t-as="row" t-key="row.id">
+                                <div class="am-pay-row">
+                                    <span t-esc="row.date_label"/>
+                                    <span t-esc="row.description"/>
+                                    <span t-esc="row.amount_label"/>
+                                    <span t-esc="row.method"/>
+                                    <span t-att-class="{
+                                        'am-pill': true,
+                                        'is-ok': row.status === 'Paid',
+                                        'is-warn': row.status === 'Pending',
+                                        'is-stop': row.status === 'Failed',
+                                    }" t-esc="row.status"/>
+                                    <button type="button" class="am-icon-btn" t-on-click="() => this.receiptPing(row)">
+                                        <i class="fa fa-download"/>
+                                    </button>
+                                </div>
+                            </t>
+                            <div class="am-pager">
+                                <span class="am-pager-meta" t-esc="payRangeLabel()"/>
+                                <div class="am-pager-nav">
+                                    <button type="button" class="am-page-btn" t-on-click="() => this.setPayPage(state.payPage - 1)">‹</button>
+                                    <button type="button" class="am-page-btn" t-on-click="() => this.setPayPage(state.payPage + 1)">›</button>
+                                </div>
+                            </div>
+                        </article>
+                    </t>
+                    <t t-else="">
+                        <div class="am-page-head am-head-split">
+                            <div>
+                                <button type="button" class="am-back" t-on-click="() => this.setPayView('overview')">Payment History</button>
+                                <p>Review and manage your property transaction records.</p>
+                            </div>
+                            <div class="am-hero-actions">
+                                <button type="button" class="am-btn-ghost" t-on-click="exportPaymentsCsv">Export CSV</button>
+                                <button type="button" class="am-btn-primary" t-on-click="addPaymentRecord">+ New Record</button>
+                            </div>
+                        </div>
+                        <div class="am-toolbar am-pay-filters">
+                            <select class="am-select" t-on-change="onPayStatus">
+                                <option value="all">All Statuses</option>
+                                <option value="Paid">Paid</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Failed">Failed</option>
+                            </select>
+                            <select class="am-select" t-on-change="onPayMethod">
+                                <option value="all">All Methods</option>
+                                <option value="Visa">Visa</option>
+                                <option value="Bank">Bank</option>
+                                <option value="ACH">ACH</option>
+                            </select>
+                        </div>
+                        <article class="am-card">
+                            <div class="am-hist-head">
+                                <span>PAYMENT DATE</span>
+                                <span>REFERENCE ID</span>
+                                <span>PROPERTY / UNIT</span>
+                                <span>METHOD</span>
+                                <span>AMOUNT</span>
+                                <span>STATUS</span>
+                                <span>RECEIPT</span>
+                            </div>
+                            <t t-foreach="pagedPayments()" t-as="row" t-key="row.id">
+                                <div class="am-hist-row">
+                                    <span t-esc="row.date_label"/>
+                                    <span t-esc="row.reference"/>
+                                    <div>
+                                        <strong t-esc="row.property"/>
+                                        <em>Unit <t t-esc="row.unit"/></em>
+                                    </div>
+                                    <span t-esc="row.method"/>
+                                    <span t-esc="row.amount_label"/>
+                                    <span t-att-class="{
+                                        'am-pill': true,
+                                        'is-ok': row.status === 'Paid',
+                                        'is-warn': row.status === 'Pending',
+                                        'is-stop': row.status === 'Failed',
+                                    }" t-esc="row.status"/>
+                                    <button type="button" class="am-icon-btn" t-on-click="() => this.receiptPing(row)">
+                                        <i class="fa fa-download"/>
+                                    </button>
+                                </div>
+                            </t>
+                            <div class="am-pager">
+                                <span class="am-pager-meta" t-esc="payRangeLabel()"/>
+                                <div class="am-pager-nav">
+                                    <button type="button" class="am-page-btn" t-on-click="() => this.setPayPage(state.payPage - 1)">‹</button>
+                                    <t t-foreach="pageNumbers()" t-as="num" t-key="num">
+                                        <button type="button" class="am-page-btn" t-att-class="{ 'is-active': state.payPage === num }" t-on-click="() => this.setPayPage(num)" t-esc="num"/>
+                                    </t>
+                                    <button type="button" class="am-page-btn" t-on-click="() => this.setPayPage(state.payPage + 1)">›</button>
+                                </div>
+                            </div>
+                        </article>
+                    </t>
+                </t>
+                <t t-elif="state.page === 'ledger'">
+                    <div class="am-topbar">
+                        <div class="am-search">
+                            <i class="fa fa-search"/>
+                            <input type="search" placeholder="Search transactions..." t-att-value="state.ledgerSearch" t-on-input="onLedgerSearch"/>
+                        </div>
+                        <div class="am-top-avatar" t-esc="state.data.tenant_initials"/>
+                    </div>
+                    <div class="am-page-head am-head-split">
+                        <div>
+                            <h1>Ledger</h1>
+                            <p>Review comprehensive transaction history and account balances.</p>
+                        </div>
+                        <button type="button" class="am-btn-primary" t-on-click="exportLedgerCsv">Export / Scope</button>
+                    </div>
+                    <section class="am-pay-kpis">
+                        <article class="am-card">
+                            <span>OPENING BALANCE</span>
+                            <strong t-esc="ledger().opening_label"/>
+                            <em t-esc="ledger().opening_as"/>
+                        </article>
+                        <article class="am-card">
+                            <span>TOTAL CHARGES</span>
+                            <strong class="is-due" t-esc="ledger().charges_label"/>
+                            <em t-esc="ledger().period"/>
+                        </article>
+                        <article class="am-card">
+                            <span>TOTAL PAYMENTS</span>
+                            <strong class="is-pay" t-esc="ledger().payments_label"/>
+                            <em t-esc="ledger().period"/>
+                        </article>
+                        <article class="am-card am-balance-card">
+                            <span>CURRENT BALANCE</span>
+                            <strong t-esc="ledger().current_label"/>
+                            <em t-esc="ledger().today_as"/>
+                        </article>
+                    </section>
+                    <article class="am-card">
+                        <div class="am-card-head">
+                            <h2>Transaction Ledger</h2>
+                            <button type="button" class="am-btn-ghost" t-on-click="toggleLedgerFilter">Filter</button>
+                        </div>
+                        <div t-if="state.ledgerFilter" class="am-toolbar am-pay-filters">
+                            <select class="am-select" t-on-change="onLedgerType">
+                                <option value="all">All Types</option>
+                                <option value="Rent">Rent</option>
+                                <option value="Payment">Payment</option>
+                                <option value="Maintenance">Maintenance</option>
+                                <option value="Utility">Utility</option>
+                                <option value="Opening">Opening</option>
+                            </select>
+                        </div>
+                        <div class="am-led-head">
+                            <span>DATE</span>
+                            <span>TYPE</span>
+                            <span>DESCRIPTION</span>
+                            <span>DEBIT (-)</span>
+                            <span>CREDIT (+)</span>
+                            <span>BALANCE</span>
+                        </div>
+                        <t t-foreach="pagedLedger()" t-as="row" t-key="row.id">
+                            <div class="am-led-row">
+                                <span t-esc="row.date_label"/>
+                                <span t-attf-class="am-pill is-#{row.tone}" t-esc="row.type"/>
+                                <span t-esc="row.description"/>
+                                <span t-att-class="{ 'is-due': row.is_debit }" t-esc="row.debit_label"/>
+                                <span t-att-class="{ 'is-pay': row.is_credit }" t-esc="row.credit_label"/>
+                                <strong t-esc="row.balance_label"/>
+                            </div>
+                        </t>
+                        <div class="am-pager">
+                            <span class="am-pager-meta" t-esc="ledgerRangeLabel()"/>
+                            <div class="am-pager-nav">
+                                <button type="button" class="am-page-btn" t-on-click="() => this.setLedgerPage(state.ledgerPage - 1)">‹</button>
+                                <t t-foreach="ledgerPageNumbers()" t-as="num" t-key="num">
+                                    <button type="button" class="am-page-btn" t-att-class="{ 'is-active': state.ledgerPage === num }" t-on-click="() => this.setLedgerPage(num)" t-esc="num"/>
+                                </t>
+                                <button type="button" class="am-page-btn" t-on-click="() => this.setLedgerPage(state.ledgerPage + 1)">›</button>
+                            </div>
+                        </div>
+                    </article>
+                </t>
+                <t t-elif="state.page === 'maintenance'">
+                    <div class="am-topbar">
+                        <div class="am-search">
+                            <i class="fa fa-search"/>
+                            <input type="search" placeholder="Search..." t-att-value="state.maintSearch" t-on-input="onMaintSearch"/>
+                        </div>
+                        <div class="am-top-avatar" t-esc="state.data.tenant_initials"/>
+                    </div>
+                    <t t-if="state.maintView === 'list'">
+                    <div class="am-page-head am-head-split">
+                        <div>
+                            <h1>Maintenance</h1>
+                            <p>Manage and track maintenance requests.</p>
+                        </div>
+                        <button type="button" class="am-btn-primary" t-on-click="openMaintModal">+ New Maintenance Request</button>
+                    </div>
+                    <section class="am-pay-kpis">
+                        <article class="am-card">
+                            <span>Open</span>
+                            <strong class="is-due" t-esc="maintPageData().open"/>
+                            <em class="is-due" t-esc="maintPageData().open_hint"/>
+                        </article>
+                        <article class="am-card">
+                            <span>In Progress</span>
+                            <strong class="is-warn-text" t-esc="maintPageData().progress"/>
+                        </article>
+                        <article class="am-card">
+                            <span>Scheduled</span>
+                            <strong class="is-pay" t-esc="maintPageData().scheduled"/>
+                        </article>
+                        <article class="am-card">
+                            <span>Completed</span>
+                            <strong class="is-ok" t-esc="maintPageData().done"/>
+                            <em class="is-ok" t-esc="maintPageData().done_hint"/>
+                        </article>
+                    </section>
+                    <article class="am-card">
+                        <div class="am-card-head">
+                            <h2>Recent Requests</h2>
+                        </div>
+                        <div class="am-mnt-head">
+                            <span>REQUEST ID</span>
+                            <span>ISSUE</span>
+                            <span>CATEGORY</span>
+                            <span>PRIORITY</span>
+                            <span>SUBMITTED</span>
+                            <span>STATUS</span>
+                            <span>SCHEDULED</span>
+                            <span>ACTION</span>
+                        </div>
+                        <t t-foreach="pagedMaint()" t-as="row" t-key="row.id">
+                            <div class="am-mnt-row">
+                                <button type="button" class="am-link" t-on-click="() => this.viewMaint(row)" t-esc="row.code"/>
+                                <span t-esc="row.issue"/>
+                                <span t-esc="row.category"/>
+                                <span t-attf-class="am-pill is-#{row.ptone}" t-esc="row.priority"/>
+                                <span t-esc="row.submitted"/>
+                                <span t-attf-class="am-pill is-#{row.stone}" t-esc="row.status"/>
+                                <span t-esc="row.scheduled"/>
+                                <button type="button" class="am-link" t-on-click="() => this.viewMaint(row)">View</button>
+                            </div>
+                        </t>
+                        <div class="am-pager">
+                            <span class="am-pager-meta" t-esc="maintRangeLabel()"/>
+                            <div class="am-pager-nav">
+                                <button type="button" class="am-page-btn" t-on-click="() => this.setMaintPage(state.maintPage - 1)">Prev</button>
+                                <t t-foreach="maintPageNumbers()" t-as="num" t-key="num">
+                                    <button type="button" class="am-page-btn" t-att-class="{ 'is-active': state.maintPage === num }" t-on-click="() => this.setMaintPage(num)" t-esc="num"/>
+                                </t>
+                                <button type="button" class="am-page-btn" t-on-click="() => this.setMaintPage(state.maintPage + 1)">Next</button>
+                            </div>
+                        </div>
+                    </article>
+                    </t>
+                    <t t-else="">
+                        <div class="am-page-head">
+                            <h1>Create Maintenance Request</h1>
+                            <p>Log a new issue for a property or tenant.</p>
+                        </div>
+                        <section class="am-create-grid">
+                            <div class="am-create-main">
+                                <article class="am-card">
+                                    <h2>Issue Details</h2>
+                                    <div class="am-create-2">
+                                        <div class="am-field">
+                                            <label>LOCATION / UNIT</label>
+                                            <select class="am-select am-select-full" t-on-change="(ev) => this.setMaintForm('unitId', ev)">
+                                                <option value="">Select Property or Unit...</option>
+                                                <t t-foreach="unitOptions()" t-as="opt" t-key="opt.id">
+                                                    <option t-att-value="opt.id" t-att-selected="state.maintForm.unitId == opt.id" t-esc="opt.label"/>
+                                                </t>
+                                            </select>
+                                        </div>
+                                        <div class="am-field">
+                                            <label>ISSUE CATEGORY</label>
+                                            <select class="am-select am-select-full" t-on-change="(ev) => this.setMaintForm('category', ev)">
+                                                <option value="">Select Category...</option>
+                                                <option value="HVAC">HVAC</option>
+                                                <option value="Plumbing">Plumbing</option>
+                                                <option value="Electrical">Electrical</option>
+                                                <option value="Interior">Interior</option>
+                                                <option value="Appliance">Appliance</option>
+                                                <option value="General">General</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <label>ISSUE TITLE</label>
+                                    <input type="text" class="am-input" placeholder="Brief summary of the issue (e.g., Leaking kitchen sink)" t-att-value="state.maintForm.title" t-on-input="(ev) => this.setMaintForm('title', ev)"/>
+                                    <label>DETAILED DESCRIPTION</label>
+                                    <textarea class="am-input am-textarea" placeholder="Provide as much detail as possible about the problem, when it started, etc." t-on-input="(ev) => this.setMaintForm('description', ev)" t-esc="state.maintForm.description"/>
+                                </article>
+                                <article class="am-card">
+                                    <h2>Access &amp; Attachments</h2>
+                                    <div class="am-create-2">
+                                        <div class="am-field">
+                                            <label>PREFERRED ACCESS TIME</label>
+                                            <input type="date" class="am-input" t-att-value="state.maintForm.accessDate" t-on-input="(ev) => this.setMaintForm('accessDate', ev)"/>
+                                        </div>
+                                        <div class="am-field">
+                                            <label>TIME WINDOW</label>
+                                            <select class="am-select am-select-full" t-on-change="(ev) => this.setMaintForm('accessSlot', ev)">
+                                                <option value="Morning (8am – 12pm)">Morning (8am – 12pm)</option>
+                                                <option value="Afternoon (12pm – 5pm)">Afternoon (12pm – 5pm)</option>
+                                                <option value="Evening (5pm – 8pm)">Evening (5pm – 8pm)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <label>ATTACH PHOTOS/VIDEOS</label>
+                                    <label class="am-drop">
+                                        <i class="fa fa-cloud-upload"/>
+                                        <strong>Click to upload or drag and drop</strong>
+                                        <span>SVG, PNG, JPG or GIF (max. 800×400px)</span>
+                                        <input type="file" multiple="multiple" accept="image/*,video/*" t-on-change="onMaintFiles"/>
+                                    </label>
+                                    <t t-foreach="state.maintForm.fileNames" t-as="file" t-key="file">
+                                        <div class="am-file-name" t-esc="file"/>
+                                    </t>
+                                    <label>ADDITIONAL NOTES FOR VENDOR/MAINTENANCE</label>
+                                    <textarea class="am-input am-textarea" placeholder="e.g., Please call before arriving, beware of dog." t-on-input="(ev) => this.setMaintForm('notes', ev)" t-esc="state.maintForm.notes"/>
+                                </article>
+                            </div>
+                            <div class="am-create-side">
+                                <article class="am-card">
+                                    <h2><i class="fa fa-exclamation-triangle"/> Priority Level</h2>
+                                    <t t-foreach="maintPriorities" t-as="prio" t-key="prio.id">
+                                        <button type="button" class="am-prio" t-att-class="{ 'is-active': state.maintForm.priority === prio.id, 'is-emergency': prio.id === 'emergency' }" t-on-click="() => this.setMaintPriority(prio.id)">
+                                            <strong t-esc="prio.title"/>
+                                            <span t-esc="prio.note"/>
+                                        </button>
+                                    </t>
+                                </article>
+                                <article class="am-card">
+                                    <h2>Ready to submit?</h2>
+                                    <button type="button" class="am-btn-primary am-btn-block" t-att-disabled="state.creatingMaint" t-on-click="submitMaint">Submit Request</button>
+                                    <button type="button" class="am-btn-ghost am-btn-block" t-on-click="closeMaintModal">Cancel</button>
+                                </article>
+                            </div>
+                        </section>
+                    </t>
+                </t>
+                <t t-elif="state.page === 'messages'">
+                    <t t-if="state.msgView === 'inbox'">
+                        <div class="am-topbar">
+                            <div class="am-search">
+                                <i class="fa fa-search"/>
+                                <input type="search" placeholder="Search messages..." t-att-value="state.msgSearch" t-on-input="onMsgSearch"/>
+                            </div>
+                            <button type="button" class="am-btn-primary" t-on-click="openCompose">+ New Message</button>
+                        </div>
+                        <div class="am-card am-inbox-list">
+                            <t t-foreach="threads()" t-as="row" t-key="row.id">
+                                <button type="button" class="am-thread" t-att-class="{ 'is-unread': row.unread }" t-on-click="() => this.openThread(row.id)">
+                                    <div class="am-thread-top">
+                                        <strong t-esc="row.author"/>
+                                        <span t-esc="row.when"/>
+                                    </div>
+                                    <em t-esc="row.subject"/>
+                                    <p t-esc="row.preview"/>
+                                    <span t-if="row.tag" t-attf-class="am-pill is-tag-#{row.tag_key}" t-esc="row.tag"/>
+                                </button>
+                            </t>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <div class="am-chat-page">
+                            <div class="am-chat-crumb">
+                                <button type="button" class="am-link" t-on-click="openInbox">Messages</button>
+                            </div>
+                            <article class="am-card am-chat">
+                                <t t-if="state.msgCompose">
+                                    <div class="am-chat-head">
+                                        <div class="am-chat-who">
+                                            <div class="am-avatar">AM</div>
+                                            <div>
+                                                <h2>New Message</h2>
+                                                <p>Start a conversation with property management.</p>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="am-btn-ghost" t-on-click="() => this.state.msgCompose = false">Cancel</button>
+                                    </div>
+                                    <label class="am-chat-label">Subject</label>
+                                    <input type="text" class="am-input" placeholder="Subject" t-att-value="state.msgSubject" t-on-input="(ev) => this.state.msgSubject = ev.target.value"/>
+                                </t>
+                                <t t-elif="activeThread()">
+                                    <div class="am-chat-head">
+                                        <div class="am-chat-who">
+                                            <div class="am-avatar" t-esc="threadInitials()"/>
+                                            <div>
+                                                <h2 t-esc="activeThread().subject"/>
+                                                <p><t t-esc="activeThread().author"/> · <t t-esc="activeThread().email"/></p>
+                                            </div>
+                                        </div>
+                                        <div class="am-chat-actions">
+                                            <button type="button" class="am-icon-btn" title="Print" t-on-click="printThread"><i class="fa fa-print"/></button>
+                                            <button type="button" class="am-icon-btn" title="Delete" t-on-click="deleteThread"><i class="fa fa-trash-o"/></button>
+                                            <button type="button" class="am-btn-ghost" t-on-click="focusComposer"><i class="fa fa-reply"/> Reply</button>
+                                        </div>
+                                    </div>
+                                    <div class="am-chat-scroll">
+                                        <div class="am-chat-day"><span>TODAY</span></div>
+                                        <t t-foreach="activeThread().messages" t-as="note" t-key="note.id">
+                                            <div t-att-class="{ 'am-chat-row': true, 'is-mine': note.mine }">
+                                                <div t-if="!note.mine" class="am-avatar" t-esc="note.initials"/>
+                                                <div class="am-chat-col">
+                                                    <div class="am-chat-meta">
+                                                        <t t-if="note.mine">
+                                                            <span t-esc="note.when"/> You
+                                                        </t>
+                                                        <t t-else="">
+                                                            <strong t-esc="note.author"/> <span t-esc="note.when"/>
+                                                        </t>
+                                                    </div>
+                                                    <div class="am-chat-bubble" t-esc="note.body"/>
+                                                    <div t-if="note.attachment" class="am-file-chip">
+                                                        <i class="fa fa-file-o"/>
+                                                        <span t-esc="note.attachment"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </t>
+                                <t t-else="">
+                                    <div class="am-empty">Select a conversation.</div>
+                                </t>
+                                <div class="am-composer-box">
+                                    <textarea class="am-composer-input" t-att-placeholder="replyPlaceholder()" t-att-value="state.msgReply" t-on-input="onMsgReply" t-on-keydown="onReplyKey"/>
+                                    <div t-if="state.msgFile" class="am-file-chip am-file-pending">
+                                        <i class="fa fa-file-o"/>
+                                        <span t-esc="state.msgFile"/>
+                                    </div>
+                                    <div class="am-composer-bar">
+                                        <div class="am-composer-tools">
+                                            <button type="button" class="am-icon-btn" title="Voice" t-on-click="voiceUnavailable"><i class="fa fa-microphone"/></button>
+                                            <button type="button" class="am-icon-btn" title="Bold" t-on-click="wrapBold"><b>B</b></button>
+                                            <label class="am-icon-btn" title="Attach">
+                                                <i class="fa fa-paperclip"/>
+                                                <input type="file" class="am-hidden-file" t-on-change="onMsgFile"/>
+                                            </label>
+                                        </div>
+                                        <button type="button" class="am-btn-primary" t-att-disabled="state.sendingMsg" t-on-click="sendReply">Send <i class="fa fa-paper-plane"/></button>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                    </t>
+                </t>
+                <t t-elif="state.page === 'documents'">
+                    <t t-if="state.docView === 'viewer' and activeDoc()">
+                        <div class="am-topbar">
+                            <h1 class="am-inline-title">Document Viewer</h1>
+                            <div class="am-search">
+                                <i class="fa fa-search"/>
+                                <input type="search" placeholder="Search documents..." t-att-value="state.docSearch" t-on-input="onDocSearch"/>
+                            </div>
+                            <button type="button" class="am-icon-btn" title="Notifications" t-on-click="() => this.onNav('notifications')"><i class="fa fa-bell-o"/></button>
+                            <button type="button" class="am-icon-btn" title="Settings" t-on-click="() => this.onNav('settings')"><i class="fa fa-cog"/></button>
+                        </div>
+                        <section class="am-lib-viewer">
+                            <article class="am-card am-lib-stage">
+                                <div class="am-lib-toolbar">
+                                    <div class="am-zoom">
+                                        <button type="button" t-on-click="() => this.bumpDocZoom(-10)"><i class="fa fa-search-minus"/></button>
+                                        <span t-esc="state.docZoom"/>%
+                                        <button type="button" t-on-click="() => this.bumpDocZoom(10)"><i class="fa fa-search-plus"/></button>
+                                        <button type="button" t-on-click="() => this.state.docZoom = 100" title="Fit"><i class="fa fa-file-o"/></button>
+                                    </div>
+                                    <div class="am-lib-pager">
+                                        Page <t t-esc="state.docSheet"/> of <t t-esc="activeDoc().pages"/>
+                                        <button type="button" t-on-click="() => this.setDocSheet(state.docSheet - 1)">‹</button>
+                                        <button type="button" t-on-click="() => this.setDocSheet(state.docSheet + 1)">›</button>
+                                    </div>
+                                </div>
+                                <div class="am-paper-wrap">
+                                    <div class="am-paper am-lib-paper" t-attf-style="transform: scale(#{state.docZoom / 100});">
+                                        <em class="am-paper-kicker" t-esc="docPreview().kicker"/>
+                                        <h2 t-esc="docPreview().title"/>
+                                        <p class="am-paper-sub" t-esc="docPreview().subtitle"/>
+                                        <t t-foreach="docPreview().lines" t-as="line" t-key="line_index">
+                                            <p t-esc="line"/>
+                                        </t>
+                                    </div>
+                                </div>
+                            </article>
+                            <aside class="am-card am-lib-side">
+                                <h2>DOCUMENT DETAILS</h2>
+                                <div class="am-lib-file">
+                                    <i t-attf-class="fa #{activeDoc().icon} am-kind-#{activeDoc().kind}"/>
+                                    <div>
+                                        <strong t-esc="activeDoc().name"/>
+                                        <span t-esc="activeDoc().size"/>
+                                    </div>
+                                </div>
+                                <div class="am-fin-list">
+                                    <div><span>Type</span><strong t-esc="activeDoc().type_label"/></div>
+                                    <div><span>Date</span><strong t-esc="activeDoc().date_label"/></div>
+                                    <div><span>Version</span><strong t-esc="activeDoc().version"/></div>
+                                    <div><span>Uploaded By</span><strong t-esc="activeDoc().uploaded_by"/></div>
+                                    <div>
+                                        <span>Status</span>
+                                        <span t-att-class="{
+                                            'am-pill': true,
+                                            'is-ok': activeDoc().status_key === 'verified' or activeDoc().status_key === 'paid',
+                                            'is-warn': activeDoc().status_key === 'pending',
+                                            'is-muted': activeDoc().status_key === 'archived',
+                                        }" t-esc="activeDoc().status"/>
+                                    </div>
+                                </div>
+                                <div class="am-lib-tags">
+                                    <span>TAGS</span>
+                                    <div>
+                                        <t t-foreach="activeDoc().tags" t-as="tag" t-key="tag">
+                                            <em class="am-chip" t-esc="tag"/>
+                                        </t>
+                                        <button type="button" class="am-chip-add">+</button>
+                                    </div>
+                                </div>
+                                <div class="am-side-actions">
+                                    <button type="button" class="am-btn-primary" t-on-click="() => this.downloadLibrary()"><i class="fa fa-download"/> Download PDF</button>
+                                    <button type="button" class="am-btn-ghost" t-on-click="printLibrary"><i class="fa fa-print"/> Print Document</button>
+                                    <button type="button" class="am-btn-ghost" t-on-click="closeDoc">Back to list</button>
+                                </div>
+                            </aside>
+                        </section>
+                    </t>
+                    <t t-else="">
+                        <div class="am-topbar am-doc-top">
+                            <h1 class="am-inline-title">Documents</h1>
+                            <div class="am-search">
+                                <i class="fa fa-search"/>
+                                <input type="search" placeholder="Search documents, tags, or properties..." t-att-value="state.docSearch" t-on-input="onDocSearch"/>
+                            </div>
+                            <label class="am-btn-primary">
+                                <i class="fa fa-upload"/> Upload Document
+                                <input type="file" class="am-hidden-file" t-on-change="onUploadDoc"/>
+                            </label>
+                        </div>
+                        <div class="am-doc-tabs">
+                            <t t-foreach="docTabs" t-as="tab" t-key="tab.id">
+                                <button type="button" t-att-class="{ 'is-active': state.docTab === tab.id }" t-on-click="() => this.setDocTab(tab.id)" t-esc="tab.label"/>
+                            </t>
+                        </div>
+                        <article class="am-card am-lib-table">
+                            <div class="am-lib-head">
+                                <label><input type="checkbox" t-att-checked="allDocsChecked()" t-on-change="toggleAllDocs"/></label>
+                                <span>DOCUMENT NAME</span>
+                                <span>PROPERTY</span>
+                                <span>CATEGORY</span>
+                                <span>DATE ADDED</span>
+                                <span>STATUS</span>
+                                <span>ACTIONS</span>
+                            </div>
+                            <t t-foreach="pagedLibrary()" t-as="row" t-key="row.id">
+                                <div class="am-lib-row">
+                                    <label><input type="checkbox" t-att-checked="state.docSelected[row.id]" t-on-change="() => this.toggleDoc(row.id)"/></label>
+                                    <button type="button" class="am-lib-name" t-on-click="() => this.openDoc(row)">
+                                        <i t-attf-class="fa #{row.icon} am-kind-#{row.kind}"/>
+                                        <span>
+                                            <strong t-esc="row.name"/>
+                                            <em><t t-esc="row.size"/> · Uploaded by <t t-esc="row.uploaded_by"/></em>
+                                        </span>
+                                    </button>
+                                    <span t-esc="row.property"/>
+                                    <span t-esc="row.category_label"/>
+                                    <span class="am-lib-date"><strong t-esc="row.date_month"/> <t t-esc="row.date_rest"/></span>
+                                    <span t-att-class="{
+                                        'am-pill': true,
+                                        'is-ok': row.status_key === 'verified' or row.status_key === 'paid',
+                                        'is-warn': row.status_key === 'pending',
+                                        'is-muted': row.status_key === 'archived',
+                                    }" t-esc="row.status"/>
+                                    <div class="am-lib-actions">
+                                        <button type="button" class="am-icon-btn" title="View" t-on-click="() => this.openDoc(row)"><i class="fa fa-eye"/></button>
+                                        <button type="button" class="am-icon-btn" title="Download" t-on-click="() => this.downloadLibrary(row)"><i class="fa fa-download"/></button>
+                                    </div>
+                                </div>
+                            </t>
+                            <div class="am-pager">
+                                <span class="am-pager-meta" t-esc="docRangeLabel()"/>
+                                <div class="am-pager-nav">
+                                    <button type="button" class="am-page-btn" t-on-click="() => this.setDocListPage(state.docPage - 1)">‹</button>
+                                    <button type="button" class="am-page-btn" t-on-click="() => this.setDocListPage(state.docPage + 1)">›</button>
+                                </div>
+                            </div>
+                        </article>
+                    </t>
+                </t>
+                <t t-elif="state.page === 'notifications'">
+                    <div class="am-page-head am-head-split">
+                        <div>
+                            <h1>Notifications</h1>
+                            <p>Manage your alerts and communications.</p>
+                        </div>
+                    </div>
+                    <div class="am-topbar">
+                        <div class="am-search">
+                            <i class="fa fa-search"/>
+                            <input type="search" placeholder="Search notifications..." t-att-value="state.noteSearch" t-on-input="onNoteSearch"/>
+                        </div>
+                        <button type="button" class="am-link" t-on-click="markNoticesRead">Mark all as read</button>
+                    </div>
+                    <div class="am-doc-tabs">
+                        <t t-foreach="noteTabs" t-as="tab" t-key="tab.id">
+                            <button type="button" t-att-class="{ 'is-active': state.noteTab === tab.id }" t-on-click="() => this.setNoteTab(tab.id)" t-esc="tab.label"/>
+                        </t>
+                    </div>
+                    <article class="am-card am-note-list">
+                        <t t-foreach="filteredNotices()" t-as="row" t-key="row.id">
+                            <button type="button" class="am-note" t-att-class="{ 'is-unread': row.unread }" t-on-click="() => this.openNotice(row)">
+                                <div t-attf-class="am-note-icon is-#{row.category}"><i t-attf-class="fa #{row.icon}"/></div>
+                                <div class="am-note-body">
+                                    <strong t-esc="row.title"/>
+                                    <p t-esc="row.body"/>
+                                </div>
+                                <span class="am-note-when" t-esc="row.when"/>
+                                <span class="am-note-actions">
+                                    <i class="fa fa-archive" t-on-click.stop="(ev) => this.archiveNotice(row, ev)" title="Archive"/>
+                                    <i class="fa fa-times" t-on-click.stop="(ev) => this.dismissNotice(row, ev)" title="Dismiss"/>
+                                </span>
+                            </button>
+                        </t>
+                        <div t-if="!filteredNotices().length" class="am-empty">No notifications in this view.</div>
+                    </article>
+                </t>
+                <t t-elif="state.page === 'settings'">
+                    <div class="am-page-head">
+                        <h1>Profile &amp; Settings</h1>
+                        <p>Manage your personal information, security preferences, and account settings.</p>
+                    </div>
+                    <section class="am-set-grid">
+                        <div class="am-set-main">
+                            <article class="am-card">
+                                <div class="am-card-head">
+                                    <h2><i class="fa fa-user"/> Personal Information</h2>
+                                    <t t-if="state.editingProfile">
+                                        <div class="am-hero-actions">
+                                            <button type="button" class="am-btn-ghost" t-on-click="cancelEditProfile">Cancel</button>
+                                            <button type="button" class="am-btn-primary" t-att-disabled="state.savingProfile" t-on-click="saveProfile">Save</button>
+                                        </div>
+                                    </t>
+                                    <button t-else="" type="button" class="am-link" t-on-click="startEditProfile"><i class="fa fa-pencil"/> Edit</button>
+                                </div>
+                                <div class="am-set-photo">
+                                    <div class="am-avatar xl" t-esc="profile().initials"/>
+                                    <div>
+                                        <button type="button" class="am-btn-ghost" t-on-click="changePhoto">Change Photo</button>
+                                        <p>JPG, GIF or PNG. Max size of 800K</p>
+                                    </div>
+                                </div>
+                                <div class="am-set-fields">
+                                    <label>FULL NAME
+                                        <t t-if="state.editingProfile"><input class="am-input" t-att-value="state.profileForm.name" t-on-input="(ev) => this.setProfileField('name', ev)"/></t>
+                                        <strong t-else="" t-esc="profile().name"/>
+                                    </label>
+                                    <label>EMAIL ADDRESS
+                                        <t t-if="state.editingProfile"><input class="am-input" t-att-value="state.profileForm.email" t-on-input="(ev) => this.setProfileField('email', ev)"/></t>
+                                        <strong t-else="" t-esc="profile().email"/>
+                                    </label>
+                                    <label>PHONE NUMBER
+                                        <t t-if="state.editingProfile"><input class="am-input" t-att-value="state.profileForm.phone" t-on-input="(ev) => this.setProfileField('phone', ev)"/></t>
+                                        <strong t-else="" t-esc="profile().phone"/>
+                                    </label>
+                                    <label>ROLE
+                                        <t t-if="state.editingProfile"><input class="am-input" t-att-value="state.profileForm.role" t-on-input="(ev) => this.setProfileField('role', ev)"/></t>
+                                        <strong t-else="" t-esc="profile().role"/>
+                                    </label>
+                                    <label class="am-set-span">OFFICE ADDRESS
+                                        <t t-if="state.editingProfile"><input class="am-input" t-att-value="state.profileForm.address" t-on-input="(ev) => this.setProfileField('address', ev)"/></t>
+                                        <strong t-else="" t-esc="profile().address"/>
+                                    </label>
+                                </div>
+                            </article>
+                            <article class="am-card">
+                                <h2><i class="fa fa-sliders"/> Communication Preferences</h2>
+                                <div class="am-set-row">
+                                    <div>
+                                        <strong>Email Notifications</strong>
+                                        <p>Receive daily summaries and urgent alerts via email.</p>
+                                    </div>
+                                    <button type="button" class="am-switch" t-att-class="{ 'is-on': prefs().email_on }" t-on-click="() => this.togglePref('email_on')"/>
+                                </div>
+                                <div class="am-set-row">
+                                    <div>
+                                        <strong>SMS Notifications</strong>
+                                        <p>Get immediate text messages for critical maintenance requests.</p>
+                                    </div>
+                                    <button type="button" class="am-switch" t-att-class="{ 'is-on': prefs().sms_on }" t-on-click="() => this.togglePref('sms_on')"/>
+                                </div>
+                                <div class="am-set-row">
+                                    <div>
+                                        <strong>Push Notifications</strong>
+                                        <p>Enable browser and mobile app push alerts.</p>
+                                    </div>
+                                    <button type="button" class="am-switch" t-att-class="{ 'is-on': prefs().push_on }" t-on-click="() => this.togglePref('push_on')"/>
+                                </div>
+                            </article>
+                        </div>
+                        <div class="am-set-side">
+                            <article class="am-card">
+                                <h2><i class="fa fa-shield"/> Security</h2>
+                                <div class="am-set-row">
+                                    <div>
+                                        <strong>Password</strong>
+                                        <p t-esc="prefs().password_changed"/>
+                                    </div>
+                                    <button type="button" class="am-link" t-on-click="changePassword">Change Password</button>
+                                </div>
+                                <div class="am-set-row">
+                                    <div>
+                                        <strong>Two-Factor Auth (2FA)</strong>
+                                        <p t-att-class="{ 'is-ok': prefs().two_factor }"><t t-if="prefs().two_factor">ENABLED</t><t t-else="">OFF</t></p>
+                                    </div>
+                                    <button type="button" class="am-link" t-on-click="() => this.togglePref('two_factor')">Manage Security Settings</button>
+                                </div>
+                                <button type="button" class="am-link" t-on-click="loginHistory">View Login History</button>
+                            </article>
+                            <article class="am-card am-set-status">
+                                <h2>Account Status</h2>
+                                <div class="am-status-ok"><i class="fa fa-check-circle"/> Active Account</div>
+                                <p>Member since <t t-esc="profile().member_since"/></p>
+                                <button type="button" class="am-btn-danger" t-on-click="logout">Secure Logout</button>
+                            </article>
+                        </div>
+                    </section>
+                </t>
+                <t t-else="">
+                    <div class="am-page-head">
+                        <h1 t-esc="pageTitle()"/>
+                        <p t-esc="pageSubtitle()"/>
+                    </div>
+                    <article class="am-card am-placeholder">
+                        <p>This section uses the same unit as the dashboard. Open <button type="button" class="am-link" t-on-click="() => this.onNav('dashboard')">Dashboard</button> for the live overview.</p>
+                    </article>
+                </t>
+            </main>
+        </div>
+    </t>
+</templates>

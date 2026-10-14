@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_wf_portal" model="ir.actions.client">
+        <field name="name">Workforce Management</field>
+        <field name="tag">workforce_management.portal</field>
+    </record>
+    <menuitem id="menu_wf_root"
+              name="Workforce Management"
+              action="action_wf_portal"
+              web_icon="workforce_management,static/description/icon.svg"
+              sequence="28"/>
+</odoo>

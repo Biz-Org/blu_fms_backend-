@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="rule_apartment_payment_tenant" model="ir.rule">
+        <field name="name">Apartment payment: tenant own unit</field>
+        <field name="model_id" ref="model_apartment_payment"/>
+        <field name="domain_force">['|', ('tenant_id', '=', user.partner_id.id), ('unit_id.tenant_id', '=', user.partner_id.id)]</field>
+        <field name="groups" eval="[(4, ref('group_apartment_user'))]"/>
+    </record>
+    <record id="rule_apartment_payment_manager" model="ir.rule">
+        <field name="name">Apartment payment: manager all</field>
+        <field name="model_id" ref="model_apartment_payment"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_apartment_manager'))]"/>
+    </record>
+
+    <record id="rule_apartment_maintenance_tenant" model="ir.rule">
+        <field name="name">Apartment maintenance: tenant own unit</field>
+        <field name="model_id" ref="model_apartment_maintenance"/>
+        <field name="domain_force">['|', ('tenant_id', '=', user.partner_id.id), ('unit_id.tenant_id', '=', user.partner_id.id)]</field>
+        <field name="groups" eval="[(4, ref('group_apartment_user'))]"/>
+    </record>
+    <record id="rule_apartment_maintenance_manager" model="ir.rule">
+        <field name="name">Apartment maintenance: manager all</field>
+        <field name="model_id" ref="model_apartment_maintenance"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_apartment_manager'))]"/>
+    </record>
+
+    <record id="rule_apartment_message_tenant" model="ir.rule">
+        <field name="name">Apartment message: tenant own unit</field>
+        <field name="model_id" ref="model_apartment_message"/>
+        <field name="domain_force">['|', '|', ('tenant_id', '=', user.partner_id.id), ('unit_id.tenant_id', '=', user.partner_id.id), ('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_apartment_user'))]"/>
+    </record>
+    <record id="rule_apartment_message_manager" model="ir.rule">
+        <field name="name">Apartment message: manager all</field>
+        <field name="model_id" ref="model_apartment_message"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_apartment_manager'))]"/>
+    </record>
+
+    <record id="rule_apartment_document_tenant" model="ir.rule">
+        <field name="name">Apartment document: tenant own unit</field>
+        <field name="model_id" ref="model_apartment_document"/>
+        <field name="domain_force">['|', ('tenant_id', '=', user.partner_id.id), ('unit_id.tenant_id', '=', user.partner_id.id)]</field>
+        <field name="groups" eval="[(4, ref('group_apartment_user'))]"/>
+    </record>
+    <record id="rule_apartment_document_manager" model="ir.rule">
+        <field name="name">Apartment document: manager all</field>
+        <field name="model_id" ref="model_apartment_document"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_apartment_manager'))]"/>
+    </record>
+
+    <record id="rule_apartment_notice_tenant" model="ir.rule">
+        <field name="name">Apartment notice: tenant own or global</field>
+        <field name="model_id" ref="model_apartment_notice"/>
+        <field name="domain_force">['|', '|', ('tenant_id', '=', user.partner_id.id), ('tenant_id', '=', False), ('unit_id.tenant_id', '=', user.partner_id.id)]</field>
+        <field name="groups" eval="[(4, ref('group_apartment_user'))]"/>
+    </record>
+    <record id="rule_apartment_notice_manager" model="ir.rule">
+        <field name="name">Apartment notice: manager all</field>
+        <field name="model_id" ref="model_apartment_notice"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_apartment_manager'))]"/>
+    </record>
+
+    <record id="rule_apartment_preference_user" model="ir.rule">
+        <field name="name">Apartment preference: own record</field>
+        <field name="model_id" ref="model_apartment_preference"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_apartment_user'))]"/>
+    </record>
+    <record id="rule_apartment_preference_manager" model="ir.rule">
+        <field name="name">Apartment preference: manager all</field>
+        <field name="model_id" ref="model_apartment_preference"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_apartment_manager'))]"/>
+    </record>
+</odoo>

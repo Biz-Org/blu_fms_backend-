@@ -1,0 +1,10 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_resident_resident_user,resident.resident.user,model_resident_resident,base.group_user,1,1,1,1
+access_resident_household_user,resident.household.member.user,model_resident_household_member,base.group_user,1,1,1,1
+access_resident_emergency_user,resident.emergency.contact.user,model_resident_emergency_contact,base.group_user,1,1,1,1
+access_resident_kyc_user,resident.kyc.document.user,model_resident_kyc_document,base.group_user,1,1,1,1
+access_resident_move_user,resident.move.request.user,model_resident_move_request,base.group_user,1,1,1,1
+access_resident_check_user,resident.checklist.item.user,model_resident_checklist_item,base.group_user,1,1,1,1
+access_resident_history_user,resident.status.history.user,model_resident_status_history,base.group_user,1,1,1,1
+access_resident_comm_user,resident.communication.user,model_resident_communication,base.group_user,1,1,1,1
+access_resident_recip_user,resident.comm.recipient.user,model_resident_comm_recipient,base.group_user,1,1,1,1

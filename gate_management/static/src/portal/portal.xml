@@ -1,0 +1,1048 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="gate_management.Portal">
+        <div class="o_gate_portal">
+            <div class="gf-body">
+                <aside class="gf-sidebar">
+                    <div class="gf-sys">
+                        <i class="fa fa-lock"/>
+                        <div>
+                            <b>Gate Control</b>
+                            <em>● SYSTEM LIVE</em>
+                        </div>
+                    </div>
+                    <nav class="gf-nav">
+                        <t t-foreach="navItems" t-as="item" t-key="item.id">
+                            <button type="button" t-att-class="{ 'is-on': isNavOn(item.id) }" t-on-click="() => this.onNav(item.id)">
+                                <i t-attf-class="fa #{item.icon}"/><span t-esc="item.label"/>
+                            </button>
+                        </t>
+                    </nav>
+                    <button class="gf-side-cta" t-on-click="() => this.onNav('register')"><i class="fa fa-plus"/> New Entry Request</button>
+                    <button class="gf-side-danger" t-on-click="() => this.doGate('hold')"><i class="fa fa-lock"/> Emergency Lockdown</button>
+                </aside>
+
+                <main class="gf-main">
+                    <t t-if="state.loading"><div class="gf-empty">Loading GateFlow...</div></t>
+                    <t t-elif="state.page === 'dashboard'" t-call="gate_management.Dashboard"/>
+                    <t t-elif="state.page === 'register'" t-call="gate_management.Register"/>
+                    <t t-elif="state.page === 'details'" t-call="gate_management.Details"/>
+                    <t t-elif="state.page === 'pending'" t-call="gate_management.Pending"/>
+                    <t t-elif="state.page === 'qr'" t-call="gate_management.QR"/>
+                    <t t-elif="state.page === 'live'" t-call="gate_management.Live"/>
+                    <t t-elif="state.page === 'ai'" t-call="gate_management.AI"/>
+                    <t t-elif="state.page === 'vehicle_dash'" t-call="gate_management.VehicleDash"/>
+                    <t t-elif="state.page === 'perimeter'" t-call="gate_management.Perimeter"/>
+                    <t t-elif="state.page === 'profile'" t-call="gate_management.Profile"/>
+                    <t t-elif="state.page === 'timeline'" t-call="gate_management.Timeline"/>
+                    <t t-elif="state.page === 'vehicle_exit'" t-call="gate_management.Exit"/>
+                    <t t-elif="state.page === 'vehicles'" t-call="gate_management.Vehicles"/>
+                    <t t-elif="state.page === 'vehicle_history'" t-call="gate_management.History"/>
+                    <t t-elif="state.page === 'analytics'" t-call="gate_management.Analytics"/>
+                    <t t-elif="state.page === 'employees'" t-call="gate_management.Employees"/>
+                    <t t-elif="state.page === 'alerts'" t-call="gate_management.Alerts"/>
+                    <t t-elif="state.page === 'access'" t-call="gate_management.Access"/>
+                    <t t-elif="state.page === 'devices'" t-call="gate_management.Devices"/>
+                    <t t-elif="state.page === 'topology'" t-call="gate_management.Topology"/>
+                    <t t-elif="state.page === 'notifications'" t-call="gate_management.Notes"/>
+                    <t t-elif="state.page === 'settings'" t-call="gate_management.Settings"/>
+                </main>
+            </div>
+        </div>
+    </t>
+
+    <!-- ========== 1 Command Dashboard ========== -->
+    <t t-name="gate_management.Dashboard">
+        <t t-set="k" t-value="state.data.kpis || {}"/>
+        <div class="gf-head">
+            <div>
+                <h1>Command Dashboard</h1>
+                <p>Real-time surveillance and access analytics.</p>
+                <div class="gf-status-row">
+                    <span class="gf-chip"><span class="gf-dot"/> AI Stable</span>
+                    <span class="gf-chip"><i class="fa fa-video-camera"/> <t t-esc="(state.data.devices || []).length"/> Active</span>
+                    <span class="gf-chip"><i class="fa fa-signal"/> 92ms</span>
+                </div>
+            </div>
+            <div class="gf-head-actions">
+                <button class="gf-btn outline" t-on-click="() => this.onNav('live')"><i class="fa fa-video-camera"/> Live View</button>
+                <button class="gf-btn outline" t-on-click="() => this.onNav('register')"><i class="fa fa-user-plus"/> Register Visitor</button>
+                <button class="gf-btn outline" t-on-click="() => this.onNav('vehicles')"><i class="fa fa-car"/> Add Vehicle</button>
+                <button class="gf-btn dark" t-on-click="() => this.doGate('hold')"><i class="fa fa-lock"/> Emergency Lockdown</button>
+            </div>
+        </div>
+        <section class="gf-kpis">
+            <article class="gf-kpi"><span>Visitors Today</span><strong><t t-esc="k.visitors"/><em class="delta">↑ 12%</em></strong></article>
+            <article class="gf-kpi"><span>Vehicles Inside</span><strong t-esc="k.vehicles"/></article>
+            <article class="gf-kpi"><span>Active Passes</span><strong t-esc="(state.data.passes || []).length"/></article>
+            <article class="gf-kpi"><span>Pending Approvals</span><strong class="warn" t-esc="k.pending"/></article>
+            <article class="gf-kpi is-alert"><span>Security Alerts</span><strong t-esc="k.alerts"/></article>
+            <article class="gf-kpi is-ok"><span>Gates Online</span><strong><t t-esc="(state.data.gates || []).length"/>/<t t-esc="(state.data.gates || []).length"/></strong></article>
+        </section>
+        <section class="gf-split gf-dash-top">
+            <article class="gf-card gf-activity-card">
+                <div class="gf-card-head">
+                    <h2>Live Gate Activity</h2>
+                    <div class="gf-actions">
+                        <span class="gf-pill ok">Monitoring</span>
+                        <button class="gf-link" t-on-click="() => this.onNav('live')">View All Logs</button>
+                    </div>
+                </div>
+                <table class="gf-table">
+                    <thead><tr><th>Subject</th><th>Zone</th><th>Time</th><th>AI Valid %</th><th>Risk</th></tr></thead>
+                    <tbody>
+                        <t t-foreach="liveActivity()" t-as="row" t-key="row.id">
+                            <tr t-att-class="{ 'is-danger': row.risk === 'rejected' || row.risk === 'hold' }">
+                                <td><b t-esc="row.subject"/></td>
+                                <td t-esc="row.zone"/>
+                                <td t-esc="row.when"/>
+                                <td class="purple"><t t-esc="row.ai"/>%</td>
+                                <td><em t-attf-class="gf-pill #{badge(row.risk)}" t-esc="row.risk"/></td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+                <t t-if="!liveActivity().length">
+                    <div class="gf-activity-empty">
+                        <i class="fa fa-video-camera"/>
+                        <p>No live events yet. Open Live Monitoring or register a visitor to start the feed.</p>
+                        <button class="gf-btn outline" t-on-click="() => this.onNav('live')">Open Live Monitoring</button>
+                    </div>
+                </t>
+                <div class="gf-activity-foot">
+                    <div>
+                        <span class="gf-chip"><span class="gf-dot"/> Stream healthy</span>
+                        <span class="gf-chip"><t t-esc="liveActivity().length"/> events shown</span>
+                    </div>
+                    <div class="gf-actions">
+                        <button class="gf-btn outline" t-on-click="() => this.onNav('ai')">AI Validation</button>
+                        <button class="gf-btn primary" t-on-click="() => this.onNav('live')">Live View</button>
+                    </div>
+                </div>
+            </article>
+            <aside class="gf-dash-aside">
+                <div class="gf-risk">
+                    <h3><i class="fa fa-shield"/> Risk Summary</h3>
+                    <div class="gf-risk-item" t-on-click="() => this.onNav('alerts')">
+                        <div style="display:flex;align-items:center"><span class="gf-risk-num bad" t-esc="k.alerts"/><span>High Risk Events</span></div>
+                        <i class="fa fa-chevron-right"/>
+                    </div>
+                    <div class="gf-risk-item">
+                        <div style="display:flex;align-items:center"><span class="gf-risk-num warn">12</span><span>Medium Risk Events</span></div>
+                        <i class="fa fa-chevron-right"/>
+                    </div>
+                    <div class="gf-risk-item">
+                        <div style="display:flex;align-items:center"><span class="gf-risk-num ok" t-esc="k.throughput"/><span>Verified Entries</span></div>
+                        <i class="fa fa-chevron-right"/>
+                    </div>
+                </div>
+                <div class="gf-map-preview" t-on-click="() => this.onNav('perimeter')" style="cursor:pointer">
+                    <span>ACTIVE PERIMETER MAP</span>
+                    <b>Secure Zone Alpha</b>
+                    <span><t t-esc="(state.data.gates || []).length"/> Gates Online</span>
+                </div>
+            </aside>
+        </section>
+        <section class="gf-split gf-dash-charts">
+            <article class="gf-card">
+                <div class="gf-card-head">
+                    <h2 style="color:#1f2937">Visitor Trend</h2>
+                    <span class="gf-chip">WEEKLY ▾</span>
+                </div>
+                <div class="gf-bars">
+                    <t t-foreach="state.data.visitor_trend || []" t-as="bar" t-key="bar.day">
+                        <div class="gf-bar-col">
+                            <div class="gf-bar-track">
+                                <div t-attf-class="gf-bar #{bar.active ? 'is-active' : ''}" t-attf-style="height: #{bar.pct}%"/>
+                            </div>
+                            <span t-esc="bar.day"/>
+                        </div>
+                    </t>
+                </div>
+            </article>
+            <article class="gf-card">
+                <div class="gf-card-head">
+                    <h2 style="color:#1f2937">Gate Utilization</h2>
+                    <span class="gf-pill ok">● Live Load</span>
+                </div>
+                <t t-foreach="state.data.gate_utilization || []" t-as="g" t-key="g.name">
+                    <div class="gf-util-row">
+                        <div class="gf-util-label">
+                            <span t-esc="g.name"/>
+                            <b><t t-esc="g.pct"/>%</b>
+                        </div>
+                        <div class="gf-util-track">
+                            <div class="gf-util-fill" t-attf-style="width: #{g.pct}%"/>
+                        </div>
+                    </div>
+                </t>
+            </article>
+        </section>
+    </t>
+
+    <!-- ========== 2 Visitor Registration ========== -->
+    <t t-name="gate_management.Register">
+        <div class="gf-tabs">
+            <t t-foreach="visitorTabs" t-as="tab" t-key="tab.id">
+                <button t-att-class="{ 'is-on': state.page === tab.id }" t-on-click="() => this.onNav(tab.id)" t-esc="tab.label"/>
+            </t>
+        </div>
+        <div class="gf-head">
+            <div>
+                <h1>Visitor Registration</h1>
+                <p>Capture visitor details, host, purpose and vehicle for gate access.</p>
+            </div>
+            <button class="gf-btn primary" t-on-click="() => this.register()"><i class="fa fa-paper-plane"/> Send Invitation</button>
+        </div>
+        <section class="gf-split">
+            <div>
+                <article class="gf-card gf-form">
+                    <div class="gf-section-title"><i class="fa fa-user"/> Visitor Information</div>
+                    <div class="gf-grid-2">
+                        <label><span>Full Name</span><input placeholder="e.g. Jonathan Doe" t-on-input="(ev) => this.state.form.name = ev.target.value"/></label>
+                        <label><span>Company</span><input placeholder="Organization Name" t-on-input="(ev) => this.state.form.company = ev.target.value"/></label>
+                        <label><span>Mobile Number</span><input placeholder="+1 (555) 000-0000" t-on-input="(ev) => this.state.form.phone = ev.target.value"/></label>
+                        <label><span>Email Address</span><input placeholder="j.doe@company.com" t-on-input="(ev) => this.state.form.email = ev.target.value"/></label>
+                    </div>
+                </article>
+                <article class="gf-card gf-form">
+                    <div class="gf-section-title"><i class="fa fa-calendar"/> Visit Details</div>
+                    <div class="gf-grid-2">
+                        <label><span>Host Employee</span>
+                            <select t-on-change="(ev) => this.state.form.host_id = ev.target.value">
+                                <option value="">Search employee...</option>
+                                <t t-foreach="state.data.hosts || []" t-as="h" t-key="h.id"><option t-att-value="h.id" t-esc="h.label"/></t>
+                            </select>
+                        </label>
+                        <label><span>Purpose</span>
+                            <select t-on-change="(ev) => this.state.form.purpose = ev.target.value">
+                                <option value="meeting">Client Meeting</option>
+                                <option value="delivery">Delivery</option>
+                                <option value="interview">Interview</option>
+                                <option value="maintenance">Maintenance</option>
+                            </select>
+                        </label>
+                        <label><span>Visitors Count</span><input type="number" t-att-value="state.form.count" t-on-input="(ev) => this.state.form.count = ev.target.value"/></label>
+                        <label><span>Gate / Entry Zone</span>
+                            <select t-on-change="(ev) => this.state.form.gate_id = ev.target.value">
+                                <option value="">Select gate</option>
+                                <t t-foreach="state.data.gates || []" t-as="g" t-key="g.id"><option t-att-value="g.id" t-esc="g.name"/></t>
+                            </select>
+                        </label>
+                    </div>
+                </article>
+                <article class="gf-card gf-form">
+                    <div class="gf-section-title"><i class="fa fa-car"/> Vehicle Information</div>
+                    <div class="gf-grid-2">
+                        <label><span>Fleet Vehicle</span>
+                            <select t-on-change="(ev) => this.state.form.vehicle_id = ev.target.value">
+                                <option value="">None</option>
+                                <t t-foreach="state.data.vehicle_opts || []" t-as="v" t-key="v.id"><option t-att-value="v.id" t-esc="v.label"/></t>
+                            </select>
+                        </label>
+                        <label><span>Vehicle Number</span><input placeholder="ABC-1234" t-on-input="(ev) => this.state.form.plate = ev.target.value"/></label>
+                        <label><span>Vehicle Type</span><input placeholder="Sedan / SUV" t-on-input="(ev) => this.state.form.vehicle_type = ev.target.value"/></label>
+                        <label><span>Priority</span>
+                            <select t-on-change="(ev) => this.state.form.priority = ev.target.value">
+                                <option value="normal">Normal</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="gf-actions" style="margin-top:12px">
+                        <button class="gf-btn primary" t-on-click="() => this.register()">Save Visitor</button>
+                        <button class="gf-btn outline" t-on-click="() => this.onNav('qr')">Generate QR Pass</button>
+                    </div>
+                </article>
+            </div>
+            <aside>
+                <article class="gf-card">
+                    <div class="gf-card-head"><h3>Face Recognition</h3><span class="gf-pill ok">Live Camera</span></div>
+                    <div class="gf-cam">
+                        <i class="fa fa-camera fa-2x"/>
+                        <p>Position the visitor clearly in frame for AI verification.</p>
+                    </div>
+                </article>
+                <article class="gf-qr-pass">
+                    <h3 class="gf-pass-title">GateFlow AI Secure Access Pass</h3>
+                    <div class="gf-pass-body">
+                        <span class="valid">VALID 24H</span>
+                        <div class="gf-qrbox" t-esc="selectedPass().token || 'QR PREVIEW'"/>
+                        <p class="gf-pass-name" t-esc="selected().name || 'Visitor Name'"/>
+                        <p class="gf-pass-meta">Meeting Host: <b t-esc="selected().host || 'To be specified'"/></p>
+                        <p class="gf-pass-meta">Entry Zone: <b t-esc="selected().gate || 'MAIN NORTH GATE'"/></p>
+                        <p style="font-size:11px;color:#6b7280;margin-top:10px"><i class="fa fa-check-circle"/> Verified by GateFlow AI Core</p>
+                    </div>
+                </article>
+            </aside>
+        </section>
+    </t>
+
+    <!-- ========== 3 Visitor Details ========== -->
+    <t t-name="gate_management.Details">
+        <t t-set="v" t-value="selected()"/>
+        <div class="gf-tabs">
+            <t t-foreach="visitorTabs" t-as="tab" t-key="tab.id">
+                <button t-att-class="{ 'is-on': state.page === tab.id }" t-on-click="() => this.onNav(tab.id)" t-esc="tab.label"/>
+            </t>
+        </div>
+        <div class="gf-head">
+            <div><h1>Visitor Details</h1><p>Visit schedule, host, vehicle and access pass preview.</p></div>
+            <div class="gf-actions">
+                <button class="gf-btn" t-on-click="() => this.onNav('pending')">Back to Pending</button>
+                <button class="gf-btn primary" t-on-click="() => this.openPass()">Open QR Pass</button>
+            </div>
+        </div>
+        <section class="gf-split">
+            <article class="gf-card">
+                <div class="gf-section-title"><i class="fa fa-calendar"/> Visit Details</div>
+                <div class="gf-grid-2">
+                    <div><span style="color:#6b7280;font-size:11px">Visitor</span><p><b class="purple" t-esc="v.name"/></p></div>
+                    <div><span style="color:#6b7280;font-size:11px">Company</span><p><b t-esc="v.company"/></p></div>
+                    <div><span style="color:#6b7280;font-size:11px">Host Employee</span><p><b t-esc="v.host"/></p></div>
+                    <div><span style="color:#6b7280;font-size:11px">Department</span><p><b t-esc="v.department"/></p></div>
+                    <div><span style="color:#6b7280;font-size:11px">Purpose</span><p><b t-esc="v.purpose_label"/></p></div>
+                    <div><span style="color:#6b7280;font-size:11px">Visit Date</span><p><b t-esc="v.planned"/></p></div>
+                    <div><span style="color:#6b7280;font-size:11px">Visitors Count</span><p><b t-esc="v.count"/></p></div>
+                    <div><span style="color:#6b7280;font-size:11px">Gate</span><p><b t-esc="v.gate"/></p></div>
+                </div>
+                <div class="gf-section-title" style="margin-top:16px"><i class="fa fa-car"/> Vehicle Information</div>
+                <div class="gf-grid-2">
+                    <div><span style="color:#6b7280;font-size:11px">Vehicle Number</span><p><b class="gf-plate" t-esc="v.vehicle"/></p></div>
+                    <div><span style="color:#6b7280;font-size:11px">Vehicle Type</span><p><b t-esc="v.vehicle_type"/></p></div>
+                </div>
+                <div class="gf-actions" style="margin-top:14px">
+                    <button class="gf-btn primary" t-on-click="() => this.openVisitor(v, 'profile')">Open Profile</button>
+                    <button class="gf-btn outline" t-on-click="() => this.openPass()">Generate QR Pass</button>
+                </div>
+            </article>
+            <aside>
+                <article class="gf-qr-pass">
+                    <h3 class="gf-pass-title">GateFlow AI Secure Access Pass</h3>
+                    <div class="gf-pass-body">
+                        <span class="valid">VALID 24H</span>
+                        <div class="gf-qrbox" t-esc="selectedPass().token || 'QR'"/>
+                        <p class="gf-pass-name" t-esc="v.name"/>
+                        <p class="gf-pass-meta">Meeting Host: <b t-esc="v.host"/></p>
+                        <p class="gf-pass-meta">Entry Zone: <b t-esc="v.gate || 'MAIN NORTH GATE'"/></p>
+                    </div>
+                </article>
+            </aside>
+        </section>
+    </t>
+
+    <!-- ========== 4 Pending Requests ========== -->
+    <t t-name="gate_management.Pending">
+        <div class="gf-tabs">
+            <t t-foreach="visitorTabs" t-as="tab" t-key="tab.id">
+                <button t-att-class="{ 'is-on': state.page === tab.id }" t-on-click="() => this.onNav(tab.id)" t-esc="tab.label"/>
+            </t>
+        </div>
+        <div class="gf-head">
+            <div>
+                <h1>Pending Visitor Requests</h1>
+                <p>Review and manage site access permissions for external partners and contractors.</p>
+            </div>
+            <span class="gf-chip">Last Sync: just now</span>
+        </div>
+        <section class="gf-kpis">
+            <article class="gf-kpi"><span>Total Pending</span><strong t-esc="pendingCount()"/><p style="font-size:11px;color:#6b7280;margin:4px 0 0">In approval queue</p></article>
+            <article class="gf-kpi is-alert"><span>Urgent Access</span><strong t-esc="urgentCount()"/><p style="font-size:11px;margin:4px 0 0">Immediate action required</p></article>
+            <article class="gf-kpi"><span>Avg Response</span><strong>12m</strong><p style="font-size:11px;color:#6b7280;margin:4px 0 0">Target: 15m</p></article>
+            <article class="gf-kpi is-ok"><span>Visitors Active</span><strong t-esc="(state.data.kpis || {}).on_site"/><p style="font-size:11px;margin:4px 0 0">Currently on site</p></article>
+        </section>
+        <article class="gf-card">
+            <table class="gf-table">
+                <thead>
+                    <tr><th>Visitor &amp; Organization</th><th>Purpose &amp; Host</th><th>Visit Time</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="state.data.requests || []" t-as="row" t-key="row.id">
+                        <tr>
+                            <td>
+                                <b t-esc="row.visitor"/><br/>
+                                <span style="color:#6b7280;font-size:11px" t-esc="row.name"/>
+                            </td>
+                            <td>
+                                <span t-esc="row.purpose"/><br/>
+                                <span style="color:#6b7280;font-size:11px">Host: <t t-esc="row.host"/></span>
+                            </td>
+                            <td t-esc="row.when"/>
+                            <td>
+                                <em t-attf-class="gf-pill #{badge(row.state)}" t-esc="row.state"/>
+                                <t t-if="row.priority === 'urgent'"> <em class="gf-pill bad">Urgent</em></t>
+                            </td>
+                            <td>
+                                <button class="gf-link" t-on-click="() => this.openVisitor({id: row.visitor_id}, 'details')">View</button>
+                                <button class="gf-btn primary" style="padding:5px 10px;margin-left:4px" t-on-click="() => this.review(row.id, 'approve')">Approve</button>
+                                <button class="gf-btn bad" style="padding:5px 10px;margin-left:4px" t-on-click="() => this.review(row.id, 'reject')">Reject</button>
+                            </td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+            <div class="gf-footer-bar">
+                <div>
+                    <button class="gf-link">Import from CSV</button>
+                    <button class="gf-link" style="margin-left:12px" t-on-click="() => this.onNav('analytics')">View Traffic Analysis</button>
+                </div>
+                <button class="gf-btn primary">Proceed to Batch Approval →</button>
+            </div>
+        </article>
+    </t>
+
+    <!-- ========== 5 QR Access Pass ========== -->
+    <t t-name="gate_management.QR">
+        <t t-set="p" t-value="selectedPass()"/><t t-set="v" t-value="selected()"/>
+        <div class="gf-tabs">
+            <t t-foreach="visitorTabs" t-as="tab" t-key="tab.id">
+                <button t-att-class="{ 'is-on': state.page === tab.id }" t-on-click="() => this.onNav(tab.id)" t-esc="tab.label"/>
+            </t>
+        </div>
+        <div class="gf-head"><h1>Visitor QR Access Pass</h1><p>Digital visitor badge for gate and reception check-in.</p></div>
+        <div class="gf-pass-card">
+            <div class="top">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+                    <b style="font-size:15px;color:#fff"><i class="fa fa-shield"/> GateFlow AI Secure Access Pass</b>
+                    <span class="valid" style="background:#d1fae5;color:#065f46;white-space:nowrap">VALID 24H</span>
+                </div>
+            </div>
+            <div class="body">
+                <div class="gf-qrbox" t-esc="p.token || 'QR'"/>
+                <p style="font-size:11px;color:#6b7280">ID: <t t-esc="p.name || 'PASS'"/></p>
+                <h2 class="purple" style="margin:8px 0 4px" t-esc="p.visitor || v.name"/>
+                <p style="color:#6b7280" t-esc="v.company"/>
+                <div class="gf-grid-2" style="margin-top:12px;text-align:left;font-size:12px">
+                    <div><span style="color:#6b7280">Date</span><br/><b t-esc="p.from"/></div>
+                    <div><span style="color:#6b7280">Expiry</span><br/><b class="bad" t-esc="p.until"/></div>
+                    <div><span style="color:#6b7280">Host</span><br/><b t-esc="p.host"/></div>
+                    <div><span style="color:#6b7280">Gate</span><br/><b t-esc="p.gate"/></div>
+                </div>
+                <div class="veh">
+                    <i class="fa fa-car purple"/>
+                    <div style="flex:1;text-align:left">
+                        <div t-esc="v.vehicle_type || 'Vehicle'"/>
+                        <span class="plate" t-esc="p.vehicle || v.vehicle || '—'"/>
+                    </div>
+                </div>
+                <p style="font-size:10px;color:#9ca3af;margin-top:12px">SECURED BY GATEFLOW AI</p>
+                <div class="gf-actions" style="margin-top:12px;justify-content:center">
+                    <button class="gf-btn primary" style="flex:1"><i class="fa fa-download"/> Download QR</button>
+                </div>
+                <div class="gf-actions" style="margin-top:8px;justify-content:center">
+                    <button class="gf-btn"><i class="fa fa-print"/> Print</button>
+                    <button class="gf-btn"><i class="fa fa-envelope-o"/> Email</button>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <!-- ========== 6 Live Monitoring ========== -->
+    <t t-name="gate_management.Live">
+        <div class="gf-head">
+            <div>
+                <h1>Live Gate Monitoring</h1>
+                <p>Camera feed with AI vehicle/driver verification and gate controls.</p>
+            </div>
+            <button class="gf-btn primary"><i class="fa fa-refresh"/> Sync Data</button>
+        </div>
+        <article class="gf-card">
+            <div class="gf-card-head">
+                <h2><i class="fa fa-video-camera"/> Camera Feed — <t t-esc="firstGate().name || 'Main Entrance'"/></h2>
+                <span class="gf-pill ok">4K Stream</span>
+            </div>
+            <div class="gf-feed">
+                <div class="overlay">
+                    CAM_ID: <t t-esc="firstGate().code || 'SE_GATE_04'"/><br/>
+                    LOC: <t t-esc="firstGate().location || 'North Entrance'"/>
+                </div>
+                <div class="scan">AI SCANNING: ACTIVE</div>
+                <div class="box">VEHICLE DETECTED</div>
+            </div>
+        </article>
+        <section class="gf-grid-3" style="margin-top:12px">
+            <article class="gf-card">
+                <h3>Vehicle Info</h3>
+                <p>License Plate <b class="gf-plate" t-esc="(state.data.movements || [])[0]?.plate || 'ABC-1234'"/></p>
+                <p>Gate <b t-esc="(state.data.movements || [])[0]?.gate || firstGate().name"/></p>
+                <p>Status <em t-attf-class="gf-pill #{badge((state.data.movements || [])[0]?.status || 'pending')}" t-esc="(state.data.movements || [])[0]?.status || 'pending'"/></p>
+            </article>
+            <article class="gf-card">
+                <h3>Driver / Visitor Info</h3>
+                <div style="display:flex;gap:10px;align-items:center">
+                    <div class="gf-profile-ava" t-esc="selected().initials || 'V'"/>
+                    <div>
+                        <b t-esc="selected().name || 'Pre-registered'"/>
+                        <p style="color:#6b7280;font-size:12px" t-esc="selected().company"/>
+                        <em class="gf-pill ok">Pre-registered</em>
+                    </div>
+                </div>
+            </article>
+            <article class="gf-card">
+                <h3>Verification Results</h3>
+                <t t-set="ai" t-value="firstAI()"/>
+                <div style="text-align:center;padding:12px 0">
+                    <strong class="purple" style="font-size:36px" t-esc="ai.confidence || 98"/>%
+                    <p style="color:#6b7280">Match Confidence</p>
+                </div>
+            </article>
+        </section>
+        <div class="gf-footer-bar">
+            <div>
+                <button class="gf-link">Import from SAP</button>
+                <button class="gf-link" style="margin-left:12px" t-on-click="() => this.onNav('analytics')">View Order Analysis</button>
+            </div>
+            <div class="gf-actions">
+                <button class="gf-btn bad" t-on-click="() => this.doGate('reject')">Reject Entry</button>
+                <button class="gf-btn outline" t-on-click="() => this.runAI()">Manual Verify</button>
+                <button class="gf-btn primary" t-on-click="() => this.doGate('open')"><i class="fa fa-unlock"/> Open Gate</button>
+            </div>
+        </div>
+    </t>
+
+    <!-- ========== 7 AI Validation ========== -->
+    <t t-name="gate_management.AI">
+        <t t-set="ai" t-value="firstAI()"/>
+        <div class="gf-head">
+            <div>
+                <h1>AI Validation Panel</h1>
+                <p>Face, vehicle, QR and blacklist verification results.</p>
+            </div>
+            <div class="gf-head-actions">
+                <span class="gf-chip">Last Scan: just now</span>
+                <button class="gf-btn primary" t-on-click="() => this.runAI()">Run Validation</button>
+            </div>
+        </div>
+        <section class="gf-split">
+            <div>
+                <article class="gf-card">
+                    <div class="gf-grant"><i class="fa fa-check-circle"/> ACCESS <t t-esc="(ai.decision || 'granted').toUpperCase()"/></div>
+                    <div style="margin-top:14px" class="gf-grid-2">
+                        <div><span style="color:#6b7280;font-size:11px">Reason</span><p><b t-esc="ai.note || 'All security protocols satisfied.'"/></p></div>
+                        <div><span style="color:#6b7280;font-size:11px">AI Confidence</span><p><b class="purple" style="font-size:22px"><t t-esc="ai.confidence || 0"/>%</b></p></div>
+                        <div><span style="color:#6b7280;font-size:11px">Timestamp</span><p><b t-esc="ai.when || '—'"/></p></div>
+                        <div><span style="color:#6b7280;font-size:11px">Decision</span><p><em t-attf-class="gf-pill #{badge(ai.decision)}" t-esc="ai.decision"/></p></div>
+                    </div>
+                </article>
+                <article class="gf-card">
+                    <h3>Evidence Records</h3>
+                    <div class="gf-evidence">
+                        <article><b>Captured Biometrics</b><span>Face scan frame</span></article>
+                        <article><b>Database Reference</b><span>Visitor / employee photo</span></article>
+                        <article><b>Vehicle Entry Log</b><span t-esc="firstGate().name || 'North Gate'"/></article>
+                    </div>
+                </article>
+            </div>
+            <aside class="gf-card">
+                <h3>Validation Metrics</h3>
+                <div class="gf-metric"><span><i class="fa fa-user purple"/> Face Recognition</span><b class="purple"><t t-esc="ai.face || 0"/>%</b></div>
+                <div class="gf-metric"><span><i class="fa fa-car purple"/> Vehicle Match</span><b class="purple"><t t-esc="ai.vehicle || 0"/>%</b></div>
+                <div class="gf-metric"><span><i class="fa fa-qrcode purple"/> QR Validation</span><em t-attf-class="gf-pill #{ai.qr ? 'ok' : 'bad'}" t-esc="ai.qr ? 'Verified' : 'Failed'"/></div>
+                <div class="gf-metric"><span><i class="fa fa-ban purple"/> Blacklist Check</span><em t-attf-class="gf-pill #{ai.blacklist ? 'bad' : 'ok'}" t-esc="ai.blacklist ? 'Match' : 'Clear'"/></div>
+                <div class="gf-metric"><span><i class="fa fa-file-text-o purple"/> Permit Status</span><em class="gf-pill ok" t-esc="ai.permit || 'Active'"/></div>
+                <div style="margin-top:12px;background:#f3eefc;border-radius:10px;padding:12px;font-size:12px">
+                    <span class="gf-dot" style="display:inline-block;margin-right:6px"/>
+                    Neural Core — real-time model processing. High fidelity verification active.
+                </div>
+            </aside>
+        </section>
+    </t>
+
+    <!-- ========== 8 Vehicle Dashboard ========== -->
+    <t t-name="gate_management.VehicleDash">
+        <t t-set="k" t-value="state.data.kpis || {}"/>
+        <div class="gf-tabs">
+            <t t-foreach="vehicleTabs" t-as="tab" t-key="tab.id">
+                <button t-att-class="{ 'is-on': state.page === tab.id }" t-on-click="() => this.onNav(tab.id)" t-esc="tab.label"/>
+            </t>
+        </div>
+        <div class="gf-head"><h1>Vehicle Management Dashboard</h1><p>On-site vehicles, deliveries, unauthorized attempts and gate throughput.</p></div>
+        <section class="gf-kpis">
+            <article class="gf-kpi"><span>Vehicles On-Site</span><strong class="purple" t-esc="k.vehicles"/><p style="font-size:11px;color:#059669;margin:4px 0 0">85% Capacity</p></article>
+            <article class="gf-kpi"><span>Pending Deliveries</span><strong class="warn">08</strong></article>
+            <article class="gf-kpi is-alert"><span>Unauthorized Attempts</span><strong t-esc="k.alerts"/></article>
+            <article class="gf-kpi"><span>Gate Throughput</span><strong t-esc="k.throughput"/><p style="font-size:11px;color:#6b7280;margin:4px 0 0">Avg entry 1.2m · exit 0.8m</p></article>
+        </section>
+        <article class="gf-card">
+            <div class="gf-card-head"><h2>Recent Vehicle Entries / Exits</h2><button class="gf-link" t-on-click="() => this.onNav('vehicle_history')">View all</button></div>
+            <table class="gf-table">
+                <thead><tr><th>Plate</th><th>Type</th><th>Gate</th><th>Status</th><th>AI</th><th>Time</th></tr></thead>
+                <tbody>
+                    <t t-foreach="(state.data.movements || []).slice(0,8)" t-as="row" t-key="row.id">
+                        <tr t-att-class="{ 'is-danger': row.status === 'failed' || row.status === 'hold' }">
+                            <td class="gf-plate" t-esc="row.plate"/>
+                            <td t-esc="row.type"/>
+                            <td t-esc="row.gate"/>
+                            <td><em t-attf-class="gf-pill #{badge(row.status)}" t-esc="row.status"/></td>
+                            <td t-esc="row.confidence"/>
+                            <td t-esc="row.when"/>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </article>
+        <article class="gf-card" style="margin-top:12px">
+            <div class="gf-card-head">
+                <h2>Active Perimeter Map</h2>
+                <button class="gf-link" t-on-click="() => this.onNav('perimeter')">Open map</button>
+            </div>
+            <div class="gf-legend">
+                <span><i class="p"/> Parking Zone</span>
+                <span><i class="r"/> Blocked Entry</span>
+                <span><i class="g"/> Loading Dock</span>
+            </div>
+            <div class="gf-map">
+                <t t-foreach="state.data.zones || []" t-as="z" t-key="z.id">
+                    <div t-attf-class="gf-zone is-#{z.status}"><b t-esc="z.name"/><br/><span t-esc="z.type"/> · <t t-esc="z.status"/></div>
+                </t>
+            </div>
+        </article>
+    </t>
+
+    <!-- ========== 9 Perimeter ========== -->
+    <t t-name="gate_management.Perimeter">
+        <div class="gf-head">
+            <div><h1>Active Perimeter Map</h1><p>Gates, parking, loading docks and blocked zones.</p></div>
+            <button class="gf-btn primary" t-on-click="() => this.onNav('live')">Open Live Monitoring</button>
+        </div>
+        <div class="gf-legend">
+            <span><i class="p"/> Parking Zone</span>
+            <span><i class="r"/> Blocked Entry</span>
+            <span><i class="g"/> Loading Dock</span>
+        </div>
+        <div class="gf-plan">
+            <t t-foreach="state.data.zones || []" t-as="z" t-key="z.id">
+                <article t-attf-class="gf-zone is-#{z.status}">
+                    <div class="gf-zone-head">
+                        <div>
+                            <b t-esc="z.name"/>
+                            <span t-esc="z.type"/>
+                        </div>
+                        <em t-attf-class="gf-pill #{badge(z.status)}" t-esc="z.status"/>
+                    </div>
+                    <div class="gf-zone-floor">
+                        <t t-if="z.gates.length">
+                            <t t-foreach="z.gates" t-as="g" t-key="g.id">
+                                <div class="gf-pin">
+                                    <b t-esc="g.name"/>
+                                    <span t-esc="g.location || g.camera || 'Gate'"/>
+                                    <em t-attf-class="gf-pill #{badge(g.status)}" t-esc="g.status"/>
+                                </div>
+                            </t>
+                        </t>
+                        <t t-else="">
+                            <div class="gf-pin is-empty">
+                                <b t-esc="z.status === 'closed' ? 'Entry blocked' : z.status === 'restricted' ? 'Controlled access' : 'Zone clear'"/>
+                                <span>No gate linked to this zone</span>
+                            </div>
+                        </t>
+                    </div>
+                </article>
+            </t>
+        </div>
+    </t>
+
+    <!-- ========== 10 Profile ========== -->
+    <t t-name="gate_management.Profile">
+        <t t-set="v" t-value="selected()"/>
+        <div class="gf-tabs">
+            <t t-foreach="visitorTabs" t-as="tab" t-key="tab.id">
+                <button t-att-class="{ 'is-on': state.page === tab.id }" t-on-click="() => this.onNav(tab.id)" t-esc="tab.label"/>
+            </t>
+        </div>
+        <div class="gf-head">
+            <div><h1>Visitor Profile</h1><p t-esc="v.name"/></div>
+            <div class="gf-actions">
+                <button class="gf-btn" t-on-click="() => this.check('in')">Check In</button>
+                <button class="gf-btn" t-on-click="() => this.check('out')">Check Out</button>
+                <button class="gf-btn primary" t-on-click="() => this.onNav('timeline')">View Timeline</button>
+            </div>
+        </div>
+        <section class="gf-split">
+            <article class="gf-card">
+                <div style="display:flex;gap:14px;align-items:center">
+                    <div class="gf-profile-ava" t-esc="v.initials"/>
+                    <div>
+                        <h2 class="purple" style="margin:0" t-esc="v.name"/>
+                        <p style="color:#6b7280;margin:4px 0" t-esc="v.company"/>
+                        <em t-attf-class="gf-pill #{badge(v.state)}" t-esc="v.state_label"/>
+                    </div>
+                </div>
+                <div class="gf-grid-2" style="margin-top:16px">
+                    <div><span style="color:#6b7280;font-size:11px">Phone</span><p><b t-esc="v.phone"/></p></div>
+                    <div><span style="color:#6b7280;font-size:11px">Email</span><p><b t-esc="v.email"/></p></div>
+                    <div><span style="color:#6b7280;font-size:11px">Security</span><p><b t-esc="v.security"/></p></div>
+                    <div><span style="color:#6b7280;font-size:11px">Floor / Room</span><p><b><t t-esc="v.floor"/> · <t t-esc="v.room"/></b></p></div>
+                </div>
+            </article>
+            <article class="gf-card">
+                <h3>Current Visit</h3>
+                <p>Host <b t-esc="v.host"/></p>
+                <p>Department <b t-esc="v.department"/></p>
+                <p>Purpose <b t-esc="v.purpose_label"/></p>
+                <p>Vehicle <b class="gf-plate" t-esc="v.vehicle"/></p>
+                <p>Gate <b t-esc="v.gate"/></p>
+                <p>Check-in <b t-esc="v.check_in"/> · Check-out <b t-esc="v.check_out"/></p>
+            </article>
+        </section>
+    </t>
+
+    <!-- ========== 11 Timeline ========== -->
+    <t t-name="gate_management.Timeline">
+        <t t-set="v" t-value="selected()"/>
+        <div class="gf-tabs">
+            <t t-foreach="visitorTabs" t-as="tab" t-key="tab.id">
+                <button t-att-class="{ 'is-on': state.page === tab.id }" t-on-click="() => this.onNav(tab.id)" t-esc="tab.label"/>
+            </t>
+        </div>
+        <div class="gf-head"><h1>Visitor Timeline</h1><p>Security and visit history for <t t-esc="v.name"/>.</p></div>
+        <article class="gf-card">
+            <t t-foreach="eventsOf()" t-as="e" t-key="e.id">
+                <div class="gf-tl"><span style="color:#6b7280;min-width:110px" t-esc="e.when"/><b t-esc="e.name"/></div>
+            </t>
+            <t t-if="!eventsOf().length"><div class="gf-empty">No timeline events yet.</div></t>
+        </article>
+    </t>
+
+    <!-- ========== 12 Exit ========== -->
+    <t t-name="gate_management.Exit">
+        <div class="gf-tabs">
+            <t t-foreach="vehicleTabs" t-as="tab" t-key="tab.id">
+                <button t-att-class="{ 'is-on': state.page === tab.id }" t-on-click="() => this.onNav(tab.id)" t-esc="tab.label"/>
+            </t>
+        </div>
+        <div class="gf-head"><h1>Vehicle Exit Verification</h1><p>AI metrics, security check, hold or approve exit.</p></div>
+        <article class="gf-card">
+            <t t-foreach="state.data.movements || []" t-as="row" t-key="row.id">
+                <div class="gf-row">
+                    <div>
+                        <b class="gf-plate" t-esc="row.plate"/> · <t t-esc="row.gate"/><br/>
+                        <span style="color:#6b7280;font-size:12px">AI <t t-esc="row.confidence"/>% · <t t-esc="row.when"/></span>
+                    </div>
+                    <div class="gf-actions">
+                        <em t-attf-class="gf-pill #{badge(row.status)}" t-esc="row.status"/>
+                        <button class="gf-btn bad" t-on-click="() => this.exitAction(row.id, 'hold')">Hold</button>
+                        <button class="gf-btn primary" t-on-click="() => this.exitAction(row.id, 'release')">Approve Exit</button>
+                    </div>
+                </div>
+            </t>
+        </article>
+    </t>
+
+    <!-- ========== 13 Vehicles ========== -->
+    <t t-name="gate_management.Vehicles">
+        <div class="gf-tabs">
+            <t t-foreach="vehicleTabs" t-as="tab" t-key="tab.id">
+                <button t-att-class="{ 'is-on': state.page === tab.id }" t-on-click="() => this.onNav(tab.id)" t-esc="tab.label"/>
+            </t>
+        </div>
+        <div class="gf-head">
+            <div>
+                <h1>Vehicle Management</h1>
+                <p>Fleet vehicles. New plates are saved in Odoo Fleet.</p>
+            </div>
+        </div>
+        <article class="gf-card gf-form">
+            <div class="gf-section-title"><i class="fa fa-car"/> Add Fleet Vehicle</div>
+            <div class="gf-grid-3">
+                <label><span>Plate</span><input placeholder="MH-12-AB-1234" t-att-value="state.vehicleForm.plate" t-on-input="(ev) => this.state.vehicleForm.plate = ev.target.value"/></label>
+                <label><span>Access</span>
+                    <select t-on-change="(ev) => this.state.vehicleForm.access = ev.target.value">
+                        <option value="staff">Staff</option>
+                        <option value="visitor">Visitor</option>
+                        <option value="delivery">Delivery</option>
+                        <option value="contractor">Contractor</option>
+                    </select>
+                </label>
+                <label><span>Permit</span><input placeholder="P-1001" t-att-value="state.vehicleForm.permit" t-on-input="(ev) => this.state.vehicleForm.permit = ev.target.value"/></label>
+            </div>
+            <button class="gf-btn primary" t-on-click="() => this.createVehicle()">Save in Fleet</button>
+        </article>
+        <section class="gf-kpis">
+            <article class="gf-kpi"><span>Total Registered</span><strong class="purple" t-esc="(state.data.vehicles || []).length"/></article>
+            <article class="gf-kpi is-ok"><span>Active Permits</span><strong t-esc="(state.data.vehicles || []).filter((v) => v.authorized and !v.blacklisted).length"/></article>
+            <article class="gf-kpi"><span>Expiring Soon</span><strong class="warn">—</strong></article>
+            <article class="gf-kpi is-alert"><span>Blacklisted</span><strong t-esc="(state.data.vehicles || []).filter((v) => v.blacklisted).length"/></article>
+        </section>
+        <article class="gf-card">
+            <table class="gf-table">
+                <thead><tr><th>Vehicle Number</th><th>Driver / Owner</th><th>Access</th><th>Permit</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody>
+                    <t t-foreach="state.data.vehicles || []" t-as="row" t-key="row.id">
+                        <tr t-att-class="{ 'is-danger': row.blacklisted }">
+                            <td class="gf-plate" t-esc="row.plate"/>
+                            <td t-esc="row.driver || '—'"/>
+                            <td t-esc="row.access"/>
+                            <td t-esc="row.permit || '—'"/>
+                            <td>
+                                <em t-attf-class="gf-pill #{row.blacklisted ? 'bad' : (row.authorized ? 'ok' : 'warn')}" t-esc="row.blacklisted ? 'Blacklisted' : row.status"/>
+                            </td>
+                            <td><button class="gf-link" t-on-click="() => this.toggleBlacklist(row)">Toggle blacklist</button></td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </article>
+    </t>
+
+    <!-- ========== 14 History ========== -->
+    <t t-name="gate_management.History">
+        <div class="gf-tabs">
+            <t t-foreach="vehicleTabs" t-as="tab" t-key="tab.id">
+                <button t-att-class="{ 'is-on': state.page === tab.id }" t-on-click="() => this.onNav(tab.id)" t-esc="tab.label"/>
+            </t>
+        </div>
+        <div class="gf-head">
+            <div><h1>Vehicle Entry / Exit History</h1><p>24h movement trend and gate verification log.</p></div>
+            <button class="gf-btn outline" t-on-click="() => this.onNav('vehicle_exit')">Exit verification</button>
+        </div>
+        <article class="gf-card">
+            <table class="gf-table">
+                <thead><tr><th>When</th><th>Plate</th><th>Type</th><th>Gate</th><th>Status</th><th>AI %</th></tr></thead>
+                <tbody>
+                    <t t-foreach="state.data.movements || []" t-as="row" t-key="row.id">
+                        <tr>
+                            <td t-esc="row.when"/><td class="gf-plate" t-esc="row.plate"/><td t-esc="row.type"/>
+                            <td t-esc="row.gate"/><td><em t-attf-class="gf-pill #{badge(row.status)}" t-esc="row.status"/></td><td t-esc="row.confidence"/>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </article>
+    </t>
+
+    <!-- ========== 15 Analytics ========== -->
+    <t t-name="gate_management.Analytics">
+        <t t-set="k" t-value="state.data.kpis || {}"/>
+        <div class="gf-head"><h1>System Analytics</h1><p>Daily visitors, vehicle trends, peak hours and security KPIs.</p></div>
+        <section class="gf-kpis">
+            <article class="gf-kpi"><span>Daily Visitors</span><strong t-esc="k.visitors"/></article>
+            <article class="gf-kpi"><span>Vehicle Moves</span><strong t-esc="k.throughput"/></article>
+            <article class="gf-kpi"><span>AI Rate</span><strong class="purple"><t t-esc="k.ai_rate"/>%</strong></article>
+            <article class="gf-kpi is-alert"><span>Alerts</span><strong t-esc="k.alerts"/></article>
+        </section>
+        <section class="gf-grid-2">
+            <article class="gf-card">
+                <h2>Visitor Trend</h2>
+                <p style="color:#6b7280">Live counts from GateFlow visitor register and request workflow.</p>
+                <div style="height:120px;background:linear-gradient(180deg,#f3eefc,#fff);border-radius:10px;margin-top:10px;display:flex;align-items:flex-end;padding:12px;gap:6px">
+                    <div style="flex:1;background:#7c3aed;height:40%;border-radius:4px 4px 0 0"/>
+                    <div style="flex:1;background:#7c3aed;height:70%;border-radius:4px 4px 0 0"/>
+                    <div style="flex:1;background:#7c3aed;height:55%;border-radius:4px 4px 0 0"/>
+                    <div style="flex:1;background:#7c3aed;height:90%;border-radius:4px 4px 0 0"/>
+                    <div style="flex:1;background:#7c3aed;height:65%;border-radius:4px 4px 0 0"/>
+                </div>
+            </article>
+            <article class="gf-card">
+                <h2>Vehicle Throughput</h2>
+                <p style="color:#6b7280">Entry/exit movements across all gates.</p>
+                <div style="height:120px;background:linear-gradient(180deg,#ecfdf5,#fff);border-radius:10px;margin-top:10px;display:flex;align-items:flex-end;padding:12px;gap:6px">
+                    <div style="flex:1;background:#059669;height:50%;border-radius:4px 4px 0 0"/>
+                    <div style="flex:1;background:#059669;height:75%;border-radius:4px 4px 0 0"/>
+                    <div style="flex:1;background:#059669;height:45%;border-radius:4px 4px 0 0"/>
+                    <div style="flex:1;background:#059669;height:85%;border-radius:4px 4px 0 0"/>
+                    <div style="flex:1;background:#059669;height:60%;border-radius:4px 4px 0 0"/>
+                </div>
+            </article>
+        </section>
+    </t>
+
+    <!-- ========== 16 Employees ========== -->
+    <t t-name="gate_management.Employees">
+        <div class="gf-tabs">
+            <t t-foreach="employeeTabs" t-as="tab" t-key="tab.id">
+                <button t-att-class="{ 'is-on': state.page === tab.id }" t-on-click="() => this.onNav(tab.id)" t-esc="tab.label"/>
+            </t>
+        </div>
+        <div class="gf-head">
+            <div><h1>Employee Management</h1><p>Employees and Attendances from Odoo. Check-in writes hr.attendance.</p></div>
+        </div>
+        <article class="gf-card">
+            <table class="gf-table">
+                <thead><tr><th>Employee</th><th>Job</th><th>Department</th><th>Badge</th><th>Attendance</th><th>Face</th><th/></tr></thead>
+                <tbody>
+                    <t t-foreach="state.data.employees || []" t-as="row" t-key="row.id">
+                        <tr>
+                            <td><b t-esc="row.name"/></td>
+                            <td t-esc="row.job"/>
+                            <td t-esc="row.dept"/>
+                            <td t-esc="row.badge"/>
+                            <td>
+                                <em t-attf-class="gf-pill #{badge(row.attendance)}" t-esc="row.attendance === 'checked_in' ? 'Checked In' : 'Checked Out'"/>
+                                <div style="font-size:11px;color:#6b7280">In <t t-esc="row.last_in"/></div>
+                            </td>
+                            <td t-esc="row.face ? 'Enrolled' : 'No'"/>
+                            <td>
+                                <button class="gf-btn primary" style="padding:5px 10px" t-on-click="() => this.toggleAttendance(row)">
+                                    <t t-esc="row.attendance === 'checked_in' ? 'Check Out' : 'Check In'"/>
+                                </button>
+                                <button class="gf-link" t-on-click="() => this.saveEmployee(row)">Toggle face</button>
+                            </td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </article>
+    </t>
+
+    <!-- ========== 17 Alerts ========== -->
+    <t t-name="gate_management.Alerts">
+        <div class="gf-head">
+            <div>
+                <h1>AI Security Alerts</h1>
+                <p>Unauthorized entry, wrong vehicle, tailgating, blacklist and emergencies.</p>
+            </div>
+        </div>
+        <div class="gf-tabs">
+            <button t-att-class="{ 'is-on': state.alertFilter === 'all' }" t-on-click="() => this.state.alertFilter = 'all'">All</button>
+            <button t-att-class="{ 'is-on': state.alertFilter === 'critical' }" t-on-click="() => this.state.alertFilter = 'critical'">Critical</button>
+            <button t-att-class="{ 'is-on': state.alertFilter === 'medium' }" t-on-click="() => this.state.alertFilter = 'medium'">Medium</button>
+            <button t-att-class="{ 'is-on': state.alertFilter === 'low' }" t-on-click="() => this.state.alertFilter = 'low'">Low</button>
+        </div>
+        <div class="gf-alerts">
+            <t t-foreach="filteredAlerts()" t-as="row" t-key="row.id">
+                <article class="gf-alert-card">
+                    <div class="shot">CAM · <t t-esc="row.gate || 'Perimeter'"/></div>
+                    <div class="body">
+                        <em t-attf-class="gf-pill #{badge(row.severity)}" t-esc="row.severity"/>
+                        <h4 t-esc="row.name"/>
+                        <p style="font-size:12px;color:#4b5563;margin:0" t-esc="row.description"/>
+                        <div class="meta"><t t-esc="row.when"/> · <t t-esc="row.gate"/></div>
+                        <div class="gf-actions">
+                            <button class="gf-btn" t-on-click="() => this.reviewAlert(row.id, 'investigate')">Investigate</button>
+                            <button t-attf-class="gf-btn #{row.severity === 'critical' || row.severity === 'high' ? 'danger' : 'primary'}" t-on-click="() => this.reviewAlert(row.id, 'resolve')">Resolve Alert</button>
+                        </div>
+                    </div>
+                </article>
+            </t>
+        </div>
+    </t>
+
+    <!-- ========== 18 Access ========== -->
+    <t t-name="gate_management.Access">
+        <div class="gf-tabs">
+            <t t-foreach="employeeTabs" t-as="tab" t-key="tab.id">
+                <button t-att-class="{ 'is-on': state.page === tab.id }" t-on-click="() => this.onNav(tab.id)" t-esc="tab.label"/>
+            </t>
+        </div>
+        <div class="gf-head"><h1>Employee Access Management</h1><p>Policies, allowed gates, hours and access state.</p></div>
+        <article class="gf-card">
+            <table class="gf-table">
+                <thead><tr><th>Employee</th><th>Gate</th><th>Policy</th><th>Hours</th><th>Days</th><th>State</th></tr></thead>
+                <tbody>
+                    <t t-foreach="state.data.access || []" t-as="row" t-key="row.id">
+                        <tr>
+                            <td t-esc="row.employee"/><td t-esc="row.gate"/><td t-esc="row.policy"/>
+                            <td><t t-esc="row.from"/>–<t t-esc="row.to"/></td>
+                            <td t-esc="row.days"/><td><em t-attf-class="gf-pill #{badge(row.state)}" t-esc="row.state"/></td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </article>
+    </t>
+
+    <!-- ========== 19 Devices ========== -->
+    <t t-name="gate_management.Devices">
+        <div class="gf-tabs">
+            <t t-foreach="hardwareTabs" t-as="tab" t-key="tab.id">
+                <button t-att-class="{ 'is-on': state.page === tab.id }" t-on-click="() => this.onNav(tab.id)" t-esc="tab.label"/>
+            </t>
+        </div>
+        <div class="gf-head"><h1>Hardware &amp; Devices</h1><p>Each device is a Maintenance equipment record. Requests open in Odoo Maintenance.</p></div>
+        <div class="gf-grid-2">
+            <t t-foreach="state.data.devices || []" t-as="d" t-key="d.id">
+                <article class="gf-card">
+                    <div class="gf-card-head">
+                        <h3 t-esc="d.name"/>
+                        <em t-attf-class="gf-pill #{badge(d.status)}" t-esc="d.status"/>
+                    </div>
+                    <p style="color:#6b7280;font-size:12px;text-transform:uppercase" t-esc="d.type"/>
+                    <p>IP <b t-esc="d.ip"/></p>
+                    <p>Gate <b t-esc="d.gate || '—'"/></p>
+                    <p>Maintenance equipment <b t-esc="d.equipment"/></p>
+                    <p>Open requests <b t-esc="d.maintenance_requests"/></p>
+                    <p>Health <b class="purple"><t t-esc="d.health"/>%</b> · Firmware <t t-esc="d.firmware"/></p>
+                    <button class="gf-btn outline" t-on-click="() => this.logMaintenance(d)">Log maintenance request</button>
+                </article>
+            </t>
+        </div>
+    </t>
+
+    <!-- ========== 20 Topology ========== -->
+    <t t-name="gate_management.Topology">
+        <div class="gf-tabs">
+            <t t-foreach="hardwareTabs" t-as="tab" t-key="tab.id">
+                <button t-att-class="{ 'is-on': state.page === tab.id }" t-on-click="() => this.onNav(tab.id)" t-esc="tab.label"/>
+            </t>
+        </div>
+        <div class="gf-head"><h1>System Network Topology</h1><p>Odoo → IoT Gateway → Gate Controller → Cameras / Barriers.</p></div>
+        <div class="gf-topo">
+            <t t-foreach="state.data.nodes || []" t-as="n" t-key="n.id">
+                <div class="gf-node"><b t-esc="n.name"/><br/><span style="font-size:11px;color:#6b7280" t-esc="n.type"/> · <t t-esc="n.ip"/></div>
+            </t>
+        </div>
+        <article class="gf-card">
+            <h3>Connections</h3>
+            <t t-foreach="state.data.connections || []" t-as="c" t-key="c.id">
+                <p><b t-esc="c.source"/> → <b t-esc="c.target"/> <em class="gf-pill info" t-esc="c.type"/></p>
+            </t>
+        </article>
+    </t>
+
+    <!-- ========== 21 Notifications ========== -->
+    <t t-name="gate_management.Notes">
+        <div class="gf-tabs">
+            <t t-foreach="settingsTabs" t-as="tab" t-key="tab.id">
+                <button t-att-class="{ 'is-on': state.page === tab.id }" t-on-click="() => this.onNav(tab.id)" t-esc="tab.label"/>
+            </t>
+        </div>
+        <div class="gf-head">
+            <div><h1>Notifications Center</h1><p>Security alerts, visitor updates, gate events and system messages.</p></div>
+            <button class="gf-btn" t-on-click="() => this.markNotes('all')">Mark all read</button>
+        </div>
+        <div class="gf-tabs">
+            <button t-att-class="{ 'is-on': state.noteTab === 'all' }" t-on-click="() => this.state.noteTab = 'all'">All</button>
+            <button t-att-class="{ 'is-on': state.noteTab === 'security' }" t-on-click="() => this.state.noteTab = 'security'">Security</button>
+            <button t-att-class="{ 'is-on': state.noteTab === 'visitor' }" t-on-click="() => this.state.noteTab = 'visitor'">Visitor</button>
+            <button t-att-class="{ 'is-on': state.noteTab === 'gate' }" t-on-click="() => this.state.noteTab = 'gate'">Gate</button>
+            <button t-att-class="{ 'is-on': state.noteTab === 'system' }" t-on-click="() => this.state.noteTab = 'system'">System</button>
+        </div>
+        <article class="gf-card">
+            <t t-foreach="notes()" t-as="n" t-key="n.id">
+                <div class="gf-row">
+                    <div>
+                        <b t-esc="n.title"/>
+                        <p style="margin:4px 0 0;color:#6b7280;font-size:12px" t-esc="n.message"/>
+                    </div>
+                    <button class="gf-link" t-on-click="() => this.markNotes('read', n.id)" t-esc="n.read ? 'Read' : 'Mark read'"/>
+                </div>
+            </t>
+        </article>
+    </t>
+
+    <!-- ========== 22 Settings ========== -->
+    <t t-name="gate_management.Settings">
+        <t t-set="c" t-value="state.config"/>
+        <div class="gf-tabs">
+            <t t-foreach="settingsTabs" t-as="tab" t-key="tab.id">
+                <button t-att-class="{ 'is-on': state.page === tab.id }" t-on-click="() => this.onNav(tab.id)" t-esc="tab.label"/>
+            </t>
+        </div>
+        <div class="gf-head"><h1>System Settings</h1><p>Organization profile, AI thresholds and alert configuration.</p></div>
+        <article class="gf-card gf-form" style="max-width:640px">
+            <div class="gf-section-title"><i class="fa fa-building"/> Organization Profile</div>
+            <label><span>Organization</span><input t-att-value="c.org" t-on-input="(ev) => this.state.config.org = ev.target.value"/></label>
+            <div class="gf-section-title"><i class="fa fa-sliders"/> AI Thresholds</div>
+            <div class="gf-grid-2">
+                <label><span>Facial Recognition Sensitivity</span><input type="number" step="0.01" t-att-value="c.face" t-on-input="(ev) => this.state.config.face = ev.target.value"/></label>
+                <label><span>License Plate Confidence</span><input type="number" step="0.01" t-att-value="c.lpr" t-on-input="(ev) => this.state.config.lpr = ev.target.value"/></label>
+            </div>
+            <div class="gf-section-title"><i class="fa fa-bell"/> Alerts &amp; Optimization</div>
+            <label class="gf-check"><input type="checkbox" t-att-checked="c.tailgating" t-on-change="() => this.state.config.tailgating = !this.state.config.tailgating"/> Tailgating detection</label>
+            <label class="gf-check"><input type="checkbox" t-att-checked="c.unauth" t-on-change="() => this.state.config.unauth = !this.state.config.unauth"/> Unauthorized access alert</label>
+            <label class="gf-check"><input type="checkbox" t-att-checked="c.auto" t-on-change="() => this.state.config.auto = !this.state.config.auto"/> AI auto-optimization</label>
+            <button class="gf-btn primary" style="margin-top:12px" t-on-click="() => this.saveSettings()">Save configuration</button>
+        </article>
+    </t>
+</templates>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_ot_portal" model="ir.actions.client">
+        <field name="name">Owner Tenant Management</field>
+        <field name="tag">owner_tenant_management.portal</field>
+    </record>
+    <menuitem id="menu_ot_root"
+              name="Owner Tenant"
+              action="action_ot_portal"
+              web_icon="owner_tenant_management,static/description/icon.svg"
+              sequence="36"/>
+</odoo>

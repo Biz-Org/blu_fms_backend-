@@ -1,0 +1,607 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="esg_management.Portal">
+        <div class="o_esg_portal">
+            <aside class="esg-side">
+                <div class="esg-brand">
+                    <span>F</span>
+                    <div>
+                        <b>FMS Enterprise</b>
+                        <em>ESG &amp; Sustainability</em>
+                    </div>
+                </div>
+                <nav>
+                    <t t-foreach="navItems" t-as="item" t-key="item.id">
+                        <button type="button" t-att-class="{ 'is-on': state.page === item.id }" t-on-click="() => this.onNav(item.id)">
+                            <i t-attf-class="fa #{item.icon}"/><span t-esc="item.label"/>
+                        </button>
+                    </t>
+                </nav>
+            </aside>
+            <main class="esg-main">
+                <header class="esg-head">
+                    <div>
+                        <h1 t-esc="pageTitle()"/>
+                        <p t-if="state.data.period_label">Portfolio data for <t t-esc="state.data.period_label"/></p>
+                    </div>
+                    <div class="esg-head-tools">
+                        <label class="esg-search"><i class="fa fa-search"/><input placeholder="Search facilities..." t-on-input="(ev) => this.state.search = ev.target.value"/></label>
+                        <button type="button" class="esg-btn" t-on-click="() => this.download(state.page === 'reporting' ? state.reportTemplate : 'energy')"><i class="fa fa-download"/> Export</button>
+                        <button type="button" class="esg-btn esg-btn-primary" t-if="state.page === 'kpis'" t-on-click="() => this.state.show = 'kpi'">+ Add KPI</button>
+                        <button type="button" class="esg-btn esg-btn-primary" t-if="state.page === 'targets'" t-on-click="() => this.state.show = 'target'">+ Add Target</button>
+                        <button type="button" class="esg-btn esg-btn-primary" t-if="state.page === 'energy_analysis' || state.page === 'energy'" t-on-click="() => this.openReading('energy')">+ Add Data</button>
+                        <button type="button" class="esg-btn esg-btn-primary" t-if="state.page === 'water' || state.page === 'water_analysis'" t-on-click="() => this.openReading('water')">+ Add Data</button>
+                        <button type="button" class="esg-btn esg-btn-primary" t-if="state.page === 'carbon' || state.page === 'emissions'" t-on-click="() => this.openReading('carbon')">+ Add Entry</button>
+                    </div>
+                </header>
+                <t t-if="state.loading"><div class="esg-empty">Loading sustainability data...</div></t>
+                <div t-else="" class="esg-scroll">
+                    <t t-if="state.show === 'reading'" t-call="esg_management.ReadingForm"/>
+                    <t t-if="state.show === 'kpi'" t-call="esg_management.KpiForm"/>
+                    <t t-if="state.show === 'target'" t-call="esg_management.TargetForm"/>
+                    <t t-if="state.page === 'dashboard'" t-call="esg_management.Dashboard"/>
+                    <t t-elif="state.page === 'energy'" t-call="esg_management.Energy"/>
+                    <t t-elif="state.page === 'water'" t-call="esg_management.Water"/>
+                    <t t-elif="state.page === 'carbon'" t-call="esg_management.Carbon"/>
+                    <t t-elif="state.page === 'kpis'" t-call="esg_management.Kpis"/>
+                    <t t-elif="state.page === 'energy_analysis'" t-call="esg_management.EnergyAnalysis"/>
+                    <t t-elif="state.page === 'water_analysis'" t-call="esg_management.WaterAnalysis"/>
+                    <t t-elif="state.page === 'emissions'" t-call="esg_management.Emissions"/>
+                    <t t-elif="state.page === 'targets'" t-call="esg_management.Targets"/>
+                    <t t-elif="state.page === 'reporting'" t-call="esg_management.Reporting"/>
+                </div>
+            </main>
+        </div>
+    </t>
+
+    <t t-name="esg_management.Filters">
+        <div class="esg-filters">
+            <select t-model="state.filters.property_id" t-on-change="onPropertyChange">
+                <option value="0">All Properties</option>
+                <t t-foreach="properties()" t-as="prop" t-key="prop.id"><option t-att-value="prop.id" t-esc="prop.name"/></t>
+            </select>
+            <select t-model="state.filters.building_id">
+                <option value="0">All Buildings</option>
+                <t t-foreach="buildings()" t-as="bld" t-key="bld.id"><option t-att-value="bld.id" t-esc="bld.name"/></t>
+            </select>
+            <select t-model="state.filters.period">
+                <option value="ytd">YTD</option>
+                <option value="prev">Previous Year</option>
+                <option value="12m">Last 12 Months</option>
+                <option value="30d">Last 30 Days</option>
+            </select>
+            <button type="button" class="esg-btn esg-btn-primary" t-on-click="applyFilters">Apply Filters</button>
+            <span class="esg-applied" t-if="dash().energy_scope" t-esc="dash().energy_scope"/>
+        </div>
+    </t>
+
+    <t t-name="esg_management.ReadingForm">
+        <form class="esg-form" t-on-submit.prevent="saveReading">
+            <b>Save meter reading</b>
+            <select t-model="state.reading.metric">
+                <option value="energy">Energy (kWh)</option>
+                <option value="water">Water (m3)</option>
+                <option value="carbon">Carbon (tCO2e)</option>
+                <option value="waste">Waste diversion (%)</option>
+                <option value="renewable">Renewable mix (%)</option>
+            </select>
+            <select t-model="state.reading.property_id">
+                <option value="">Property</option>
+                <t t-foreach="properties()" t-as="prop" t-key="prop.id"><option t-att-value="prop.id" t-esc="prop.name"/></t>
+            </select>
+            <select t-model="state.reading.building_id">
+                <option value="">Building</option>
+                <t t-foreach="formBuildings()" t-as="bld" t-key="bld.id"><option t-att-value="bld.id" t-esc="bld.name"/></t>
+            </select>
+            <input type="date" t-model="state.reading.date" required="required"/>
+            <input type="number" step="0.01" placeholder="Value" t-model="state.reading.value" required="required"/>
+            <select t-if="state.reading.metric === 'carbon'" t-model="state.reading.scope">
+                <option value="1">Scope 1</option>
+                <option value="2">Scope 2</option>
+                <option value="3">Scope 3</option>
+            </select>
+            <select t-model="state.reading.segment">
+                <option value="office">Office</option>
+                <option value="warehouse">Warehouse</option>
+                <option value="manufacturing">Manufacturing</option>
+                <option value="logistics">Logistics</option>
+                <option value="other">Other</option>
+            </select>
+            <label class="esg-check" t-if="state.reading.metric === 'energy'"><input type="checkbox" t-model="state.reading.peak"/> Peak hours</label>
+            <button type="submit" class="esg-btn esg-btn-primary" t-att-disabled="state.saving">Save</button>
+            <button type="button" class="esg-btn" t-on-click="() => this.state.show = ''">Cancel</button>
+        </form>
+    </t>
+
+    <t t-name="esg_management.KpiForm">
+        <form class="esg-form" t-on-submit.prevent="saveKpi">
+            <b>Add KPI</b>
+            <input placeholder="KPI name" t-model="state.kpi.name" required="required"/>
+            <select t-model="state.kpi.category">
+                <option value="energy">Energy</option>
+                <option value="water">Water</option>
+                <option value="carbon">Carbon</option>
+                <option value="waste">Waste</option>
+            </select>
+            <input type="number" step="0.01" placeholder="Target" t-model="state.kpi.target" required="required"/>
+            <input placeholder="Unit" t-model="state.kpi.unit"/>
+            <select t-model="state.kpi.direction">
+                <option value="lower">Lower is better</option>
+                <option value="higher">Higher is better</option>
+            </select>
+            <button type="submit" class="esg-btn esg-btn-primary">Save KPI</button>
+            <button type="button" class="esg-btn" t-on-click="() => this.state.show = ''">Cancel</button>
+        </form>
+    </t>
+
+    <t t-name="esg_management.TargetForm">
+        <form class="esg-form" t-on-submit.prevent="saveTarget">
+            <b t-esc="state.targetId ? 'Edit target' : 'Add target'"/>
+            <input placeholder="Target name" t-model="state.target.name" required="required"/>
+            <input placeholder="Subtitle" t-model="state.target.subtitle"/>
+            <select t-model="state.target.metric">
+                <option value="energy">Energy</option>
+                <option value="water">Water</option>
+                <option value="carbon">Carbon</option>
+                <option value="waste">Waste</option>
+                <option value="renewable">Renewable</option>
+            </select>
+            <select t-model="state.target.measure">
+                <option value="total">Total</option>
+                <option value="intensity">Intensity</option>
+                <option value="rate">Rate</option>
+            </select>
+            <select t-model="state.target.direction">
+                <option value="lower">Lower is better</option>
+                <option value="higher">Higher is better</option>
+            </select>
+            <input type="number" step="0.01" placeholder="Baseline" t-model="state.target.baseline"/>
+            <input type="number" step="0.01" placeholder="Target" t-model="state.target.target_value"/>
+            <input placeholder="Unit" t-model="state.target.unit"/>
+            <input type="date" t-model="state.target.due_date"/>
+            <button type="submit" class="esg-btn esg-btn-primary">Save Target</button>
+            <button type="button" class="esg-btn" t-on-click="() => { this.state.show = ''; this.state.targetId = false; }">Cancel</button>
+        </form>
+    </t>
+
+    <t t-name="esg_management.Dashboard">
+        <t t-call="esg_management.Filters"/>
+        <div class="esg-kpis">
+            <article class="esg-card"><span>Total Energy</span><strong t-esc="dash().energy"/><em>kWh</em><small t-att-class="deltaClass(dash().energy_delta)" t-esc="(dash().energy_delta || 0) + '%'"/> </article>
+            <article class="esg-card"><span>Water</span><strong t-esc="dash().water"/><em>m3</em><small t-att-class="deltaClass(dash().water_delta)" t-esc="(dash().water_delta || 0) + '%'"/></article>
+            <article class="esg-card"><span>Footprint</span><strong t-esc="dash().footprint"/><em>tCO2e</em><small t-att-class="deltaClass(dash().footprint_delta)" t-esc="(dash().footprint_delta || 0) + '%'"/></article>
+            <article class="esg-card"><span>Emissions</span><strong t-esc="dash().emissions"/><em>Scope 1+2</em><small t-att-class="deltaClass(dash().emissions_delta)" t-esc="(dash().emissions_delta || 0) + '%'"/></article>
+            <article class="esg-card"><span>KPI Score</span><strong><t t-esc="dash().score"/>/100</strong><div class="esg-track"><i t-attf-style="width: #{dash().score || 0}%"/></div></article>
+            <article class="esg-card"><span>Target Ach.</span><strong t-esc="(dash().target_ach || 0) + '%'"/><em>Progress</em><div class="esg-track"><i t-attf-style="width: #{dash().target_ach || 0}%"/></div></article>
+        </div>
+        <div class="esg-grid">
+            <section class="esg-card esg-span2">
+                <div class="esg-card-head">
+                    <h3>Energy Consumption Trend</h3>
+                    <small t-esc="dash().energy_scope"/>
+                </div>
+                <p class="esg-lead" t-if="!(dash().energy_trend || []).length">No energy readings for this filter.</p>
+                <svg t-else="" viewBox="0 0 640 210" class="esg-energy-chart" t-att-aria-label="dash().energy_scope">
+                    <t t-set="chart" t-value="energyChart(dash().energy_trend)"/>
+                    <line class="esg-axis" x1="44" t-att-y1="chart.baseline" x2="628" t-att-y2="chart.baseline"/>
+                    <path class="esg-area" t-att-d="chart.area"/>
+                    <polyline class="esg-stroke" t-att-points="chart.line"/>
+                    <t t-foreach="chart.dots" t-as="dot" t-key="dot_index">
+                        <circle t-att-cx="dot.x" t-att-cy="dot.y" r="4"><title t-esc="dot.label + ' ' + dot.value"/></circle>
+                        <text class="esg-point" t-att-x="dot.x" t-att-y="dot.y - 8" t-esc="dot.value"/>
+                        <text class="esg-month" t-att-x="dot.x" t-att-y="202" t-esc="dot.label"/>
+                    </t>
+                </svg>
+            </section>
+            <section class="esg-card">
+                <h3>Performance Summary</h3>
+                <div class="esg-perf"><span><i class="fa fa-bolt"/> Energy</span><b t-att-class="deltaClass(dash().energy_delta)" t-esc="(dash().energy_delta || 0) + '% YOY'"/></div>
+                <div class="esg-perf"><span><i class="fa fa-tint"/> Water</span><b t-att-class="deltaClass(dash().water_delta)" t-esc="(dash().water_delta || 0) + '% YOY'"/></div>
+                <div class="esg-perf"><span><i class="fa fa-cloud"/> Carbon</span><b t-att-class="deltaClass(dash().footprint_delta)" t-esc="(dash().footprint_delta || 0) + '% YOY'"/></div>
+                <h3 class="esg-gap">Recent Activities</h3>
+                <t t-foreach="activities()" t-as="act" t-key="act.id">
+                    <p class="esg-activity"><b t-esc="act.name"/><small t-esc="act.detail"/></p>
+                </t>
+            </section>
+            <section class="esg-card">
+                <h3>Water Usage Trend</h3>
+                <div class="esg-bars">
+                    <t t-foreach="dash().water_trend || []" t-as="bar" t-key="bar_index">
+                        <div class="esg-bar-col"><div class="esg-bar is-soft" t-attf-style="height: #{bar.pct}%"/><span t-esc="bar.label"/></div>
+                    </t>
+                </div>
+            </section>
+            <section class="esg-card">
+                <h3>Carbon Emission Trend</h3>
+                <div class="esg-bars">
+                    <t t-foreach="dash().carbon_trend || []" t-as="bar" t-key="bar_index">
+                        <div class="esg-bar-col"><div class="esg-bar is-area" t-attf-style="height: #{bar.pct}%"/><span t-esc="bar.label"/></div>
+                    </t>
+                </div>
+            </section>
+            <section class="esg-card esg-center">
+                <h3>Sustainability Target Progress</h3>
+                <div class="esg-donut" t-att-style="donutStyle([{pct: dash().target_ach || 0, color: '#7c3aed'}, {pct: 100 - (dash().target_ach || 0), color: '#f3e8ff'}])"><span t-esc="(dash().target_ach || 0) + '%'"/></div>
+            </section>
+        </div>
+        <section class="esg-card">
+            <div class="esg-card-head"><h3>Target Achievement Details</h3><button type="button" class="esg-btn" t-on-click="() => this.download('targets')">Export</button></div>
+            <table class="esg-table">
+                <thead><tr><th>Target Name</th><th>Current</th><th>Target</th><th>Achievement</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr t-foreach="visible(targets())" t-as="row" t-key="row.id">
+                        <td t-esc="row.name"/>
+                        <td t-esc="row.current_label"/>
+                        <td t-esc="row.target_label"/>
+                        <td><div class="esg-track"><i t-attf-style="width: #{row.achievement}%"/></div><small t-esc="row.achievement + '%'"/></td>
+                        <td><span t-attf-class="esg-badge is-#{row.status}" t-esc="statusLabel(row.status)"/></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </t>
+
+    <t t-name="esg_management.Energy">
+        <t t-call="esg_management.Filters"/>
+        <p class="esg-lead">Monitor and analyze energy consumption across facilities. Readings are stored on each property and building.</p>
+        <div class="esg-kpis esg-kpis-5">
+            <article class="esg-card"><span>Total Energy</span><strong t-esc="energy().total"/><em>kWh</em></article>
+            <article class="esg-card"><span>Current Period</span><strong t-esc="energy().current"/><em>kWh</em></article>
+            <article class="esg-card"><span>Previous Period</span><strong t-esc="energy().previous"/><em>kWh</em></article>
+            <article class="esg-card"><span>Variance</span><strong t-att-class="deltaClass(energy().variance)" t-esc="(energy().variance || 0) + '%'"/><em>vs previous</em></article>
+            <article class="esg-card"><span>Efficiency</span><strong t-esc="energy().intensity"/><em>kWh/sqft</em></article>
+        </div>
+        <div class="esg-split">
+            <section class="esg-card">
+                <h3>Energy by Month</h3>
+                <div class="esg-bars esg-bars-tall">
+                    <t t-foreach="energy().daily || []" t-as="bar" t-key="bar_index">
+                        <div class="esg-bar-col"><div class="esg-bar" t-attf-style="height: #{bar.pct}%" t-att-title="bar.label_value"/><span t-esc="bar.label"/></div>
+                    </t>
+                </div>
+            </section>
+            <section class="esg-card">
+                <h3>Monthly Usage</h3>
+                <div class="esg-bars esg-bars-tall">
+                    <t t-foreach="energy().monthly || []" t-as="bar" t-key="bar_index">
+                        <div class="esg-bar-col"><div class="esg-bar is-soft" t-attf-style="height: #{bar.pct}%"/><span t-esc="bar.label"/></div>
+                    </t>
+                </div>
+            </section>
+        </div>
+        <section class="esg-card">
+            <h3>Property Breakdown</h3>
+            <table class="esg-table">
+                <thead><tr><th>Property</th><th>Building</th><th>Consumption (kWh)</th><th>Variance</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr t-foreach="visible(energy().rows)" t-as="row" t-key="row_index">
+                        <td t-esc="row.property"/><td t-esc="row.building"/><td t-esc="row.current_label"/><td t-esc="row.variance_label"/>
+                        <td><span t-attf-class="esg-badge is-#{row.status}" t-esc="statusLabel(row.status)"/></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </t>
+
+    <t t-name="esg_management.Water">
+        <t t-call="esg_management.Filters"/>
+        <p class="esg-lead">Enterprise-wide water usage and conservation performance.</p>
+        <div class="esg-kpis">
+            <article class="esg-card"><span>Total Water Usage</span><strong t-esc="water().total"/><em>m3</em><small t-att-class="deltaClass(water().saved_delta, true)" t-esc="(water().saved_delta || 0) + '%'"/></article>
+            <article class="esg-card"><span>Average Daily Usage</span><strong t-esc="water().daily"/><em>m3/day</em></article>
+            <article class="esg-card"><span>Water Saved</span><strong t-esc="water().saved"/><em>m3 vs previous</em></article>
+            <article class="esg-card"><span>Conservation Rate</span><strong t-esc="(water().rate || 0) + '%'"/></article>
+        </div>
+        <div class="esg-split">
+            <section class="esg-card esg-grow">
+                <h3>Water Usage Trend</h3>
+                <div class="esg-bars esg-bars-tall">
+                    <t t-foreach="water().trend || []" t-as="bar" t-key="bar_index">
+                        <div class="esg-bar-col"><div class="esg-bar" t-attf-style="height: #{bar.pct}%"/><span t-esc="bar.label"/></div>
+                    </t>
+                </div>
+            </section>
+            <div class="esg-stack">
+                <section class="esg-card">
+                    <h3>Consumption by Building</h3>
+                    <t t-foreach="water().by_building || []" t-as="row" t-key="row_index">
+                        <div class="esg-line-row"><span t-esc="row.name"/><b t-esc="row.pct + '%'"/></div>
+                        <div class="esg-track"><i t-attf-style="width: #{row.pct}%"/></div>
+                    </t>
+                </section>
+                <section class="esg-card esg-center">
+                    <h3>Conservation Target</h3>
+                    <div class="esg-donut" t-att-style="donutStyle([{pct: water().goal || 0, color: '#7c3aed'}, {pct: 100 - (water().goal || 0), color: '#f3e8ff'}])"><span t-esc="(water().goal || 0) + '%'"/></div>
+                </section>
+            </div>
+        </div>
+        <section class="esg-card">
+            <h3>Facility Detail Report</h3>
+            <table class="esg-table">
+                <thead><tr><th>Property</th><th>Building</th><th>Water Usage</th><th>Previous</th><th>Variance</th></tr></thead>
+                <tbody>
+                    <tr t-foreach="visible(water().rows)" t-as="row" t-key="row_index">
+                        <td t-esc="row.property"/><td t-esc="row.building"/><td t-esc="row.current_label"/><td t-esc="row.previous_label"/><td t-esc="row.variance_label"/>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </t>
+
+    <t t-name="esg_management.Carbon">
+        <t t-call="esg_management.Filters"/>
+        <p class="esg-lead">Enterprise-wide emissions tracking and reduction progress.</p>
+        <div class="esg-kpis">
+            <article class="esg-card"><span>Total Carbon Footprint</span><strong t-esc="carbon().total"/><em>tCO2e</em></article>
+            <article class="esg-card"><span>Avg. per Property</span><strong t-esc="carbon().per_property"/><em>tCO2e</em></article>
+            <article class="esg-card"><span>Emissions Trend</span><strong t-att-class="deltaClass(carbon().trend)" t-esc="(carbon().trend || 0) + '%'"/><em>vs last period</em></article>
+            <article class="esg-card"><span>Reduction Goal</span><strong t-esc="(carbon().goal || 0) + '%'"/><div class="esg-track"><i t-attf-style="width: #{carbon().goal || 0}%"/></div></article>
+        </div>
+        <div class="esg-split">
+            <section class="esg-card esg-grow">
+                <h3>Monthly Emissions vs Previous Year</h3>
+                <div class="esg-bars esg-bars-tall">
+                    <t t-foreach="carbon().months || []" t-as="bar" t-key="bar_index">
+                        <div class="esg-bar-col">
+                            <div class="esg-pair">
+                                <div class="esg-bar" t-attf-style="height: #{bar.current_pct}%" t-att-title="bar.current"/>
+                                <div class="esg-bar is-soft" t-attf-style="height: #{bar.previous_pct}%" t-att-title="bar.previous"/>
+                            </div>
+                            <span t-esc="bar.label"/>
+                        </div>
+                    </t>
+                </div>
+            </section>
+            <section class="esg-card esg-center">
+                <h3>Contribution Breakdown</h3>
+                <div class="esg-donut" t-att-style="donutStyle(dash().scopes)"><span>100%</span></div>
+                <ul class="esg-legend">
+                    <li t-foreach="dash().scopes || []" t-as="scope" t-key="scope.key"><i t-attf-style="background: #{scope.color}"/><span t-esc="scope.label"/> <b t-esc="scope.pct + '%'"/></li>
+                </ul>
+            </section>
+        </div>
+        <section class="esg-card">
+            <h3>Top Emitters by Property</h3>
+            <t t-foreach="visible(carbon().rows)" t-as="row" t-key="row_index">
+                <div class="esg-line-row"><span t-esc="row.property + ' · ' + row.building"/><b t-esc="row.current_label + ' tCO2e'"/></div>
+                <div class="esg-track"><i t-attf-style="width: #{share(row.current, carbon().rows[0].current)}%"/></div>
+            </t>
+        </section>
+    </t>
+
+    <t t-name="esg_management.Kpis">
+        <div class="esg-kpis">
+            <article class="esg-card" t-foreach="kpis()" t-as="kpi" t-key="kpi.id">
+                <span t-esc="kpi.category"/><strong t-esc="kpi.card"/><em t-esc="kpi.unit"/>
+                <small t-att-class="deltaClass(kpi.delta, kpi.direction === 'higher')" t-esc="kpi.delta + '% vs target'"/>
+            </article>
+        </div>
+        <section class="esg-card">
+            <h3>Detailed KPI Tracking</h3>
+            <table class="esg-table">
+                <thead><tr><th>KPI Name</th><th>Category</th><th>Target</th><th>Actual</th><th>Achievement</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr t-foreach="visible(kpis())" t-as="row" t-key="row.id">
+                        <td t-esc="row.name"/>
+                        <td t-esc="row.category"/>
+                        <td t-esc="row.target_label"/>
+                        <td t-esc="row.actual_label"/>
+                        <td><div class="esg-track"><i t-attf-style="width: #{Math.min(row.achievement, 100)}%"/></div> <small t-esc="row.achievement + '%'"/></td>
+                        <td><span t-attf-class="esg-badge is-#{row.status}" t-esc="statusLabel(row.status)"/></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </t>
+
+    <t t-name="esg_management.EnergyAnalysis">
+        <t t-call="esg_management.Filters"/>
+        <div class="esg-split">
+            <section class="esg-card esg-grow">
+                <h3>Energy Consumption Trends</h3>
+                <div class="esg-bars esg-bars-tall">
+                    <t t-foreach="analysis().trend || []" t-as="bar" t-key="bar_index">
+                        <div class="esg-bar-col"><div class="esg-bar" t-attf-style="height: #{bar.pct}%"/><span t-esc="bar.label"/></div>
+                    </t>
+                </div>
+            </section>
+            <div class="esg-stack">
+                <section class="esg-card esg-center">
+                    <h3>Variance Overview</h3>
+                    <strong class="esg-hero" t-esc="analysis().total"/>
+                    <em>Total kWh consumed</em>
+                    <p>vs previous <b t-att-class="deltaClass(analysis().vs_previous)" t-esc="(analysis().vs_previous || 0) + '%'"/></p>
+                    <p>vs prior baseline <b t-att-class="deltaClass(analysis().vs_target)" t-esc="(analysis().vs_target || 0) + '%'"/></p>
+                </section>
+                <section class="esg-card esg-center">
+                    <h3>Period Distribution</h3>
+                    <div class="esg-donut" t-att-style="donutStyle([{pct: analysis().peak_pct || 0, color: '#7c3aed'}, {pct: 100 - (analysis().peak_pct || 0), color: '#d9ccff'}])"><span t-esc="(analysis().peak_pct || 0) + '%'"/></div>
+                    <p>Peak <b t-esc="analysis().peak"/> · Off-peak <b t-esc="analysis().offpeak"/></p>
+                </section>
+            </div>
+        </div>
+        <section class="esg-card">
+            <h3>Top Energy Consumers</h3>
+            <table class="esg-table">
+                <thead><tr><th>Property</th><th>Building</th><th>Consumption (kWh)</th><th>Variance</th></tr></thead>
+                <tbody>
+                    <tr t-foreach="visible(analysis().rows)" t-as="row" t-key="row_index">
+                        <td t-esc="row.property"/><td t-esc="row.building"/><td t-esc="row.current_label"/><td t-esc="row.variance_label"/>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </t>
+
+    <t t-name="esg_management.WaterAnalysis">
+        <t t-call="esg_management.Filters"/>
+        <div class="esg-split">
+            <section class="esg-card esg-grow">
+                <h3>Usage Trends</h3>
+                <div class="esg-bars esg-bars-tall">
+                    <t t-foreach="waterAnalysis().trend || []" t-as="bar" t-key="bar_index">
+                        <div class="esg-bar-col"><div class="esg-bar is-soft" t-attf-style="height: #{bar.pct}%"/><span t-esc="bar.label"/></div>
+                    </t>
+                </div>
+            </section>
+            <section class="esg-card esg-center">
+                <h3>Conservation Goal</h3>
+                <div class="esg-donut" t-att-style="donutStyle(waterGoal(waterAnalysis()))"><span t-esc="(waterAnalysis().reduction || 0) + '%'"/></div>
+                <p t-esc="waterAnalysis().goal_note"/>
+            </section>
+        </div>
+        <div class="esg-grid esg-grid-3">
+            <section class="esg-card">
+                <h3>YoY Comparison</h3>
+                <div class="esg-line-row"><span>Current</span><b t-esc="waterAnalysis().current"/></div>
+                <div class="esg-track"><i style="width: 86%"/></div>
+                <div class="esg-line-row"><span>Previous</span><b t-esc="waterAnalysis().previous"/></div>
+                <div class="esg-track"><i class="is-muted" style="width: 100%"/></div>
+                <p>Overall variance <b t-esc="(waterAnalysis().variance || 0) + '%'"/></p>
+            </section>
+            <section class="esg-card">
+                <h3>Usage by Category</h3>
+                <div class="esg-donut esg-donut-sm" t-att-style="donutStyle(waterAnalysis().segments)"/>
+                <ul class="esg-legend">
+                    <li t-foreach="waterAnalysis().segments || []" t-as="seg" t-key="seg.key"><span t-esc="seg.label"/> <b t-esc="seg.pct + '%'"/></li>
+                </ul>
+            </section>
+            <section class="esg-card">
+                <h3>Top Consumers</h3>
+                <t t-foreach="waterAnalysis().top || []" t-as="row" t-key="row_index">
+                    <div class="esg-line-row"><span t-esc="row.property"/><b t-esc="row.current_label"/></div>
+                    <div class="esg-track"><i t-attf-style="width: #{share(row.current, waterAnalysis().top[0].current)}%"/></div>
+                </t>
+            </section>
+        </div>
+        <section class="esg-card">
+            <h3>Water Consumption Analysis Table</h3>
+            <table class="esg-table">
+                <thead><tr><th>Property</th><th>Building</th><th>Current</th><th>Previous</th><th>Variance</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr t-foreach="visible(waterAnalysis().rows)" t-as="row" t-key="row_index">
+                        <td t-esc="row.property"/><td t-esc="row.building"/><td t-esc="row.current_label"/><td t-esc="row.previous_label"/><td t-esc="row.variance_label"/>
+                        <td><span t-attf-class="esg-badge is-#{row.status}" t-esc="statusLabel(row.status)"/></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </t>
+
+    <t t-name="esg_management.Emissions">
+        <t t-call="esg_management.Filters"/>
+        <div class="esg-kpis">
+            <article class="esg-card"><span>Total Emissions</span><strong t-esc="emissions().total"/><em>tCO2e</em></article>
+            <article class="esg-card"><span>Emissions Trend</span><strong t-att-class="deltaClass(emissions().trend)" t-esc="(emissions().trend || 0) + '%'"/></article>
+            <article class="esg-card"><span>Reduction Target</span><strong t-esc="(emissions().reduction_target || 0) + '%'"/><div class="esg-track"><i t-attf-style="width: #{emissions().reduction_target || 0}%"/></div></article>
+            <article class="esg-card"><span>Carbon Intensity</span><strong t-esc="emissions().intensity"/><em>kgCO2e/sqft</em></article>
+        </div>
+        <div class="esg-grid esg-grid-3">
+            <section class="esg-card">
+                <h3>Monthly Emissions</h3>
+                <div class="esg-bars">
+                    <t t-foreach="emissions().monthly || []" t-as="bar" t-key="bar_index">
+                        <div class="esg-bar-col"><div class="esg-bar" t-attf-style="height: #{bar.pct}%"/><span t-esc="bar.label"/></div>
+                    </t>
+                </div>
+            </section>
+            <section class="esg-card esg-center">
+                <h3>Distribution</h3>
+                <div class="esg-donut" t-att-style="donutStyle(emissions().scopes)"><span>100%</span></div>
+                <ul class="esg-legend"><li t-foreach="emissions().scopes || []" t-as="scope" t-key="scope.key"><span t-esc="scope.label"/> <b t-esc="scope.pct + '%'"/></li></ul>
+            </section>
+            <section class="esg-card">
+                <h3>YoY Comparison</h3>
+                <svg viewBox="0 0 280 96" class="esg-line">
+                    <polyline t-att-points="linePoints(emissions().yoy)" class="is-current"/>
+                    <polyline t-att-points="linePoints(emissions().yoy_prev)" class="is-prev"/>
+                </svg>
+            </section>
+        </div>
+        <section class="esg-card">
+            <h3>Emission Performance by Property</h3>
+            <table class="esg-table">
+                <thead><tr><th>Property</th><th>Current (tCO2e)</th><th>Previous</th><th>Variance</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr t-foreach="visible(emissions().rows)" t-as="row" t-key="row_index">
+                        <td t-esc="row.property + ' · ' + row.building"/><td t-esc="row.current_label"/><td t-esc="row.previous_label"/><td t-esc="row.variance_label"/>
+                        <td><span t-attf-class="esg-badge is-#{row.status}" t-esc="statusLabel(row.status)"/></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </t>
+
+    <t t-name="esg_management.Targets">
+        <div class="esg-split">
+            <section class="esg-card esg-grow">
+                <h3>Progress by Category</h3>
+                <div class="esg-bars esg-bars-tall">
+                    <t t-foreach="categoryBars()" t-as="bar" t-key="bar.label">
+                        <div class="esg-bar-col"><div class="esg-bar is-soft" t-attf-style="height: #{bar.pct}%"/><span t-esc="bar.label"/></div>
+                    </t>
+                </div>
+            </section>
+            <section class="esg-card esg-center">
+                <h3>Overall Achievement</h3>
+                <div class="esg-donut" t-att-style="donutStyle([{pct: overall(), color: '#7c3aed'}, {pct: 100 - overall(), color: '#f3e8ff'}])"><span t-esc="overall() + '%'"/></div>
+                <p>Across <t t-esc="targets().length"/> active targets</p>
+                <div class="esg-chips">
+                    <button type="button" t-att-class="{ 'is-on': state.targetFilter === 'all' }" t-on-click="() => this.state.targetFilter = 'all'">All (<t t-esc="targetCount('all')"/>)</button>
+                    <button type="button" t-att-class="{ 'is-on': state.targetFilter === 'on_track' }" t-on-click="() => this.state.targetFilter = 'on_track'">On Track (<t t-esc="targetCount('on_track')"/>)</button>
+                    <button type="button" t-att-class="{ 'is-on': state.targetFilter === 'at_risk' }" t-on-click="() => this.state.targetFilter = 'at_risk'">At Risk (<t t-esc="targetCount('at_risk')"/>)</button>
+                    <button type="button" t-att-class="{ 'is-on': state.targetFilter === 'achieved' }" t-on-click="() => this.state.targetFilter = 'achieved'">Achieved (<t t-esc="targetCount('achieved')"/>)</button>
+                </div>
+            </section>
+        </div>
+        <div class="esg-target-grid">
+            <article class="esg-card esg-target" t-foreach="filteredTargets()" t-as="row" t-key="row.id">
+                <div class="esg-card-head"><span t-esc="row.category"/><b t-attf-class="esg-badge is-#{row.status}" t-esc="statusLabel(row.status)"/></div>
+                <h3 t-esc="row.name"/>
+                <div class="esg-two"><div><small>Baseline</small><b t-esc="row.baseline_label"/></div><div><small>Target</small><b t-esc="row.target_label"/></div></div>
+                <div class="esg-two"><div><small>Current</small><b t-esc="row.current_label"/></div><div><small>Date</small><b t-esc="row.due"/></div></div>
+                <div class="esg-track"><i t-attf-style="width: #{row.achievement}%" t-attf-class="is-#{row.status}"/></div>
+                <div class="esg-card-head"><span t-esc="row.achievement + '%'"/><button type="button" class="esg-btn" t-on-click="() => this.editTarget(row)">Edit</button></div>
+            </article>
+        </div>
+    </t>
+
+    <t t-name="esg_management.Reporting">
+        <t t-call="esg_management.Filters"/>
+        <div class="esg-report-bar">
+            <select t-model="state.reportTemplate">
+                <option value="energy">Energy</option>
+                <option value="water">Water</option>
+                <option value="carbon">Carbon</option>
+                <option value="kpis">KPIs</option>
+                <option value="performance">ESG Performance</option>
+                <option value="targets">Targets</option>
+            </select>
+            <button type="button" class="esg-btn esg-btn-primary" t-on-click="generateReport">Generate</button>
+            <button type="button" class="esg-btn" t-on-click="() => this.download(state.reportTemplate)">Excel</button>
+        </div>
+        <div class="esg-templates">
+            <button type="button" t-att-class="{ 'is-on': state.reportTemplate === 'energy' }" t-on-click="() => this.state.reportTemplate = 'energy'"><i class="fa fa-bolt"/><b>Energy</b><small>Consumption and efficiency</small></button>
+            <button type="button" t-att-class="{ 'is-on': state.reportTemplate === 'water' }" t-on-click="() => this.state.reportTemplate = 'water'"><i class="fa fa-tint"/><b>Water</b><small>Withdrawal and savings</small></button>
+            <button type="button" t-att-class="{ 'is-on': state.reportTemplate === 'carbon' }" t-on-click="() => this.state.reportTemplate = 'carbon'"><i class="fa fa-cloud"/><b>Carbon</b><small>GHG emissions</small></button>
+            <button type="button" t-att-class="{ 'is-on': state.reportTemplate === 'kpis' }" t-on-click="() => this.state.reportTemplate = 'kpis'"><i class="fa fa-bar-chart"/><b>KPIs</b><small>GRI style indicators</small></button>
+            <button type="button" t-att-class="{ 'is-on': state.reportTemplate === 'performance' }" t-on-click="() => this.state.reportTemplate = 'energy'"><i class="fa fa-dashboard"/><b>ESG Perf</b><small>Portfolio overview</small></button>
+            <button type="button" t-att-class="{ 'is-on': state.reportTemplate === 'targets' }" t-on-click="() => this.state.reportTemplate = 'targets'"><i class="fa fa-bullseye"/><b>Targets</b><small>Goal progress</small></button>
+        </div>
+        <section class="esg-card">
+            <h3>Recent Reports</h3>
+            <table class="esg-table">
+                <thead><tr><th>Report Name</th><th>Period</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody>
+                    <tr t-foreach="visible(reports())" t-as="row" t-key="row.id">
+                        <td t-esc="row.name"/>
+                        <td t-esc="row.period"/>
+                        <td t-esc="row.date"/>
+                        <td><span t-attf-class="esg-badge is-#{row.status === 'done' ? 'achieved' : 'review'}" t-esc="row.status === 'done' ? 'Done' : 'In Progress'"/></td>
+                        <td><button type="button" class="esg-btn" t-on-click="() => this.download(row.template)">Excel</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </t>
+</templates>

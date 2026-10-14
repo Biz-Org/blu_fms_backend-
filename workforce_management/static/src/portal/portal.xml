@@ -1,0 +1,482 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="workforce_management.Portal">
+        <div class="o_wf_portal">
+            <aside class="wf-side">
+                <div class="wf-brand"><span>F</span><div><b>Workforce Admin</b><em>Enterprise FMS</em></div></div>
+                <nav>
+                    <t t-foreach="navItems" t-as="item" t-key="item.id">
+                        <button type="button" t-att-class="{ 'is-on': state.page === item.id }" t-on-click="() => this.onNav(item.id)">
+                            <i t-attf-class="fa #{item.icon}"/><span t-esc="item.label"/>
+                        </button>
+                    </t>
+                </nav>
+            </aside>
+            <main class="wf-main">
+                <header class="wf-head">
+                    <div>
+                        <h1 t-esc="pageTitle()"/>
+                        <p t-if="state.page === 'overview'">Manage staff availability, scheduling, attendance, skills and workforce productivity.</p>
+                    </div>
+                    <div class="wf-tools">
+                        <label class="wf-search"><i class="fa fa-search"/><input placeholder="Search..." t-on-input="(ev) => this.state.search = ev.target.value"/></label>
+                        <button type="button" class="wf-btn" t-on-click="() => this.download(state.page === 'tasks' ? 'tasks' : state.page === 'attendance' ? 'attendance' : 'employees')">Export</button>
+                        <button type="button" class="wf-btn wf-primary" t-if="state.page === 'employees'" t-on-click="() => this.state.show = 'employee'">+ Add Employee</button>
+                        <button type="button" class="wf-btn wf-primary" t-if="state.page === 'technicians'" t-on-click="() => this.state.show = 'technician'">+ Add Technician</button>
+                        <button type="button" class="wf-btn wf-primary" t-if="state.page === 'shifts' || state.page === 'overview'" t-on-click="() => this.state.show = 'shift'">+ New Shift</button>
+                        <button type="button" class="wf-btn wf-primary" t-if="state.page === 'leave'" t-on-click="() => this.state.show = 'leave'">+ New Request</button>
+                        <button type="button" class="wf-btn wf-primary" t-if="state.page === 'skills'" t-on-click="() => this.state.show = 'skill'">+ Add Skill</button>
+                        <button type="button" class="wf-btn wf-primary" t-if="state.page === 'tasks' || state.page === 'attendance'" t-on-click="() => this.state.show = 'task'">+ New Task</button>
+                    </div>
+                </header>
+                <t t-if="state.loading"><div class="wf-empty">Loading workforce...</div></t>
+                <div t-else="" class="wf-scroll">
+                    <t t-if="state.show === 'employee'" t-call="workforce_management.EmployeeForm"/>
+                    <t t-if="state.show === 'technician'" t-call="workforce_management.TechForm"/>
+                    <t t-if="state.show === 'shift'" t-call="workforce_management.ShiftForm"/>
+                    <t t-if="state.show === 'leave'" t-call="workforce_management.LeaveForm"/>
+                    <t t-if="state.show === 'skill'" t-call="workforce_management.SkillForm"/>
+                    <t t-if="state.show === 'task'" t-call="workforce_management.TaskForm"/>
+                    <t t-if="state.page === 'overview'" t-call="workforce_management.Overview"/>
+                    <t t-elif="state.page === 'employees'" t-call="workforce_management.Employees"/>
+                    <t t-elif="state.page === 'technicians'" t-call="workforce_management.Technicians"/>
+                    <t t-elif="state.page === 'shifts'" t-call="workforce_management.Shifts"/>
+                    <t t-elif="state.page === 'roster'" t-call="workforce_management.Roster"/>
+                    <t t-elif="state.page === 'attendance'" t-call="workforce_management.Attendance"/>
+                    <t t-elif="state.page === 'leave'" t-call="workforce_management.Leave"/>
+                    <t t-elif="state.page === 'skills'" t-call="workforce_management.Skills"/>
+                    <t t-elif="state.page === 'tasks'" t-call="workforce_management.Tasks"/>
+                    <t t-elif="state.page === 'allocation'" t-call="workforce_management.Allocation"/>
+                    <t t-elif="state.page === 'reports'" t-call="workforce_management.Reports"/>
+                </div>
+            </main>
+        </div>
+    </t>
+
+    <t t-name="workforce_management.Filters">
+        <div class="wf-filters">
+            <select t-model="state.filters.department">
+                <option value="">All Departments</option>
+                <t t-foreach="state.data.departments || []" t-as="dep" t-key="dep"><option t-att-value="dep" t-esc="dep"/></t>
+            </select>
+            <select t-model="state.filters.site">
+                <option value="">All Sites</option>
+                <t t-foreach="state.data.sites || []" t-as="site" t-key="site"><option t-att-value="site" t-esc="site"/></t>
+            </select>
+            <select t-model="state.filters.status">
+                <option value="">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+            </select>
+            <button type="button" class="wf-btn wf-primary" t-on-click="applyFilters">Apply</button>
+        </div>
+    </t>
+
+    <t t-name="workforce_management.EmployeeForm">
+        <form class="wf-form" t-on-submit.prevent="saveEmployee">
+            <b>Add employee</b>
+            <input placeholder="Name" t-model="state.employee.name" required="required"/>
+            <input placeholder="Department" t-model="state.employee.department"/>
+            <input placeholder="Designation" t-model="state.employee.designation"/>
+            <input placeholder="Site" t-model="state.employee.site"/>
+            <button type="submit" class="wf-btn wf-primary">Save in HR</button>
+            <button type="button" class="wf-btn" t-on-click="() => this.state.show = ''">Cancel</button>
+        </form>
+    </t>
+    <t t-name="workforce_management.TechForm">
+        <form class="wf-form" t-on-submit.prevent="saveTechnician">
+            <b>Add technician</b>
+            <input placeholder="Name" t-model="state.technician.name" required="required"/>
+            <input placeholder="Trade" t-model="state.technician.trade"/>
+            <input placeholder="Skills" t-model="state.technician.skills"/>
+            <input placeholder="Site" t-model="state.technician.site"/>
+            <input placeholder="Shift" t-model="state.technician.shift_name"/>
+            <button type="submit" class="wf-btn wf-primary">Save</button>
+            <button type="button" class="wf-btn" t-on-click="() => this.state.show = ''">Cancel</button>
+        </form>
+    </t>
+    <t t-name="workforce_management.ShiftForm">
+        <form class="wf-form" t-on-submit.prevent="saveShift">
+            <b>Add shift</b>
+            <input placeholder="Shift name" t-model="state.shift.name" required="required"/>
+            <input placeholder="Site" t-model="state.shift.site"/>
+            <input placeholder="Department" t-model="state.shift.department"/>
+            <input placeholder="08:00 - 16:00" t-model="state.shift.time_label"/>
+            <input type="number" placeholder="Capacity" t-model="state.shift.capacity"/>
+            <button type="submit" class="wf-btn wf-primary">Save</button>
+            <button type="button" class="wf-btn" t-on-click="() => this.state.show = ''">Cancel</button>
+        </form>
+    </t>
+    <t t-name="workforce_management.LeaveForm">
+        <form class="wf-form" t-on-submit.prevent="saveLeave">
+            <b>New leave request</b>
+            <select t-model="state.leave.employee_id" required="required">
+                <option value="">Employee</option>
+                <t t-foreach="state.data.employees || []" t-as="emp" t-key="emp.id"><option t-att-value="emp.id" t-esc="emp.name"/></t>
+            </select>
+            <input placeholder="Leave type" t-model="state.leave.leave_type"/>
+            <input type="date" t-model="state.leave.date_from" required="required"/>
+            <input type="date" t-model="state.leave.date_to"/>
+            <input placeholder="Reason" t-model="state.leave.reason"/>
+            <button type="submit" class="wf-btn wf-primary">Submit</button>
+            <button type="button" class="wf-btn" t-on-click="() => this.state.show = ''">Cancel</button>
+        </form>
+    </t>
+    <t t-name="workforce_management.SkillForm">
+        <form class="wf-form" t-on-submit.prevent="saveSkill">
+            <b>Add skill</b>
+            <input placeholder="Skill" t-model="state.skill.name" required="required"/>
+            <input placeholder="Category" t-model="state.skill.category"/>
+            <input placeholder="Certification" t-model="state.skill.certification"/>
+            <input type="number" placeholder="Proficiency" t-model="state.skill.proficiency"/>
+            <button type="submit" class="wf-btn wf-primary">Save</button>
+            <button type="button" class="wf-btn" t-on-click="() => this.state.show = ''">Cancel</button>
+        </form>
+    </t>
+    <t t-name="workforce_management.TaskForm">
+        <form class="wf-form" t-on-submit.prevent="saveTask">
+            <b>New task</b>
+            <input placeholder="Task" t-model="state.task.name" required="required"/>
+            <input placeholder="Location" t-model="state.task.location"/>
+            <input placeholder="Site" t-model="state.task.site"/>
+            <input placeholder="Required skill" t-model="state.task.required_skill"/>
+            <select t-model="state.task.priority">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+            </select>
+            <button type="submit" class="wf-btn wf-primary">Save</button>
+            <button type="button" class="wf-btn" t-on-click="() => this.state.show = ''">Cancel</button>
+        </form>
+    </t>
+
+    <t t-name="workforce_management.Overview">
+        <div class="wf-kpis">
+            <article><span>Total Emp</span><strong t-esc="kpis().total"/></article>
+            <article><span>Technicians</span><strong t-esc="kpis().technicians"/></article>
+            <article><span>Present</span><strong t-esc="kpis().present"/></article>
+            <article><span>On Leave</span><strong t-esc="kpis().on_leave"/></article>
+            <article><span>Avail Techs</span><strong t-esc="kpis().available"/></article>
+            <article><span>Active Tasks</span><strong t-esc="kpis().active_tasks"/></article>
+            <article><span>Pending</span><strong t-esc="kpis().pending"/></article>
+            <article><span>Utilization</span><strong t-esc="(kpis().utilization || 0) + '%'"/></article>
+        </div>
+        <div class="wf-grid">
+            <div class="wf-stack">
+                <section class="wf-card">
+                    <h3>Today's Workforce</h3>
+                    <div class="wf-stackbar">
+                        <i class="is-present" t-attf-style="width: #{force().present_pct || 0}%"/>
+                        <i class="is-late" t-attf-style="width: #{force().late_pct || 0}%"/>
+                        <i class="is-absent" t-attf-style="width: #{force().absent_pct || 0}%"/>
+                        <i class="is-leave" t-attf-style="width: #{force().leave_pct || 0}%"/>
+                    </div>
+                    <p>Present <b t-esc="force().present"/> · Absent <b t-esc="force().absent"/> · Late <b t-esc="force().late"/> · On Leave <b t-esc="force().leave"/></p>
+                </section>
+                <section class="wf-card">
+                    <h3>Shift Status</h3>
+                    <div t-foreach="state.data.shift_cards || []" t-as="shift" t-key="shift.id" t-att-class="{ 'wf-shift': true, 'is-now': shift.active }">
+                        <b t-esc="shift.name"/><span t-esc="shift.time"/><em t-esc="shift.count + ' staff'"/></div>
+                </section>
+            </div>
+            <div class="wf-stack">
+                <section class="wf-card">
+                    <h3>Technician Availability</h3>
+                    <t t-foreach="state.data.availability || []" t-as="row" t-key="row.label">
+                        <div class="wf-line"><span t-esc="row.label + ' (' + row.count + ')'"/><b t-esc="row.pct + '%'"/></div>
+                        <div class="wf-track"><i t-attf-style="width: #{row.pct}%"/></div>
+                    </t>
+                </section>
+                <section class="wf-card">
+                    <h3>Task Distribution</h3>
+                    <div class="wf-line"><span>Unassigned</span><b t-esc="state.data.task_dist.unassigned"/></div>
+                    <div class="wf-line"><span>Assigned</span><b t-esc="state.data.task_dist.assigned"/></div>
+                    <div class="wf-line"><span>In Progress</span><b t-esc="state.data.task_dist.progress"/></div>
+                    <div class="wf-line"><span>Completed</span><b t-esc="state.data.task_dist.done"/></div>
+                </section>
+            </div>
+            <section class="wf-card wf-alert">
+                <h3>Workforce Alerts</h3>
+                <article t-foreach="state.data.alerts || []" t-as="alert" t-key="alert.id">
+                    <b t-esc="alert.name"/><span t-esc="alert.age"/>
+                    <p t-esc="alert.detail"/>
+                    <button type="button" class="wf-btn" t-on-click="() => this.resolveAlert(alert.id)">Resolve</button>
+                </article>
+            </section>
+        </div>
+    </t>
+
+    <t t-name="workforce_management.Employees">
+        <t t-call="workforce_management.Filters"/>
+        <div class="wf-kpis">
+            <article><span>Total Employees</span><strong t-esc="state.data.employee_stats.total"/></article>
+            <article><span>Active</span><strong t-esc="state.data.employee_stats.active"/></article>
+            <article><span>Inactive</span><strong t-esc="state.data.employee_stats.inactive"/></article>
+            <article><span>New This Month</span><strong t-esc="state.data.employee_stats.new"/></article>
+        </div>
+        <section class="wf-card">
+            <table class="wf-table">
+                <thead><tr><th>Employee ID</th><th>Employee</th><th>Department</th><th>Designation</th><th>Site</th><th>Joining Date</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr t-foreach="employees()" t-as="row" t-key="row.id">
+                        <td t-esc="row.code"/><td t-esc="row.name"/><td t-esc="row.department"/><td t-esc="row.designation"/><td t-esc="row.site"/><td t-esc="row.join_date"/>
+                        <td><span t-attf-class="wf-badge is-#{row.status}" t-esc="row.status"/></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </t>
+
+    <t t-name="workforce_management.Technicians">
+        <section class="wf-card">
+            <table class="wf-table">
+                <thead><tr><th>Tech ID</th><th>Technician</th><th>Trade</th><th>Skills</th><th>Exp</th><th>Site</th><th>Shift</th><th>Status</th><th>Cert</th><th>Workload</th></tr></thead>
+                <tbody>
+                    <tr t-foreach="technicians()" t-as="row" t-key="row.id">
+                        <td t-esc="row.code"/><td t-esc="row.name"/><td t-esc="row.trade"/><td t-esc="row.skills"/><td t-esc="row.experience"/><td t-esc="row.site"/><td t-esc="row.shift_name"/>
+                        <td><span t-attf-class="wf-badge is-#{row.availability}" t-esc="row.availability"/></td>
+                        <td t-esc="row.cert_level"/><td t-esc="row.workload + '%'"/></tr>
+                </tbody>
+            </table>
+        </section>
+    </t>
+
+    <t t-name="workforce_management.Shifts">
+        <div class="wf-split">
+            <section class="wf-card wf-grow">
+                <h3>Weekly Schedule</h3>
+                <table class="wf-table">
+                    <thead><tr><th>Shift Name</th><th>Time</th><th>Site</th><th>Assigned</th><th>Capacity</th><th>Status</th></tr></thead>
+                    <tbody>
+                        <tr t-foreach="state.data.shifts || []" t-as="row" t-key="row.id">
+                            <td><b t-esc="row.name"/><small t-esc="row.site"/></td>
+                            <td t-esc="row.time"/><td t-esc="row.department"/><td t-esc="row.assigned"/><td t-esc="row.assigned + '/' + row.capacity"/>
+                            <td><span t-attf-class="wf-badge is-#{row.status}" t-esc="row.status"/></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+            <section class="wf-card wf-alert">
+                <h3>Shift Conflicts</h3>
+                <article t-foreach="state.data.conflicts || []" t-as="row" t-key="row.name"><b t-esc="row.name"/><p t-esc="row.detail"/></article>
+            </section>
+        </div>
+    </t>
+
+    <t t-name="workforce_management.Roster">
+        <div class="wf-tools">
+            <b t-esc="state.data.roster.label"/>
+            <button type="button" class="wf-btn" t-on-click="publishRoster">Save Draft</button>
+            <button type="button" class="wf-btn wf-primary" t-on-click="publishRoster">Publish Roster</button>
+            <span class="wf-badge" t-esc="state.data.roster.state"/>
+        </div>
+        <div class="wf-split">
+            <section class="wf-card wf-grow">
+                <table class="wf-table">
+                    <thead>
+                        <tr><th>Employee</th><th t-foreach="state.data.roster.days || []" t-as="day" t-key="day" t-esc="day"/></tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="state.data.roster.rows || []" t-as="row" t-key="row.id">
+                            <td t-esc="row.name"/>
+                            <td t-foreach="row.cells" t-as="cell" t-key="cell.date"><span t-attf-class="wf-cell is-#{cell.kind}" t-esc="cell.label"/></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+            <section class="wf-card">
+                <h3>Weekly Summary</h3>
+                <div class="wf-line"><span>Scheduled</span><b t-esc="state.data.roster.scheduled + ' shifts'"/></div>
+                <div class="wf-line"><span>Unassigned</span><b t-esc="state.data.roster.unassigned + ' shifts'"/></div>
+                <div class="wf-line"><span>On Leave</span><b t-esc="state.data.roster.on_leave + ' shifts'"/></div>
+                <div class="wf-line"><span>Total Workforce</span><b t-esc="state.data.roster.total"/></div>
+            </section>
+        </div>
+    </t>
+
+    <t t-name="workforce_management.Attendance">
+        <div class="wf-kpis">
+            <article><span>Present</span><strong t-esc="state.data.attendance.present + ' / ' + state.data.attendance.expected"/></article>
+            <article><span>Absent</span><strong t-esc="state.data.attendance.absent"/></article>
+            <article><span>Late</span><strong t-esc="state.data.attendance.late"/></article>
+            <article><span>On Leave</span><strong t-esc="state.data.attendance.on_leave"/></article>
+            <article><span>Overtime</span><strong t-esc="state.data.attendance.overtime"/></article>
+        </div>
+        <div class="wf-split">
+            <section class="wf-card wf-grow">
+                <h3>Today's Roster</h3>
+                <table class="wf-table">
+                    <thead><tr><th>Employee</th><th>Shift</th><th>Check-In</th><th>Check-Out</th><th>Worked</th><th>OT</th><th>Status</th><th/></tr></thead>
+                    <tbody>
+                        <tr t-foreach="state.data.attendance.rows || []" t-as="row" t-key="row.id">
+                            <td t-esc="row.name"/><td t-esc="row.shift"/><td t-esc="row.check_in"/><td t-esc="row.check_out"/><td t-esc="row.worked"/><td t-esc="row.overtime"/>
+                            <td><span t-attf-class="wf-badge is-#{row.status}" t-esc="row.status"/></td>
+                            <td><button type="button" class="wf-btn" t-on-click="() => this.markAttendance(row.id, 'present')">Present</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="wf-tools">
+                    <span>Mark a staff member who is not on today's list:</span>
+                    <t t-foreach="(state.data.employees || []).slice(0, 4)" t-as="emp" t-key="emp.id">
+                        <button type="button" class="wf-btn" t-on-click="() => this.markAttendance(emp.id, 'present')" t-esc="emp.name"/>
+                    </t>
+                </div>
+            </section>
+            <section class="wf-card">
+                <h3>7-Day Trend</h3>
+                <div class="wf-bars">
+                    <t t-foreach="state.data.attendance.trend || []" t-as="bar" t-key="bar_index">
+                        <div class="wf-bar" t-attf-style="height: #{bar}%"/>
+                    </t>
+                </div>
+                <p>Pending leave requests <b t-esc="state.data.leave_stats.pending"/></p>
+                <button type="button" class="wf-btn" t-on-click="() => this.onNav('leave')">Review Dashboard</button>
+            </section>
+        </div>
+    </t>
+
+    <t t-name="workforce_management.Leave">
+        <div class="wf-kpis">
+            <article><span>Pending</span><strong t-esc="state.data.leave_stats.pending"/></article>
+            <article><span>Approved</span><strong t-esc="state.data.leave_stats.approved"/></article>
+            <article><span>Rejected</span><strong t-esc="state.data.leave_stats.rejected"/></article>
+            <article><span>On Leave Today</span><strong t-esc="state.data.leave_stats.today"/></article>
+        </div>
+        <section class="wf-card">
+            <table class="wf-table">
+                <thead><tr><th>Employee</th><th>Leave Type</th><th>Duration</th><th>Days</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody>
+                    <tr t-foreach="visible(state.data.leaves)" t-as="row" t-key="row.id">
+                        <td t-esc="row.name + ' · ' + row.code"/><td t-esc="row.type"/><td t-esc="row.start + ' - ' + row.end"/><td t-esc="row.days"/><td t-esc="row.reason"/>
+                        <td><span t-attf-class="wf-badge is-#{row.status}" t-esc="row.status"/></td>
+                        <td>
+                            <button type="button" class="wf-btn" t-on-click="() => this.reviewLeave(row.id, 'approved')">Approve</button>
+                            <button type="button" class="wf-btn" t-on-click="() => this.reviewLeave(row.id, 'rejected')">Reject</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </t>
+
+    <t t-name="workforce_management.Skills">
+        <div class="wf-kpis">
+            <article><span>Skill Coverage</span><strong t-esc="state.data.skill_stats.coverage + '%'"/></article>
+            <article><span>Critical Skills</span><strong t-esc="state.data.skill_stats.critical"/></article>
+            <article><span>Available Staff</span><strong t-esc="state.data.skill_stats.available"/></article>
+            <article><span>Skill Gaps</span><strong t-esc="state.data.skill_stats.gaps"/></article>
+            <article><span>Expiring Certs</span><strong t-esc="state.data.skill_stats.expiring"/></article>
+        </div>
+        <section class="wf-card">
+            <h3>Skill Inventory Matrix</h3>
+            <table class="wf-table">
+                <thead><tr><th>Skill</th><th>Category</th><th>Staff</th><th>Technicians</th><th>Proficiency</th><th>Certification</th><th>Expiry</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr t-foreach="visible(state.data.skills)" t-as="row" t-key="row.id">
+                        <td t-esc="row.name"/><td t-esc="row.category"/><td t-esc="row.staff"/><td t-esc="row.techs"/>
+                        <td><div class="wf-track"><i t-attf-style="width: #{row.proficiency}%"/></div><small t-esc="row.proficiency + '%'"/></td>
+                        <td t-esc="row.certification"/><td t-esc="row.expiry"/>
+                        <td><span t-attf-class="wf-badge is-#{row.status}" t-esc="row.status"/></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </t>
+
+    <t t-name="workforce_management.Tasks">
+        <div class="wf-kpis">
+            <article><span>Total Tasks</span><strong t-esc="state.data.task_stats.total"/></article>
+            <article><span>Unassigned</span><strong t-esc="state.data.task_stats.unassigned"/></article>
+            <article><span>Assigned</span><strong t-esc="state.data.task_stats.assigned"/></article>
+            <article><span>In Progress</span><strong t-esc="state.data.task_stats.progress"/></article>
+            <article><span>Completed</span><strong t-esc="state.data.task_stats.done"/></article>
+        </div>
+        <div class="wf-split">
+            <section class="wf-card wf-grow">
+                <h3>Active Distributions</h3>
+                <table class="wf-table">
+                    <thead><tr><th>Task ID</th><th>Task</th><th>Location</th><th>Priority</th><th>Req. Skill</th><th>Status</th></tr></thead>
+                    <tbody>
+                        <tr t-foreach="visible(state.data.tasks).filter((row) => row.status !== 'done')" t-as="row" t-key="row.id">
+                            <td t-esc="row.code"/><td t-esc="row.name"/><td t-esc="row.location"/><td t-esc="row.priority"/><td t-esc="row.skill"/>
+                            <td><span t-attf-class="wf-badge is-#{row.status}" t-esc="row.status"/></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+            <section class="wf-card wf-alert">
+                <h3>Unassigned Queue</h3>
+                <article t-foreach="state.data.allocation.pending || []" t-as="row" t-key="row.id">
+                    <b t-esc="row.code"/><span t-esc="row.name"/>
+                    <p t-esc="row.location + ' · ' + row.skill"/>
+                </article>
+            </section>
+        </div>
+    </t>
+
+    <t t-name="workforce_management.Allocation">
+        <div class="wf-tools">
+            <button type="button" class="wf-btn" t-on-click="autoAssign">Auto-Assign</button>
+            <button type="button" class="wf-btn wf-primary" t-on-click="assignSelected">Allocate Technician</button>
+        </div>
+        <div class="wf-split">
+            <section class="wf-card wf-grow">
+                <h3>Available Technicians</h3>
+                <table class="wf-table">
+                    <thead><tr><th/><th>Technician</th><th>Skill</th><th>Location</th><th>Availability</th><th>Workload</th></tr></thead>
+                    <tbody>
+                        <tr t-foreach="state.data.allocation.techs || []" t-as="row" t-key="row.id" t-att-class="{ 'is-pick': state.selectedTech === row.id }" t-on-click="() => this.state.selectedTech = row.id">
+                            <td><input type="radio" t-att-checked="state.selectedTech === row.id"/></td>
+                            <td t-esc="row.name"/><td t-esc="row.trade"/><td t-esc="row.site"/>
+                            <td><span t-attf-class="wf-badge is-#{row.availability}" t-esc="row.availability"/></td>
+                            <td t-esc="row.workload + '%'"/></tr>
+                    </tbody>
+                </table>
+            </section>
+            <section class="wf-card">
+                <h3>Pending Tasks</h3>
+                <article t-foreach="state.data.allocation.pending || []" t-as="row" t-key="row.id" t-att-class="{ 'is-pick': state.selectedTask === row.id }" t-on-click="() => this.state.selectedTask = row.id">
+                    <b t-esc="row.name"/><span t-esc="row.location"/>
+                    <p t-esc="row.priority + ' · ' + row.skill + ' · ' + row.due"/>
+                </article>
+            </section>
+        </div>
+    </t>
+
+    <t t-name="workforce_management.Reports">
+        <div class="wf-kpis">
+            <article><span>Tasks Completed</span><strong t-esc="state.data.productivity.completed"/></article>
+            <article><span>Completion Rate</span><strong t-esc="state.data.productivity.rate + '%'"/></article>
+            <article><span>Workforce Util.</span><strong t-esc="state.data.productivity.utilization + '%'"/></article>
+            <article><span>Avg Tasks / Staff</span><strong t-esc="state.data.productivity.avg_tasks"/></article>
+            <article><span>Avg Compl. Time</span><strong t-esc="state.data.productivity.avg_time"/></article>
+        </div>
+        <div class="wf-split">
+            <section class="wf-card wf-grow">
+                <h3>Productivity Trend</h3>
+                <svg viewBox="0 0 320 100" class="wf-linechart"><polyline t-att-points="linePoints(state.data.productivity.trend)"/></svg>
+            </section>
+            <section class="wf-card">
+                <h3>Utilization Breakdown</h3>
+                <div class="wf-line"><span>Available vs Roster</span><b t-esc="state.data.productivity.available_pct + '%'"/></div>
+                <div class="wf-track"><i t-attf-style="width: #{state.data.productivity.available_pct}%"/></div>
+                <div class="wf-line"><span>Productive vs Worked</span><b t-esc="state.data.productivity.productive_pct + '%'"/></div>
+                <div class="wf-track"><i t-attf-style="width: #{state.data.productivity.productive_pct}%"/></div>
+                <p>Non-productive time <b t-esc="state.data.productivity.nonproductive"/></p>
+            </section>
+        </div>
+        <section class="wf-card">
+            <h3>Technician Performance</h3>
+            <table class="wf-table">
+                <thead><tr><th>Technician</th><th>Assigned</th><th>Completed</th><th>Completion %</th><th>Avg Time</th><th>Utilization</th></tr></thead>
+                <tbody>
+                    <tr t-foreach="state.data.productivity.rows || []" t-as="row" t-key="row.id">
+                        <td t-esc="row.name"/><td t-esc="row.assigned"/><td t-esc="row.completed"/><td t-esc="row.rate + '%'"/><td t-esc="row.avg"/>
+                        <td><div class="wf-track"><i t-attf-style="width: #{row.utilization}%"/></div></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </t>
+</templates>

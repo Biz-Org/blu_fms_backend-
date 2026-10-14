@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <function model="property.property" name="_seed_demo_portfolio"/>
+</odoo>

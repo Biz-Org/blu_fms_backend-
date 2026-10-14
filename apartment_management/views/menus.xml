@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_apartment_portal" model="ir.actions.client">
+        <field name="name">Apartment Management</field>
+        <field name="tag">apartment_management.portal</field>
+    </record>
+
+    <menuitem id="menu_apartment_root"
+              name="Apartment Management"
+              action="action_apartment_portal"
+              web_icon="apartment_management,static/description/icon.svg"
+              sequence="36"/>
+</odoo>

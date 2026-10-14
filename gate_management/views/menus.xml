@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_gate_portal" model="ir.actions.client">
+        <field name="name">GateFlow AI</field>
+        <field name="tag">gate_management.portal</field>
+    </record>
+    <menuitem id="menu_gate_root"
+              name="GateFlow AI"
+              action="action_gate_portal"
+              web_icon="gate_management,static/description/icon.svg"
+              sequence="20"/>
+</odoo>

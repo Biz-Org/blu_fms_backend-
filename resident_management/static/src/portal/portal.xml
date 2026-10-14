@@ -1,0 +1,812 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="resident_management.Portal">
+        <div class="o_resident_portal">
+            <aside class="rm-sidebar">
+                <div class="rm-brand">
+                    <div class="rm-brand-icon">RM</div>
+                    <div>
+                        <div class="rm-brand-title">RESIDENT MANAGEMENT</div>
+                        <div class="rm-brand-sub">Institutional Portal</div>
+                    </div>
+                </div>
+                <nav class="rm-nav">
+                    <t t-foreach="navItems" t-as="item" t-key="item.id">
+                        <button type="button" class="rm-nav-item" t-att-class="{ 'is-active': state.page === item.id }" t-on-click="() => this.onNav(item.id)">
+                            <i t-attf-class="fa #{item.icon}"/>
+                            <span t-esc="item.label"/>
+                        </button>
+                    </t>
+                </nav>
+                <div class="rm-user">
+                    <em><t t-esc="(state.data.user_name || 'A').slice(0,1)"/></em>
+                    <div>
+                        <strong t-esc="state.data.user_name"/>
+                        <span t-esc="state.data.user_role"/>
+                    </div>
+                    <button type="button" class="rm-link" t-on-click="() => this.logout()">Logout</button>
+                </div>
+            </aside>
+            <main class="rm-main">
+                <input type="file" class="d-none" t-ref="importInput" accept=".csv,text/csv" t-on-change="(ev) => this.onImportFile(ev)"/>
+                <input type="file" class="d-none" t-ref="kycInput" accept="image/*,.pdf,.doc,.docx" t-on-change="(ev) => this.onKycFile(ev)"/>
+                <input type="file" class="d-none" t-ref="commFileInput" t-on-change="(ev) => this.onCommFile(ev)"/>
+                <t t-if="state.loading"><div class="rm-empty">Loading resident management...</div></t>
+                <t t-elif="state.page === 'overview'" t-call="resident_management.Overview"/>
+                <t t-elif="state.page === 'directory' and state.view === 'add'" t-call="resident_management.AddResident"/>
+                <t t-elif="state.page === 'directory'" t-call="resident_management.Directory"/>
+                <t t-elif="state.page === 'onboarding' and state.view === 'detail'" t-call="resident_management.OnboardDetail"/>
+                <t t-elif="state.page === 'onboarding'" t-call="resident_management.Onboarding"/>
+                <t t-elif="state.page === 'kyc' and state.view === 'verify'" t-call="resident_management.KycVerify"/>
+                <t t-elif="state.page === 'kyc'" t-call="resident_management.KycList"/>
+                <t t-elif="state.page === 'household' and state.view === 'detail'" t-call="resident_management.HouseholdDetail"/>
+                <t t-elif="state.page === 'household' and state.view === 'add'" t-call="resident_management.HouseholdAdd"/>
+                <t t-elif="state.page === 'household'" t-call="resident_management.Household"/>
+                <t t-elif="state.page === 'profile' and state.profileTab === 'personal'" t-call="resident_management.ProfilePersonal"/>
+                <t t-elif="state.page === 'profile'" t-call="resident_management.Profile"/>
+                <t t-elif="state.page === 'move' and state.view === 'detail'" t-call="resident_management.MoveDetail"/>
+                <t t-elif="state.page === 'move'" t-call="resident_management.MoveList"/>
+                <t t-elif="state.page === 'emergency' and state.view === 'add'" t-call="resident_management.EmergencyAdd"/>
+                <t t-elif="state.page === 'emergency'" t-call="resident_management.Emergency"/>
+                <t t-elif="state.page === 'communication' and state.view === 'compose'" t-call="resident_management.CommCompose"/>
+                <t t-elif="state.page === 'communication' and state.view === 'detail'" t-call="resident_management.CommDetail"/>
+                <t t-elif="state.page === 'communication'" t-call="resident_management.CommList"/>
+                <t t-elif="state.page === 'status' and state.view === 'change'" t-call="resident_management.StatusChange"/>
+                <t t-elif="state.page === 'status'" t-call="resident_management.StatusList"/>
+                <t t-elif="state.page === 'history' and state.view === 'activity'" t-call="resident_management.HistoryActivity"/>
+                <t t-elif="state.page === 'history' and state.view === 'lifecycle'" t-call="resident_management.Lifecycle"/>
+                <t t-elif="state.page === 'history'" t-call="resident_management.History"/>
+            </main>
+        </div>
+    </t>
+
+    <t t-name="resident_management.Overview">
+        <div class="rm-page-head">
+            <div><h1>Resident Management</h1><p>Manage resident onboarding, verification, and lifecycle.</p></div>
+            <div class="rm-actions"><button class="rm-btn" t-on-click="() => this.exportResidents()">Export</button><button class="rm-btn is-primary" t-on-click="() => this.openAdd()">+ Add Resident</button></div>
+        </div>
+        <section class="rm-kpis">
+            <article class="rm-card"><span>TOTAL RESIDENTS</span><strong t-esc="kpis().total"/><em class="is-ok">this month</em></article>
+            <article class="rm-card"><span>ACTIVE RESIDENTS</span><strong t-esc="kpis().active"/><em><t t-esc="kpis().occupancy"/>% Occupancy</em></article>
+            <article class="rm-card"><span>PENDING ONBOARDING</span><strong class="is-warn" t-esc="kpis().pending_onboarding"/><em class="is-warn">Needs Attention</em></article>
+            <article class="rm-card"><span>PENDING KYC</span><strong class="is-bad" t-esc="kpis().pending_kyc"/><em class="is-bad">Urgent</em></article>
+            <article class="rm-card"><span>UPCOMING MOVE-INS</span><strong t-esc="kpis().move_ins"/><em>Next 7 days</em></article>
+            <article class="rm-card"><span>UPCOMING MOVE-OUTS</span><strong t-esc="kpis().move_outs"/><em>Next 30 days</em></article>
+        </section>
+        <section class="rm-card rm-pipe">
+            <h2>Resident Lifecycle Pipeline</h2>
+            <div class="rm-pipe-row">
+                <div><b t-esc="pipeline().onboarding"/><span>Onboarding</span></div>
+                <div><b t-esc="pipeline().kyc"/><span>KYC</span></div>
+                <div><b t-esc="pipeline().approved"/><span>Approved</span></div>
+                <div><b t-esc="pipeline().move_in"/><span>Move-in</span></div>
+                <div class="is-on"><b t-esc="pipeline().active"/><span>Active</span></div>
+                <div><b t-esc="pipeline().notice"/><span>Notice</span></div>
+                <div><b t-esc="pipeline().move_out"/><span>Move-Out</span></div>
+            </div>
+        </section>
+        <section class="rm-split">
+            <article class="rm-card">
+                <h2>Pending Actions</h2>
+                <div class="rm-action-row">KYC verification pending <b t-esc="state.data.pending.kyc"/> Items <button class="rm-link" t-on-click="() => this.onNav('kyc')">Review</button></div>
+                <div class="rm-action-row">Onboarding approvals <b t-esc="state.data.pending.onboarding"/> Items <button class="rm-link" t-on-click="() => this.onNav('onboarding')">Review</button></div>
+                <div class="rm-action-row">Move-in requests <b t-esc="state.data.pending.move_in"/> Items <button class="rm-link" t-on-click="() => this.onNav('move')">Review</button></div>
+                <div class="rm-action-row">Move-out requests <b t-esc="state.data.pending.move_out"/> Items <button class="rm-link" t-on-click="() => this.onNav('move')">Review</button></div>
+            </article>
+            <article class="rm-card">
+                <div class="rm-card-head"><h2>Recent Resident Activity</h2></div>
+                <table class="rm-table">
+                    <thead><tr><th>RESIDENT</th><th>UNIT</th><th>ACTIVITY</th><th>DATE</th><th>STATUS</th></tr></thead>
+                    <tbody>
+                        <t t-foreach="state.data.activity || []" t-as="row" t-key="row.id">
+                            <tr t-on-click="() => this.openResident(row)">
+                                <td><b t-esc="row.resident"/></td>
+                                <td t-esc="row.unit"/>
+                                <td t-esc="row.activity"/>
+                                <td t-esc="row.date"/>
+                                <td><span t-attf-class="rm-badge is-#{badge(row.status)}" t-esc="row.status_label"/></td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </article>
+        </section>
+    </t>
+
+    <t t-name="resident_management.Directory">
+        <div class="rm-page-head">
+            <div><h1>Resident Directory</h1><p>Search, view, and manage all residents.</p></div>
+            <div class="rm-actions"><button class="rm-btn" t-on-click="() => this.exportResidents()">Export</button><button class="rm-btn" t-on-click="() => this.triggerImport()">Import</button><button class="rm-btn is-primary" t-on-click="() => this.openAdd()">+ Add Resident</button></div>
+        </div>
+        <div class="rm-toolbar">
+            <input class="rm-search" placeholder="Search by resident name, ID, phone, email, or unit..." t-att-value="state.dirSearch" t-on-input="(ev) => this.state.dirSearch = ev.target.value"/>
+        </div>
+        <div class="rm-filters">
+            <select t-on-change="(ev) => this.state.dirStatus = ev.target.value"><option value="all">Resident Status</option><option value="active">Active</option><option value="pending">Pending</option><option value="notice">Notice Period</option><option value="moved_out">Moved Out</option></select>
+            <button class="rm-link" t-on-click="() => { this.state.dirStatus = 'all'; this.state.dirSearch = ''; }">Clear Filters</button>
+        </div>
+        <div class="rm-card">
+            <table class="rm-table">
+                <thead><tr><th>RESIDENT</th><th>UNIT</th><th>CONTACT</th><th>HOUSEHOLD</th><th>KYC</th><th>STATUS</th><th>MOVE-IN DATE</th><th>ACTIONS</th></tr></thead>
+                <tbody>
+                    <t t-foreach="dirRows()" t-as="row" t-key="row.id">
+                        <tr t-on-click="() => this.openResident(row)">
+                            <td><div class="rm-ava"><em t-esc="row.initials"/><div><b t-esc="row.name"/><span t-esc="row.code"/></div></div></td>
+                            <td><b t-esc="row.unit"/><div class="rm-muted" t-esc="row.building"/></td>
+                            <td><div t-esc="row.mobile"/><div class="rm-muted" t-esc="row.email"/></td>
+                            <td t-esc="row.household"/>
+                            <td t-esc="row.kyc_label"/>
+                            <td><span t-attf-class="rm-badge is-#{badge(row.status)}" t-esc="row.status_label"/></td>
+                            <td t-esc="row.move_in"/>
+                            <td>
+                                <div class="rm-row-actions">
+                                    <button type="button" class="rm-btn" t-on-click.stop="() => this.openEdit(row)">Edit</button>
+                                    <button type="button" class="rm-btn is-bad" t-on-click.stop="() => this.deleteResident(row)">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+            <div class="rm-pager">Showing <t t-esc="dirRows().length"/> of <t t-esc="filteredResidents().length"/> residents</div>
+        </div>
+    </t>
+
+    <t t-name="resident_management.AddResident">
+        <div class="rm-page-head"><div><h1 t-esc="state.form.id ? 'Edit Resident' : 'Add Resident'"/><p t-esc="state.form.id ? 'Update resident details and save to the database.' : 'Enter details to onboard a new resident.'"/></div></div>
+        <div class="rm-card rm-form">
+            <h3>Personal Information</h3>
+            <div class="rm-grid-4">
+                <label>First Name *<input t-att-value="state.form.first_name" t-on-input="(ev) => this.state.form.first_name = ev.target.value"/></label>
+                <label>Last Name *<input t-att-value="state.form.last_name" t-on-input="(ev) => this.state.form.last_name = ev.target.value"/></label>
+                <label>DOB<input type="date" t-att-value="state.form.dob" t-on-input="(ev) => this.state.form.dob = ev.target.value"/></label>
+                <label>Gender<select t-att-value="state.form.gender" t-on-change="(ev) => this.state.form.gender = ev.target.value"><option value="">Select</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option></select></label>
+            </div>
+            <h3>Contact Information</h3>
+            <div class="rm-grid-3">
+                <label>Mobile *<input t-att-value="state.form.mobile" t-on-input="(ev) => this.state.form.mobile = ev.target.value"/></label>
+                <label>Email *<input t-att-value="state.form.email" t-on-input="(ev) => this.state.form.email = ev.target.value"/></label>
+                <label>Alt Contact<input t-att-value="state.form.alt_phone" t-on-input="(ev) => this.state.form.alt_phone = ev.target.value"/></label>
+            </div>
+            <h3>Residency Information</h3>
+            <div class="rm-grid-4">
+                <label>Building
+                    <select t-att-value="state.form.building_id" t-on-change="(ev) => this.state.form.building_id = ev.target.value">
+                        <option value="">Select</option>
+                        <t t-foreach="state.data.buildings || []" t-as="b" t-key="b.id"><option t-att-value="b.id" t-esc="b.label"/></t>
+                    </select>
+                </label>
+                <label>Unit
+                    <select t-att-value="state.form.unit_id" t-on-change="(ev) => this.state.form.unit_id = ev.target.value">
+                        <option value="">Unit</option>
+                        <t t-foreach="state.data.units || []" t-as="u" t-key="u.id"><option t-att-value="u.id" t-esc="u.label"/></t>
+                    </select>
+                </label>
+                <label>Move-In *<input type="date" t-att-value="state.form.move_in" t-on-input="(ev) => this.state.form.move_in = ev.target.value"/></label>
+            </div>
+            <h3>Identification</h3>
+            <div class="rm-grid-2">
+                <label>ID Type<input t-att-value="state.form.id_type" t-on-input="(ev) => this.state.form.id_type = ev.target.value"/></label>
+                <label>ID Number<input t-att-value="state.form.id_number" t-on-input="(ev) => this.state.form.id_number = ev.target.value"/></label>
+            </div>
+            <h3>Emergency Contact</h3>
+            <div class="rm-grid-4">
+                <label>Name<input t-att-value="state.form.em_name" t-on-input="(ev) => this.state.form.em_name = ev.target.value"/></label>
+                <label>Relation<input t-att-value="state.form.em_relation" t-on-input="(ev) => this.state.form.em_relation = ev.target.value"/></label>
+                <label>Phone<input t-att-value="state.form.em_phone" t-on-input="(ev) => this.state.form.em_phone = ev.target.value"/></label>
+                <label>Email<input t-att-value="state.form.em_email" t-on-input="(ev) => this.state.form.em_email = ev.target.value"/></label>
+            </div>
+            <h3>Address</h3>
+            <div class="rm-grid-4">
+                <label>Street<input t-att-value="state.form.street" t-on-input="(ev) => this.state.form.street = ev.target.value"/></label>
+                <label>City<input t-att-value="state.form.city" t-on-input="(ev) => this.state.form.city = ev.target.value"/></label>
+                <label>State<input t-att-value="state.form.state_name" t-on-input="(ev) => this.state.form.state_name = ev.target.value"/></label>
+                <label>ZIP<input t-att-value="state.form.zip" t-on-input="(ev) => this.state.form.zip = ev.target.value"/></label>
+            </div>
+            <div class="rm-form-actions">
+                <button type="button" class="rm-btn" t-on-click="() => this.state.view = 'list'">Cancel</button>
+                <button type="button" class="rm-btn is-bad" t-if="state.form.id" t-on-click="() => this.deleteResident()">Delete</button>
+                <button type="button" class="rm-btn" t-if="!state.form.id" t-on-click="() => this.createResident(true)">Save Draft</button>
+                <button type="button" class="rm-btn is-primary" t-on-click="() => this.createResident(false)" t-esc="state.form.id ? 'Save Changes' : 'Create Resident'"/>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="resident_management.Onboarding">
+        <div class="rm-page-head">
+            <div><h1>Digital Onboarding</h1><p>Track residents through the digital onboarding process.</p></div>
+            <button class="rm-btn is-primary" t-on-click="() => this.openAdd()">+ Start Onboarding</button>
+        </div>
+        <section class="rm-mini-kpis">
+            <article>NEW APPLICATIONS<strong t-esc="state.data.onboard_stats.new"/></article>
+            <article>IN PROGRESS<strong t-esc="state.data.onboard_stats.progress"/></article>
+            <article>DOCS PENDING<strong t-esc="state.data.onboard_stats.docs"/></article>
+            <article>KYC PENDING<strong t-esc="state.data.onboard_stats.kyc"/></article>
+            <article>APPROVED<strong t-esc="state.data.onboard_stats.approved"/></article>
+            <article>REJECTED<strong t-esc="state.data.onboard_stats.rejected"/></article>
+        </section>
+        <h3>Pipeline View</h3>
+        <div class="rm-kanban">
+            <t t-foreach="[['submitted','Submitted'],['docs','Docs Uploaded'],['kyc','KYC'],['review','Review'],['approved','Approved']]" t-as="col" t-key="col_index">
+                <div class="rm-col">
+                    <header t-esc="col[1]"/>
+                    <t t-foreach="residents().filter((r) => r.onboarding_stage === col[0])" t-as="row" t-key="row.id">
+                        <button class="rm-kanban-card" t-on-click="() => this.openResident(row, 'onboarding')">
+                            <b t-esc="row.name"/><span t-esc="row.unit"/><em t-esc="row.kyc_label"/><div class="rm-bar"><i t-attf-style="width: #{row.progress}%"/></div>
+                        </button>
+                    </t>
+                </div>
+            </t>
+        </div>
+        <div class="rm-card">
+            <h2>All Applications</h2>
+            <table class="rm-table">
+                <thead><tr><th>RESIDENT</th><th>UNIT</th><th>PROGRESS</th><th>KYC STATUS</th><th>STATUS</th></tr></thead>
+                <tbody>
+                    <t t-foreach="residents().slice(0,8)" t-as="row" t-key="row.id">
+                        <tr t-on-click="() => this.openResident(row, 'onboarding')"><td t-esc="row.name"/><td t-esc="row.unit"/><td t-esc="row.progress + '%' "/><td t-esc="row.kyc_label"/><td t-esc="row.onboarding_stage"/></tr>
+                    </t>
+                </tbody>
+            </table>
+        </div>
+    </t>
+
+    <t t-name="resident_management.OnboardDetail">
+        <t t-set="r" t-value="selected()"/>
+        <div class="rm-page-head">
+            <div><h1>Onboarding Application</h1></div>
+            <div class="rm-actions">
+                <button class="rm-btn" t-on-click="() => this.onboard('changes')">Request Changes</button>
+                <button class="rm-btn is-bad" t-on-click="() => this.onboard('reject')">Reject</button>
+                <button class="rm-btn is-primary" t-on-click="() => this.onboard('approve')">Approve</button>
+            </div>
+        </div>
+        <div class="rm-hero rm-card">
+            <em class="rm-bigava" t-esc="r.initials"/>
+            <div><h2 t-esc="r.name"/> <span t-attf-class="rm-badge is-#{badge(r.status)}" t-esc="r.status_label"/><div class="rm-muted"><t t-esc="r.code"/> · Unit <t t-esc="r.unit"/></div></div>
+        </div>
+        <div class="rm-steps">
+            <span class="is-done">Personal Information</span><span class="is-done">Residency</span><span class="is-on">Documents</span><span>KYC</span><span>Review</span><span>Approval</span>
+        </div>
+        <div class="rm-split">
+            <article class="rm-card"><h3>Personal Information</h3><p>Full Name <b t-esc="r.name"/></p><p>Date of Birth <b t-esc="r.dob_label"/></p><p>Gender <b t-esc="r.gender"/></p><p t-esc="r.email"/><p t-esc="r.mobile"/></article>
+            <article class="rm-card"><h3>Residency Information</h3><p>Building <b t-esc="r.building"/></p><p>Unit <b t-esc="r.unit"/></p><p>Resident Type <b t-esc="r.resident_type"/></p><p>Expected Move-In <b t-esc="r.move_in"/></p><p>Lease Term <b t-esc="r.lease_term"/></p></article>
+        </div>
+        <article class="rm-card">
+            <h3>Documents</h3>
+            <t t-foreach="(state.data.kycs || []).filter((d) => d.resident_id === r.id)" t-as="doc" t-key="doc.id">
+                <div class="rm-doc"><b t-esc="doc.name"/><span t-esc="doc.file_name"/><span t-attf-class="rm-badge is-#{badge(doc.status)}" t-esc="doc.status_label"/></div>
+            </t>
+        </article>
+    </t>
+
+    <t t-name="resident_management.KycList">
+        <div class="rm-page-head"><div><h1>KYC &amp; Document Verification</h1><p>Review, verify, and manage resident documents.</p></div>
+            <button class="rm-btn is-primary" t-on-click="() => this.triggerKycUpload()">Upload Document</button></div>
+        <section class="rm-mini-kpis">
+            <article>TOTAL DOCUMENTS<strong t-esc="state.data.kyc_stats.total"/></article>
+            <article>PENDING VERIFICATION<strong t-esc="state.data.kyc_stats.pending"/></article>
+            <article>VERIFIED<strong t-esc="state.data.kyc_stats.verified"/></article>
+            <article>REJECTED<strong t-esc="state.data.kyc_stats.rejected"/></article>
+            <article>EXPIRING SOON<strong t-esc="state.data.kyc_stats.expiring"/></article>
+        </section>
+        <div class="rm-card">
+            <table class="rm-table">
+                <thead><tr><th>RESIDENT</th><th>DOCUMENT</th><th>SUBMITTED</th><th>STATUS</th><th>EXPIRY</th><th>REVIEWER</th><th>ACTION</th></tr></thead>
+                <tbody>
+                    <t t-foreach="state.data.kycs || []" t-as="row" t-key="row.id">
+                        <tr>
+                            <td t-esc="row.resident"/><td t-esc="row.name"/><td t-esc="row.submitted"/>
+                            <td><span t-attf-class="rm-badge is-#{badge(row.status)}" t-esc="row.status_label"/></td>
+                            <td t-esc="row.expiry"/><td t-esc="row.reviewer"/>
+                            <td><button class="rm-link" t-on-click="() => this.openKyc(row)">Review</button></td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </div>
+    </t>
+
+    <t t-name="resident_management.KycVerify">
+        <t t-set="d" t-value="kycSelected()"/>
+        <div class="rm-page-head">
+            <button class="rm-btn" t-on-click="() => this.state.view = 'list'">Back</button>
+            <div><h1>Document Verification</h1><p><t t-esc="d.code"/> · <t t-esc="d.resident"/></p></div>
+        </div>
+        <div class="rm-split">
+            <article class="rm-card rm-preview">
+                <div class="rm-preview-box" t-if="!state.kycFile">No file stored yet. Upload a document from the KYC list.</div>
+                <div t-elif="isImage(state.kycFile.mimetype)" class="rm-preview-box"><img class="rm-preview-img" t-att-src="kycPreviewSrc()" t-att-alt="state.kycFile.filename"/></div>
+                <iframe t-elif="isPdf(state.kycFile.mimetype)" class="rm-preview-frame" t-att-src="kycPreviewSrc()"/>
+                <div t-else="" class="rm-preview-box">
+                    <p t-esc="state.kycFile.filename"/>
+                    <button class="rm-btn is-primary" t-on-click="() => this.downloadKyc()">Download file</button>
+                </div>
+            </article>
+            <aside>
+                <article class="rm-card">
+                    <h3>Resident Information</h3>
+                    <p>Name <b t-esc="d.resident"/></p><p>Resident ID <b t-esc="d.resident_code"/></p><p>Unit <b t-esc="d.unit"/></p><p>Phone <b t-esc="d.phone"/></p>
+                </article>
+                <article class="rm-card">
+                    <h3>Document Details</h3>
+                    <p>Type <b t-esc="d.type"/></p><p>Document Number <b t-esc="d.number"/></p><p>Uploaded <b t-esc="d.submitted"/></p><p>Expiry <b t-esc="d.expiry"/></p>
+                    <span t-attf-class="rm-badge is-#{badge(d.status)}" t-esc="d.status_label"/>
+                </article>
+                <article class="rm-card">
+                    <h3>Verification Checklist</h3>
+                    <label class="rm-check"><input type="checkbox" t-att-checked="d.identity_match" t-on-change="() => this.toggleCheck('identity_match')"/> Identity matches</label>
+                    <label class="rm-check"><input type="checkbox" t-att-checked="d.document_readable" t-on-change="() => this.toggleCheck('document_readable')"/> Document is readable</label>
+                    <label class="rm-check"><input type="checkbox" t-att-checked="d.document_valid" t-on-change="() => this.toggleCheck('document_valid')"/> Document is valid</label>
+                    <label class="rm-check"><input type="checkbox" t-att-checked="d.not_expired" t-on-change="() => this.toggleCheck('not_expired')"/> Document is not expired</label>
+                    <label class="rm-check"><input type="checkbox" t-att-checked="d.information_match" t-on-change="() => this.toggleCheck('information_match')"/> Information matches</label>
+                    <button class="rm-btn is-primary rm-block" t-on-click="() => this.reviewKyc('approve')">Approve Document</button>
+                    <button class="rm-btn rm-block" t-on-click="() => this.reviewKyc('resubmit')">Request Resubmission</button>
+                    <button class="rm-btn is-bad rm-block" t-on-click="() => this.reviewKyc('reject')">Reject</button>
+                </article>
+            </aside>
+        </div>
+    </t>
+
+    <t t-name="resident_management.Household">
+        <div class="rm-page-head"><div><h1>Household Members</h1><p>Manage family members and dependents associated with residents.</p></div>
+            <button class="rm-btn is-primary" t-on-click="() => this.openMemberAdd()">+ Add Household Member</button></div>
+        <section class="rm-mini-kpis">
+            <article>TOTAL HOUSEHOLDS<strong t-esc="state.data.household_stats.households"/></article>
+            <article>AVG HOUSEHOLD SIZE<strong t-esc="state.data.household_stats.avg"/></article>
+            <article>TOTAL MEMBERS<strong t-esc="state.data.household_stats.members"/></article>
+            <article>DEPENDENTS<strong t-esc="state.data.household_stats.dependents"/></article>
+        </section>
+        <div class="rm-card">
+            <table class="rm-table">
+                <thead><tr><th>PRIMARY RESIDENT</th><th>HOUSEHOLD MEMBER</th><th>RELATIONSHIP</th><th>AGE</th><th>CONTACT</th><th>UNIT</th><th>STATUS</th></tr></thead>
+                <tbody>
+                    <t t-foreach="state.data.members || []" t-as="row" t-key="row.id">
+                        <tr t-on-click="() => this.openHousehold(row)">
+                            <td t-esc="row.resident"/><td t-esc="row.name"/><td t-esc="row.relation"/><td t-esc="row.age"/><td t-esc="row.email || 'N/A'"/><td t-esc="row.unit"/>
+                            <td><span t-attf-class="rm-badge is-#{badge(row.status)}" t-esc="row.status"/></td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </div>
+    </t>
+
+    <t t-name="resident_management.HouseholdAdd">
+        <div class="rm-page-head"><h1 t-esc="state.memberForm.id ? 'Edit Household Member' : 'Add Household Member'"/></div>
+        <div class="rm-card rm-form">
+            <div class="rm-grid-2">
+                <label>Primary Resident
+                    <select t-att-value="state.memberForm.resident_id" t-on-change="(ev) => this.state.memberForm.resident_id = ev.target.value">
+                        <option value="">Select</option>
+                        <t t-foreach="residents()" t-as="r" t-key="r.id"><option t-att-value="r.id" t-esc="r.name"/></t>
+                    </select>
+                </label>
+                <label>Member Name<input t-att-value="state.memberForm.name" t-on-input="(ev) => this.state.memberForm.name = ev.target.value"/></label>
+                <label>Relationship<input t-att-value="state.memberForm.relation" t-on-input="(ev) => this.state.memberForm.relation = ev.target.value"/></label>
+                <label>Email<input t-att-value="state.memberForm.email" t-on-input="(ev) => this.state.memberForm.email = ev.target.value"/></label>
+                <label>Phone<input t-att-value="state.memberForm.phone" t-on-input="(ev) => this.state.memberForm.phone = ev.target.value"/></label>
+            </div>
+            <div class="rm-form-actions">
+                <button class="rm-btn" t-on-click="() => this.state.view = 'list'">Cancel</button>
+                <button class="rm-btn is-primary" t-on-click="() => this.addMember()">Save</button>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="resident_management.HouseholdDetail">
+        <t t-set="r" t-value="selected()"/>
+        <div class="rm-page-head"><div><p class="rm-muted">Household Members › Details</p><h1>Household Details</h1></div>
+            <div class="rm-actions"><button class="rm-btn" t-on-click="() => this.openEdit(r)">Edit Profile</button><button class="rm-btn is-primary" t-on-click="() => this.messageHousehold()">Message</button></div></div>
+        <div class="rm-hero rm-card"><em class="rm-bigava" t-esc="r.initials"/><div><h2 t-esc="r.name"/><div class="rm-muted">Unit <t t-esc="r.unit"/> · <t t-esc="r.email"/> · <t t-esc="r.mobile"/></div></div></div>
+        <section class="rm-mini-kpis">
+            <article>PRIMARY RESIDENT<strong t-esc="r.name"/></article>
+            <article>UNIT<strong t-esc="r.unit"/></article>
+            <article>HOUSEHOLD SIZE<strong t-esc="r.household + 1"/> Members</article>
+            <article>HOUSEHOLD STATUS<strong t-esc="r.status_label"/></article>
+        </section>
+        <div class="rm-card">
+            <div class="rm-card-head"><h2>Household Members</h2><button class="rm-btn" t-on-click="() => this.openMemberAdd()">+ Add Member</button></div>
+            <table class="rm-table">
+                <thead><tr><th>MEMBER</th><th>RELATIONSHIP</th><th>AGE</th><th>CONTACT</th><th>KYC STATUS</th><th>STATUS</th></tr></thead>
+                <tbody>
+                    <t t-foreach="householdOfSelected()" t-as="row" t-key="row.id">
+                        <tr t-on-click="() => this.openMemberEdit(row)"><td t-esc="row.name"/><td t-esc="row.relation"/><td t-esc="row.age"/><td t-esc="row.email || 'No contact provided'"/><td t-esc="row.kyc_state"/><td t-esc="row.status"/></tr>
+                    </t>
+                </tbody>
+            </table>
+        </div>
+    </t>
+
+    <t t-name="resident_management.Profile">
+        <t t-set="r" t-value="selected()"/>
+        <div class="rm-hero rm-card">
+            <em class="rm-bigava" t-esc="r.initials"/>
+            <div><h2 t-esc="r.name"/> <span t-attf-class="rm-badge is-#{badge(r.status)}" t-esc="r.status_label"/>
+                <div class="rm-muted"><t t-esc="r.code"/> · Unit <t t-esc="r.unit"/> · KYC <t t-esc="r.kyc_label"/></div></div>
+            <div class="rm-actions"><button class="rm-btn" t-on-click="() => this.openEdit(r)">Edit Resident</button><button class="rm-btn is-bad" t-on-click="() => this.deleteResident(r)">Delete</button><button class="rm-btn is-primary" t-on-click="() => this.openStatusChange(r)">Change Status</button></div>
+        </div>
+        <div class="rm-tabs">
+            <button t-att-class="{ 'is-on': state.profileTab === 'overview' }" t-on-click="() => this.state.profileTab = 'overview'">Overview</button>
+            <button t-att-class="{ 'is-on': state.profileTab === 'personal' }" t-on-click="() => this.state.profileTab = 'personal'">Personal Info</button>
+            <button t-on-click="() => this.onNav('household')">Household</button>
+            <button t-on-click="() => this.onNav('kyc')">Documents</button>
+            <button t-on-click="() => this.onNav('communication')">Communication</button>
+            <button t-on-click="() => this.onNav('move')">Occupancy</button>
+            <button t-on-click="() => this.openLifecycle(r)">History</button>
+        </div>
+        <div class="rm-tiles">
+            <article class="rm-card"><span>CONTACT INFO</span><p t-esc="r.mobile"/><p t-esc="r.email"/></article>
+            <article class="rm-card"><span>UNIT DETAILS</span><p t-esc="r.building"/><p>Lease <t t-esc="r.lease_term"/></p></article>
+            <article class="rm-card"><span>KYC STATUS</span><p t-esc="r.kyc_label"/></article>
+            <article class="rm-card"><span>HOUSEHOLD</span><p><t t-esc="r.household"/> Members · <t t-esc="r.dependents"/> Dependents</p></article>
+            <article class="rm-card"><span>EMERGENCY</span>
+                <t t-if="r.emergency and r.emergency.length"><p t-esc="r.emergency[0].name"/><p t-esc="r.emergency[0].phone"/></t>
+            </article>
+        </div>
+    </t>
+
+    <t t-name="resident_management.ProfilePersonal">
+        <t t-set="r" t-value="selected()"/>
+        <div class="rm-page-head"><div><p class="rm-muted">Directory › Unit <t t-esc="r.unit"/></p><h1 t-esc="r.name"/><p>Personal Information &amp; Core Identity</p></div>
+            <button class="rm-btn is-primary" t-on-click="() => this.openEdit(r)">Edit Information</button></div>
+        <div class="rm-split">
+            <article class="rm-card">
+                <h3>Personal Details</h3>
+                <div class="rm-grid-3">
+                    <div>Full Legal Name<b t-esc="r.name"/></div>
+                    <div>Preferred Name<b t-esc="r.preferred_name"/></div>
+                    <div>Resident ID<b t-esc="r.code"/></div>
+                    <div>Date of Birth<b t-esc="r.dob_label"/></div>
+                    <div>Gender<b t-esc="r.gender"/></div>
+                    <div>Marital Status<b t-esc="r.marital_status or '—'"/></div>
+                    <div>Resident Type<b t-esc="r.resident_type"/></div>
+                    <div>Nationality<b t-esc="r.nationality"/></div>
+                </div>
+            </article>
+            <article class="rm-card">
+                <h3>Contact Methods</h3>
+                <p>Primary Mobile <b t-esc="r.mobile"/></p>
+                <p>Primary Email <b t-esc="r.email"/></p>
+                <p>Alternate Phone <b t-esc="r.alt_phone or '—'"/></p>
+            </article>
+        </div>
+        <article class="rm-card">
+            <h3>Permanent Address / Billing</h3>
+            <p t-esc="r.street"/><p><t t-esc="r.city"/> · <t t-esc="r.state_name"/> · <t t-esc="r.zip"/></p><p t-esc="r.country"/>
+        </article>
+        <button class="rm-link" t-on-click="() => this.state.profileTab = 'overview'">Back to overview</button>
+    </t>
+
+    <t t-name="resident_management.MoveList">
+        <div class="rm-page-head">
+            <div><h1>Move-In / Move-Out Management</h1><p>Manage scheduled transitions, approvals, and checklists.</p></div>
+            <div class="rm-seg"><button t-att-class="{ 'is-on': state.moveTab === 'in' }" t-on-click="() => this.state.moveTab = 'in'">Move-In</button><button t-att-class="{ 'is-on': state.moveTab === 'out' }" t-on-click="() => this.state.moveTab = 'out'">Move-Out</button></div>
+        </div>
+        <section class="rm-mini-kpis">
+            <article>UPCOMING<strong t-esc="moves().length"/></article>
+            <article>PENDING APPROVAL<strong t-esc="moves().filter((m) => !m.approved).length"/></article>
+            <article>SCHEDULED TODAY<strong t-esc="moves().filter((m) => m.state === 'scheduled').length"/></article>
+            <article>COMPLETED<strong t-esc="moves().filter((m) => m.state === 'done').length"/></article>
+        </section>
+        <div class="rm-card">
+            <h2 t-esc="state.moveTab === 'in' ? 'Move-In Schedule' : 'Move-Out Schedule'"/>
+            <table class="rm-table">
+                <thead><tr><th>RESIDENT</th><th>UNIT</th><th>DATE</th><th>APPROVAL</th><th>CHECKLIST</th><th>STATUS</th><th/></tr></thead>
+                <tbody>
+                    <t t-foreach="moves()" t-as="row" t-key="row.id">
+                        <tr>
+                            <td t-esc="row.resident"/><td t-esc="row.unit"/><td t-esc="row.date"/>
+                            <td t-esc="row.approved ? 'Yes' : 'No'"/><td t-esc="row.checklist"/>
+                            <td><span t-attf-class="rm-badge is-#{badge(row.state)}" t-esc="row.state_label"/></td>
+                            <td><button class="rm-link" t-on-click="() => this.openMove(row)">Review</button></td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </div>
+    </t>
+
+    <t t-name="resident_management.MoveDetail">
+        <t t-set="m" t-value="moveSelected()"/>
+        <div class="rm-page-head">
+            <button class="rm-btn" t-on-click="() => this.state.view = 'list'">Back to list</button>
+            <h1 t-esc="m.move_type === 'out' ? 'Move-Out Request' : 'Move-In Request'"/>
+            <div class="rm-actions" t-if="m.move_type !== 'out'">
+                <button class="rm-btn" t-on-click="() => this.doMove('approve')">Approve Move-In</button>
+                <button class="rm-btn" t-on-click="() => this.doMove('schedule')">Schedule</button>
+                <button class="rm-btn is-primary" t-on-click="() => this.doMove('complete')">Complete Move-In</button>
+            </div>
+        </div>
+        <section class="rm-mini-kpis">
+            <article>RESIDENT<strong t-esc="m.resident"/></article>
+            <article>UNIT<strong t-esc="m.unit"/></article>
+            <article>DATES<strong t-esc="m.date"/></article>
+            <article>STATUS<strong t-esc="m.state_label"/></article>
+        </section>
+        <div class="rm-split">
+            <div>
+                <article class="rm-card"><h3>Readiness Score</h3><div class="rm-score" t-esc="m.readiness + '%' "/><div class="rm-bar"><i t-attf-style="width: #{m.readiness}%"/></div></article>
+                <article class="rm-card"><h3>Assigned Agent</h3><p t-esc="m.agent"/></article>
+            </div>
+            <article class="rm-card">
+                <h3 t-esc="m.move_type === 'out' ? 'Move-Out Checklist' : 'Move-In Checklist'"/>
+                <t t-foreach="m.items || []" t-as="item" t-key="item.id">
+                    <label class="rm-check"><input type="checkbox" t-att-checked="item.done" t-on-change="() => this.toggleItem(item.id)"/> <b t-esc="item.name"/></label>
+                    <div class="rm-muted" t-esc="item.note"/>
+                </t>
+            </article>
+        </div>
+        <div class="rm-actions" t-if="m.move_type === 'out'">
+            <button class="rm-btn is-primary" t-on-click="() => this.doMove('complete')">Complete Move-Out</button>
+            <button class="rm-btn" t-on-click="() => this.doMove('schedule')">Save Progress</button>
+            <button class="rm-btn" t-on-click="() => this.doMove('clearance')">Generate Clearance Certificate</button>
+            <button class="rm-btn" t-if="m.has_clearance" t-on-click="() => this.doMove('clearance')">Download Clearance</button>
+        </div>
+    </t>
+
+    <t t-name="resident_management.Emergency">
+        <div class="rm-page-head"><div><h1>Emergency Contacts</h1><p>Manage emergency contacts for residents.</p></div>
+            <button class="rm-btn is-primary" t-on-click="() => this.state.view = 'add'">+ Add Emergency Contact</button></div>
+        <section class="rm-mini-kpis">
+            <article>TOTAL CONTACTS<strong t-esc="state.data.emergency_stats.total"/></article>
+            <article>RESIDENTS W/ CONTACTS<strong t-esc="state.data.emergency_stats.with_contact"/></article>
+            <article class="is-alert">MISSING CONTACTS<strong t-esc="state.data.emergency_stats.missing"/></article>
+            <article>RECENTLY UPDATED<strong t-esc="state.data.emergency_stats.recent"/></article>
+        </section>
+        <div class="rm-card">
+            <table class="rm-table">
+                <thead><tr><th>RESIDENT</th><th>UNIT</th><th>EMERGENCY CONTACT</th><th>RELATIONSHIP</th><th>PHONE</th><th>PRIORITY</th><th>UPDATED</th></tr></thead>
+                <tbody>
+                    <t t-foreach="state.data.emergencies || []" t-as="row" t-key="row.id">
+                        <tr>
+                            <td t-esc="row.resident"/><td t-esc="row.unit"/><td t-esc="row.name"/><td t-esc="row.relation"/><td t-esc="row.phone"/>
+                            <td><span class="rm-badge is-info" t-esc="row.priority"/></td><td t-esc="row.updated"/>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </div>
+    </t>
+
+    <t t-name="resident_management.EmergencyAdd">
+        <div class="rm-card rm-form">
+            <h1>Add Emergency Contact</h1>
+            <label>Resident<select t-on-change="(ev) => this.state.emForm.resident_id = ev.target.value"><option value="">Select</option><t t-foreach="residents()" t-as="r" t-key="r.id"><option t-att-value="r.id" t-esc="r.name"/></t></select></label>
+            <label>Name<input t-on-input="(ev) => this.state.emForm.name = ev.target.value"/></label>
+            <label>Relation<input t-on-input="(ev) => this.state.emForm.relation = ev.target.value"/></label>
+            <label>Phone<input t-on-input="(ev) => this.state.emForm.phone = ev.target.value"/></label>
+            <div class="rm-form-actions"><button class="rm-btn" t-on-click="() => this.state.view = 'list'">Cancel</button><button class="rm-btn is-primary" t-on-click="() => this.addEmergency()">Save</button></div>
+        </div>
+    </t>
+
+    <t t-name="resident_management.CommList">
+        <div class="rm-page-head"><div><h1>Resident Communication</h1><p>Send and track communications with residents.</p></div>
+            <button class="rm-btn is-primary" t-on-click="() => this.composeComm()">+ New Communication</button></div>
+        <section class="rm-mini-kpis">
+            <article>TOTAL SENT<strong t-esc="state.data.comm_stats.sent"/></article>
+            <article>SCHEDULED<strong t-esc="state.data.comm_stats.scheduled"/></article>
+            <article>DELIVERED<strong t-esc="state.data.comm_stats.delivered"/></article>
+            <article>READ<strong t-esc="state.data.comm_stats.read"/>%</article>
+            <article>FAILED<strong t-esc="state.data.comm_stats.failed"/></article>
+        </section>
+        <div class="rm-card">
+            <table class="rm-table">
+                <thead><tr><th>SUBJECT</th><th>AUDIENCE</th><th>CHANNEL</th><th>SENT BY</th><th>DATE</th><th>DELIVERY</th><th>READ</th></tr></thead>
+                <tbody>
+                    <t t-foreach="state.data.comms || []" t-as="row" t-key="row.id">
+                        <tr t-on-click="() => this.openComm(row)">
+                            <td t-esc="row.name"/><td t-esc="row.audience"/><td t-esc="(row.channels || []).join(', ')"/><td t-esc="row.sent_by"/><td t-esc="row.date"/>
+                            <td><span t-attf-class="rm-badge is-#{badge(row.state)}" t-esc="row.state_label"/></td>
+                            <td t-esc="row.read_pct + '%'"/>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </div>
+    </t>
+
+    <t t-name="resident_management.CommCompose">
+        <div class="rm-page-head"><h1>New Communication</h1><p>Draft and broadcast messages to residents across your portfolio.</p></div>
+        <div class="rm-split">
+            <div class="rm-card rm-form">
+                <h3>Target Audience</h3>
+                <div class="rm-seg">
+                    <button t-att-class="{ 'is-on': state.commForm.audience_type === 'all' }" t-on-click="() => this.setAudience('all')">All Residents</button>
+                    <button t-att-class="{ 'is-on': state.commForm.audience_type === 'building' }" t-on-click="() => this.setAudience('building')">Specific Building</button>
+                    <button t-att-class="{ 'is-on': state.commForm.audience_type === 'unit' }" t-on-click="() => this.setAudience('unit')">Specific Unit</button>
+                    <button t-att-class="{ 'is-on': state.commForm.audience_type === 'resident' }" t-on-click="() => this.setAudience('resident')">One Resident</button>
+                </div>
+                <label t-if="state.commForm.audience_type === 'building'">Building
+                    <select t-on-change="(ev) => this.state.commForm.audience_id = ev.target.value">
+                        <option value="">Select building</option>
+                        <t t-foreach="state.data.buildings || []" t-as="b" t-key="b.id"><option t-att-value="b.id" t-esc="b.label"/></t>
+                    </select>
+                </label>
+                <label t-if="state.commForm.audience_type === 'unit'">Unit
+                    <select t-on-change="(ev) => this.state.commForm.audience_id = ev.target.value">
+                        <option value="">Select unit</option>
+                        <t t-foreach="state.data.units || []" t-as="u" t-key="u.id"><option t-att-value="u.id" t-esc="u.label"/></t>
+                    </select>
+                </label>
+                <label t-if="state.commForm.audience_type === 'resident'">Resident
+                    <select t-on-change="(ev) => this.state.commForm.audience_id = ev.target.value">
+                        <option value="">Select resident</option>
+                        <t t-foreach="residents()" t-as="r" t-key="r.id"><option t-att-value="r.id" t-esc="r.name"/></t>
+                    </select>
+                </label>
+                <label>Subject Line<input t-att-value="state.commForm.subject" t-on-input="(ev) => this.state.commForm.subject = ev.target.value"/></label>
+                <label>Message Body<textarea rows="8" t-att-value="state.commForm.body" t-on-input="(ev) => this.state.commForm.body = ev.target.value"/></label>
+                <button class="rm-btn" t-on-click="() => this.triggerCommFile()">Attach file</button>
+                <p class="rm-muted" t-if="state.commForm.attachment" t-esc="state.commForm.attachment"/>
+            </div>
+            <aside class="rm-card">
+                <h3>Delivery Channels</h3>
+                <label class="rm-check"><input type="checkbox" t-att-checked="state.commForm.push" t-on-change="() => this.state.commForm.push = !this.state.commForm.push"/> Resident App Push</label>
+                <label class="rm-check"><input type="checkbox" t-att-checked="state.commForm.email" t-on-change="() => this.state.commForm.email = !this.state.commForm.email"/> Email Notification</label>
+                <label class="rm-check"><input type="checkbox" t-att-checked="state.commForm.sms" t-on-change="() => this.state.commForm.sms = !this.state.commForm.sms"/> SMS Message</label>
+                <button class="rm-btn is-primary rm-block" t-on-click="() => this.sendComm(false)">Send Communication</button>
+                <button class="rm-btn rm-block" t-on-click="() => this.sendComm(true)">Save Draft</button>
+            </aside>
+        </div>
+    </t>
+
+    <t t-name="resident_management.CommDetail">
+        <t t-set="c" t-value="commSelected()"/>
+        <div class="rm-page-head"><button class="rm-btn" t-on-click="() => this.state.view = 'list'">Back</button><h1>Communication Details</h1></div>
+        <div class="rm-split">
+            <article class="rm-card">
+                <h2 t-esc="c.name"/>
+                <p class="rm-muted">Sent by <t t-esc="c.sent_by"/> · <t t-esc="c.date"/></p>
+                <p>Audience <b t-esc="c.audience"/></p>
+                <pre class="rm-body" t-esc="c.body"/>
+                <p t-if="c.attachment">Attachment: <t t-esc="c.attachment"/></p>
+            </article>
+            <aside>
+                <article class="rm-card">TOTAL RECIPIENTS<strong t-esc="c.total"/></article>
+                <article class="rm-card">DELIVERED<strong t-esc="c.delivered"/></article>
+                <article class="rm-card">READ RATE<strong t-esc="c.read_pct"/>%</article>
+                <article class="rm-card">FAILED<strong t-esc="c.failed"/></article>
+            </aside>
+        </div>
+        <div class="rm-card">
+            <h2>Recipient Log</h2>
+            <table class="rm-table">
+                <thead><tr><th>RESIDENT</th><th>UNIT</th><th>DELIVERY STATUS</th><th>READ STATUS</th><th>TIMESTAMP</th></tr></thead>
+                <tbody>
+                    <t t-foreach="c.recipients || []" t-as="row" t-key="row.id">
+                        <tr><td t-esc="row.resident"/><td t-esc="row.unit"/><td t-esc="row.delivery"/><td t-esc="row.read ? 'READ' : 'UNREAD'"/><td t-esc="row.when"/></tr>
+                    </t>
+                </tbody>
+            </table>
+        </div>
+    </t>
+
+    <t t-name="resident_management.StatusList">
+        <div class="rm-page-head"><div><h1>Resident Status</h1><p>Monitor and manage resident lifecycle statuses across the portfolio.</p></div>
+            <button class="rm-btn is-primary" t-on-click="() => this.openStatusChange(selected())">Update Statuses</button></div>
+        <section class="rm-mini-kpis">
+            <article>ACTIVE<strong t-esc="state.data.status_stats.active"/></article>
+            <article>PENDING<strong t-esc="state.data.status_stats.pending"/></article>
+            <article>UNDER VERIFICATION<strong t-esc="state.data.status_stats.verification"/></article>
+            <article>NOTICE PERIOD<strong t-esc="state.data.status_stats.notice"/></article>
+            <article>INACTIVE<strong t-esc="state.data.status_stats.inactive"/></article>
+            <article>MOVED OUT<strong t-esc="state.data.status_stats.moved_out"/></article>
+            <article>SUSPENDED<strong t-esc="state.data.status_stats.suspended"/></article>
+        </section>
+        <div class="rm-card">
+            <table class="rm-table">
+                <thead><tr><th>RESIDENT</th><th>UNIT</th><th>CURRENT STATUS</th><th>STATUS SINCE</th><th>REASON / CONTEXT</th></tr></thead>
+                <tbody>
+                    <t t-foreach="residents()" t-as="row" t-key="row.id">
+                        <tr t-on-click="() => this.openStatusChange(row)">
+                            <td t-esc="row.name"/><td t-esc="row.unit"/>
+                            <td><span t-attf-class="rm-badge is-#{badge(row.status)}" t-esc="row.status_label"/></td>
+                            <td t-esc="row.status_since"/><td t-esc="row.status_reason"/>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </div>
+    </t>
+
+    <t t-name="resident_management.StatusChange">
+        <t t-set="r" t-value="selected()"/>
+        <div class="rm-page-head"><h1>Change Resident Status</h1></div>
+        <div class="rm-card rm-form">
+            <h2>Status Configuration</h2>
+            <p>Current <span t-attf-class="rm-badge is-#{badge(r.status)}" t-esc="r.status_label"/></p>
+            <div class="rm-grid-2">
+                <label>New Status *
+                    <select t-on-change="(ev) => this.state.statusForm.status = ev.target.value">
+                        <option value="">Select new status...</option>
+                        <option value="active">Active</option>
+                        <option value="pending">Pending</option>
+                        <option value="verification">Under Verification</option>
+                        <option value="notice">Notice Period</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="moved_out">Moved Out</option>
+                        <option value="suspended">Suspended</option>
+                    </select>
+                </label>
+                <label>Reason Code *<input t-on-input="(ev) => this.state.statusForm.reason = ev.target.value" placeholder="Select reason..."/></label>
+            </div>
+            <label>Additional Notes<textarea rows="4" t-on-input="(ev) => this.state.statusForm.notes = ev.target.value"/></label>
+            <div class="rm-form-actions">
+                <button class="rm-btn" t-on-click="() => this.state.view = 'list'">Cancel</button>
+                <button class="rm-btn is-primary" t-on-click="() => this.saveStatus()">Update Status</button>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="resident_management.History">
+        <div class="rm-page-head"><div><h1>Resident History</h1><p>View the complete resident lifecycle and activity history.</p></div></div>
+        <div class="rm-card">
+            <h2>Activity Timeline</h2>
+            <div class="rm-timeline">
+                <t t-foreach="state.data.history || []" t-as="row" t-key="row.id">
+                    <button class="rm-tl-item" t-on-click="() => this.openHistory(row)">
+                        <span class="rm-tl-date"><t t-esc="row.date"/><br/><t t-esc="row.time"/></span>
+                        <div>
+                            <b t-esc="row.title"/>
+                            <p t-esc="row.body"/>
+                            <em>Performed by: <t t-esc="row.performed_by"/></em>
+                        </div>
+                    </button>
+                </t>
+            </div>
+            <button class="rm-link" t-on-click="() => this.openLifecycle(selected())">Open lifecycle view</button>
+        </div>
+    </t>
+
+    <t t-name="resident_management.HistoryActivity">
+        <t t-set="h" t-value="histSelected()"/>
+        <div class="rm-page-head">
+            <button class="rm-btn" t-on-click="() => this.state.view = 'list'">Back to History</button>
+            <h1>Activity Details</h1>
+            <button class="rm-btn is-primary" t-on-click="() => this.openResident({id: h.resident_id})">View Resident</button>
+        </div>
+        <div class="rm-hero rm-card"><em class="rm-bigava" t-esc="(h.resident || 'R').slice(0,2)"/><div><h2 t-esc="h.resident"/> <span class="rm-badge" t-esc="h.status"/><div class="rm-muted"><t t-esc="h.code"/> · Unit <t t-esc="h.unit"/></div></div></div>
+        <div class="rm-split">
+            <article class="rm-card">
+                <h3>Activity Information</h3>
+                <p>Activity Type <b t-esc="h.title"/></p>
+                <p>Date &amp; Time <b t-esc="h.datetime"/></p>
+                <p>Performed By <b t-esc="h.performed_by"/></p>
+                <div class="rm-flow">
+                    <span class="rm-badge is-warn" t-esc="h.old_status or '—'"/> → <span class="rm-badge is-ok" t-esc="h.new_status or '—'"/>
+                </div>
+                <h3>Change Details</h3>
+                <p>Reason <b t-esc="h.reason or '—'"/></p>
+                <p t-esc="h.notes"/>
+            </article>
+            <aside class="rm-card">
+                <h3>Record Metadata</h3>
+                <p>Activity ID <b t-esc="h.hist_code"/></p>
+                <p>Category <b t-esc="h.category"/></p>
+            </aside>
+        </div>
+    </t>
+
+    <t t-name="resident_management.Lifecycle">
+        <t t-set="r" t-value="selected()"/>
+        <div class="rm-page-head"><button class="rm-btn" t-on-click="() => this.state.view = 'list'">Back</button><h1>Resident Lifecycle</h1></div>
+        <div class="rm-hero rm-card"><em class="rm-bigava" t-esc="r.initials"/><div><h2 t-esc="r.name"/><div class="rm-muted">Unit <t t-esc="r.unit"/> · <t t-esc="r.building"/></div></div></div>
+        <div class="rm-steps">
+            <span t-att-class="{ 'is-done': true }">Onboarding</span>
+            <span t-att-class="{ 'is-done': r.kyc_state === 'verified' }">KYC</span>
+            <span t-att-class="{ 'is-done': r.onboarding_stage === 'approved' or r.status === 'active' }">Approval</span>
+            <span t-att-class="{ 'is-done': r.status === 'active' or r.status === 'notice' }">Move-In</span>
+            <span t-att-class="{ 'is-on': r.status === 'active' }">Active</span>
+            <span t-att-class="{ 'is-on': r.status === 'notice' }">Notice</span>
+            <span t-att-class="{ 'is-on': r.status === 'moved_out' }">Move-Out</span>
+            <span>Archived</span>
+        </div>
+        <div class="rm-card">
+            <h2>Event Timeline</h2>
+            <t t-foreach="(state.data.history || []).filter((h) => h.resident_id === r.id)" t-as="row" t-key="row.id">
+                <div class="rm-tl-item"><b t-esc="row.title"/><span t-esc="row.datetime"/><p t-esc="row.body"/></div>
+            </t>
+        </div>
+    </t>
+</templates>

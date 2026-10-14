@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_esg_reading_user,esg.reading.user,model_esg_reading,base.group_user,1,1,1,1
+access_esg_kpi_user,esg.kpi.user,model_esg_kpi,base.group_user,1,1,1,1
+access_esg_target_user,esg.target.user,model_esg_target,base.group_user,1,1,1,1
+access_esg_activity_user,esg.activity.user,model_esg_activity,base.group_user,1,1,1,1
+access_esg_report_user,esg.report.user,model_esg_report,base.group_user,1,1,1,1

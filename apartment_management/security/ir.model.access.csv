@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_apartment_payment_user,apartment.payment.user,model_apartment_payment,base.group_user,1,1,1,1
+access_apartment_maintenance_user,apartment.maintenance.user,model_apartment_maintenance,base.group_user,1,1,1,1
+access_apartment_message_user,apartment.message.user,model_apartment_message,base.group_user,1,1,1,1
+access_apartment_document_user,apartment.document.user,model_apartment_document,base.group_user,1,1,1,1
+access_apartment_notice_user,apartment.notice.user,model_apartment_notice,base.group_user,1,1,1,1
+access_apartment_preference_user,apartment.preference.user,model_apartment_preference,base.group_user,1,1,1,1

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_apartment_maintenance_list" model="ir.ui.view">
+        <field name="name">apartment.maintenance.list</field>
+        <field name="model">apartment.maintenance</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="unit_id"/>
+                <field name="category"/>
+                <field name="priority"/>
+                <field name="state"/>
+                <field name="scheduled_date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_apartment_maintenance_form" model="ir.ui.view">
+        <field name="name">apartment.maintenance.form</field>
+        <field name="model">apartment.maintenance</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="open,progress,scheduled,done"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="unit_id"/>
+                            <field name="property_id"/>
+                            <field name="tenant_id"/>
+                            <field name="category"/>
+                        </group>
+                        <group>
+                            <field name="priority"/>
+                            <field name="access_date"/>
+                            <field name="access_slot"/>
+                            <field name="scheduled_date"/>
+                            <field name="attachment_name"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="description"/>
+                        <field name="notes"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_apartment_maintenance" model="ir.actions.act_window">
+        <field name="name">Maintenance</field>
+        <field name="res_model">apartment.maintenance</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

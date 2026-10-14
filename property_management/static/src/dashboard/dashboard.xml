@@ -1,0 +1,2775 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="property_management.Dashboard">
+        <div class="o_property_dashboard" t-on-click="closeMenus">
+            <aside class="pm-sidebar">
+                <div class="pm-brand">
+                    <div class="pm-brand-icon">PM</div>
+                    <div>
+                        <div class="pm-brand-title">Property Management FMS</div>
+                        <div class="pm-brand-sub">PORTFOLIO EXECUTIVE</div>
+                    </div>
+                </div>
+                <nav class="pm-nav">
+                    <t t-foreach="navItems" t-as="item" t-key="item.id">
+                        <button type="button"
+                                class="pm-nav-item"
+                                t-att-class="{ 'is-active': isNavActive(item) }"
+                                t-on-click="() => this.onNav(item)">
+                            <i t-attf-class="fa #{item.icon}"/>
+                            <span t-esc="item.label"/>
+                        </button>
+                    </t>
+                    <div class="pm-nav-label">REPORTS</div>
+                    <t t-foreach="reportItems" t-as="item" t-key="item.id">
+                        <button type="button" class="pm-nav-item" t-on-click="() => this.onNav(item)">
+                            <i t-attf-class="fa #{item.icon}"/>
+                            <span t-esc="item.label"/>
+                        </button>
+                    </t>
+                </nav>
+                <div class="pm-user">
+                    <span class="pm-avatar">JD</span>
+                    <div>
+                        <div class="pm-user-name">Jane Doe</div>
+                        <div class="pm-user-role">System Admin</div>
+                    </div>
+                </div>
+                <div class="pm-sidebar-footer">
+                    <button type="button" class="pm-nav-item" t-on-click="() => this.onNav({ xmlId: 'property_management.action_property_property' })">
+                        <i class="fa fa-cog"/>
+                        <span>Settings</span>
+                    </button>
+                    <button type="button" class="pm-nav-item" t-on-click="openHelp">
+                        <i class="fa fa-question-circle-o"/>
+                        <span>Help &amp; Support</span>
+                    </button>
+                </div>
+            </aside>
+
+            <main class="pm-main">
+                <div t-att-class="{ 'pm-topbar': true, 'is-own': isCompactTop }">
+                    <div class="pm-breadcrumb" t-if="!isCompactTop">
+                        <t t-if="state.page === 'building-detail'">Property Management &gt; Properties &gt; <t t-esc="state.buildingDetail.building.property_name"/> &gt; <t t-esc="state.buildingDetail.building.name"/></t>
+                        <t t-elif="state.page === 'unit-detail'">Property Management &gt; Units &gt; <t t-esc="state.unitDetail.unit.name"/></t>
+                        <t t-elif="state.page === 'ownership'">Property Management &gt; Ownership</t>
+                        <t t-elif="state.page === 'occupancy'">Property Management &gt; Occupancy</t>
+                        <t t-elif="state.page === 'units'">Property Management &gt; Units</t>
+                        <t t-elif="state.page === 'floors'">Apartment Management / Properties / Floors &amp; Wings</t>
+                        <t t-elif="state.page === 'buildings'">Property Management &gt; Buildings &amp; Towers</t>
+                        <t t-elif="state.page === 'property-detail'">Property Management &gt; Properties &gt; Property Details</t>
+                        <t t-elif="state.page === 'hierarchy'">Apartment Management &gt; Properties &gt; Hierarchy Explorer</t>
+                        <t t-elif="state.page === 'add-property'">Property Management &gt; Properties &gt; Add Property</t>
+                        <t t-elif="state.page === 'properties'">Apartment Management &gt; Properties</t>
+                        <t t-else="">Apartment Management &gt; Overview</t>
+                    </div>
+                    <div class="pm-top-icons">
+                        <div t-att-class="{ 'pm-top-search': true, 'is-wide': isCompactTop }">
+                            <i class="fa fa-search"/>
+                            <input type="text" t-att-placeholder="topSearchPlaceholder" t-att-value="topSearchValue" t-on-input="onGlobalSearch"/>
+                        </div>
+                        <span class="pm-top-link" t-if="!isCompactTop" t-on-click="() => this.state.page = 'overview'">Portfolio</span>
+                        <span class="pm-top-link" t-if="!isCompactTop" t-on-click="() => this.onNav({ xmlId: 'property_management.action_occupancy_reports' })">Analytics</span>
+                        <span class="pm-top-link" t-if="!isCompactTop" t-on-click="() => this.onNav({ xmlId: 'property_management.action_property_reports' })">Reports</span>
+                        <i class="fa fa-bell-o"/>
+                        <i t-if="isCompactTop" class="fa fa-cog"/>
+                        <i t-if="!isCompactTop" class="fa fa-question-circle-o" t-on-click="openHelp"/>
+                        <span class="pm-avatar">EX</span>
+                    </div>
+                </div>
+
+                <t t-if="state.loading">
+                    <div class="pm-loading">Loading dashboard...</div>
+                </t>
+
+                <t t-elif="state.page === 'add-property'">
+                    <div class="pm-page-head">
+                        <div>
+                            <h1>Add Property</h1>
+                        </div>
+                    </div>
+
+                    <form class="pm-add-form" t-on-submit.prevent="() => this.submitProperty(false)">
+                        <section class="pm-card pm-form-card">
+                            <h2><i class="fa fa-info-circle"/> Basic Information</h2>
+                            <div class="pm-form-grid">
+                                <label>
+                                    <span>Property Name <em>*</em></span>
+                                    <input type="text" placeholder="e.g. Grand Plaza Tower" t-att-value="state.form.name" t-on-input="(ev) => this.state.form.name = ev.target.value"/>
+                                </label>
+                                <label>
+                                    <span>Property Code <em>*</em></span>
+                                    <input type="text" placeholder="e.g. GPT-001" t-att-value="state.form.code" t-on-input="(ev) => this.state.form.code = ev.target.value"/>
+                                </label>
+                                <label>
+                                    <span>Property Type <em>*</em></span>
+                                    <select t-att-value="state.form.property_type" t-on-change="(ev) => this.state.form.property_type = ev.target.value">
+                                        <option value="">Select type</option>
+                                        <option value="residential">Residential</option>
+                                        <option value="commercial">Commercial</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    <span>Status</span>
+                                    <select t-att-value="state.form.operational_status" t-on-change="(ev) => this.state.form.operational_status = ev.target.value">
+                                        <option value="active">Active</option>
+                                        <option value="maintenance">Maintenance</option>
+                                    </select>
+                                </label>
+                                <label class="pm-span-2">
+                                    <span>Description</span>
+                                    <textarea rows="3" placeholder="Brief description" t-att-value="state.form.description" t-on-input="(ev) => this.state.form.description = ev.target.value"/>
+                                </label>
+                            </div>
+                        </section>
+
+                        <section class="pm-card pm-form-card">
+                            <h2><i class="fa fa-map-marker"/> Location Details</h2>
+                            <div class="pm-location-grid">
+                                <div class="pm-form-grid">
+                                    <label class="pm-span-2">
+                                        <span>Address Line 1 <em>*</em></span>
+                                        <input type="text" placeholder="Street address" t-ref="street" t-att-value="state.form.street" t-on-input="(ev) => this.state.form.street = ev.target.value"/>
+                                    </label>
+                                    <label>
+                                        <span>City <em>*</em></span>
+                                        <input type="text" placeholder="City" t-att-value="state.form.city" t-on-input="(ev) => this.state.form.city = ev.target.value"/>
+                                    </label>
+                                    <label>
+                                        <span>State / Province <em>*</em></span>
+                                        <input type="text" placeholder="State" t-att-value="state.form.state_name" t-on-input="(ev) => this.state.form.state_name = ev.target.value"/>
+                                    </label>
+                                    <label>
+                                        <span>Postal Code <em>*</em></span>
+                                        <input type="text" placeholder="ZIP" t-att-value="state.form.zip" t-on-input="(ev) => this.state.form.zip = ev.target.value"/>
+                                    </label>
+                                    <label>
+                                        <span>Country <em>*</em></span>
+                                        <select t-att-value="state.form.country" t-on-change="(ev) => this.state.form.country = ev.target.value">
+                                            <option value="">Select country</option>
+                                            <option value="India">India</option>
+                                            <option value="United Arab Emirates">United Arab Emirates</option>
+                                            <option value="United States">United States</option>
+                                            <option value="United Kingdom">United Kingdom</option>
+                                            <option value="Singapore">Singapore</option>
+                                        </select>
+                                    </label>
+                                </div>
+                                <div class="pm-map">
+                                    <button type="button" class="pm-map-edit" t-on-click="focusAddress">Edit</button>
+                                    <div class="pm-map-pin"><i class="fa fa-map-marker"/></div>
+                                    <div class="pm-map-caption" t-esc="mapCaption"/>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="pm-card pm-form-card">
+                            <h2><i class="fa fa-th-large"/> Property Configuration</h2>
+                            <div class="pm-config-grid">
+                                <label>
+                                    <span>Buildings</span>
+                                    <span class="pm-config-input">
+                                        <i class="fa fa-building"/>
+                                        <input type="number" min="0" t-att-value="state.form.planned_buildings" t-on-input="(ev) => this.state.form.planned_buildings = Number(ev.target.value || 0)"/>
+                                    </span>
+                                </label>
+                                <label>
+                                    <span>Total Floors</span>
+                                    <span class="pm-config-input">
+                                        <i class="fa fa-align-justify"/>
+                                        <input type="number" min="0" t-att-value="state.form.planned_floors" t-on-input="(ev) => this.state.form.planned_floors = Number(ev.target.value || 0)"/>
+                                    </span>
+                                </label>
+                                <label>
+                                    <span>Total Units</span>
+                                    <span class="pm-config-input">
+                                        <i class="fa fa-th"/>
+                                        <input type="number" min="0" t-att-value="state.form.planned_units" t-on-input="(ev) => this.state.form.planned_units = Number(ev.target.value || 0)"/>
+                                    </span>
+                                </label>
+                                <label>
+                                    <span>Category</span>
+                                    <select t-att-value="state.form.category" t-on-change="(ev) => this.state.form.category = ev.target.value">
+                                        <option value="class_a">Class A</option>
+                                        <option value="class_b">Class B</option>
+                                        <option value="class_c">Class C</option>
+                                    </select>
+                                </label>
+                            </div>
+                        </section>
+
+                        <section class="pm-card pm-form-card">
+                            <div class="pm-docs-head">
+                                <h2><i class="fa fa-folder-open-o"/> Documents</h2>
+                                <span>(Optional)</span>
+                            </div>
+                            <div class="pm-docs-grid">
+                                <label class="pm-doc-tile" t-att-class="{ 'is-filled': !!state.form.documents.property_reg }">
+                                    <input type="file" t-on-change="(ev) => this.onDocFile('property_reg', ev)"/>
+                                    <i class="fa fa-file-text-o"/>
+                                    <strong>Property Reg.</strong>
+                                    <small t-esc="state.form.documents.property_reg ? state.form.documents.property_reg.name : 'Upload'"/>
+                                </label>
+                                <label class="pm-doc-tile" t-att-class="{ 'is-filled': !!state.form.documents.ownership }">
+                                    <input type="file" t-on-change="(ev) => this.onDocFile('ownership', ev)"/>
+                                    <i class="fa fa-id-card-o"/>
+                                    <strong>Ownership</strong>
+                                    <small t-esc="state.form.documents.ownership ? state.form.documents.ownership.name : 'Upload'"/>
+                                </label>
+                                <label class="pm-doc-tile" t-att-class="{ 'is-filled': !!state.form.documents.building }">
+                                    <input type="file" t-on-change="(ev) => this.onDocFile('building', ev)"/>
+                                    <i class="fa fa-building-o"/>
+                                    <strong>Building Docs</strong>
+                                    <small t-esc="state.form.documents.building ? state.form.documents.building.name : 'Upload'"/>
+                                </label>
+                                <label class="pm-doc-tile" t-att-class="{ 'is-filled': !!state.form.documents.other }">
+                                    <input type="file" t-on-change="(ev) => this.onDocFile('other', ev)"/>
+                                    <i class="fa fa-files-o"/>
+                                    <strong>Other Docs</strong>
+                                    <small t-esc="state.form.documents.other ? state.form.documents.other.name : 'Upload'"/>
+                                </label>
+                            </div>
+                        </section>
+                    </form>
+
+                    <div class="pm-form-footer">
+                        <button type="button" class="pm-btn pm-btn-link" t-on-click="cancelAdd">Cancel</button>
+                        <button type="button" class="pm-btn pm-btn-outline" t-att-disabled="state.saving" t-on-click="() => this.submitProperty(true)">Save as Draft</button>
+                        <button type="button" class="pm-btn pm-btn-primary" t-att-disabled="state.saving" t-on-click="() => this.submitProperty(false)">
+                            <i class="fa fa-check"/> <t t-esc="state.saving ? 'Saving...' : 'Create Property'"/>
+                        </button>
+                    </div>
+                </t>
+
+                <t t-elif="state.page === 'property-detail'">
+                    <div t-if="state.loadingDetail" class="pm-loading">Loading property details...</div>
+                    <t t-else="">
+                        <div class="pm-detail-head">
+                            <div>
+                                <div class="pm-detail-meta">
+                                    <span class="pm-code-chip" t-esc="state.detail.property.code"/>
+                                    <span t-attf-class="pm-live #{state.detail.property.status === 'active' ? 'is-on' : 'is-off'}">
+                                        <i class="fa fa-circle"/> <t t-esc="state.detail.property.status_label"/>
+                                    </span>
+                                </div>
+                                <h1 t-esc="state.detail.property.name"/>
+                                <div class="pm-detail-loc">
+                                    <i class="fa fa-map-marker"/>
+                                    <span t-esc="state.detail.property.location"/>
+                                </div>
+                            </div>
+                            <div class="pm-page-actions">
+                                <button type="button" class="pm-btn pm-btn-primary" t-on-click="() => this.openPropertyForm(state.detail.property.id)">
+                                    <i class="fa fa-pencil"/> Edit Details
+                                </button>
+                                <div class="pm-actions">
+                                    <button type="button" class="pm-dots pm-dots-lg" t-on-click="toggleDetailMenu">...</button>
+                                    <div class="pm-menu" t-if="state.detailMenu">
+                                        <button type="button" t-on-click="() => this.openHierarchy(state.detail.property.id)">View Hierarchy</button>
+                                        <button type="button" t-on-click="() => this.state.page = 'properties'">Back to Properties</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <nav class="pm-tabs">
+                            <t t-foreach="detailTabs" t-as="tab" t-key="tab.id">
+                                <button type="button"
+                                        t-att-class="{ 'is-active': state.detailTab === tab.id }"
+                                        t-on-click="() => this.setDetailTab(tab.id)"
+                                        t-esc="tab.label"/>
+                            </t>
+                        </nav>
+
+                        <t t-if="state.detailTab === 'overview'">
+                            <section class="pm-detail-kpis">
+                                <article class="pm-card pm-stat">
+                                    <div class="pm-stat-label">Buildings</div>
+                                    <div class="pm-stat-value" t-esc="formatNumber(state.detail.kpis.buildings)"/>
+                                </article>
+                                <article class="pm-card pm-stat">
+                                    <div class="pm-stat-label">Floors</div>
+                                    <div class="pm-stat-value" t-esc="formatNumber(state.detail.kpis.floors)"/>
+                                </article>
+                                <article class="pm-card pm-stat">
+                                    <div class="pm-stat-label">Total Units</div>
+                                    <div class="pm-stat-value" t-esc="formatNumber(state.detail.kpis.units)"/>
+                                </article>
+                                <article class="pm-card pm-stat">
+                                    <div class="pm-stat-label">Occupied</div>
+                                    <div class="pm-stat-value" t-esc="formatNumber(state.detail.kpis.occupied)"/>
+                                    <span class="pm-stat-bar"><span t-attf-style="width: #{state.detail.kpis.occupancy_pct}%"/></span>
+                                </article>
+                                <article class="pm-card pm-stat">
+                                    <div class="pm-stat-label">Vacant</div>
+                                    <div class="pm-stat-value" t-esc="formatNumber(state.detail.kpis.vacant)"/>
+                                    <span class="pm-stat-bar is-vacant"><span t-attf-style="width: #{state.detail.kpis.vacant_pct}%"/></span>
+                                </article>
+                            </section>
+
+                            <section class="pm-detail-split">
+                                <div class="pm-detail-col">
+                                    <article class="pm-card">
+                                        <h2>Property Information</h2>
+                                        <dl class="pm-info-list">
+                                            <div><dt>Type</dt><dd t-esc="state.detail.property.type_label"/></div>
+                                            <div><dt>Year Built</dt><dd t-esc="state.detail.property.year_built"/></div>
+                                            <div><dt>Total GLA</dt><dd t-esc="state.detail.property.gla"/></div>
+                                            <div>
+                                                <dt>Property Mgr</dt>
+                                                <dd class="pm-mgr">
+                                                    <span class="pm-avatar" t-esc="state.detail.property.manager_initials"/>
+                                                    <span t-esc="state.detail.property.manager_name"/>
+                                                </dd>
+                                            </div>
+                                            <div><dt>Acquisition</dt><dd t-esc="state.detail.property.acquisition"/></div>
+                                        </dl>
+                                    </article>
+                                    <article class="pm-card">
+                                        <div class="pm-card-head">
+                                            <h2>Recent Activity</h2>
+                                            <button type="button" class="pm-link" t-on-click="() => this.setDetailTab('history')">View All</button>
+                                        </div>
+                                        <div class="pm-activity">
+                                            <t t-foreach="state.detail.activities" t-as="item" t-key="item.id">
+                                                <div class="pm-activity-item">
+                                                    <span t-attf-class="pm-activity-dot is-#{item.type}"/>
+                                                    <div>
+                                                        <div class="pm-activity-title" t-esc="item.title"/>
+                                                        <div class="pm-activity-meta"><t t-esc="item.when"/> • <t t-esc="item.place"/></div>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                            <div t-if="!state.detail.activities.length" class="pm-empty">No recent activity</div>
+                                        </div>
+                                    </article>
+                                </div>
+
+                                <article class="pm-card pm-org-card">
+                                    <div class="pm-card-head">
+                                        <h2>Property Hierarchy</h2>
+                                        <div class="pm-zoom">
+                                            <button type="button" t-on-click="() => this.zoomHierarchy(-0.1)"><i class="fa fa-search-minus"/></button>
+                                            <button type="button" t-on-click="() => this.zoomHierarchy(0.1)"><i class="fa fa-search-plus"/></button>
+                                        </div>
+                                    </div>
+                                    <div class="pm-org-stage">
+                                        <div class="pm-org" t-attf-style="transform: scale(#{state.hierarchyZoom})">
+                                            <div class="pm-org-root" t-esc="state.detail.hierarchy.root"/>
+                                            <div class="pm-org-stem"/>
+                                            <div class="pm-org-buildings" t-if="state.detail.hierarchy.buildings.length">
+                                                <t t-foreach="state.detail.hierarchy.buildings" t-as="building" t-key="building.id">
+                                                    <div class="pm-org-col">
+                                                        <div class="pm-org-down"/>
+                                                        <button type="button"
+                                                                class="pm-org-node"
+                                                                t-att-class="{ 'is-selected': selectedDetailBuilding &amp;&amp; selectedDetailBuilding.id === building.id }"
+                                                                t-on-click="() => this.selectDetailBuilding(building.id)">
+                                                            <strong t-esc="building.name"/>
+                                                            <small t-esc="building.subtitle"/>
+                                                        </button>
+                                                        <div class="pm-org-bands" t-if="selectedDetailBuilding &amp;&amp; selectedDetailBuilding.id === building.id">
+                                                            <t t-foreach="building.bands" t-as="band" t-key="band.id">
+                                                                <button type="button"
+                                                                        class="pm-org-band"
+                                                                        t-att-class="{ 'is-selected': state.selectedBandId === band.id }"
+                                                                        t-on-click="(ev) => this.selectDetailBand(band.id, ev)"
+                                                                        t-esc="band.label"/>
+                                                            </t>
+                                                            <div class="pm-org-pop" t-if="selectedDetailBand">
+                                                                <strong t-esc="selectedDetailBand.title"/>
+                                                                <div>Units: <t t-esc="selectedDetailBand.units_occupied"/> / <t t-esc="selectedDetailBand.units_total"/></div>
+                                                                <div>Occupancy: <t t-esc="selectedDetailBand.occupancy"/>%</div>
+                                                                <span class="pm-stat-bar is-green"><span t-attf-style="width: #{selectedDetailBand.occupancy}%"/></span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </t>
+                                            </div>
+                                            <div t-else="" class="pm-empty">No buildings mapped yet.</div>
+                                        </div>
+                                    </div>
+                                </article>
+                            </section>
+                        </t>
+
+                        <t t-elif="state.detailTab === 'buildings'">
+                            <section class="pm-card">
+                                <table class="pm-table">
+                                    <thead><tr><th>Building</th><th>Code</th><th>Use</th><th>Floors</th><th>Units</th><th>Occupancy</th></tr></thead>
+                                    <tbody>
+                                        <t t-foreach="state.detail.buildings" t-as="row" t-key="row.id">
+                                            <tr class="pm-row-link" t-on-click="() => this.openBuildingDetail(row.id)">
+                                                <td t-esc="row.name"/>
+                                                <td t-esc="row.code"/>
+                                                <td t-esc="row.usage"/>
+                                                <td t-esc="row.floors"/>
+                                                <td t-esc="formatNumber(row.units)"/>
+                                                <td><t t-esc="row.occupancy"/>%</td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </section>
+                        </t>
+
+                        <t t-elif="state.detailTab === 'units'">
+                            <section class="pm-card">
+                                <p class="pm-muted" t-if="state.detail.unit_total > state.detail.units.length">Showing first <t t-esc="state.detail.units.length"/> of <t t-esc="state.detail.unit_total"/> units.</p>
+                                <table class="pm-table">
+                                    <thead><tr><th>Unit</th><th>Building</th><th>Floor</th><th>Type</th><th>Status</th></tr></thead>
+                                    <tbody>
+                                        <t t-foreach="state.detail.units" t-as="row" t-key="row.id">
+                                            <tr class="pm-row-link" t-on-click="() => this.openUnitDetail(row.id)">
+                                                <td t-esc="row.name"/>
+                                                <td t-esc="row.building"/>
+                                                <td t-esc="row.floor"/>
+                                                <td t-esc="row.type"/>
+                                                <td><span t-attf-class="pm-pill #{hierarchyStatusClass(row.status)}" t-esc="row.status_label"/></td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </section>
+                        </t>
+
+                        <t t-elif="state.detailTab === 'occupancy'">
+                            <section class="pm-detail-kpis">
+                                <article class="pm-card pm-stat">
+                                    <div class="pm-stat-label">Occupancy</div>
+                                    <div class="pm-stat-value"><t t-esc="state.detail.kpis.occupancy_pct"/>%</div>
+                                    <span class="pm-stat-bar"><span t-attf-style="width: #{state.detail.kpis.occupancy_pct}%"/></span>
+                                </article>
+                                <article class="pm-card pm-stat">
+                                    <div class="pm-stat-label">Occupied</div>
+                                    <div class="pm-stat-value" t-esc="formatNumber(state.detail.kpis.occupied)"/>
+                                </article>
+                                <article class="pm-card pm-stat">
+                                    <div class="pm-stat-label">Vacant</div>
+                                    <div class="pm-stat-value" t-esc="formatNumber(state.detail.kpis.vacant)"/>
+                                </article>
+                            </section>
+                            <div class="pm-occ-jump">
+                                <button type="button" class="pm-link" t-on-click="() => this.openOccupancy()">Open Occupancy workspace</button>
+                            </div>
+                        </t>
+
+                        <t t-elif="state.detailTab === 'ownership'">
+                            <section class="pm-card">
+                                <table class="pm-table">
+                                    <thead><tr><th>Owner</th><th>Share</th></tr></thead>
+                                    <tbody>
+                                        <t t-foreach="state.detail.owners" t-as="row" t-key="row.id">
+                                            <tr><td t-esc="row.name"/><td><t t-esc="row.share"/>%</td></tr>
+                                        </t>
+                                        <tr t-if="!state.detail.owners.length"><td colspan="2" class="pm-empty">No ownership records.</td></tr>
+                                    </tbody>
+                                </table>
+                            </section>
+                        </t>
+
+                        <t t-elif="state.detailTab === 'documents'">
+                            <section class="pm-card">
+                                <table class="pm-table">
+                                    <thead><tr><th>Document</th><th>Type</th></tr></thead>
+                                    <tbody>
+                                        <t t-foreach="state.detail.documents" t-as="row" t-key="row.id">
+                                            <tr><td t-esc="row.name"/><td t-esc="row.type"/></tr>
+                                        </t>
+                                        <tr t-if="!state.detail.documents.length"><td colspan="2" class="pm-empty">No documents uploaded.</td></tr>
+                                    </tbody>
+                                </table>
+                            </section>
+                        </t>
+
+                        <t t-else="">
+                            <section class="pm-card">
+                                <div class="pm-activity">
+                                    <t t-foreach="state.detail.activities" t-as="item" t-key="item.id">
+                                        <div class="pm-activity-item">
+                                            <span t-attf-class="pm-activity-dot is-#{item.type}"/>
+                                            <div>
+                                                <div class="pm-activity-title" t-esc="item.title"/>
+                                                <div class="pm-activity-meta"><t t-esc="item.when"/> • <t t-esc="item.place"/></div>
+                                            </div>
+                                        </div>
+                                    </t>
+                                    <div t-if="!state.detail.activities.length" class="pm-empty">No history yet.</div>
+                                </div>
+                            </section>
+                        </t>
+                    </t>
+                </t>
+
+                <t t-elif="state.page === 'hierarchy'">
+                    <div class="pm-hier-head">
+                        <h1>Apartment Management</h1>
+                        <div class="pm-hier-crumb">
+                            <button type="button" t-on-click="() => this.state.page = 'properties'">Properties</button>
+                            <span>&gt;</span>
+                            <strong>Hierarchy Explorer</strong>
+                        </div>
+                    </div>
+
+                    <div class="pm-hier-toolbar">
+                        <div class="pm-hier-search">
+                            <i class="fa fa-search"/>
+                            <input type="text" placeholder="Search hierarchy..." t-att-value="state.hierarchySearch" t-on-input="onHierarchySearch"/>
+                        </div>
+                        <div class="pm-hier-filter-wrap">
+                            <button type="button" class="pm-hier-filter-btn" t-att-class="{ 'is-on': state.showHierarchyFilter || state.hierarchyStatusFilter !== 'all' }" t-on-click="toggleHierarchyFilter">
+                                <i class="fa fa-filter"/> Filter
+                            </button>
+                            <div class="pm-hier-filter-menu" t-if="state.showHierarchyFilter">
+                                <button type="button" t-att-class="{ 'is-current': state.hierarchyStatusFilter === 'all' }" t-on-click="() => this.setHierarchyStatusFilter('all')">All statuses</button>
+                                <button type="button" t-att-class="{ 'is-current': state.hierarchyStatusFilter === 'active' }" t-on-click="() => this.setHierarchyStatusFilter('active')">Active</button>
+                                <button type="button" t-att-class="{ 'is-current': state.hierarchyStatusFilter === 'full' }" t-on-click="() => this.setHierarchyStatusFilter('full')">Full</button>
+                                <button type="button" t-att-class="{ 'is-current': state.hierarchyStatusFilter === 'occupied' }" t-on-click="() => this.setHierarchyStatusFilter('occupied')">Occupied</button>
+                                <button type="button" t-att-class="{ 'is-current': state.hierarchyStatusFilter === 'vacant' }" t-on-click="() => this.setHierarchyStatusFilter('vacant')">Vacant</button>
+                                <button type="button" t-att-class="{ 'is-current': state.hierarchyStatusFilter === 'maintenance' }" t-on-click="() => this.setHierarchyStatusFilter('maintenance')">Maintenance</button>
+                                <button type="button" t-att-class="{ 'is-current': state.hierarchyStatusFilter === 'draft' }" t-on-click="() => this.setHierarchyStatusFilter('draft')">Draft</button>
+                            </div>
+                        </div>
+                        <div class="pm-hier-expand">
+                            <button type="button" t-on-click="expandAllHierarchy">Expand All</button>
+                            <span>|</span>
+                            <button type="button" t-on-click="collapseAllHierarchy">Collapse All</button>
+                        </div>
+                    </div>
+
+                    <section class="pm-card pm-hier-card">
+                        <div class="pm-tree-head">
+                            <span>STRUCTURE</span>
+                            <span>CODE</span>
+                            <span>UNITS</span>
+                            <span>OCCUPANCY</span>
+                            <span>STATUS</span>
+                        </div>
+                        <t t-if="state.loadingHierarchy">
+                            <div class="pm-empty">Loading hierarchy...</div>
+                        </t>
+                        <t t-elif="visibleHierarchyRows.length">
+                            <t t-foreach="visibleHierarchyRows" t-as="row" t-key="row.id">
+                                <div class="pm-tree-row" t-on-click="() => this.openHierarchyNode(row)">
+                                    <div class="pm-tree-structure" t-attf-style="padding-left: #{8 + row.depth * 22}px">
+                                        <button type="button"
+                                                class="pm-tree-toggle"
+                                                t-att-class="{ 'is-hidden': !row.hasChildren }"
+                                                t-on-click="(ev) => this.toggleExpand(row.id, ev)">
+                                            <i t-attf-class="fa #{row.isExpanded ? 'fa-chevron-down' : 'fa-chevron-right'}"/>
+                                        </button>
+                                        <span t-attf-class="pm-tree-icon is-#{row.type}">
+                                            <i t-attf-class="fa #{hierarchyIcon(row.type)}"/>
+                                        </span>
+                                        <strong t-esc="row.name"/>
+                                    </div>
+                                    <span t-esc="row.code"/>
+                                    <span t-esc="row.units"/>
+                                    <span t-esc="row.occupancy"/>
+                                    <span>
+                                        <span t-attf-class="pm-pill #{hierarchyStatusClass(row.status)}" t-esc="row.status_label"/>
+                                    </span>
+                                </div>
+                            </t>
+                        </t>
+                        <t t-else="">
+                            <div class="pm-empty">No hierarchy records match this search.</div>
+                        </t>
+                    </section>
+                </t>
+
+                <t t-elif="state.page === 'buildings'">
+                    <div class="pm-page-head">
+                        <div>
+                            <h1>Buildings &amp; Towers</h1>
+                            <p>Manage physical structures across all properties in your portfolio.</p>
+                        </div>
+                        <div class="pm-page-actions">
+                            <button type="button" class="pm-btn pm-btn-outline" t-on-click="exportCsv">
+                                <i class="fa fa-download"/> Export
+                            </button>
+                            <button type="button" class="pm-btn pm-btn-primary" t-on-click="newBuilding">+ Add Building</button>
+                        </div>
+                    </div>
+
+                    <section class="pm-filters pm-filters-buildings">
+                        <label>
+                            <span>Property</span>
+                            <select t-att-value="state.buildingPropertyFilter" t-on-change="onBuildingPropertyFilter">
+                                <option value="all">All Properties</option>
+                                <t t-foreach="state.buildingProperties" t-as="prop" t-key="prop.id">
+                                    <option t-att-value="prop.id" t-esc="prop.name"/>
+                                </t>
+                            </select>
+                        </label>
+                        <label>
+                            <span>Status</span>
+                            <select t-att-value="state.buildingStatusFilter" t-on-change="onBuildingStatusFilter">
+                                <option value="all">All Statuses</option>
+                                <option value="active">Active</option>
+                                <option value="maintenance">Maintenance</option>
+                                <option value="construction">Under Construction</option>
+                            </select>
+                        </label>
+                        <label class="pm-search-field">
+                            <span>Search Name/Code</span>
+                            <span class="pm-search-input">
+                                <i class="fa fa-search"/>
+                                <input type="text" placeholder="e.g. BLD-01" t-att-value="state.buildingSearch" t-on-input="onBuildingSearch"/>
+                            </span>
+                        </label>
+                        <button type="button" class="pm-more-filters" t-on-click="toggleMoreFilters">
+                            <i class="fa fa-filter"/>
+                        </button>
+                    </section>
+
+                    <section class="pm-card pm-table-card">
+                        <div t-if="state.loadingBuildings" class="pm-empty">Loading buildings...</div>
+                        <table t-else="" class="pm-table pm-buildings-table">
+                            <thead>
+                                <tr>
+                                    <th class="pm-check-col">
+                                        <input type="checkbox" t-att-checked="allPagedBuildingsSelected" t-on-click="toggleAllBuildings"/>
+                                    </th>
+                                    <th>BUILDING</th>
+                                    <th>CODE</th>
+                                    <th>PROPERTY</th>
+                                    <th>FLOORS</th>
+                                    <th>UNITS</th>
+                                    <th>OCCUPIED %</th>
+                                    <th>STATUS</th>
+                                    <th>ACT</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="pagedBuildings" t-as="row" t-key="row.id">
+                                    <tr t-on-click="() => this.openBuilding(row.id)">
+                                        <td class="pm-check-col" t-on-click="(ev) => this.toggleBuildingSelect(row.id, ev)">
+                                            <input type="checkbox" t-att-checked="state.selectedBuildingIds[row.id]"/>
+                                        </td>
+                                        <td>
+                                            <div class="pm-prop-name">
+                                                <span t-attf-class="pm-bldg-icon #{row.icon === 'wrench' ? 'is-build' : ''}">
+                                                    <i t-attf-class="fa #{row.icon === 'wrench' ? 'fa-wrench' : 'fa-building'}"/>
+                                                </span>
+                                                <strong t-esc="row.name"/>
+                                            </div>
+                                        </td>
+                                        <td t-esc="row.code"/>
+                                        <td t-esc="row.property_name"/>
+                                        <td t-esc="formatNumber(row.floors)"/>
+                                        <td t-esc="formatNumber(row.units)"/>
+                                        <td>
+                                            <div class="pm-occ">
+                                                <span t-esc="row.occupancy"/>%
+                                                <span class="pm-occ-track">
+                                                    <span t-attf-class="pm-occ-fill #{occupancyBarClass(row.occupancy)}" t-attf-style="width: #{row.occupancy}%"/>
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span t-attf-class="pm-pill #{buildingStatusClass(row.status)}" t-esc="row.status_label"/>
+                                        </td>
+                                        <td class="pm-actions" t-on-click="(ev) => this.toggleMenu('b-' + row.id, ev)">
+                                            <button type="button" class="pm-dots">...</button>
+                                            <div class="pm-menu" t-if="state.menuId === ('b-' + row.id)">
+                                                <button type="button" t-on-click="() => this.openBuildingDetail(row.id)">View Details</button>
+                                                <button type="button" t-on-click="() => this.openBuildingForm(row.id)">Edit in Form</button>
+                                                <button type="button" t-on-click="() => this.openPropertyDetail(row.property_id)">View Property</button>
+                                                <button type="button" t-on-click="() => this.openHierarchy(row.property_id)">View Hierarchy</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <tr t-if="!pagedBuildings.length">
+                                    <td colspan="9" class="pm-empty">No buildings match these filters.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="pm-pager">
+                            <span t-esc="buildingRangeLabel"/>
+                            <div class="pm-pager-btns">
+                                <button type="button" t-on-click="() => this.setBuildingPage(state.buildingPage - 1)">&lt;</button>
+                                <t t-foreach="buildingPageNumbers" t-as="page" t-key="page_index">
+                                    <button type="button"
+                                            t-att-class="{ 'is-current': page === state.buildingPage }"
+                                            t-on-click="() => this.setBuildingPage(page)"
+                                            t-esc="page"/>
+                                </t>
+                                <button type="button" t-on-click="() => this.setBuildingPage(state.buildingPage + 1)">&gt;</button>
+                            </div>
+                        </div>
+                    </section>
+                </t>
+
+                <t t-elif="state.page === 'building-detail'">
+                    <div t-if="state.loadingBuildingDetail" class="pm-loading">Loading building details...</div>
+                    <t t-else="">
+                        <div class="pm-crumb-links">
+                            <button type="button" t-on-click="() => this.state.page = 'properties'">Properties</button>
+                            <span>&gt;</span>
+                            <button type="button" t-on-click="() => this.openPropertyDetail(state.buildingDetail.building.property_id)" t-esc="state.buildingDetail.building.property_name"/>
+                            <span>&gt;</span>
+                            <strong t-esc="state.buildingDetail.building.name"/>
+                        </div>
+                        <div class="pm-detail-head">
+                            <div>
+                                <h1>
+                                    <t t-esc="state.buildingDetail.building.name"/>
+                                    <span t-attf-class="pm-pill pm-pill-dot #{buildingStatusClass(state.buildingDetail.building.status)}">
+                                        <i class="fa fa-circle"/>
+                                        <t t-esc="state.buildingDetail.building.status_label"/>
+                                    </span>
+                                    <span class="pm-code-chip" t-esc="state.buildingDetail.building.code"/>
+                                </h1>
+                                <div class="pm-detail-loc" t-esc="state.buildingDetail.building.location"/>
+                            </div>
+                            <div class="pm-page-actions">
+                                <button type="button" class="pm-btn pm-btn-outline pm-btn-accent" t-on-click="() => this.openBuildingForm(state.buildingDetail.building.id)">
+                                    <i class="fa fa-pencil"/> Edit Building
+                                </button>
+                            </div>
+                        </div>
+
+                        <section class="pm-detail-kpis">
+                            <article class="pm-card pm-stat">
+                                <div class="pm-stat-label">Floors</div>
+                                <div class="pm-stat-value" t-esc="formatNumber(state.buildingDetail.kpis.floors)"/>
+                            </article>
+                            <article class="pm-card pm-stat">
+                                <div class="pm-stat-label">Wings</div>
+                                <div class="pm-stat-value" t-esc="formatNumber(state.buildingDetail.kpis.wings)"/>
+                            </article>
+                            <article class="pm-card pm-stat">
+                                <div class="pm-stat-label">Total Units</div>
+                                <div class="pm-stat-value" t-esc="formatNumber(state.buildingDetail.kpis.units)"/>
+                            </article>
+                            <article class="pm-card pm-stat">
+                                <div class="pm-stat-label">Occupied</div>
+                                <div class="pm-stat-value">
+                                    <t t-esc="formatNumber(state.buildingDetail.kpis.occupied)"/>
+                                    <small class="is-occ"><t t-esc="state.buildingDetail.kpis.occupancy_pct"/>%</small>
+                                </div>
+                            </article>
+                            <article class="pm-card pm-stat">
+                                <div class="pm-stat-label">Vacant</div>
+                                <div class="pm-stat-value">
+                                    <t t-esc="formatNumber(state.buildingDetail.kpis.vacant)"/>
+                                    <small class="is-vac"><t t-esc="state.buildingDetail.kpis.vacant_pct"/>%</small>
+                                </div>
+                            </article>
+                        </section>
+
+                        <nav class="pm-tabs">
+                            <t t-foreach="buildingTabs" t-as="tab" t-key="tab.id">
+                                <button type="button"
+                                        t-att-class="{ 'is-active': state.buildingTab === tab.id }"
+                                        t-on-click="() => this.setBuildingTab(tab.id)"
+                                        t-esc="tab.label"/>
+                            </t>
+                        </nav>
+
+                        <t t-if="state.buildingTab === 'overview'">
+                            <section class="pm-bldg-split">
+                                <article class="pm-card">
+                                    <div class="pm-card-head">
+                                        <h2>Building Hierarchy</h2>
+                                        <button type="button" class="pm-link" t-on-click="toggleAllBuildingBands">
+                                            <t t-esc="allBuildingBandsExpanded ? 'Collapse All' : 'Expand All'"/>
+                                        </button>
+                                    </div>
+                                    <div t-if="!state.buildingDetail.bands.length" class="pm-empty">No floors mapped for this building.</div>
+                                    <t t-foreach="state.buildingDetail.bands" t-as="band" t-key="band.id">
+                                        <div class="pm-acc">
+                                            <button type="button" class="pm-acc-head" t-on-click="(ev) => this.toggleBuildingBand(band.id, ev)">
+                                                <span class="pm-acc-title">
+                                                    <i t-attf-class="fa #{state.buildingExpanded[band.id] ? 'fa-chevron-down' : 'fa-chevron-right'}"/>
+                                                    <strong t-esc="band.title"/>
+                                                    <span class="pm-level-chip" t-esc="band.label"/>
+                                                </span>
+                                                <span class="pm-acc-meta">
+                                                    Units: <t t-esc="band.units"/>
+                                                    <span t-att-class="{ 'is-occ': band.occupancy === 100 }">Occupancy: <t t-esc="band.occupancy"/>%</span>
+                                                </span>
+                                            </button>
+                                            <div class="pm-wing-grid" t-if="state.buildingExpanded[band.id]">
+                                                <t t-foreach="band.wings" t-as="wing" t-key="wing.id">
+                                                    <div class="pm-wing-card">
+                                                        <div class="pm-wing-top">
+                                                            <strong t-esc="wing.name"/>
+                                                            <span t-attf-class="pm-wing-dot #{wing.full ? 'is-full' : 'is-partial'}"/>
+                                                        </div>
+                                                        <div class="pm-wing-stats">
+                                                            <span><t t-esc="wing.units"/> Units</span>
+                                                            <span><t t-esc="wing.occupied"/> Occupied</span>
+                                                        </div>
+                                                        <span class="pm-stat-bar is-green pm-wing-bar"><span t-attf-style="width: #{wing.occupancy}%"/></span>
+                                                    </div>
+                                                </t>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </article>
+                                <article class="pm-card">
+                                    <div class="pm-card-head">
+                                        <h2>Recent Activity</h2>
+                                        <button type="button" class="pm-more-filters" t-on-click="cycleBuildingActivityFilter">
+                                            <i class="fa fa-filter"/>
+                                        </button>
+                                    </div>
+                                    <div class="pm-feed">
+                                        <t t-foreach="filteredBuildingActivities" t-as="item" t-key="item.id">
+                                            <div class="pm-feed-item">
+                                                <span t-attf-class="pm-activity-dot is-#{item.type}"/>
+                                                <div>
+                                                    <div class="pm-feed-row">
+                                                        <strong t-esc="item.title"/>
+                                                        <span t-esc="item.when"/>
+                                                    </div>
+                                                    <div class="pm-activity-meta" t-esc="item.description"/>
+                                                </div>
+                                            </div>
+                                        </t>
+                                        <div t-if="!filteredBuildingActivities.length" class="pm-empty">No recent activity</div>
+                                    </div>
+                                </article>
+                            </section>
+                        </t>
+
+                        <t t-elif="state.buildingTab === 'floors'">
+                            <section class="pm-card">
+                                <div class="pm-card-head">
+                                    <h2>Floors &amp; Wings</h2>
+                                    <button type="button" class="pm-link" t-on-click="() => this.openFloors(state.buildingDetail.building.id)">Manage</button>
+                                </div>
+                                <table class="pm-table">
+                                    <thead><tr><th>Floor</th><th>Wing</th><th>Units</th><th>Occupied</th><th>Occupancy</th></tr></thead>
+                                    <tbody>
+                                        <t t-foreach="state.buildingDetail.floors" t-as="row" t-key="row.id">
+                                            <tr>
+                                                <td t-esc="row.name"/>
+                                                <td t-esc="row.wing"/>
+                                                <td t-esc="row.units"/>
+                                                <td t-esc="row.occupied"/>
+                                                <td>
+                                                    <div class="pm-occ">
+                                                        <span><t t-esc="row.occupancy"/>%</span>
+                                                        <span class="pm-occ-track">
+                                                            <span t-attf-class="pm-occ-fill #{occupancyBarClass(row.occupancy)}" t-attf-style="width: #{row.occupancy}%"/>
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </section>
+                        </t>
+
+                        <t t-elif="state.buildingTab === 'units'">
+                            <section class="pm-card">
+                                <div class="pm-card-head">
+                                    <h2>Units</h2>
+                                    <button type="button" class="pm-link" t-on-click="() => this.openUnits()">Manage</button>
+                                </div>
+                                <p class="pm-muted" t-if="state.buildingDetail.unit_total > state.buildingDetail.units.length">Showing first <t t-esc="state.buildingDetail.units.length"/> of <t t-esc="state.buildingDetail.unit_total"/> units.</p>
+                                <table class="pm-table">
+                                    <thead><tr><th>Unit</th><th>Floor</th><th>Type</th><th>Status</th></tr></thead>
+                                    <tbody>
+                                        <t t-foreach="state.buildingDetail.units" t-as="row" t-key="row.id">
+                                            <tr class="pm-row-link" t-on-click="() => this.openUnitDetail(row.id)">
+                                                <td t-esc="row.name"/>
+                                                <td t-esc="row.floor"/>
+                                                <td t-esc="row.type"/>
+                                                <td><span t-attf-class="pm-pill #{hierarchyStatusClass(row.status)}" t-esc="row.status_label"/></td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </section>
+                        </t>
+
+                        <t t-elif="state.buildingTab === 'occupancy'">
+                            <section class="pm-detail-kpis">
+                                <article class="pm-card pm-stat">
+                                    <div class="pm-stat-label">Occupancy</div>
+                                    <div class="pm-stat-value"><t t-esc="state.buildingDetail.kpis.occupancy_pct"/>%</div>
+                                    <span class="pm-stat-bar is-green"><span t-attf-style="width: #{state.buildingDetail.kpis.occupancy_pct}%"/></span>
+                                </article>
+                                <article class="pm-card pm-stat">
+                                    <div class="pm-stat-label">Occupied</div>
+                                    <div class="pm-stat-value" t-esc="formatNumber(state.buildingDetail.kpis.occupied)"/>
+                                </article>
+                                <article class="pm-card pm-stat">
+                                    <div class="pm-stat-label">Vacant</div>
+                                    <div class="pm-stat-value" t-esc="formatNumber(state.buildingDetail.kpis.vacant)"/>
+                                </article>
+                            </section>
+                            <div class="pm-occ-jump">
+                                <button type="button" class="pm-link" t-on-click="() => this.openOccupancy()">Open Occupancy workspace</button>
+                            </div>
+                        </t>
+
+                        <t t-elif="state.buildingTab === 'documents'">
+                            <section class="pm-card">
+                                <table class="pm-table">
+                                    <thead><tr><th>Document</th><th>Type</th></tr></thead>
+                                    <tbody>
+                                        <t t-foreach="state.buildingDetail.documents" t-as="row" t-key="row.id">
+                                            <tr><td t-esc="row.name"/><td t-esc="row.type"/></tr>
+                                        </t>
+                                        <tr t-if="!state.buildingDetail.documents.length"><td colspan="2" class="pm-empty">No documents uploaded.</td></tr>
+                                    </tbody>
+                                </table>
+                            </section>
+                        </t>
+
+                        <t t-else="">
+                            <section class="pm-card">
+                                <div class="pm-feed">
+                                    <t t-foreach="state.buildingDetail.activities" t-as="item" t-key="item.id">
+                                        <div class="pm-feed-item">
+                                            <span t-attf-class="pm-activity-dot is-#{item.type}"/>
+                                            <div>
+                                                <div class="pm-feed-row">
+                                                    <strong t-esc="item.title"/>
+                                                    <span t-esc="item.when"/>
+                                                </div>
+                                                <div class="pm-activity-meta" t-esc="item.description"/>
+                                            </div>
+                                        </div>
+                                    </t>
+                                    <div t-if="!state.buildingDetail.activities.length" class="pm-empty">No history yet.</div>
+                                </div>
+                            </section>
+                        </t>
+                    </t>
+                </t>
+
+                <t t-elif="state.page === 'floors'">
+                    <div t-if="state.loadingFloors" class="pm-loading">Loading floors and wings...</div>
+                    <section t-else="" class="pm-floors-layout">
+                        <aside class="pm-card pm-floors-list">
+                            <h2>Properties</h2>
+                            <label class="pm-search-input">
+                                <i class="fa fa-search"/>
+                                <input type="text" placeholder="Filter buildings..." t-att-value="state.floorBuildingSearch" t-on-input="onFloorBuildingSearch"/>
+                            </label>
+                            <div class="pm-floor-bldg-list">
+                                <t t-foreach="filteredFloorBuildings" t-as="row" t-key="row.id">
+                                    <button type="button"
+                                            class="pm-floor-bldg"
+                                            t-att-class="{ 'is-selected': state.selectedFloorBuildingId === row.id }"
+                                            t-on-click="() => this.selectFloorBuilding(row.id)">
+                                        <strong t-esc="row.name"/>
+                                        <span><t t-esc="formatNumber(row.units)"/> Units • <t t-esc="formatNumber(row.floors)"/> Floors</span>
+                                    </button>
+                                </t>
+                                <div t-if="!filteredFloorBuildings.length" class="pm-empty">No buildings match this filter.</div>
+                            </div>
+                        </aside>
+                        <div class="pm-floors-board">
+                            <div class="pm-page-head">
+                                <div>
+                                    <h1 t-esc="state.floorsWorkspace.building.name || 'Select a building'"/>
+                                    <p>Manage floors, wings, and unit allocation.</p>
+                                </div>
+                                <div class="pm-page-actions">
+                                    <button type="button" class="pm-btn pm-btn-outline pm-btn-accent" t-on-click="newWing">+ Add Wing</button>
+                                    <button type="button" class="pm-btn pm-btn-primary" t-on-click="newFloor">+ Add Floor</button>
+                                </div>
+                            </div>
+                            <section class="pm-card pm-table-card">
+                                <div class="pm-struct-head">
+                                    <span>STRUCTURE</span>
+                                    <span>TOTAL UNITS</span>
+                                    <span>OCCUPIED</span>
+                                    <span>VACANT</span>
+                                    <span>ACTIONS</span>
+                                </div>
+                                <t t-foreach="state.floorsWorkspace.floors" t-as="row" t-key="row.id">
+                                    <div class="pm-struct-floor">
+                                        <div class="pm-struct-row" t-on-click="(ev) => this.toggleFloorRow(row.id, ev)">
+                                            <span class="pm-struct-name">
+                                                <i t-attf-class="fa #{state.floorExpanded[row.id] ? 'fa-chevron-down' : 'fa-chevron-right'}"/>
+                                                <i class="fa fa-clone pm-struct-icon"/>
+                                                <strong t-esc="row.name"/>
+                                            </span>
+                                            <span t-esc="formatNumber(row.units)"/>
+                                            <span t-esc="formatNumber(row.occupied)"/>
+                                            <span t-esc="formatNumber(row.vacant)"/>
+                                            <span class="pm-struct-acts" t-on-click="(ev) => ev.stopPropagation()">
+                                                <button type="button" title="Edit" t-on-click="(ev) => this.editFloor(row, ev)"><i class="fa fa-pencil"/></button>
+                                                <button type="button" title="Delete" t-on-click="(ev) => this.deleteFloor(row, ev)"><i class="fa fa-trash-o"/></button>
+                                            </span>
+                                        </div>
+                                        <t t-if="state.floorExpanded[row.id]">
+                                            <t t-foreach="row.wings" t-as="wing" t-key="wing.id">
+                                                <div class="pm-struct-wing">
+                                                    <span class="pm-struct-name">
+                                                        <span class="pm-struct-dot"/>
+                                                        <strong t-esc="wing.name"/>
+                                                        <span t-attf-class="pm-pill #{wing.status === 'active' ? 'is-healthy' : 'is-draft'}" t-esc="wing.status_label"/>
+                                                    </span>
+                                                    <span t-esc="formatNumber(wing.units)"/>
+                                                    <span t-esc="formatNumber(wing.occupied)"/>
+                                                    <span t-esc="formatNumber(wing.vacant)"/>
+                                                    <span/>
+                                                </div>
+                                            </t>
+                                        </t>
+                                    </div>
+                                </t>
+                                <div t-if="!state.floorsWorkspace.floors.length" class="pm-empty">No floors mapped for this building.</div>
+                            </section>
+                        </div>
+                    </section>
+                </t>
+
+                <t t-elif="state.page === 'occupancy'">
+                    <div class="pm-page-head">
+                        <div>
+                            <h1>Occupancy</h1>
+                            <p>Real-time tracking of portfolio utilization and unit statuses.</p>
+                        </div>
+                        <div class="pm-page-actions">
+                            <button type="button" class="pm-btn pm-btn-outline" t-on-click="exportCsv">
+                                <i class="fa fa-download"/> Export Report
+                            </button>
+                        </div>
+                    </div>
+
+                    <section class="pm-occ-kpis">
+                        <article class="pm-card pm-occ-kpi is-total">
+                            <div class="pm-kpi-label">Total Units</div>
+                            <div class="pm-kpi-value" t-esc="formatNumber(occupancyKpis.total)"/>
+                        </article>
+                        <article class="pm-card pm-occ-kpi is-occupied">
+                            <div class="pm-kpi-label">Occupied</div>
+                            <div class="pm-kpi-value" t-esc="formatNumber(occupancyKpis.occupied)"/>
+                        </article>
+                        <article class="pm-card pm-occ-kpi is-vacant">
+                            <div class="pm-kpi-label">Vacant</div>
+                            <div class="pm-kpi-value" t-esc="formatNumber(occupancyKpis.vacant)"/>
+                        </article>
+                        <article class="pm-card pm-occ-kpi is-reserved">
+                            <div class="pm-kpi-label">Reserved</div>
+                            <div class="pm-kpi-value" t-esc="formatNumber(occupancyKpis.reserved)"/>
+                        </article>
+                        <article class="pm-card pm-occ-kpi is-maint">
+                            <div class="pm-kpi-label">Maintenance</div>
+                            <div class="pm-kpi-value" t-esc="formatNumber(occupancyKpis.maintenance)"/>
+                        </article>
+                        <article class="pm-card pm-occ-kpi is-pct">
+                            <div class="pm-kpi-label">Occupancy %</div>
+                            <div class="pm-occ-pct-row">
+                                <div class="pm-kpi-value"><t t-esc="occupancyKpis.occupancy_display"/>%</div>
+                                <span t-attf-class="pm-occ-delta #{occupancyKpis.delta_up ? 'is-up' : 'is-down'}" t-esc="occupancyKpis.occupancy_delta"/>
+                            </div>
+                        </article>
+                    </section>
+
+                    <section class="pm-occ-mid">
+                        <article class="pm-card pm-occ-filter-card">
+                            <div class="pm-card-head">
+                                <h2><i class="fa fa-filter"/> Global Filters</h2>
+                            </div>
+                            <div class="pm-occ-filters">
+                                <label>
+                                    <span>PROPERTY</span>
+                                    <select t-att-value="state.occDraft.property" t-on-change="onOccDraftProperty">
+                                        <option value="all">All Properties</option>
+                                        <t t-foreach="state.occupancyProperties" t-as="prop" t-key="prop.id">
+                                            <option t-att-value="prop.id" t-esc="prop.name"/>
+                                        </t>
+                                    </select>
+                                </label>
+                                <label>
+                                    <span>BLDG</span>
+                                    <select t-att-value="state.occDraft.building" t-on-change="onOccDraftBuilding">
+                                        <option value="all">All</option>
+                                        <t t-foreach="occupancyFilterBuildings" t-as="row" t-key="row.name">
+                                            <option t-att-value="row.name" t-esc="row.name"/>
+                                        </t>
+                                    </select>
+                                </label>
+                                <label>
+                                    <span>FLOOR</span>
+                                    <select t-att-value="state.occDraft.floor" t-on-change="onOccDraftFloor">
+                                        <option value="all">All</option>
+                                        <t t-foreach="occupancyFilterFloors" t-as="row" t-key="row.number">
+                                            <option t-att-value="row.number" t-esc="row.name"/>
+                                        </t>
+                                    </select>
+                                </label>
+                                <label>
+                                    <span>STATUS</span>
+                                    <select t-att-value="state.occDraft.status" t-on-change="onOccDraftStatus">
+                                        <option value="all">All Statuses</option>
+                                        <option value="occupied">Occupied</option>
+                                        <option value="vacant">Vacant</option>
+                                        <option value="reserved">Reserved</option>
+                                        <option value="maintenance">Maintenance</option>
+                                    </select>
+                                </label>
+                            </div>
+                            <div class="pm-occ-filter-actions">
+                                <button type="button" class="pm-btn pm-btn-ghost" t-on-click="resetOccupancyFilters">Reset</button>
+                                <button type="button" class="pm-btn pm-btn-primary" t-on-click="applyOccupancyFilters">Apply</button>
+                            </div>
+                        </article>
+                        <article class="pm-card pm-occ-chart-card">
+                            <div class="pm-card-head">
+                                <h2>6-Month Occupancy Trend</h2>
+                                <div class="pm-occ-legend">
+                                    <span><i class="is-target"/> Target</span>
+                                    <span><i class="is-actual"/> Actual</span>
+                                </div>
+                            </div>
+                            <svg class="pm-occ-chart" t-att-viewBox="occupancyChart.viewBox">
+                                <t t-foreach="occupancyChart.grid" t-as="line" t-key="line_index">
+                                    <line t-att-x1="occupancyChart.padL" t-att-x2="occupancyChart.innerRight" t-att-y1="line.y" t-att-y2="line.y" class="pm-occ-grid"/>
+                                    <text t-att-x="occupancyChart.padLabelX" t-att-y="line.labelY" class="pm-occ-ylabel" t-esc="line.label"/>
+                                </t>
+                                <line t-att-x1="occupancyChart.padL" t-att-x2="occupancyChart.innerRight" t-att-y1="occupancyChart.targetY" t-att-y2="occupancyChart.targetY" class="pm-occ-target"/>
+                                <polyline t-att-points="occupancyChart.actualPoints" class="pm-occ-actual"/>
+                                <t t-foreach="occupancyChart.dots" t-as="dot" t-key="dot.month">
+                                    <circle t-att-cx="dot.x" t-att-cy="dot.y" r="4" class="pm-occ-dot-pt"/>
+                                    <text t-att-x="dot.x" t-att-y="dot.labelY" class="pm-occ-xlabel" t-esc="dot.month"/>
+                                </t>
+                            </svg>
+                        </article>
+                    </section>
+
+                    <section class="pm-card pm-table-card pm-occ-dir">
+                        <div class="pm-occ-dir-head">
+                            <h2>Unit Directory</h2>
+                            <span class="pm-search-input pm-occ-find">
+                                <i class="fa fa-search"/>
+                                <input type="text" placeholder="Find..." t-att-value="state.occSearch" t-on-input="onOccSearch"/>
+                            </span>
+                        </div>
+                        <div t-if="state.loadingOccupancy" class="pm-empty">Loading occupancy...</div>
+                        <table t-else="" class="pm-table">
+                            <thead>
+                                <tr>
+                                    <th>UNIT</th>
+                                    <th>PROPERTY</th>
+                                    <th>TENANT</th>
+                                    <th>STATUS</th>
+                                    <th>ACTIONS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="pagedOccupancyUnits" t-as="row" t-key="row.id">
+                                    <tr class="pm-row-link" t-on-click="() => this.openUnitDetail(row.id)">
+                                        <td><strong t-esc="row.name"/></td>
+                                        <td t-esc="row.property_name"/>
+                                        <td>
+                                            <span t-att-class="{ 'pm-occ-empty': row.tenant_empty }" t-esc="row.tenant"/>
+                                        </td>
+                                        <td>
+                                            <span t-attf-class="pm-pill #{directoryStatusClass(row.directory_status)}" t-esc="row.directory_label"/>
+                                        </td>
+                                        <td class="pm-actions" t-on-click="(ev) => this.toggleMenu('occ-' + row.id, ev)">
+                                            <button type="button" class="pm-dots">...</button>
+                                            <div class="pm-menu" t-if="state.menuId === ('occ-' + row.id)">
+                                                <button type="button" t-on-click="() => this.openUnitDetail(row.id)">View Details</button>
+                                                <button type="button" t-on-click="() => this.openUnitForm(row.id)">Edit Unit</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <tr t-if="!pagedOccupancyUnits.length">
+                                    <td colspan="5" class="pm-empty">No units match these filters.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="pm-pager">
+                            <span t-esc="occRangeLabel"/>
+                            <div class="pm-pager-btns">
+                                <button type="button" t-on-click="() => this.setOccPage(state.occPage - 1)">&lt;</button>
+                                <t t-foreach="occPageNumbers" t-as="page" t-key="page_index">
+                                    <button type="button"
+                                            t-att-class="{ 'is-current': page === state.occPage }"
+                                            t-on-click="() => this.setOccPage(page)"
+                                            t-esc="page"/>
+                                </t>
+                                <button type="button" t-on-click="() => this.setOccPage(state.occPage + 1)">&gt;</button>
+                            </div>
+                        </div>
+                    </section>
+                </t>
+
+                <t t-elif="state.page === 'ownership'">
+                    <div class="pm-own-wrap" t-att-class="{ 'has-drawer': !!selectedOwnership }">
+                        <div class="pm-own-main">
+                            <div class="pm-page-head">
+                                <div>
+                                    <h1>Ownership Directory</h1>
+                                    <p>Manage unit owners, ownership structures, and recent transfers.</p>
+                                </div>
+                                <div class="pm-page-actions">
+                                    <button type="button" class="pm-btn pm-btn-outline" t-on-click="exportCsv">
+                                        <i class="fa fa-download"/> Export
+                                    </button>
+                                    <button type="button" class="pm-btn pm-btn-primary" t-on-click="() => this.openOwnershipTransfer()">
+                                        + Record Transfer
+                                    </button>
+                                </div>
+                            </div>
+
+                            <section class="pm-own-kpis">
+                                <article class="pm-card pm-own-kpi">
+                                    <div class="pm-kpi-label">TOTAL OWNERS</div>
+                                    <div class="pm-own-kpi-row">
+                                        <div class="pm-kpi-value" t-esc="formatNumber(state.ownershipKpis.owners)"/>
+                                        <span class="pm-occ-delta is-up" t-esc="state.ownershipKpis.owners_delta"/>
+                                    </div>
+                                </article>
+                                <article class="pm-card pm-own-kpi">
+                                    <div class="pm-kpi-label">UNITS OWNED</div>
+                                    <div class="pm-kpi-value" t-esc="formatNumber(state.ownershipKpis.units_owned)"/>
+                                    <div class="pm-kpi-hint">Across <t t-esc="state.ownershipKpis.properties"/> Props</div>
+                                </article>
+                                <article class="pm-card pm-own-kpi">
+                                    <div class="pm-kpi-label">JOINT OWNERSHIP</div>
+                                    <div class="pm-kpi-value" t-esc="formatNumber(state.ownershipKpis.joint)"/>
+                                    <div class="pm-kpi-hint">Records</div>
+                                </article>
+                                <article class="pm-card pm-own-kpi">
+                                    <div class="pm-kpi-label">RECENT CHANGES</div>
+                                    <div class="pm-kpi-value" t-esc="formatNumber(state.ownershipKpis.recent)"/>
+                                    <div class="pm-kpi-hint">Last 30 Days</div>
+                                </article>
+                            </section>
+
+                            <section class="pm-card pm-table-card pm-own-table-card">
+                                <div class="pm-own-toolbar">
+                                    <div class="pm-own-tabs">
+                                        <button type="button" t-att-class="{ 'is-active': state.ownTab === 'all' }" t-on-click="() => this.setOwnTab('all')">All Records</button>
+                                        <button type="button" t-att-class="{ 'is-active': state.ownTab === 'pending' }" t-on-click="() => this.setOwnTab('pending')">Pending Transfers</button>
+                                        <button type="button" t-att-class="{ 'is-active': state.ownTab === 'multi' }" t-on-click="() => this.setOwnTab('multi')">Multi-Owners</button>
+                                    </div>
+                                    <button type="button" class="pm-own-filter-btn" t-att-class="{ 'is-active': state.showOwnershipFilters }" t-on-click="toggleOwnershipFilters">
+                                        <i class="fa fa-filter"/>
+                                    </button>
+                                </div>
+                                <div t-if="state.showOwnershipFilters" class="pm-own-filter-row">
+                                    <select t-att-value="state.ownPropertyFilter" t-on-change="onOwnPropertyFilter">
+                                        <option value="all">All Properties</option>
+                                        <t t-foreach="state.ownershipProperties" t-as="prop" t-key="prop.id">
+                                            <option t-att-value="prop.id" t-esc="prop.name"/>
+                                        </t>
+                                    </select>
+                                    <select t-att-value="state.ownStatusFilter" t-on-change="onOwnStatusFilter">
+                                        <option value="all">All Statuses</option>
+                                        <option value="active">Active</option>
+                                        <option value="pending">Pending</option>
+                                    </select>
+                                </div>
+                                <div t-if="state.loadingOwnership" class="pm-empty">Loading ownership...</div>
+                                <table t-else="" class="pm-table pm-own-table">
+                                    <thead>
+                                        <tr>
+                                            <th>UNIT</th>
+                                            <th>OWNER</th>
+                                            <th>TYPE</th>
+                                            <th>% SHARE</th>
+                                            <th>EFFECTIVE</th>
+                                            <th>STATUS</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="pagedOwnership" t-as="row" t-key="row.id">
+                                            <tr t-att-class="{ 'is-selected': state.selectedOwnershipId === row.id }" t-on-click="() => this.selectOwnership(row)">
+                                                <td>
+                                                    <div class="pm-own-unit">
+                                                        <strong t-esc="row.unit_name"/>
+                                                        <small t-esc="row.property_name"/>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="pm-owner-cell">
+                                                        <span class="pm-avatar" t-esc="row.owner_initials"/>
+                                                        <span t-esc="row.owner_name"/>
+                                                    </div>
+                                                </td>
+                                                <td t-esc="row.owner_type_label"/>
+                                                <td><t t-esc="row.share"/>%</td>
+                                                <td t-esc="row.effective_label"/>
+                                                <td>
+                                                    <span t-attf-class="pm-pill #{ownershipStatusClass(row.status)}" t-esc="row.status_label"/>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                        <tr t-if="!pagedOwnership.length">
+                                            <td colspan="6" class="pm-empty">No ownership records match these filters.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="pm-pager">
+                                    <span t-esc="ownRangeLabel"/>
+                                    <div class="pm-pager-btns">
+                                        <button type="button" t-on-click="() => this.setOwnPage(state.ownPage - 1)">&lt;</button>
+                                        <t t-foreach="ownPageNumbers" t-as="page" t-key="page_index">
+                                            <button type="button"
+                                                    t-att-class="{ 'is-current': page === state.ownPage }"
+                                                    t-on-click="() => this.setOwnPage(page)"
+                                                    t-esc="page"/>
+                                        </t>
+                                        <button type="button" t-on-click="() => this.setOwnPage(state.ownPage + 1)">&gt;</button>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                        <aside t-if="selectedOwnership" class="pm-own-drawer">
+                            <div class="pm-own-drawer-head">
+                                <span class="pm-own-key"><i class="fa fa-key"/></span>
+                                <div>
+                                    <strong t-esc="selectedOwnership.unit_name"/>
+                                    <small t-esc="selectedOwnership.place"/>
+                                </div>
+                                <button type="button" class="pm-own-close" t-on-click="closeOwnershipDrawer">×</button>
+                            </div>
+                            <div class="pm-own-drawer-label">Current Ownership</div>
+                            <article class="pm-own-current">
+                                <div class="pm-owner-cell">
+                                    <span class="pm-avatar pm-avatar-lg" t-esc="selectedOwnership.owner_initials"/>
+                                    <div>
+                                        <strong t-esc="selectedOwnership.owner_name"/>
+                                        <small><t t-esc="selectedOwnership.owner_type_label"/> • <t t-esc="selectedOwnership.share"/>% Share</small>
+                                    </div>
+                                </div>
+                                <dl class="pm-own-meta">
+                                    <div><dt>Effective</dt><dd t-esc="selectedOwnership.effective_label"/></div>
+                                    <div><dt>Cost</dt><dd t-esc="selectedOwnership.cost_label"/></div>
+                                    <div><dt>Deed</dt><dd t-esc="selectedOwnership.deed"/></div>
+                                </dl>
+                            </article>
+                            <div class="pm-own-drawer-label">Structure</div>
+                            <div class="pm-own-ring" t-att-style="ownershipRingStyle">
+                                <span><t t-esc="selectedOwnership.share"/>%</span>
+                            </div>
+                            <div class="pm-own-drawer-actions">
+                                <button type="button" class="pm-btn pm-btn-outline" t-on-click="openOwnershipProfile">Profile</button>
+                                <button type="button" class="pm-btn pm-btn-accent" t-on-click="openOwnershipEdit">Edit</button>
+                            </div>
+                        </aside>
+                    </div>
+                </t>
+
+                <t t-elif="state.page === 'tenancy'">
+                    <div class="pm-ten-page">
+                        <div class="pm-page-head">
+                            <div>
+                                <h1>Tenant History</h1>
+                                <p>Chronological record of tenancies across the portfolio.</p>
+                            </div>
+                        </div>
+
+                        <section class="pm-ten-kpis">
+                            <article class="pm-card pm-ten-kpi">
+                                <div>
+                                    <div class="pm-kpi-label">TOTAL TENANCIES</div>
+                                    <div class="pm-kpi-value" t-esc="formatNumber(state.tenancyKpis.total)"/>
+                                    <div class="pm-kpi-hint is-up"><i class="fa fa-arrow-up"/> <t t-esc="state.tenancyKpis.total_delta"/></div>
+                                </div>
+                                <span class="pm-ten-kpi-icon"><i class="fa fa-users"/></span>
+                            </article>
+                            <article class="pm-card pm-ten-kpi">
+                                <div>
+                                    <div class="pm-kpi-label">ACTIVE LEASES</div>
+                                    <div class="pm-kpi-value" t-esc="formatNumber(state.tenancyKpis.active)"/>
+                                    <div class="pm-kpi-hint is-up"><i class="fa fa-arrow-up"/> <t t-esc="state.tenancyKpis.active_delta"/></div>
+                                </div>
+                                <span class="pm-ten-kpi-icon"><i class="fa fa-clipboard"/></span>
+                            </article>
+                            <article class="pm-card pm-ten-kpi">
+                                <div>
+                                    <div class="pm-kpi-label">AVG. DURATION</div>
+                                    <div class="pm-kpi-value"><t t-esc="state.tenancyKpis.avg_duration"/> mo</div>
+                                    <div class="pm-kpi-hint"><t t-esc="state.tenancyKpis.avg_hint"/></div>
+                                </div>
+                                <span class="pm-ten-kpi-icon"><i class="fa fa-clock-o"/></span>
+                            </article>
+                            <article class="pm-card pm-ten-kpi">
+                                <div>
+                                    <div class="pm-kpi-label">RECENT MOVE-OUTS</div>
+                                    <div class="pm-kpi-value" t-esc="formatNumber(state.tenancyKpis.moveouts)"/>
+                                    <div class="pm-kpi-hint is-down"><i class="fa fa-arrow-up"/> <t t-esc="state.tenancyKpis.moveouts_delta"/></div>
+                                </div>
+                                <span class="pm-ten-kpi-icon is-warn"><i class="fa fa-sign-out"/></span>
+                            </article>
+                        </section>
+
+                        <section class="pm-ten-toolbar">
+                            <div class="pm-ten-toolbar-left">
+                                <div class="pm-ten-filter-wrap">
+                                    <button type="button" class="pm-ten-filter-btn" t-att-class="{ 'is-active': state.showTenancyFilters || state.tenPropertyFilter !== 'all' }" t-on-click="toggleTenancyFilters">
+                                        <i class="fa fa-filter"/> Filters
+                                    </button>
+                                    <div t-if="state.showTenancyFilters" class="pm-ten-filter-menu">
+                                        <button type="button" t-att-class="{ 'is-current': state.tenPropertyFilter === 'all' }" t-on-click="() => this.setTenPropertyFilter('all')">All Properties</button>
+                                        <t t-foreach="state.tenancyProperties" t-as="prop" t-key="prop.id">
+                                            <button type="button" t-att-class="{ 'is-current': String(state.tenPropertyFilter) === String(prop.id) }" t-on-click="() => this.setTenPropertyFilter(prop.id)" t-esc="prop.name"/>
+                                        </t>
+                                    </div>
+                                </div>
+                                <select class="pm-ten-select" t-att-value="state.tenDateRange" t-on-change="onTenDateRange">
+                                    <option value="all">Date Range</option>
+                                    <option value="90">Last 90 days</option>
+                                    <option value="365">Last 12 months</option>
+                                    <option value="1095">Last 3 years</option>
+                                </select>
+                                <select class="pm-ten-select" t-att-value="state.tenStatusFilter" t-on-change="onTenStatusFilter">
+                                    <option value="all">Status: All</option>
+                                    <option value="present">Present</option>
+                                    <option value="ended">Ended</option>
+                                    <option value="upcoming">Upcoming</option>
+                                </select>
+                            </div>
+                            <button type="button" class="pm-ten-export" t-on-click="exportCsv">
+                                <i class="fa fa-download"/> Export
+                            </button>
+                        </section>
+
+                        <div class="pm-ten-body" t-att-class="{ 'has-drawer': !!selectedTenancy }">
+                            <section class="pm-card pm-table-card pm-own-table-card">
+                                <div t-if="state.loadingTenancy" class="pm-empty">Loading tenant history...</div>
+                                <table t-else="" class="pm-table pm-own-table pm-ten-table">
+                                    <thead>
+                                        <tr>
+                                            <th>TENANT</th>
+                                            <th>UNIT / PROPERTY</th>
+                                            <th>MOVE IN</th>
+                                            <th>MOVE OUT</th>
+                                            <th>DURATION</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="pagedTenancy" t-as="row" t-key="row.id">
+                                            <tr t-att-class="{ 'is-selected': state.selectedTenancyId === row.id }" t-on-click="() => this.selectTenancy(row)">
+                                                <td>
+                                                    <div class="pm-owner-cell">
+                                                        <span class="pm-avatar" t-esc="row.tenant_initials"/>
+                                                        <span t-esc="row.tenant_name"/>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="pm-own-unit">
+                                                        <strong t-esc="row.unit_name"/>
+                                                        <small t-esc="row.property_name"/>
+                                                    </div>
+                                                </td>
+                                                <td t-esc="row.move_in_label"/>
+                                                <td>
+                                                    <span t-att-class="{ 'pm-ten-present': row.status === 'present' }" t-esc="row.move_out_label"/>
+                                                </td>
+                                                <td t-esc="row.duration"/>
+                                            </tr>
+                                        </t>
+                                        <tr t-if="!pagedTenancy.length">
+                                            <td colspan="5" class="pm-empty">No tenancies match these filters.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="pm-pager">
+                                    <span t-esc="tenRangeLabel"/>
+                                    <div class="pm-pager-btns">
+                                        <button type="button" t-on-click="() => this.setTenPage(state.tenPage - 1)">&lt;</button>
+                                        <t t-foreach="tenPageNumbers" t-as="page" t-key="page_index">
+                                            <button type="button"
+                                                    t-att-class="{ 'is-current': page === state.tenPage }"
+                                                    t-on-click="() => this.setTenPage(page)"
+                                                    t-esc="page"/>
+                                        </t>
+                                        <button type="button" t-on-click="() => this.setTenPage(state.tenPage + 1)">&gt;</button>
+                                    </div>
+                                </div>
+                            </section>
+                            <aside t-if="selectedTenancy" class="pm-own-drawer pm-ten-drawer">
+                                <div class="pm-ten-drawer-head">
+                                    <div>
+                                        <div class="pm-ten-name-row">
+                                            <strong t-esc="selectedTenancy.tenant_name"/>
+                                            <span t-attf-class="pm-pill #{tenancyStatusClass(selectedTenancy.status)}" t-esc="selectedTenancy.badge"/>
+                                        </div>
+                                        <small t-esc="selectedTenancy.place"/>
+                                    </div>
+                                    <button type="button" class="pm-own-close" t-on-click="closeTenancyDrawer">×</button>
+                                </div>
+                                <div class="pm-ten-drawer-actions">
+                                    <button type="button" class="pm-btn pm-btn-primary" t-on-click="openTenancyLease">View Lease</button>
+                                    <button type="button" class="pm-btn pm-btn-outline pm-ten-mail" t-on-click="openTenancyMessage">
+                                        <i class="fa fa-envelope-o"/>
+                                    </button>
+                                </div>
+                                <div class="pm-ten-timeline">
+                                    <t t-foreach="selectedTenancy.timeline" t-as="event" t-key="event.id">
+                                        <div t-attf-class="pm-ten-event is-#{event.tone}">
+                                            <span class="pm-ten-dot"><i t-attf-class="fa #{event.icon}"/></span>
+                                            <div>
+                                                <strong t-esc="event.title"/>
+                                                <em t-esc="event.date_label"/>
+                                                <p t-if="event.note" t-esc="event.note"/>
+                                                <button t-if="event.link" type="button" class="pm-link" t-on-click="openTenancyLease" t-esc="event.link"/>
+                                            </div>
+                                        </div>
+                                    </t>
+                                    <div t-if="!selectedTenancy.timeline.length" class="pm-empty">No timeline events.</div>
+                                </div>
+                            </aside>
+                        </div>
+                    </div>
+                </t>
+
+                <t t-elif="state.page === 'documents'">
+                    <div class="pm-doc-page">
+                        <div class="pm-page-head">
+                            <div>
+                                <h1>Documents</h1>
+                                <p>Centralized document repository.</p>
+                            </div>
+                            <div class="pm-page-actions">
+                                <button type="button" class="pm-btn pm-btn-primary" t-on-click="openDocumentUpload">
+                                    <i class="fa fa-upload"/> Upload Document
+                                </button>
+                            </div>
+                        </div>
+
+                        <section class="pm-card pm-doc-filters">
+                            <label class="pm-doc-search">
+                                <span>SEARCH</span>
+                                <span class="pm-search-input">
+                                    <i class="fa fa-search"/>
+                                    <input type="text" placeholder="Filename or ID" t-att-value="state.docSearch" t-on-input="onDocSearch"/>
+                                </span>
+                            </label>
+                            <label>
+                                <span>CATEGORY</span>
+                                <select class="pm-doc-select" t-att-value="state.docCategory" t-on-change="onDocCategory">
+                                    <option value="all">All Categories</option>
+                                    <option value="legal">Legal</option>
+                                    <option value="building">Building</option>
+                                    <option value="property">Property</option>
+                                </select>
+                            </label>
+                            <label>
+                                <span>PROPERTY</span>
+                                <select class="pm-doc-select" t-att-value="state.docPropertyFilter" t-on-change="onDocPropertyFilter">
+                                    <option value="all">All Properties</option>
+                                    <t t-foreach="state.documentProperties" t-as="prop" t-key="prop.id">
+                                        <option t-att-value="prop.id" t-esc="prop.name"/>
+                                    </t>
+                                </select>
+                            </label>
+                            <label>
+                                <span>STATUS</span>
+                                <select class="pm-doc-select" t-att-value="state.docStatusFilter" t-on-change="onDocStatusFilter">
+                                    <option value="all">All Statuses</option>
+                                    <option value="active">Active</option>
+                                    <option value="expired">Expired</option>
+                                    <option value="archived">Archived</option>
+                                </select>
+                            </label>
+                            <label>
+                                <span>UPLOAD DATE</span>
+                                <select class="pm-doc-select" t-att-value="state.docDateRange" t-on-change="onDocDateRange">
+                                    <option value="all">All Dates</option>
+                                    <option value="30">Last 30 Days</option>
+                                    <option value="90">Last 90 Days</option>
+                                    <option value="365">Last 12 Months</option>
+                                </select>
+                            </label>
+                            <button type="button" class="pm-btn pm-btn-ghost pm-doc-reset" t-on-click="resetDocumentFilters">Reset Filters</button>
+                        </section>
+
+                        <div class="pm-doc-body" t-att-class="{ 'has-drawer': !!selectedDocument }">
+                            <section class="pm-card pm-table-card pm-own-table-card">
+                                <div t-if="state.loadingDocuments" class="pm-empty">Loading documents...</div>
+                                <table t-else="" class="pm-table pm-own-table pm-doc-table">
+                                    <thead>
+                                        <tr>
+                                            <th>DOCUMENT</th>
+                                            <th>TYPE</th>
+                                            <th>ASSOCIATED WITH</th>
+                                            <th>UPLOADED BY</th>
+                                            <th>DATE</th>
+                                            <th>VER</th>
+                                            <th>EXPIRY</th>
+                                            <th>ACTIONS</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="pagedDocuments" t-as="row" t-key="row.id">
+                                            <tr t-att-class="{ 'is-selected': state.selectedDocumentId === row.id }" t-on-click="() => this.selectDocument(row)">
+                                                <td>
+                                                    <div class="pm-doc-file">
+                                                        <span t-attf-class="pm-doc-kind is-#{row.file_kind}"><i t-attf-class="fa #{row.icon}"/></span>
+                                                        <div>
+                                                            <strong t-esc="row.name"/>
+                                                            <small t-esc="row.size_label"/>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td t-esc="row.category_label"/>
+                                                <td t-esc="row.associated"/>
+                                                <td>
+                                                    <div class="pm-owner-cell">
+                                                        <span class="pm-avatar" t-esc="row.uploader_initials"/>
+                                                        <span t-esc="row.uploader"/>
+                                                    </div>
+                                                </td>
+                                                <td t-esc="row.date_label"/>
+                                                <td><span class="pm-doc-ver" t-esc="row.version"/></td>
+                                                <td>
+                                                    <span t-attf-class="pm-pill #{documentExpiryClass(row)}" t-esc="row.expiry_label"/>
+                                                </td>
+                                                <td class="pm-doc-actions" t-on-click="(ev) => ev.stopPropagation()">
+                                                    <button type="button" title="View" t-on-click="() => this.selectDocument(row)"><i class="fa fa-eye"/></button>
+                                                    <button type="button" title="Download" t-on-click="() => this.downloadDocument(row)"><i class="fa fa-download"/></button>
+                                                    <button type="button" title="More" t-on-click="(ev) => this.toggleMenu('doc-' + row.id, ev)"><i class="fa fa-ellipsis-v"/></button>
+                                                    <div class="pm-menu" t-if="state.menuId === ('doc-' + row.id)">
+                                                        <button type="button" t-on-click="() => this.showDocumentVersions(row)">Version History</button>
+                                                        <button type="button" t-on-click="() => this.deleteDocument(row)">Delete</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                        <tr t-if="!pagedDocuments.length">
+                                            <td colspan="8" class="pm-empty">No documents match these filters.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="pm-pager">
+                                    <span t-esc="docRangeLabel"/>
+                                    <div class="pm-pager-btns">
+                                        <button type="button" t-on-click="() => this.setDocPage(state.docPage - 1)">&lt;</button>
+                                        <t t-foreach="docPageNumbers" t-as="page" t-key="page_index">
+                                            <button type="button"
+                                                    t-att-class="{ 'is-current': page === state.docPage }"
+                                                    t-on-click="() => this.setDocPage(page)"
+                                                    t-esc="page"/>
+                                        </t>
+                                        <button type="button" t-on-click="() => this.setDocPage(state.docPage + 1)">&gt;</button>
+                                    </div>
+                                </div>
+                            </section>
+                            <aside t-if="selectedDocument" class="pm-own-drawer pm-doc-drawer">
+                                <div class="pm-doc-drawer-head">
+                                    <strong>Document Preview</strong>
+                                    <button type="button" class="pm-own-close" t-on-click="closeDocumentDrawer">×</button>
+                                </div>
+                                <div class="pm-doc-identity">
+                                    <span t-attf-class="pm-doc-kind is-#{selectedDocument.file_kind}"><i t-attf-class="fa #{selectedDocument.icon}"/></span>
+                                    <div>
+                                        <strong t-esc="selectedDocument.name"/>
+                                        <small><t t-esc="selectedDocument.category_label"/> · <t t-esc="selectedDocument.size_label"/></small>
+                                    </div>
+                                </div>
+                                <div class="pm-doc-meta">
+                                    <div>
+                                        <span>Uploaded By</span>
+                                        <strong t-esc="selectedDocument.uploader"/>
+                                    </div>
+                                    <div>
+                                        <span>Upload Date</span>
+                                        <strong t-esc="selectedDocument.date_label"/>
+                                    </div>
+                                    <div>
+                                        <span>Category</span>
+                                        <strong t-esc="selectedDocument.category_label"/>
+                                    </div>
+                                    <div>
+                                        <span>Status</span>
+                                        <span t-attf-class="pm-pill #{documentStatusClass(selectedDocument.status)}" t-esc="selectedDocument.status_label"/>
+                                    </div>
+                                </div>
+                                <div class="pm-doc-preview">
+                                    <i t-attf-class="fa #{selectedDocument.icon}"/>
+                                    <p>Preview generation limited</p>
+                                    <button type="button" class="pm-link" t-on-click="() => this.openDocumentViewer(selectedDocument)">Open in Viewer</button>
+                                </div>
+                                <button type="button" class="pm-btn pm-btn-outline pm-doc-full" t-on-click="() => this.downloadDocument(selectedDocument)">
+                                    <i class="fa fa-download"/> Download File
+                                </button>
+                                <button type="button" class="pm-btn pm-btn-outline pm-doc-full" t-on-click="() => this.showDocumentVersions(selectedDocument)">
+                                    <i class="fa fa-history"/> Version History
+                                </button>
+                                <button type="button" class="pm-doc-delete" t-on-click="() => this.deleteDocument(selectedDocument)">
+                                    <i class="fa fa-trash-o"/> Delete Document
+                                </button>
+                            </aside>
+                        </div>
+                    </div>
+                </t>
+
+                <t t-elif="state.page === 'status'">
+                    <div class="pm-st-page">
+                        <div class="pm-page-head">
+                            <div>
+                                <h1>Unit Status</h1>
+                                <p>Manage and track real-time unit status across the portfolio.</p>
+                            </div>
+                        </div>
+
+                        <section class="pm-st-kpis">
+                            <article class="pm-card pm-st-kpi is-available">
+                                <div>
+                                    <div class="pm-kpi-label">AVAILABLE</div>
+                                    <div class="pm-kpi-value" t-esc="formatNumber(state.statusKpis.available)"/>
+                                </div>
+                                <span class="pm-st-dot is-available"/>
+                            </article>
+                            <article class="pm-card pm-st-kpi is-occupied">
+                                <div>
+                                    <div class="pm-kpi-label">OCCUPIED</div>
+                                    <div class="pm-kpi-value" t-esc="formatNumber(state.statusKpis.occupied)"/>
+                                </div>
+                                <span class="pm-st-dot is-occupied"/>
+                            </article>
+                            <article class="pm-card pm-st-kpi is-unoccupied">
+                                <div>
+                                    <div class="pm-kpi-label">UNOCCUPIED</div>
+                                    <div class="pm-kpi-value" t-esc="formatNumber(state.statusKpis.unoccupied)"/>
+                                </div>
+                                <span class="pm-st-dot is-unoccupied"/>
+                            </article>
+                        </section>
+
+                        <section class="pm-ten-toolbar pm-st-toolbar">
+                            <div class="pm-ten-toolbar-left">
+                                <div class="pm-ten-filter-wrap">
+                                    <button type="button" class="pm-ten-filter-btn" t-att-class="{ 'is-active': state.showStatusFilters || state.stPropertyFilter !== 'all' }" t-on-click="toggleStatusFilters">
+                                        <i class="fa fa-filter"/> Filters
+                                    </button>
+                                    <div t-if="state.showStatusFilters" class="pm-ten-filter-menu">
+                                        <button type="button" t-att-class="{ 'is-current': state.stPropertyFilter === 'all' }" t-on-click="() => this.setStPropertyFilter('all')">All Properties</button>
+                                        <t t-foreach="state.statusProperties" t-as="prop" t-key="prop.id">
+                                            <button type="button" t-att-class="{ 'is-current': String(state.stPropertyFilter) === String(prop.id) }" t-on-click="() => this.setStPropertyFilter(prop.id)" t-esc="prop.name"/>
+                                        </t>
+                                    </div>
+                                </div>
+                                <select class="pm-ten-select" t-att-value="state.stDateRange" t-on-change="onStDateRange">
+                                    <option value="all">Date Range</option>
+                                    <option value="30">Last 30 days</option>
+                                    <option value="90">Last 90 days</option>
+                                    <option value="365">Last 12 months</option>
+                                </select>
+                                <select class="pm-ten-select" t-att-value="state.stStatusFilter" t-on-change="onStStatusFilter">
+                                    <option value="all">Status: All</option>
+                                    <option value="available">Available</option>
+                                    <option value="occupied">Occupied</option>
+                                    <option value="unoccupied">Unoccupied</option>
+                                </select>
+                            </div>
+                            <button type="button" class="pm-ten-export" t-on-click="exportCsv">
+                                <i class="fa fa-download"/> Export
+                            </button>
+                            <button type="button" class="pm-btn pm-btn-primary" t-on-click="openBulkStatusChange">+ Bulk update</button>
+                        </section>
+
+                        <section class="pm-card pm-table-card pm-own-table-card">
+                            <div t-if="state.loadingStatusBoard" class="pm-empty">Loading unit status...</div>
+                            <table t-else="" class="pm-table pm-own-table pm-st-table">
+                                <thead>
+                                    <tr>
+                                        <th class="pm-check">
+                                            <input type="checkbox" t-att-checked="allPagedStatusSelected" t-on-click="toggleAllStatusRows"/>
+                                        </th>
+                                        <th>UNIT</th>
+                                        <th>PROPERTY</th>
+                                        <th>STATUS</th>
+                                        <th>UPDATED BY</th>
+                                        <th>ACTIONS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="pagedStatusBoard" t-as="row" t-key="row.id">
+                                        <tr>
+                                            <td class="pm-check">
+                                                <input type="checkbox" t-att-checked="!!state.selectedStatusIds[row.id]" t-on-click="(ev) => this.toggleStatusRow(row.id, ev)"/>
+                                            </td>
+                                            <td>
+                                                <strong t-esc="row.name"/>
+                                                <small class="pm-st-bldg" t-esc="row.building_name"/>
+                                            </td>
+                                            <td t-esc="row.property_name"/>
+                                            <td>
+                                                <span t-attf-class="pm-pill #{boardStatusClass(row.board)}" t-esc="row.status_label"/>
+                                            </td>
+                                            <td>
+                                                <div class="pm-owner-cell">
+                                                    <span class="pm-avatar" t-esc="row.updated_initials"/>
+                                                    <span t-esc="row.updated_by"/>
+                                                </div>
+                                            </td>
+                                            <td class="pm-doc-actions">
+                                                <button type="button" title="Change status" t-on-click="(ev) => this.openStatusChange(row, ev)">
+                                                    <i class="fa fa-pencil"/>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <tr t-if="!pagedStatusBoard.length">
+                                        <td colspan="6" class="pm-empty">No units match these filters.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="pm-pager">
+                                <span t-esc="stRangeLabel"/>
+                                <div class="pm-pager-btns">
+                                    <button type="button" t-on-click="() => this.setStPage(state.stPage - 1)">&lt;</button>
+                                    <t t-foreach="stPageNumbers" t-as="page" t-key="page_index">
+                                        <button type="button"
+                                                t-att-class="{ 'is-current': page === state.stPage }"
+                                                t-on-click="() => this.setStPage(page)"
+                                                t-esc="page"/>
+                                    </t>
+                                    <button type="button" t-on-click="() => this.setStPage(state.stPage + 1)">&gt;</button>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </t>
+
+                <t t-elif="state.page === 'units'">
+                    <div class="pm-page-head">
+                        <div>
+                            <h1>Units</h1>
+                            <p>Track occupancy, owners, and unit configuration across the portfolio.</p>
+                        </div>
+                        <div class="pm-page-actions">
+                            <button type="button" class="pm-btn pm-btn-outline" t-on-click="exportCsv">
+                                <i class="fa fa-download"/> Export
+                            </button>
+                            <button type="button" class="pm-btn pm-btn-primary" t-on-click="newUnit">+ Add Unit</button>
+                        </div>
+                    </div>
+
+                    <section class="pm-filters pm-filters-units">
+                        <label class="pm-search-field">
+                            <span>Search Unit</span>
+                            <span class="pm-search-input">
+                                <i class="fa fa-search"/>
+                                <input type="text" placeholder="Unit ID or Name..." t-att-value="state.unitSearch" t-on-input="onUnitSearch"/>
+                            </span>
+                        </label>
+                        <label>
+                            <span>Property</span>
+                            <select t-att-value="state.unitPropertyFilter" t-on-change="onUnitPropertyFilter">
+                                <option value="all">All Properties</option>
+                                <t t-foreach="state.unitProperties" t-as="prop" t-key="prop.id">
+                                    <option t-att-value="prop.id" t-esc="prop.name"/>
+                                </t>
+                            </select>
+                        </label>
+                        <label>
+                            <span>Building</span>
+                            <select t-att-value="state.unitBuildingFilter" t-on-change="onUnitBuildingFilter">
+                                <option value="all">All Buildings</option>
+                                <t t-foreach="unitFilterBuildings" t-as="row" t-key="row.id">
+                                    <option t-att-value="row.id" t-esc="row.name"/>
+                                </t>
+                            </select>
+                        </label>
+                        <label>
+                            <span>Floor</span>
+                            <select t-att-value="state.unitFloorFilter" t-on-change="onUnitFloorFilter">
+                                <option value="all">All</option>
+                                <t t-foreach="unitFilterFloors" t-as="row" t-key="row.id">
+                                    <option t-att-value="row.id" t-esc="row.name"/>
+                                </t>
+                            </select>
+                        </label>
+                        <label>
+                            <span>Wing</span>
+                            <select t-att-value="state.unitWingFilter" t-on-change="onUnitWingFilter">
+                                <option value="all">All</option>
+                                <t t-foreach="unitFilterWings" t-as="wing" t-key="wing">
+                                    <option t-att-value="wing" t-esc="wing"/>
+                                </t>
+                            </select>
+                        </label>
+                        <label>
+                            <span>Unit Type</span>
+                            <select t-att-value="state.unitTypeFilter" t-on-change="onUnitTypeFilter">
+                                <option value="all">All Types</option>
+                                <t t-foreach="state.unitTypes" t-as="type" t-key="type">
+                                    <option t-att-value="type" t-esc="type"/>
+                                </t>
+                            </select>
+                        </label>
+                    </section>
+                    <section class="pm-filters pm-filters-units-extra">
+                        <label>
+                            <span>Occupancy</span>
+                            <select t-att-value="state.unitOccupancyFilter" t-on-change="onUnitOccupancyFilter">
+                                <option value="all">All</option>
+                                <option value="occupied">Occupied</option>
+                                <option value="vacant">Vacant</option>
+                                <option value="reserved">Reserved</option>
+                            </select>
+                        </label>
+                        <label>
+                            <span>Status</span>
+                            <select t-att-value="state.unitOpStatusFilter" t-on-change="onUnitOpStatusFilter">
+                                <option value="all">All</option>
+                                <option value="active">Active</option>
+                                <option value="maintenance">Maintenance</option>
+                                <option value="turnover">Turnover</option>
+                            </select>
+                        </label>
+                        <button type="button" class="pm-more-filters" t-on-click="toggleMoreFilters">
+                            <i class="fa fa-filter"/> More Filters
+                        </button>
+                    </section>
+
+                    <section class="pm-card pm-table-card">
+                        <div t-if="state.loadingUnits" class="pm-empty">Loading units...</div>
+                        <table t-else="" class="pm-table pm-units-table">
+                            <thead>
+                                <tr>
+                                    <th class="pm-check-col">
+                                        <input type="checkbox" t-att-checked="allPagedUnitsSelected" t-on-click="toggleAllUnits"/>
+                                    </th>
+                                    <th>UNIT</th>
+                                    <th>PROPERTY</th>
+                                    <th>BUILDING</th>
+                                    <th>FLOOR/WING</th>
+                                    <th>CONFIG</th>
+                                    <th>OWNER</th>
+                                    <th>OCCUPANCY</th>
+                                    <th>STATUS</th>
+                                    <th>ACTIONS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="pagedUnits" t-as="row" t-key="row.id">
+                                    <tr class="pm-row-link" t-on-click="() => this.openUnitDetail(row.id)">
+                                        <td class="pm-check-col" t-on-click="(ev) => this.toggleUnitSelect(row.id, ev)">
+                                            <input type="checkbox" t-att-checked="state.selectedUnitIds[row.id]"/>
+                                        </td>
+                                        <td><strong t-esc="row.name"/></td>
+                                        <td t-esc="row.property_name"/>
+                                        <td t-esc="row.building_name"/>
+                                        <td t-esc="row.floor_wing"/>
+                                        <td t-esc="row.config"/>
+                                        <td>
+                                            <div class="pm-owner-cell">
+                                                <span class="pm-avatar" t-esc="row.owner_initials"/>
+                                                <span t-esc="row.owner_name"/>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span t-attf-class="pm-pill #{occupancyClass(row.occupancy)}" t-esc="row.occupancy_label"/>
+                                        </td>
+                                        <td>
+                                            <span t-attf-class="pm-pill #{opStatusClass(row.op_status)}" t-esc="row.op_status_label"/>
+                                        </td>
+                                        <td class="pm-actions" t-on-click="(ev) => this.toggleMenu('u-' + row.id, ev)">
+                                            <button type="button" class="pm-dots">...</button>
+                                            <div class="pm-menu" t-if="state.menuId === ('u-' + row.id)">
+                                                <button type="button" t-on-click="() => this.openUnitDetail(row.id)">View Details</button>
+                                                <button type="button" t-on-click="() => this.openUnitForm(row.id)">Edit Unit</button>
+                                                <button type="button" t-if="row.building_id" t-on-click="() => this.openBuildingDetail(row.building_id)">View Building</button>
+                                                <button type="button" t-on-click="() => this.openPropertyDetail(row.property_id)">View Property</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <tr t-if="!pagedUnits.length">
+                                    <td colspan="10" class="pm-empty">No units match these filters.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="pm-pager">
+                            <span t-esc="unitRangeLabel"/>
+                            <div class="pm-pager-btns">
+                                <button type="button" t-on-click="() => this.setUnitPage(state.unitPage - 1)">&lt;</button>
+                                <t t-foreach="unitPageNumbers" t-as="page" t-key="page_index">
+                                    <button type="button"
+                                            t-att-class="{ 'is-current': page === state.unitPage }"
+                                            t-on-click="() => this.setUnitPage(page)"
+                                            t-esc="page"/>
+                                </t>
+                                <button type="button" t-on-click="() => this.setUnitPage(state.unitPage + 1)">&gt;</button>
+                            </div>
+                        </div>
+                    </section>
+                </t>
+
+                <t t-elif="state.page === 'unit-detail'">
+                    <div t-if="state.loadingUnitDetail" class="pm-loading">Loading unit details...</div>
+                    <t t-else="">
+                        <div class="pm-unit-head">
+                            <div>
+                                <h1>Unit <t t-esc="state.unitDetail.unit.name"/></h1>
+                                <div class="pm-unit-meta">
+                                    <span><i class="fa fa-folder-o"/> <t t-esc="state.unitDetail.unit.property_name"/></span>
+                                    <span><i class="fa fa-building-o"/> <t t-esc="state.unitDetail.unit.building_name"/></span>
+                                    <span><i class="fa fa-th-large"/> <t t-esc="state.unitDetail.unit.floor_label"/></span>
+                                    <span t-esc="state.unitDetail.unit.wing_label"/>
+                                    <span t-attf-class="pm-pill #{opStatusClass(state.unitDetail.unit.op_status)}" t-esc="state.unitDetail.unit.op_status_label"/>
+                                    <span t-attf-class="pm-pill #{occupancyClass(state.unitDetail.unit.occupancy)}" t-esc="state.unitDetail.unit.occupancy_label"/>
+                                </div>
+                            </div>
+                            <div class="pm-page-actions pm-unit-actions">
+                                <button type="button" class="pm-btn pm-btn-outline" t-on-click="() => this.openUnitForm(state.unitDetail.unit.id)">
+                                    <i class="fa fa-pencil"/> Edit Unit
+                                </button>
+                                <button type="button" class="pm-btn pm-btn-outline" t-on-click="() => this.openUnitAction('status')">
+                                    <i class="fa fa-exchange"/> Change Status
+                                </button>
+                                <button type="button" class="pm-btn pm-btn-primary" t-on-click="() => this.openUnitAction('tenant')">Add Tenant</button>
+                                <button type="button" class="pm-btn pm-btn-primary" t-on-click="() => this.openUnitAction('owner')">Add Owner</button>
+                            </div>
+                        </div>
+                        <div class="pm-crumb-links">
+                            <button type="button" t-on-click="() => this.openPropertyDetail(state.unitDetail.unit.property_id)" t-esc="state.unitDetail.unit.property_name"/>
+                            <span>&gt;</span>
+                            <button type="button" t-if="state.unitDetail.unit.building_id" t-on-click="() => this.openBuildingDetail(state.unitDetail.unit.building_id)" t-esc="state.unitDetail.unit.building_name"/>
+                            <span t-if="state.unitDetail.unit.building_id">&gt;</span>
+                            <button type="button" t-on-click="() => this.openFloors(state.unitDetail.unit.building_id)" t-esc="state.unitDetail.unit.floor_label"/>
+                            <span>&gt;</span>
+                            <span t-esc="state.unitDetail.unit.wing_label"/>
+                            <span>&gt;</span>
+                            <strong>Unit <t t-esc="state.unitDetail.unit.name"/></strong>
+                        </div>
+
+                        <section class="pm-detail-kpis">
+                            <article class="pm-card pm-stat">
+                                <div class="pm-stat-label">AREA</div>
+                                <div class="pm-stat-value pm-stat-sm"><t t-esc="state.unitDetail.kpis.area"/> <small>sq.ft</small></div>
+                            </article>
+                            <article class="pm-card pm-stat">
+                                <div class="pm-stat-label">CONFIGURATION</div>
+                                <div class="pm-stat-value pm-stat-sm" t-esc="state.unitDetail.kpis.config"/>
+                            </article>
+                            <article class="pm-card pm-stat">
+                                <div class="pm-stat-label">CURRENT OWNER</div>
+                                <div class="pm-stat-value pm-stat-sm" t-esc="state.unitDetail.kpis.owner"/>
+                            </article>
+                            <article class="pm-card pm-stat">
+                                <div class="pm-stat-label">CURRENT TENANT</div>
+                                <div class="pm-stat-value pm-stat-sm" t-esc="state.unitDetail.kpis.tenant"/>
+                            </article>
+                            <article class="pm-card pm-stat">
+                                <div class="pm-stat-label">OCCUPANCY</div>
+                                <div class="pm-stat-value pm-stat-sm">
+                                    <span t-attf-class="pm-occ-dot is-#{state.unitDetail.kpis.occupancy}"/>
+                                    <t t-esc="state.unitDetail.kpis.occupancy_label"/>
+                                </div>
+                            </article>
+                        </section>
+
+                        <nav class="pm-tabs">
+                            <t t-foreach="unitTabs" t-as="tab" t-key="tab.id">
+                                <button type="button"
+                                        t-att-class="{ 'is-active': state.unitTab === tab.id }"
+                                        t-on-click="() => this.setUnitTab(tab.id)"
+                                        t-esc="tab.label"/>
+                            </t>
+                        </nav>
+
+                        <t t-if="state.unitTab === 'overview'">
+                            <section class="pm-unit-split">
+                                <article class="pm-card">
+                                    <div class="pm-card-head"><h2>Unit Information</h2></div>
+                                    <div class="pm-info-grid">
+                                        <div><span>UNIT NUMBER</span><strong t-esc="state.unitDetail.info.number"/></div>
+                                        <div><span>UNIT TYPE</span><strong t-esc="state.unitDetail.info.unit_type"/></div>
+                                        <div><span>BHK / CONFIGURATION</span><strong t-esc="state.unitDetail.info.config"/></div>
+                                        <div><span>CARPET AREA</span><strong><t t-esc="state.unitDetail.info.carpet"/> sq.ft</strong></div>
+                                        <div><span>BUILT-UP AREA</span><strong><t t-esc="state.unitDetail.info.built"/> sq.ft</strong></div>
+                                        <div><span>FLOOR</span><strong t-esc="state.unitDetail.info.floor"/></div>
+                                        <div><span>WING</span><strong t-esc="state.unitDetail.info.wing"/></div>
+                                        <div><span>PARKING</span><strong t-esc="state.unitDetail.info.parking"/></div>
+                                    </div>
+                                </article>
+                                <div class="pm-unit-side">
+                                    <article class="pm-card pm-status-card">
+                                        <div class="pm-stat-label">CURRENT STATUS</div>
+                                        <div t-attf-class="pm-status-ring is-#{state.unitDetail.unit.op_status}">
+                                            <i class="fa fa-check"/>
+                                            <strong t-esc="state.unitDetail.unit.op_status_label"/>
+                                        </div>
+                                        <span t-attf-class="pm-pill #{occupancyClass(state.unitDetail.unit.occupancy)}">Currently <t t-esc="state.unitDetail.unit.occupancy_label"/></span>
+                                    </article>
+                                    <article class="pm-card pm-loc-card">
+                                        <div class="pm-loc-map">
+                                            <iframe t-if="state.unitDetail.unit.map_url"
+                                                    t-att-src="state.unitDetail.unit.map_url"
+                                                    title="Property location"
+                                                    loading="lazy"
+                                                    referrerpolicy="no-referrer-when-downgrade"/>
+                                        </div>
+                                        <div class="pm-loc-caption">
+                                            <strong t-esc="state.unitDetail.unit.location || state.unitDetail.unit.property_name"/>
+                                            <small t-esc="state.unitDetail.unit.address"/>
+                                            <a t-if="state.unitDetail.unit.map_open_url"
+                                               class="pm-loc-link"
+                                               t-att-href="state.unitDetail.unit.map_open_url"
+                                               target="_blank">Open in Maps</a>
+                                        </div>
+                                    </article>
+                                </div>
+                            </section>
+                        </t>
+
+                        <t t-elif="state.unitTab === 'ownership'">
+                            <section class="pm-card">
+                                <table class="pm-table">
+                                    <thead><tr><th>Owner</th><th>Share</th><th>Source</th></tr></thead>
+                                    <tbody>
+                                        <t t-foreach="state.unitDetail.owners" t-as="row" t-key="row.id">
+                                            <tr>
+                                                <td t-esc="row.name"/>
+                                                <td><t t-esc="row.share"/>%</td>
+                                                <td t-esc="row.source"/>
+                                            </tr>
+                                        </t>
+                                        <tr t-if="!state.unitDetail.owners.length"><td colspan="3" class="pm-empty">No ownership records.</td></tr>
+                                    </tbody>
+                                </table>
+                            </section>
+                        </t>
+
+                        <t t-elif="state.unitTab === 'tenants'">
+                            <section class="pm-card">
+                                <table class="pm-table">
+                                    <thead><tr><th>Tenant</th><th>Start</th><th>End</th><th>Status</th></tr></thead>
+                                    <tbody>
+                                        <t t-foreach="state.unitDetail.tenants" t-as="row" t-key="row.id">
+                                            <tr>
+                                                <td t-esc="row.name"/>
+                                                <td t-esc="row.start"/>
+                                                <td t-esc="row.end"/>
+                                                <td><span t-attf-class="pm-pill #{row.state === 'active' ? 'is-healthy' : 'is-draft'}" t-esc="row.state_label"/></td>
+                                            </tr>
+                                        </t>
+                                        <tr t-if="!state.unitDetail.tenants.length"><td colspan="4" class="pm-empty">No tenant history.</td></tr>
+                                    </tbody>
+                                </table>
+                            </section>
+                        </t>
+
+                        <t t-elif="state.unitTab === 'documents'">
+                            <section class="pm-card">
+                                <table class="pm-table">
+                                    <thead><tr><th>Document</th><th>Type</th></tr></thead>
+                                    <tbody>
+                                        <t t-foreach="state.unitDetail.documents" t-as="row" t-key="row.id">
+                                            <tr><td t-esc="row.name"/><td t-esc="row.type"/></tr>
+                                        </t>
+                                        <tr t-if="!state.unitDetail.documents.length"><td colspan="2" class="pm-empty">No documents uploaded.</td></tr>
+                                    </tbody>
+                                </table>
+                            </section>
+                        </t>
+
+                        <t t-else="">
+                            <section class="pm-card">
+                                <div class="pm-feed">
+                                    <t t-foreach="state.unitDetail.history" t-as="item" t-key="item.id">
+                                        <div class="pm-feed-item">
+                                            <span t-attf-class="pm-activity-dot is-#{item.type}"/>
+                                            <div>
+                                                <div class="pm-feed-row">
+                                                    <strong t-esc="item.title"/>
+                                                    <span t-esc="item.when"/>
+                                                </div>
+                                                <div class="pm-activity-meta" t-esc="item.description"/>
+                                            </div>
+                                        </div>
+                                    </t>
+                                    <div t-if="!state.unitDetail.history.length" class="pm-empty">No status history yet.</div>
+                                </div>
+                            </section>
+                        </t>
+                    </t>
+                </t>
+
+                <t t-elif="state.page === 'properties'">
+                    <div class="pm-page-head">
+                        <div>
+                            <h1>Properties</h1>
+                            <p>Manage and monitor your portfolio's assets.</p>
+                        </div>
+                        <div class="pm-page-actions">
+                            <button type="button" class="pm-btn pm-btn-outline" t-on-click="() => this.openHierarchy()">
+                                <i class="fa fa-sitemap"/> Hierarchy Explorer
+                            </button>
+                            <button type="button" class="pm-btn pm-btn-outline" t-on-click="exportCsv">
+                                <i class="fa fa-download"/> Export
+                            </button>
+                            <button type="button" class="pm-btn pm-btn-primary" t-on-click="newProperty">+ Add Property</button>
+                        </div>
+                    </div>
+
+                    <section class="pm-filters">
+                        <label class="pm-search-field">
+                            <span>Search Properties</span>
+                            <span class="pm-search-input">
+                                <i class="fa fa-search"/>
+                                <input type="text" placeholder="Name or ID..." t-att-value="state.search" t-on-input="onSearchInput"/>
+                            </span>
+                        </label>
+                        <label>
+                            <span>Type</span>
+                            <select t-on-change="onTypeFilter" t-att-value="state.typeFilter">
+                                <option value="all">All Types</option>
+                                <option value="residential">Residential</option>
+                                <option value="commercial">Commercial</option>
+                            </select>
+                        </label>
+                        <label>
+                            <span>Status</span>
+                            <select t-on-change="onStatusFilter" t-att-value="state.statusFilter">
+                                <option value="all">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="maintenance">Maintenance</option>
+                                <option value="draft">Draft</option>
+                            </select>
+                        </label>
+                        <label>
+                            <span>Location</span>
+                            <select t-on-change="onLocationFilter" t-att-value="state.locationFilter">
+                                <option value="all">All Locations</option>
+                                <t t-foreach="locations" t-as="location" t-key="location">
+                                    <option t-att-value="location" t-esc="location"/>
+                                </t>
+                            </select>
+                        </label>
+                        <button type="button" class="pm-more-filters" t-on-click="toggleMoreFilters">
+                            <i class="fa fa-sliders"/> More Filters
+                        </button>
+                    </section>
+
+                    <section class="pm-card pm-table-card">
+                        <table class="pm-table pm-properties-table">
+                            <thead>
+                                <tr>
+                                    <th>Property Name &amp; ID</th>
+                                    <th>Type</th>
+                                    <th>Location</th>
+                                    <th>Bldgs</th>
+                                    <th>Units</th>
+                                    <th>Occupancy %</th>
+                                    <th>Status</th>
+                                    <th/>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="pagedProperties" t-as="row" t-key="row.id">
+                                    <tr t-on-click="() => this.openProperty(row.id)">
+                                        <td>
+                                            <div class="pm-prop-name">
+                                                <span class="pm-thumb" t-esc="row.initials"/>
+                                                <span>
+                                                    <strong t-esc="row.name"/>
+                                                    <small t-esc="row.code"/>
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="pm-type">
+                                                <i t-attf-class="fa #{row.type === 'commercial' ? 'fa-building' : 'fa-home'}"/>
+                                                <t t-esc="row.type_label"/>
+                                            </span>
+                                        </td>
+                                        <td t-esc="row.location"/>
+                                        <td t-esc="formatNumber(row.building_count)"/>
+                                        <td t-esc="formatNumber(row.unit_count)"/>
+                                        <td>
+                                            <div class="pm-occ">
+                                                <span t-esc="row.occupancy"/>%
+                                                <span class="pm-occ-track">
+                                                    <span t-attf-class="pm-occ-fill #{occupancyBarClass(row.occupancy)}" t-attf-style="width: #{row.occupancy}%"/>
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span t-attf-class="pm-pill #{row.status === 'active' ? 'is-healthy' : row.status === 'draft' ? 'is-draft' : 'is-maint'}"
+                                                  t-esc="row.status_label"/>
+                                        </td>
+                                        <td class="pm-actions" t-on-click="(ev) => this.toggleMenu(row.id, ev)">
+                                            <button type="button" class="pm-dots">...</button>
+                                            <div class="pm-menu" t-if="state.menuId === row.id">
+                                                <button type="button" t-on-click="() => this.openPropertyDetail(row.id)">View Details</button>
+                                                <button type="button" t-on-click="() => this.openHierarchy(row.id)">View Hierarchy</button>
+                                                <button type="button" t-on-click="() => this.openPropertyForm(row.id)">Edit in Form</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <tr t-if="!pagedProperties.length">
+                                    <td colspan="8" class="pm-empty">No properties match these filters.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="pm-pager">
+                            <span t-esc="rangeLabel"/>
+                            <div class="pm-pager-btns">
+                                <button type="button" t-on-click="() => this.setListPage(state.listPage - 1)">&lt;</button>
+                                <t t-foreach="pageNumbers" t-as="page" t-key="page_index">
+                                    <button type="button"
+                                            t-att-class="{ 'is-current': page === state.listPage }"
+                                            t-on-click="() => this.setListPage(page)"
+                                            t-esc="page"/>
+                                </t>
+                                <button type="button" t-on-click="() => this.setListPage(state.listPage + 1)">&gt;</button>
+                            </div>
+                        </div>
+                    </section>
+                </t>
+
+                <t t-else="">
+                    <div class="pm-page-head">
+                        <div>
+                            <h1>Overview</h1>
+                            <p>High-level snapshot of portfolio performance and status.</p>
+                        </div>
+                        <div class="pm-page-actions">
+                            <button type="button" class="pm-btn pm-btn-outline" t-on-click="exportCsv">Export</button>
+                            <button type="button" class="pm-btn pm-btn-primary" t-on-click="newProperty">+ New Property</button>
+                        </div>
+                    </div>
+
+                    <section class="pm-kpi-grid">
+                        <article class="pm-card pm-kpi">
+                            <div class="pm-kpi-icon"><i class="fa fa-building-o"/></div>
+                            <div class="pm-kpi-label">Total Properties</div>
+                            <div class="pm-kpi-value" t-esc="formatNumber(state.data.kpis.properties)"/>
+                            <div class="pm-kpi-hint is-up" t-esc="state.data.kpis.properties_delta"/>
+                        </article>
+                        <article class="pm-card pm-kpi">
+                            <div class="pm-kpi-icon"><i class="fa fa-university"/></div>
+                            <div class="pm-kpi-label">Buildings / Towers</div>
+                            <div class="pm-kpi-value" t-esc="formatNumber(state.data.kpis.buildings)"/>
+                            <div class="pm-kpi-hint" t-esc="state.data.kpis.buildings_hint"/>
+                        </article>
+                        <article class="pm-card pm-kpi">
+                            <div class="pm-kpi-icon"><i class="fa fa-th"/></div>
+                            <div class="pm-kpi-label">Total Units</div>
+                            <div class="pm-kpi-value" t-esc="formatNumber(state.data.kpis.units)"/>
+                            <div class="pm-kpi-hint is-up" t-esc="state.data.kpis.units_delta"/>
+                        </article>
+                        <article class="pm-card pm-kpi">
+                            <div class="pm-kpi-icon"><i class="fa fa-pie-chart"/></div>
+                            <div class="pm-kpi-label">Overall Occupancy</div>
+                            <div class="pm-kpi-value"><t t-esc="state.data.kpis.occupancy"/>%</div>
+                            <div class="pm-kpi-hint is-down" t-esc="state.data.kpis.occupancy_delta"/>
+                        </article>
+                    </section>
+
+                    <section class="pm-card pm-status-row">
+                        <div class="pm-status-item">
+                            <span class="pm-dot is-occupied"/>
+                            <strong t-esc="formatNumber(state.data.status.occupied)"/>
+                            <span>Occupied</span>
+                        </div>
+                        <div class="pm-status-item">
+                            <span class="pm-dot is-vacant"/>
+                            <strong t-esc="formatNumber(state.data.status.vacant)"/>
+                            <span>Vacant</span>
+                        </div>
+                        <div class="pm-status-item">
+                            <span class="pm-dot is-maintenance"/>
+                            <strong t-esc="formatNumber(state.data.status.maintenance)"/>
+                            <span>Maintenance</span>
+                        </div>
+                        <div class="pm-status-item">
+                            <span class="pm-dot is-reserved"/>
+                            <strong t-esc="formatNumber(state.data.status.reserved)"/>
+                            <span>Reserved</span>
+                        </div>
+                        <div class="pm-status-item">
+                            <span class="pm-dot is-available"/>
+                            <strong t-esc="formatNumber(state.data.status.available)"/>
+                            <span>Available</span>
+                        </div>
+                    </section>
+
+                    <section class="pm-split">
+                        <article class="pm-card">
+                            <h2>Occupancy Trends (6 Mo)</h2>
+                            <div class="pm-bars">
+                                <t t-foreach="state.data.trends" t-as="bar" t-key="bar.month">
+                                    <div class="pm-bar-col">
+                                        <div class="pm-bar" t-attf-style="height: #{bar.height}%; background: #{bar.color}"/>
+                                        <span t-esc="bar.month"/>
+                                    </div>
+                                </t>
+                            </div>
+                        </article>
+                        <article class="pm-card">
+                            <h2>Status Distribution</h2>
+                            <div class="pm-donut-wrap">
+                                <div class="pm-donut" t-att-style="donutStyle">
+                                    <div class="pm-donut-hole">
+                                        <strong><t t-esc="state.data.kpis.occupancy"/>%</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    </section>
+
+                    <section class="pm-split pm-split-bottom">
+                        <article class="pm-card">
+                            <h2>Property Summary</h2>
+                            <table class="pm-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Total Units</th>
+                                        <th>Occupied</th>
+                                        <th>Vacant</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="state.data.summary" t-as="row" t-key="row.id">
+                                        <tr t-on-click="() => this.openProperty(row.id)">
+                                            <td t-esc="row.name"/>
+                                            <td t-esc="formatNumber(row.unit_count)"/>
+                                            <td t-esc="formatNumber(row.occupied_count)"/>
+                                            <td t-esc="formatNumber(row.vacant_count)"/>
+                                            <td>
+                                                <span t-attf-class="pm-pill {{ row.health_status === 'healthy' ? 'is-healthy' : 'is-review' }}"
+                                                      t-esc="row.health_label"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </article>
+                        <article class="pm-card">
+                            <h2>Recent Activity</h2>
+                            <div class="pm-timeline">
+                                <t t-foreach="state.data.activities" t-as="item" t-key="item.id">
+                                    <div class="pm-timeline-item">
+                                        <span t-attf-class="pm-timeline-icon is-{{ item.type }}"/>
+                                        <div>
+                                            <div class="pm-timeline-title" t-esc="item.title"/>
+                                            <div class="pm-timeline-desc" t-esc="item.description"/>
+                                            <div class="pm-timeline-when" t-esc="item.when"/>
+                                        </div>
+                                    </div>
+                                </t>
+                                <div t-if="!state.data.activities.length" class="pm-empty">No recent activity</div>
+                            </div>
+                        </article>
+                    </section>
+                </t>
+            </main>
+            <div class="pm-modal" t-if="state.showBuildingForm" t-on-click="cancelBuildingForm">
+                <div class="pm-modal-card" t-on-click="(ev) => ev.stopPropagation()">
+                    <h2>Add Building</h2>
+                    <label>
+                        <span>Building Name <em>*</em></span>
+                        <input type="text" placeholder="e.g. North Tower" t-att-value="state.buildingForm.name" t-on-input="(ev) => this.state.buildingForm.name = ev.target.value"/>
+                    </label>
+                    <label>
+                        <span>Code</span>
+                        <input type="text" placeholder="e.g. BLD-01" t-att-value="state.buildingForm.code" t-on-input="(ev) => this.state.buildingForm.code = ev.target.value"/>
+                    </label>
+                    <label>
+                        <span>Property <em>*</em></span>
+                        <select t-att-value="state.buildingForm.property_id" t-on-change="(ev) => this.state.buildingForm.property_id = ev.target.value">
+                            <option value="">Select property</option>
+                            <t t-foreach="state.buildingProperties" t-as="prop" t-key="prop.id">
+                                <option t-att-value="prop.id" t-esc="prop.name"/>
+                            </t>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Usage</span>
+                        <select t-att-value="state.buildingForm.usage" t-on-change="(ev) => this.state.buildingForm.usage = ev.target.value">
+                            <option value="commercial">Commercial</option>
+                            <option value="residential">Residential</option>
+                            <option value="parking">Parking/Retail</option>
+                            <option value="mixed">Mixed-Use</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Floors</span>
+                        <input type="number" min="0" t-att-value="state.buildingForm.floors" t-on-input="(ev) => this.state.buildingForm.floors = Number(ev.target.value || 0)"/>
+                    </label>
+                    <div class="pm-modal-actions">
+                        <button type="button" class="pm-btn pm-btn-link" t-on-click="cancelBuildingForm">Cancel</button>
+                        <button type="button" class="pm-btn pm-btn-primary" t-att-disabled="state.saving" t-on-click="submitBuilding">Create Building</button>
+                    </div>
+                </div>
+            </div>
+            <div class="pm-modal" t-if="state.showFloorForm" t-on-click="cancelFloorForm">
+                <div class="pm-modal-card" t-on-click="(ev) => ev.stopPropagation()">
+                    <h2 t-esc="floorFormTitle"/>
+                    <label t-if="state.floorForm.mode !== 'wing'">
+                        <span>Floor Name</span>
+                        <input type="text" placeholder="e.g. Floor 12" t-att-value="state.floorForm.name" t-on-input="(ev) => this.state.floorForm.name = ev.target.value"/>
+                    </label>
+                    <label t-if="state.floorForm.mode !== 'wing'">
+                        <span>Floor Number</span>
+                        <input type="number" min="0" t-att-value="state.floorForm.floor_number" t-on-input="(ev) => this.state.floorForm.floor_number = Number(ev.target.value || 0)"/>
+                    </label>
+                    <label t-if="state.floorForm.mode === 'wing'">
+                        <span>Floor</span>
+                        <select t-att-value="state.floorForm.floor_number" t-on-change="(ev) => this.state.floorForm.floor_number = Number(ev.target.value || 0)">
+                            <t t-foreach="state.floorsWorkspace.floors" t-as="row" t-key="row.id">
+                                <option t-att-value="row.number" t-esc="row.name"/>
+                            </t>
+                        </select>
+                    </label>
+                    <label t-if="state.floorForm.mode !== 'edit'">
+                        <span>Wing</span>
+                        <input type="text" maxlength="1" placeholder="A" t-att-value="state.floorForm.wing" t-on-input="(ev) => this.state.floorForm.wing = ev.target.value.toUpperCase()"/>
+                    </label>
+                    <div class="pm-modal-actions">
+                        <button type="button" class="pm-btn pm-btn-link" t-on-click="cancelFloorForm">Cancel</button>
+                        <button type="button" class="pm-btn pm-btn-primary" t-att-disabled="state.saving" t-on-click="submitFloorForm">
+                            <t t-esc="state.floorForm.mode === 'edit' ? 'Save' : 'Create'"/>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="pm-modal" t-if="state.showUnitForm" t-on-click="cancelUnitForm">
+                <div class="pm-modal-card" t-on-click="(ev) => ev.stopPropagation()">
+                    <h2>Add Unit</h2>
+                    <label>
+                        <span>Unit Name <em>*</em></span>
+                        <input type="text" placeholder="e.g. A-101" t-att-value="state.unitForm.name" t-on-input="(ev) => this.state.unitForm.name = ev.target.value"/>
+                    </label>
+                    <label>
+                        <span>Property <em>*</em></span>
+                        <select t-att-value="state.unitForm.property_id" t-on-change="onUnitFormProperty">
+                            <option value="">Select property</option>
+                            <t t-foreach="state.unitProperties" t-as="prop" t-key="prop.id">
+                                <option t-att-value="prop.id" t-esc="prop.name"/>
+                            </t>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Building</span>
+                        <select t-att-value="state.unitForm.building_id" t-on-change="onUnitFormBuilding">
+                            <option value="">Select building</option>
+                            <t t-foreach="unitFormBuildings" t-as="row" t-key="row.id">
+                                <option t-att-value="row.id" t-esc="row.name"/>
+                            </t>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Floor</span>
+                        <select t-att-value="state.unitForm.floor_id" t-on-change="(ev) => this.state.unitForm.floor_id = ev.target.value">
+                            <option value="">Select floor</option>
+                            <t t-foreach="unitFormFloors" t-as="row" t-key="row.id">
+                                <option t-att-value="row.id" t-esc="row.name"/>
+                            </t>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Configuration</span>
+                        <select t-att-value="state.unitForm.unit_type" t-on-change="(ev) => this.state.unitForm.unit_type = ev.target.value">
+                            <option value="Studio">Studio</option>
+                            <option value="2 BHK">2 BHK</option>
+                            <option value="3 BHK">3 BHK</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Occupancy</span>
+                        <select t-att-value="state.unitForm.status" t-on-change="(ev) => this.state.unitForm.status = ev.target.value">
+                            <option value="available">Available</option>
+                            <option value="occupied">Occupied</option>
+                            <option value="vacant">Vacant</option>
+                            <option value="reserved">Reserved</option>
+                            <option value="maintenance">Maintenance</option>
+                        </select>
+                    </label>
+                    <div class="pm-modal-actions">
+                        <button type="button" class="pm-btn pm-btn-link" t-on-click="cancelUnitForm">Cancel</button>
+                        <button type="button" class="pm-btn pm-btn-primary" t-att-disabled="state.saving" t-on-click="submitUnit">Create Unit</button>
+                    </div>
+                </div>
+            </div>
+            <div class="pm-modal" t-if="state.showUnitAction" t-on-click="cancelUnitAction">
+                <div class="pm-modal-card" t-on-click="(ev) => ev.stopPropagation()">
+                    <h2 t-esc="unitActionTitle"/>
+                    <label t-if="state.unitAction.mode === 'status'">
+                        <span>Status</span>
+                        <select t-att-value="state.unitAction.status" t-on-change="(ev) => this.state.unitAction.status = ev.target.value">
+                            <option value="occupied">Occupied</option>
+                            <option value="vacant">Vacant</option>
+                            <option value="reserved">Reserved</option>
+                            <option value="maintenance">Maintenance</option>
+                            <option value="available">Available</option>
+                        </select>
+                    </label>
+                    <label t-if="state.unitAction.mode === 'tenant' || state.unitAction.mode === 'owner'">
+                        <span>Name <em>*</em></span>
+                        <input type="text" placeholder="Full name" t-att-value="state.unitAction.name" t-on-input="(ev) => this.state.unitAction.name = ev.target.value"/>
+                    </label>
+                    <label t-if="state.unitAction.mode === 'tenant'">
+                        <span>Start Date</span>
+                        <input type="date" t-att-value="state.unitAction.date_start" t-on-input="(ev) => this.state.unitAction.date_start = ev.target.value"/>
+                    </label>
+                    <label t-if="state.unitAction.mode === 'owner'">
+                        <span>Share %</span>
+                        <input type="number" min="0" max="100" t-att-value="state.unitAction.share" t-on-input="(ev) => this.state.unitAction.share = Number(ev.target.value || 0)"/>
+                    </label>
+                    <div class="pm-modal-actions">
+                        <button type="button" class="pm-btn pm-btn-link" t-on-click="cancelUnitAction">Cancel</button>
+                        <button type="button" class="pm-btn pm-btn-primary" t-att-disabled="state.saving" t-on-click="submitUnitAction">Save</button>
+                    </div>
+                </div>
+            </div>
+            <div class="pm-modal" t-if="state.showOwnershipTransfer" t-on-click="cancelOwnershipTransfer">
+                <div class="pm-modal-card" t-on-click="(ev) => ev.stopPropagation()">
+                    <h2>Record Transfer</h2>
+                    <label>
+                        <span>Unit <em>*</em></span>
+                        <select t-att-value="state.ownershipTransfer.unit_id" t-on-change="(ev) => this.state.ownershipTransfer.unit_id = ev.target.value">
+                            <option value="">Select unit</option>
+                            <t t-foreach="state.ownershipUnits" t-as="row" t-key="row.id">
+                                <option t-att-value="row.id"><t t-esc="row.name"/> — <t t-esc="row.building_name"/></option>
+                            </t>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Owner Name <em>*</em></span>
+                        <input type="text" placeholder="Full name" t-att-value="state.ownershipTransfer.owner_name" t-on-input="(ev) => this.state.ownershipTransfer.owner_name = ev.target.value"/>
+                    </label>
+                    <label>
+                        <span>Type</span>
+                        <select t-att-value="state.ownershipTransfer.owner_type" t-on-change="(ev) => this.state.ownershipTransfer.owner_type = ev.target.value">
+                            <option value="primary">Primary</option>
+                            <option value="co_owner">Co-owner</option>
+                            <option value="corporate">Corporate</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Share %</span>
+                        <input type="number" min="0" max="100" t-att-value="state.ownershipTransfer.share" t-on-input="(ev) => this.state.ownershipTransfer.share = Number(ev.target.value || 0)"/>
+                    </label>
+                    <label>
+                        <span>Effective Date</span>
+                        <input type="date" t-att-value="state.ownershipTransfer.effective_date" t-on-input="(ev) => this.state.ownershipTransfer.effective_date = ev.target.value"/>
+                    </label>
+                    <label>
+                        <span>Status</span>
+                        <select t-att-value="state.ownershipTransfer.status" t-on-change="(ev) => this.state.ownershipTransfer.status = ev.target.value">
+                            <option value="pending">Pending</option>
+                            <option value="active">Active</option>
+                        </select>
+                    </label>
+                    <div class="pm-modal-actions">
+                        <button type="button" class="pm-btn pm-btn-link" t-on-click="cancelOwnershipTransfer">Cancel</button>
+                        <button type="button" class="pm-btn pm-btn-primary" t-att-disabled="state.saving" t-on-click="submitOwnershipTransfer">Save Transfer</button>
+                    </div>
+                </div>
+            </div>
+            <div class="pm-modal" t-if="state.showDocumentUpload" t-on-click="cancelDocumentUpload">
+                <div class="pm-modal-card" t-on-click="(ev) => ev.stopPropagation()">
+                    <h2>Upload Document</h2>
+                    <label>
+                        <span>File <em>*</em></span>
+                        <input type="file" t-on-change="onDocumentFile"/>
+                        <small t-if="state.documentUpload.filename" t-esc="state.documentUpload.filename"/>
+                    </label>
+                    <label>
+                        <span>Document Name <em>*</em></span>
+                        <input type="text" placeholder="Lease Agreement.pdf" t-att-value="state.documentUpload.name" t-on-input="(ev) => this.state.documentUpload.name = ev.target.value"/>
+                    </label>
+                    <label>
+                        <span>Property <em>*</em></span>
+                        <select t-att-value="state.documentUpload.property_id" t-on-change="(ev) => this.state.documentUpload.property_id = ev.target.value">
+                            <option value="">Select property</option>
+                            <t t-foreach="state.documentProperties" t-as="prop" t-key="prop.id">
+                                <option t-att-value="prop.id" t-esc="prop.name"/>
+                            </t>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Category</span>
+                        <select t-att-value="state.documentUpload.category" t-on-change="(ev) => this.state.documentUpload.category = ev.target.value">
+                            <option value="legal">Legal</option>
+                            <option value="building">Building</option>
+                            <option value="property">Property</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Expiry Date</span>
+                        <input type="date" t-att-value="state.documentUpload.expiry_date" t-on-input="(ev) => this.state.documentUpload.expiry_date = ev.target.value"/>
+                    </label>
+                    <div class="pm-modal-actions">
+                        <button type="button" class="pm-btn pm-btn-link" t-on-click="cancelDocumentUpload">Cancel</button>
+                        <button type="button" class="pm-btn pm-btn-primary" t-att-disabled="state.saving" t-on-click="submitDocumentUpload">Upload</button>
+                    </div>
+                </div>
+            </div>
+            <div class="pm-modal" t-if="state.showStatusChange" t-on-click="cancelStatusChange">
+                <div class="pm-modal-card pm-st-modal" t-on-click="(ev) => ev.stopPropagation()">
+                    <div class="pm-st-modal-head">
+                        <div>
+                            <h2>Change Unit Status</h2>
+                            <small t-if="state.statusChange.bulk"><t t-esc="state.statusChange.unit_name"/> • <t t-esc="state.statusChange.property_name"/></small>
+                            <small t-else="">Unit <t t-esc="state.statusChange.unit_name"/> • <t t-esc="state.statusChange.property_name"/></small>
+                        </div>
+                        <button type="button" class="pm-own-close" t-on-click="cancelStatusChange">×</button>
+                    </div>
+                    <div t-if="statusChangeConflict" class="pm-st-warn">
+                        <i class="fa fa-exclamation-triangle"/>
+                        <div>
+                            <strong>Status Conflict Warning</strong>
+                            <p>Warning: New status conflicts with active tenant lease. Changing status to 'Vacant' while a lease is active may cause billing discrepancies.</p>
+                        </div>
+                    </div>
+                    <div class="pm-st-modal-grid">
+                        <label>
+                            <span>Current Status</span>
+                            <div class="pm-st-current">
+                                <i t-attf-class="pm-st-dot #{boardStatusClass(boardFromStatus(state.statusChange.current_status))}"/>
+                                <span t-esc="state.statusChange.current_label"/>
+                            </div>
+                        </label>
+                        <label>
+                            <span>New Status <em>*</em></span>
+                            <select t-att-value="state.statusChange.new_status" t-on-change="(ev) => this.state.statusChange.new_status = ev.target.value">
+                                <option value="available">Available</option>
+                                <option value="occupied">Occupied</option>
+                                <option value="vacant">Vacant</option>
+                                <option value="reserved">Reserved</option>
+                                <option value="maintenance">Unoccupied</option>
+                            </select>
+                        </label>
+                    </div>
+                    <label>
+                        <span>Effective Date <em>*</em></span>
+                        <input type="date" t-att-value="state.statusChange.effective_date" t-on-input="(ev) => this.state.statusChange.effective_date = ev.target.value"/>
+                    </label>
+                    <label>
+                        <span>Reason Code</span>
+                        <select t-att-value="state.statusChange.reason" t-on-change="(ev) => this.state.statusChange.reason = ev.target.value">
+                            <option value="lease_abandonment">Lease Abandonment</option>
+                            <option value="lease_ended">Lease Ended</option>
+                            <option value="tenant_transfer">Tenant Transfer</option>
+                            <option value="maintenance_required">Maintenance Required</option>
+                            <option value="owner_request">Owner Request</option>
+                            <option value="occupancy_update">Occupancy Update</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Notes</span>
+                        <textarea rows="3" placeholder="Add context for this status change" t-att-value="state.statusChange.notes" t-on-input="(ev) => this.state.statusChange.notes = ev.target.value"/>
+                    </label>
+                    <div class="pm-modal-actions">
+                        <button type="button" class="pm-btn pm-btn-outline" t-on-click="cancelStatusChange">Cancel</button>
+                        <button t-if="statusChangeConflict" type="button" class="pm-btn pm-st-force" t-att-disabled="state.saving" t-on-click="submitStatusChange">Force Override Status</button>
+                        <button t-else="" type="button" class="pm-btn pm-btn-primary" t-att-disabled="state.saving" t-on-click="submitStatusChange">Update Status</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

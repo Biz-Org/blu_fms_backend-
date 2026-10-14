@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_property_property_list" model="ir.ui.view">
+        <field name="name">property.property.list</field>
+        <field name="model">property.property</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="property_type"/>
+                <field name="location"/>
+                <field name="city"/>
+                <field name="region"/>
+                <field name="building_count"/>
+                <field name="unit_count"/>
+                <field name="occupancy_rate" widget="progressbar"/>
+                <field name="operational_status" widget="badge"
+                       decoration-success="operational_status == 'active'"
+                       decoration-warning="operational_status == 'maintenance'"/>
+                <field name="health_status" decoration-success="health_status == 'healthy'" decoration-danger="health_status == 'review'" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_property_property_form" model="ir.ui.view">
+        <field name="name">property.property.form</field>
+        <field name="model">property.property</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Property name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="property_type"/>
+                            <field name="operational_status"/>
+                            <field name="region"/>
+                            <field name="city"/>
+                            <field name="location"/>
+                            <field name="street"/>
+                            <field name="state_name"/>
+                            <field name="zip"/>
+                            <field name="country"/>
+                            <field name="description"/>
+                            <field name="category"/>
+                            <field name="lifecycle_state"/>
+                            <field name="planned_buildings"/>
+                            <field name="planned_floors"/>
+                            <field name="planned_units"/>
+                        </group>
+                        <group>
+                            <field name="image_128" widget="image" class="oe_avatar"/>
+                            <field name="area_sqft"/>
+                            <field name="year_built"/>
+                            <field name="acquisition_date"/>
+                            <field name="manager_id"/>
+                            <field name="building_count"/>
+                            <field name="unit_count"/>
+                            <field name="occupancy_rate" widget="progressbar"/>
+                            <field name="health_status"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Buildings">
+                            <field name="building_ids">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="tower_code"/>
+                                    <field name="usage"/>
+                                    <field name="region"/>
+                                    <field name="floor_count"/>
+                                    <field name="unit_count"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Units">
+                            <field name="unit_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="building_id"/>
+                                    <field name="unit_type"/>
+                                    <field name="status" widget="badge"/>
+                                    <field name="tenant_id"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Ownership">
+                            <field name="owner_ids">
+                                <list editable="bottom">
+                                    <field name="partner_id"/>
+                                    <field name="share_percent"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Documents">
+                            <field name="document_ids">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="document_type"/>
+                                    <field name="filename"/>
+                                    <field name="attachment"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Notes">
+                            <field name="amenity_notes" placeholder="Amenities, notes..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_property_property_graph" model="ir.ui.view">
+        <field name="name">property.property.graph</field>
+        <field name="model">property.property</field>
+        <field name="arch" type="xml">
+            <graph string="Property Occupancy" type="bar">
+                <field name="name"/>
+                <field name="occupancy_rate" type="measure"/>
+                <field name="unit_count" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_property_property" model="ir.actions.act_window">
+        <field name="name">Properties</field>
+        <field name="res_model">property.property</field>
+        <field name="view_mode">list,form,graph</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first property</p>
+        </field>
+    </record>
+
+    <record id="action_property_reports" model="ir.actions.act_window">
+        <field name="name">Property Reports</field>
+        <field name="res_model">property.property</field>
+        <field name="view_mode">graph,list</field>
+        <field name="view_id" ref="view_property_property_graph"/>
+    </record>
+</odoo>

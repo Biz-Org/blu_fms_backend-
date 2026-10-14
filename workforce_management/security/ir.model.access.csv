@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_wf_employee,wf.employee,model_wf_employee,base.group_user,1,1,1,1
+access_wf_shift,wf.shift,model_wf_shift,base.group_user,1,1,1,1
+access_wf_roster,wf.roster,model_wf_roster,base.group_user,1,1,1,1
+access_wf_attendance,wf.attendance,model_wf_attendance,base.group_user,1,1,1,1
+access_wf_leave,wf.leave,model_wf_leave,base.group_user,1,1,1,1
+access_wf_skill,wf.skill,model_wf_skill,base.group_user,1,1,1,1
+access_wf_task,wf.task,model_wf_task,base.group_user,1,1,1,1
+access_wf_alert,wf.alert,model_wf_alert,base.group_user,1,1,1,1

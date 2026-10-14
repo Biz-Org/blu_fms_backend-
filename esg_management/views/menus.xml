@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_esg_portal" model="ir.actions.client">
+        <field name="name">ESG &amp; Sustainability</field>
+        <field name="tag">esg_management.portal</field>
+    </record>
+    <menuitem id="menu_esg_root"
+              name="ESG &amp; Sustainability"
+              action="action_esg_portal"
+              web_icon="esg_management,static/description/icon.svg"
+              sequence="25"/>
+</odoo>

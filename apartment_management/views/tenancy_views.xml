@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_property_tenancy_form_apartment" model="ir.ui.view">
+        <field name="name">property.tenancy.form.apartment</field>
+        <field name="model">property.tenancy</field>
+        <field name="inherit_id" ref="property_management.view_property_tenancy_form"/>
+        <field name="arch" type="xml">
+            <field name="state" position="after">
+                <field name="monthly_rent"/>
+                <field name="security_deposit"/>
+                <field name="auto_renew"/>
+                <field name="renewal_state"/>
+                <field name="payment_method"/>
+                <field name="late_fee"/>
+                <field name="notice_days"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_property_tenancy_list_apartment" model="ir.ui.view">
+        <field name="name">property.tenancy.list.apartment</field>
+        <field name="model">property.tenancy</field>
+        <field name="inherit_id" ref="property_management.view_property_tenancy_list"/>
+        <field name="arch" type="xml">
+            <field name="state" position="before">
+                <field name="monthly_rent"/>
+                <field name="renewal_state"/>
+            </field>
+        </field>
+    </record>
+</odoo>

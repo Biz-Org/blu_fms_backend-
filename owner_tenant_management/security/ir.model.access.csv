@@ -1,0 +1,10 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ot_lease_user,ot.lease.user,model_ot_lease,base.group_user,1,1,1,1
+access_ot_payment_user,ot.payment.user,model_ot_payment,base.group_user,1,1,1,1
+access_ot_ledger_user,ot.ledger.user,model_ot_ledger,base.group_user,1,1,1,1
+access_ot_maint_user,ot.maintenance.user,model_ot_maintenance,base.group_user,1,1,1,1
+access_ot_maint_msg_user,ot.maint.message.user,model_ot_maint_message,base.group_user,1,1,1,1
+access_ot_doc_user,ot.document.user,model_ot_document,base.group_user,1,1,1,1
+access_ot_msg_user,ot.message.user,model_ot_message,base.group_user,1,1,1,1
+access_ot_note_user,ot.notification.user,model_ot_notification,base.group_user,1,1,1,1
+access_ot_pref_user,ot.preference.user,model_ot_preference,base.group_user,1,1,1,1
