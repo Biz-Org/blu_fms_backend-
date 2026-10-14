@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="fire_safety_management.Emergency">
+        <div class="o_action o_fs_app">
+            <FsAppShell active="'emergency'">
+                <div class="o_fs_shell">
+                    <div t-if="state.error" class="o_fs_alert">
+                        <i class="fa fa-exclamation-circle"/>
+                        <div t-esc="state.error"/>
+                    </div>
+
+                    <t t-if="state.mode === 'list'">
+                        <div class="o_fs_page_header">
+                            <div>
+                                <h1>Emergency Response</h1>
+                                <p>Activate one emergency at a time, keep a timeline, then close with an outcome. Only a Safety Manager can close.</p>
+                            </div>
+                            <button t-if="canActivate" class="o_fs_btn danger" t-on-click="() => this.setMode('create')">
+                                <i class="fa fa-bell"/> Activate Emergency
+                            </button>
+                        </div>
+
+                        <div t-if="state.loading" class="o_fs_empty">
+                            <h3>Loading emergencies</h3>
+                            <p>Fetching live Fire &amp; Safety records.</p>
+                        </div>
+                        <t t-else="">
+                            <div t-if="hasActive" class="o_fs_alert">
+                                <i class="fa fa-bell"/>
+                                <div>
+                                    <strong>Active emergency</strong>
+                                    <div>Only one active emergency is allowed per company. Review the timeline and close it before activating another.</div>
+                                </div>
+                            </div>
+                            <div class="o_fs_kpi_row">
+                                <FsKpiCard label="'All Emergencies'" value="state.kpis.total" icon="'fa-bell'" onClick.bind="() => this.onFilter('all')"/>
+                                <FsKpiCard label="'Active'" value="state.kpis.active" icon="'fa-exclamation-circle'" tone="state.kpis.active ? 'danger' : ''" onClick.bind="() => this.onFilter('active')"/>
+                                <FsKpiCard label="'Closed'" value="state.kpis.closed" icon="'fa-check'" onClick.bind="() => this.onFilter('closed')"/>
+                            </div>
+                            <div class="o_fs_toolbar">
+                                <div class="o_fs_search">
+                                    <i class="fa fa-search"/>
+                                    <input type="text" placeholder="Search code, location, or notes..." t-att-value="state.search" t-on-change="onSearch"/>
+                                </div>
+                                <select class="o_fs_select" t-att-value="state.typeFilter" t-on-change="onTypeFilter">
+                                    <option value="">Type: All</option>
+                                    <t t-foreach="types" t-as="row" t-key="row.value">
+                                        <option t-att-value="row.value" t-esc="row.label"/>
+                                    </t>
+                                </select>
+                                <div class="o_fs_chips">
+                                    <button t-att-class="state.filter === 'all' ? 'active' : ''" t-on-click="() => this.onFilter('all')">All</button>
+                                    <button t-att-class="state.filter === 'active' ? 'active' : ''" t-on-click="() => this.onFilter('active')">Active</button>
+                                    <button t-att-class="state.filter === 'closed' ? 'active' : ''" t-on-click="() => this.onFilter('closed')">Closed</button>
+                                </div>
+                            </div>
+                            <div class="o_fs_card">
+                                <div class="o_fs_card_head">Emergency register</div>
+                                <t t-if="state.records.length">
+                                    <table class="o_fs_table">
+                                        <thead>
+                                            <tr>
+                                                <th>Emergency</th>
+                                                <th>Type</th>
+                                                <th>Severity</th>
+                                                <th>Activated</th>
+                                                <th>Status</th>
+                                                <th/>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr t-foreach="state.records" t-as="rec" t-key="rec.id" t-on-click="() => this.setMode('detail', rec.id)">
+                                                <td>
+                                                    <div class="o_fs_row_title" t-esc="rec.name"/>
+                                                    <div class="o_fs_row_sub" t-esc="rec.location_detail or m2oName(rec.property_id) or 'No location'"/>
+                                                </td>
+                                                <td><span class="o_fs_pill" t-esc="typeLabel(rec.emergency_type)"/></td>
+                                                <td><span t-attf-class="o_fs_pill {{ severityTone(rec.severity) }}" t-esc="severityLabel(rec.severity)"/></td>
+                                                <td t-esc="formatWhen(rec.activation_datetime)"/>
+                                                <td><FsStatusBadge state="rec.state" label="stateLabel(rec.state)"/></td>
+                                                <td><button class="o_fs_link" t-on-click.stop="() => this.setMode('detail', rec.id)">Open</button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div class="o_fs_pager">
+                                        <span><t t-esc="pageFrom"/>–<t t-esc="pageTo"/> of <t t-esc="state.total"/></span>
+                                        <div class="o_fs_pager_pages">
+                                            <button t-att-disabled="state.page &lt;= 1" t-on-click="() => this.onPage(-1)">Prev</button>
+                                            <button t-att-disabled="state.page &gt;= pageCount" t-on-click="() => this.onPage(1)">Next</button>
+                                        </div>
+                                    </div>
+                                </t>
+                                <div t-else="" class="o_fs_empty">
+                                    <h3>No emergencies match</h3>
+                                    <p t-if="canActivate">Activate an emergency to start the response timeline. Absence of an active record means none is in progress.</p>
+                                    <p t-else="">Emergency records will appear here.</p>
+                                    <button t-if="canActivate" class="o_fs_btn danger mt-2" t-on-click="() => this.setMode('create')">
+                                        <i class="fa fa-bell"/> Activate Emergency
+                                    </button>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+
+                    <t t-if="state.mode === 'create'">
+                        <button class="o_fs_back" t-on-click="() => this.setMode('list')"><i class="fa fa-arrow-left"/> Back to Emergencies</button>
+                        <div class="o_fs_page_header">
+                            <div>
+                                <h1>Activate Emergency</h1>
+                                <p>Safety Manager or Security can activate. Only one active emergency is allowed per company. Close is Safety Manager only.</p>
+                            </div>
+                        </div>
+                        <div t-if="hasActive" class="o_fs_alert">
+                            <i class="fa fa-bell"/>
+                            <div>
+                                <strong>An emergency is already active</strong>
+                                <div>Close the current emergency before activating another.</div>
+                            </div>
+                        </div>
+                        <div class="o_fs_form_section">
+                            <h3>What is happening</h3>
+                            <div class="o_fs_form_grid">
+                                <div>
+                                    <label>Type *</label>
+                                    <select t-model="state.form.emergency_type">
+                                        <t t-foreach="types" t-as="row" t-key="row.value">
+                                            <option t-att-value="row.value" t-esc="row.label"/>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Severity *</label>
+                                    <select t-model="state.form.severity">
+                                        <option value="low">Low</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="high">High</option>
+                                        <option value="critical">Critical</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Activation time</label>
+                                    <input type="datetime-local" t-model="state.form.activation_datetime"/>
+                                </div>
+                                <div>
+                                    <label>Location detail</label>
+                                    <input type="text" t-model="state.form.location_detail" placeholder="Floor, wing, stair, or plant room"/>
+                                </div>
+                                <div>
+                                    <label>Response team</label>
+                                    <input type="text" t-model="state.form.response_team" placeholder="On-site team. Command Center link is not implemented."/>
+                                </div>
+                            </div>
+                            <label class="mt-3">Information</label>
+                            <textarea t-model="state.form.information" placeholder="What is known now, who is affected, and first actions"/>
+                        </div>
+                        <div class="o_fs_form_section">
+                            <h3>Location (placeholder)</h3>
+                            <p class="o_fs_hint">Property, building, and area are integration placeholders until Property Management exists.</p>
+                            <div class="o_fs_form_grid">
+                                <div>
+                                    <label>Property</label>
+                                    <select t-model="state.form.property_id" t-on-change="onPropertyChange">
+                                        <option value="">None</option>
+                                        <t t-foreach="state.lookups.properties" t-as="row" t-key="row.id">
+                                            <option t-att-value="row.id" t-esc="row.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Building / Tower</label>
+                                    <select t-model="state.form.building_id" t-on-change="onBuildingChange">
+                                        <option value="">None</option>
+                                        <t t-foreach="filteredBuildings" t-as="row" t-key="row.id">
+                                            <option t-att-value="row.id" t-esc="row.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Area / Floor</label>
+                                    <select t-model="state.form.area_id">
+                                        <option value="">None</option>
+                                        <t t-foreach="filteredAreas" t-as="row" t-key="row.id">
+                                            <option t-att-value="row.id" t-esc="row.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="o_fs_footer_bar">
+                            <span t-if="state.busy" class="o_fs_busy" t-esc="state.busy"/>
+                            <button class="o_fs_btn secondary" t-att-disabled="state.busy" t-on-click="() => this.setMode('list')">Cancel</button>
+                            <button class="o_fs_btn danger" t-att-disabled="state.busy or hasActive" t-on-click="activateEmergency">
+                                <i class="fa fa-bell"/> Activate Emergency
+                            </button>
+                        </div>
+                    </t>
+
+                    <t t-if="state.mode === 'detail'">
+                        <button class="o_fs_back" t-on-click="() => this.setMode('list')"><i class="fa fa-arrow-left"/> Back to Emergencies</button>
+                        <div t-if="state.loading" class="o_fs_empty"><h3>Loading emergency</h3></div>
+                        <t t-elif="state.record">
+                            <div class="o_fs_page_header">
+                                <div>
+                                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                                        <h1 t-esc="emergency.name"/>
+                                        <FsStatusBadge state="emergency.state" label="stateLabel(emergency.state)"/>
+                                        <span class="o_fs_pill" t-esc="typeLabel(emergency.emergency_type)"/>
+                                        <span t-attf-class="o_fs_pill {{ severityTone(emergency.severity) }}" t-esc="severityLabel(emergency.severity)"/>
+                                    </div>
+                                    <p>
+                                        <t t-esc="formatWhen(emergency.activation_datetime)"/>
+                                        <t t-if="m2oName(emergency.activated_by_id)"> · Activated by <t t-esc="m2oName(emergency.activated_by_id)"/></t>
+                                        <t t-if="emergency.location_detail"> · <t t-esc="emergency.location_detail"/></t>
+                                        <t t-if="m2oName(emergency.property_id)"> · <t t-esc="m2oName(emergency.property_id)"/></t>
+                                    </p>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button t-if="canClose" class="o_fs_btn primary" t-att-disabled="state.busy" t-on-click="closeEmergency">Close Emergency</button>
+                                </div>
+                            </div>
+
+                            <div class="o_fs_detail_grid">
+                                <div class="o_fs_card">
+                                    <div class="o_fs_card_head">Record</div>
+                                    <div class="o_fs_meta">
+                                        <div><span>Activated</span><strong t-esc="formatWhen(emergency.activation_datetime)"/></div>
+                                        <div><span>Closed</span><strong t-esc="formatWhen(emergency.closed_datetime)"/></div>
+                                        <div><span>Response team</span><strong t-esc="emergency.response_team or '—'"/></div>
+                                        <div><span>Assignee location</span><strong t-esc="m2oName(emergency.property_id) or '—'"/></div>
+                                    </div>
+                                    <p class="o_fs_notes" t-esc="stripHtml(emergency.information) or 'No information yet'"/>
+                                </div>
+                                <div class="o_fs_card">
+                                    <div class="o_fs_card_head">Outcome</div>
+                                    <p t-if="emergency.state === 'closed'" class="o_fs_notes" t-esc="stripHtml(emergency.outcome) or 'No outcome recorded'"/>
+                                    <t t-else="">
+                                        <p class="o_fs_hint">A Safety Manager records the outcome and closes the emergency. Security can keep the timeline current until then.</p>
+                                        <textarea t-if="canClose" t-model="state.closeOutcome" placeholder="Containment, evacuation result, injuries, all-clear..."/>
+                                    </t>
+                                </div>
+                            </div>
+
+                            <div class="o_fs_card mt-3">
+                                <div class="o_fs_card_head">Timeline</div>
+                                <t t-foreach="state.events" t-as="row" t-key="row.id">
+                                    <div class="o_fs_list_row">
+                                        <div>
+                                            <div class="o_fs_row_title" t-esc="row.name"/>
+                                            <div class="o_fs_row_sub">
+                                                <t t-esc="formatWhen(row.event_datetime)"/>
+                                                <t t-if="m2oName(row.user_id)"> · <t t-esc="m2oName(row.user_id)"/></t>
+                                            </div>
+                                            <p t-if="row.description" class="o_fs_notes" t-esc="row.description"/>
+                                        </div>
+                                    </div>
+                                </t>
+                                <FsEmptyState t-if="!state.events.length" title="'No timeline yet'" hint="'Activation, field updates, and closure are logged here.'"/>
+                                <t t-if="canAddEvent">
+                                    <div class="o_fs_inline_panel">
+                                        <h4>Add timeline event</h4>
+                                        <div class="o_fs_form_grid">
+                                            <div>
+                                                <label>Event *</label>
+                                                <input type="text" t-model="state.eventForm.name" placeholder="Alarm silenced, floor cleared, fire service on site..."/>
+                                            </div>
+                                        </div>
+                                        <textarea class="mt-2" t-model="state.eventForm.description" placeholder="Notes"/>
+                                        <button class="o_fs_btn secondary mt-2" t-att-disabled="state.busy" t-on-click="addEvent">Add event</button>
+                                    </div>
+                                </t>
+                            </div>
+                            <div t-if="state.busy" class="o_fs_busy mt-3" t-esc="state.busy"/>
+                        </t>
+                    </t>
+                </div>
+            </FsAppShell>
+        </div>
+    </t>
+</templates>

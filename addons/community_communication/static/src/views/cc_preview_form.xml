@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="community_communication.PreviewFormView" t-inherit="web.FormView" t-inherit-mode="primary">
+        <xpath expr="//t[@t-component='props.Renderer']" position="replace">
+            <div class="o_cc_preview_layout o_cc_shell">
+                <div class="o_cc_preview_form min-w-0">
+                    <t t-component="props.Renderer" record="model.root" Compiler="props.Compiler" readonly="props.readonly" archInfo="archInfo" translateAlert="translateAlert" onNotebookPageChange.bind="onNotebookPageChange" activeNotebookPages="props.state and props.state.activeNotebookPages"/>
+                </div>
+                <CcLivePreview record="model.root"/>
+            </div>
+        </xpath>
+    </t>
+</templates>

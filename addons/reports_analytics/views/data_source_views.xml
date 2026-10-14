@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_analytics_data_source_list" model="ir.ui.view">
+        <field name="name">analytics.data.source.list</field>
+        <field name="model">analytics.data.source</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="technical_identifier"/>
+                <field name="module"/>
+                <field name="model_name"/>
+                <field name="is_available"/>
+                <field name="active" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_analytics_data_source_form" model="ir.ui.view">
+        <field name="name">analytics.data.source.form</field>
+        <field name="model">analytics.data.source</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="technical_identifier"/>
+                            <field name="module"/>
+                        </group>
+                        <group>
+                            <field name="model_name"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group string="Description">
+                        <field name="description" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_analytics_data_source_search" model="ir.ui.view">
+        <field name="name">analytics.data.source.search</field>
+        <field name="model">analytics.data.source</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="technical_identifier"/>
+                <field name="module"/>
+                <field name="model_name"/>
+                <filter string="Active" name="filter_active" domain="[('active', '=', True)]"/>
+                <filter string="Archived" name="filter_archived" domain="[('active', '=', False)]"/>
+                <group>
+                    <filter string="Module" name="group_module" context="{'group_by': 'module'}"/>
+                    <filter string="Model" name="group_model" context="{'group_by': 'model_name'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_analytics_data_source" model="ir.actions.act_window">
+        <field name="name">Data Sources</field>
+        <field name="res_model">analytics.data.source</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_analytics_data_source_search"/>
+        <field name="context">{'search_default_filter_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Register a data source
+            </p>
+            <p>
+                The registry maps authorized FMS modules and models for reports and KPIs. Register entries when integrating a module; do not duplicate operational records here.
+            </p>
+        </field>
+    </record>
+</odoo>

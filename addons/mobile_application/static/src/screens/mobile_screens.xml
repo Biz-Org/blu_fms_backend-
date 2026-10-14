@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="mobile_application.HomeScreen">
+        <div class="o_mob_screen">
+            <div class="o_mob_greeting">
+                <h1><t t-esc="data.greeting"/> <t t-esc="data.profile.name"/></h1>
+                <p t-if="data.profile.building or data.profile.unit">
+                    <t t-esc="data.profile.building"/> <t t-if="data.profile.unit">· <t t-esc="data.profile.unit"/></t>
+                </p>
+            </div>
+            <MobileSectionHeader title="'Quick Actions'"/>
+            <div class="o_mob_quick_row">
+                <MobileQuickAction t-if="canService" label="'Service Request'" icon="'fa-wrench'" onClick="() => this.onRoute('service_requests')"/>
+                <MobileQuickAction t-if="canBooking" label="'Book Amenity'" icon="'fa-building'" onClick="() => this.onRoute('amenity_booking')"/>
+                <MobileQuickAction t-if="canVisitor" label="'Add Visitor'" icon="'fa-user-plus'" onClick="() => this.onRoute('visitor_create')"/>
+                <MobileQuickAction t-if="canPayments" label="'Make Payment'" icon="'fa-credit-card'" onClick="() => this.onRoute('payments')"/>
+            </div>
+            <MobileSectionHeader title="'Important Updates'"/>
+            <t t-if="data.important_updates.length">
+                <t t-foreach="data.important_updates" t-as="item" t-key="item_index">
+                    <MobileListCard title="item.title" subtitle="item.category" onClick="() => this.onRoute('community')"/>
+                </t>
+            </t>
+            <MobileEmptyState t-else="" title="'Nothing available'" hint="'No community updates right now.'" icon="'fa-bullhorn'"/>
+            <MobileSectionHeader title="'My Requests'"/>
+            <t t-if="data.my_requests.length">
+                <t t-foreach="data.my_requests" t-as="req" t-key="req.id">
+                    <MobileListCard title="req.name" subtitle="req.category" state="req.state" stateLabel="req.stateLabel" stateTone="req.stateTone" onClick="() => this.onRoute('service_requests')"/>
+                </t>
+            </t>
+            <MobileEmptyState t-else="" title="'No requests'" hint="'You have no active service requests.'" icon="'fa-inbox'"/>
+        </div>
+    </t>
+
+    <t t-name="mobile_application.ServicesScreen">
+        <div class="o_mob_screen">
+            <MobileSectionHeader title="'Services'"/>
+            <div class="o_mob_service_grid">
+                <MobileCard className="'o_mob_service_card'" t-if="modules.service_requests" onClick="() => this.onRoute('service_requests')">
+                    <i class="fa fa-wrench"/><span>Service Requests</span>
+                </MobileCard>
+                <MobileCard className="'o_mob_service_card'" t-if="modules.helpdesk" onClick="() => this.onRoute('helpdesk')">
+                    <i class="fa fa-life-ring"/><span>Helpdesk</span>
+                </MobileCard>
+                <MobileCard className="'o_mob_service_card'" t-if="modules.amenity_booking" onClick="() => this.onRoute('amenity_booking')">
+                    <i class="fa fa-building"/><span>Amenity Booking</span>
+                </MobileCard>
+                <MobileCard className="'o_mob_service_card'" t-if="modules.visitor_management" onClick="() => this.onRoute('visitors')">
+                    <i class="fa fa-id-card-o"/><span>Visitor Management</span>
+                </MobileCard>
+                <MobileCard className="'o_mob_service_card'" t-if="modules.payments" onClick="() => this.onRoute('payments')">
+                    <i class="fa fa-credit-card"/><span>Payments</span>
+                </MobileCard>
+                <MobileCard className="'o_mob_service_card'" t-if="modules.community" onClick="() => this.onRoute('community')">
+                    <i class="fa fa-users"/><span>Community</span>
+                </MobileCard>
+            </div>
+            <MobileEmptyState t-if="!hasAnyService" title="'No services available'" hint="'Your role does not have mobile services enabled.'" icon="'fa-th-large'"/>
+        </div>
+    </t>
+
+    <t t-name="mobile_application.AlertsScreen">
+        <div class="o_mob_screen">
+            <div class="o_mob_row_actions">
+                <button type="button" class="o_mob_btn secondary" t-on-click="markAllRead">Mark all read</button>
+            </div>
+            <t t-if="items.length">
+                <t t-foreach="items" t-as="note" t-key="note.id">
+                    <MobileCard className="note.is_read ? 'o_mob_note read' : 'o_mob_note'" onClick="() => this.openNote(note)">
+                        <div class="o_mob_list_title" t-esc="note.title"/>
+                        <p t-esc="note.message"/>
+                        <small t-esc="note.created_at"/>
+                    </MobileCard>
+                </t>
+            </t>
+            <MobileEmptyState t-else="" title="'No notifications'" hint="'You are all caught up.'" icon="'fa-bell-o'"/>
+        </div>
+    </t>
+
+    <t t-name="mobile_application.ProfileScreen">
+        <div class="o_mob_screen">
+            <MobileCard>
+                <div class="o_mob_profile_head">
+                    <img class="o_mob_avatar_lg" t-att-src="profile.avatar_url" alt=""/>
+                    <div>
+                        <h2 t-esc="profile.name"/>
+                        <p t-esc="profile.role"/>
+                        <p t-if="profile.building" t-esc="profile.building"/>
+                    </div>
+                </div>
+            </MobileCard>
+            <div class="o_mob_menu_list">
+                <button type="button" t-on-click="() => this.onRoute('digital_id')"><i class="fa fa-qrcode"/> Digital ID</button>
+                <button type="button" t-on-click="() => this.onRoute('payments')" t-if="modules.payments"><i class="fa fa-wallet"/> Wallet &amp; Payments</button>
+                <button type="button" class="o_mob_logout" t-on-click="logout"><i class="fa fa-sign-out"/> Logout</button>
+            </div>
+            <p class="o_mob_push_hint" t-if="!pushConfigured">Push notifications are not configured. In-app alerts are still available.</p>
+        </div>
+    </t>
+
+    <t t-name="mobile_application.VisitorsScreen">
+        <div class="o_mob_screen">
+            <div class="o_mob_row_actions">
+                <button t-if="role === 'resident'" type="button" class="o_mob_btn primary" t-on-click="() => this.onRoute('visitor_create')">Add Visitor</button>
+            </div>
+            <t t-if="items.length">
+                <t t-foreach="items" t-as="v" t-key="v.id">
+                    <MobileListCard title="v.name" subtitle="v.purpose" state="v.state" stateLabel="v.stateLabel" stateTone="v.stateTone" onClick="() => this.openVisitor(v)"/>
+                </t>
+            </t>
+            <MobileEmptyState t-else="" title="'No visitors'" hint="'No visitor records found.'" icon="'fa-user-o'"/>
+        </div>
+    </t>
+
+    <t t-name="mobile_application.GenericListScreen">
+        <div class="o_mob_screen">
+            <MobileEmptyState t-if="unavailable" title="'Not available'" t-att-hint="message" icon="'fa-exclamation-circle'"/>
+            <t t-elif="items.length">
+                <t t-foreach="items" t-as="row" t-key="row.id or row_index">
+                    <MobileListCard title="row.title or row.name or row.question" subtitle="row.subtitle or row.date or ''"/>
+                </t>
+            </t>
+            <MobileEmptyState t-else="" title="'No Data'" hint="'Nothing to show yet.'" icon="'fa-inbox'"/>
+        </div>
+    </t>
+
+    <t t-name="mobile_application.FormScreen">
+        <div class="o_mob_screen">
+            <t t-foreach="fields" t-as="field" t-key="field.name">
+                <label class="o_mob_label" t-esc="field.label"/>
+                <input t-if="field.type !== 'textarea'" class="o_mob_input" t-att-type="field.type || 'text'" t-att-placeholder="field.placeholder" t-model="state.form[field.name]"/>
+                <textarea t-else="" class="o_mob_input" t-att-placeholder="field.placeholder" t-model="state.form[field.name]"/>
+            </t>
+            <button type="button" class="o_mob_btn primary" t-att-disabled="busy" t-on-click="submit" t-esc="submitLabel"/>
+        </div>
+    </t>
+
+    <t t-name="mobile_application.DigitalIdScreen">
+        <div class="o_mob_screen o_mob_digital">
+            <MobileCard>
+                <img class="o_mob_avatar_lg" t-att-src="data.avatar_url" alt=""/>
+                <h2 t-esc="data.name"/>
+                <p t-esc="data.role"/>
+                <p t-esc="data.id_number"/>
+                <MobileStatusBadge label="data.active ? 'Active' : 'Inactive'" tone="data.active ? 'success' : 'danger'"/>
+                <div class="o_mob_qr" t-esc="data.token"/>
+                <p class="o_mob_qr_hint">Scan for verification by authorized staff or security.</p>
+            </MobileCard>
+        </div>
+    </t>
+
+    <t t-name="mobile_application.PaymentsScreen">
+        <div class="o_mob_screen">
+            <MobileCard t-if="available">
+                <div class="o_mob_balance_label">Outstanding balance</div>
+                <div class="o_mob_balance" t-esc="balanceDisplay"/>
+            </MobileCard>
+            <MobileEmptyState t-if="!available" title="'Not available'" hint="message or 'Finance module is not available.'" icon="'fa-credit-card'"/>
+            <t t-if="items.length">
+                <MobileSectionHeader title="'Transaction history'"/>
+                <t t-foreach="items" t-as="tx" t-key="tx.id">
+                    <MobileListCard title="tx.description" subtitle="tx.currency" state="tx.state" stateLabel="tx.stateLabel" stateTone="tx.stateTone"/>
+                </t>
+            </t>
+            <MobileEmptyState t-elif="available" title="'No transactions'" hint="'No payment history yet.'" icon="'fa-list'"/>
+            <p class="o_mob_push_hint" t-if="available and !providerConfigured">Online payment provider is not configured.</p>
+        </div>
+    </t>
+</templates>

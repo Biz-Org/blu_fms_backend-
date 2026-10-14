@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_execution_pdf" model="ir.actions.report">
+        <field name="name">Analytics Report</field>
+        <field name="model">analytics.report.execution</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">reports_analytics.execution_report</field>
+        <field name="report_file">reports_analytics.execution_report</field>
+        <field name="print_report_name">'%s' % (object.report_id.name)</field>
+        <field name="binding_model_id" ref="model_analytics_report_execution"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="execution_report">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2 t-field="doc.report_id.name"/>
+                        <p>
+                            Generated: <span t-field="doc.execution_datetime"/>
+                            · Status: <span t-field="doc.status"/>
+                            · Rows: <span t-field="doc.row_count"/>
+                        </p>
+                        <t t-set="payload" t-value="doc.result_json or {}"/>
+                        <t t-if="not payload.get('available')">
+                            <p>No Data / Data unavailable.</p>
+                            <p t-esc="payload.get('reason')"/>
+                        </t>
+                        <t t-else="">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th t-foreach="payload.get('columns') or []" t-as="col" t-esc="col.get('label')"/>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="payload.get('rows') or []" t-as="row">
+                                        <td t-foreach="payload.get('columns') or []" t-as="col" t-esc="row.get(col.get('name'))"/>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </t>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

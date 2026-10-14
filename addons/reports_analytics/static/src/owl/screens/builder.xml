@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="reports_analytics.Builder">
+        <div class="o_action o_ra_app">
+            <RaAppShell active="'builder'" onNewAnalysis.bind="openAnalysis">
+                <div class="o_ra_shell">
+                    <div class="o_ra_page_header">
+                        <div>
+                            <h1>Create Report</h1>
+                            <p>Build a report using data from your FMS modules.</p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="o_ra_btn secondary" t-on-click="cancel">Cancel</button>
+                            <button class="o_ra_btn secondary" t-on-click="saveDraft" t-att-disabled="ui.busy">Save Draft</button>
+                            <button class="o_ra_btn primary" t-on-click="generate" t-att-disabled="ui.busy">Generate Report</button>
+                        </div>
+                    </div>
+                    <div class="o_ra_builder_grid">
+                        <div class="o_ra_card">
+                            <div class="o_ra_card_head">Report Information</div>
+                            <label class="small text-muted">Report Name</label>
+                            <input class="o_ra_input w-100 mb-2" t-model="ui.name" placeholder="e.g. Q3 Maintenance Overview"/>
+                            <div class="d-flex gap-2">
+                                <div class="flex-grow-1">
+                                    <label class="small text-muted">Data Source</label>
+                                    <select class="o_ra_select w-100" t-att-value="ui.data_source_id" t-on-change="onSourceChange">
+                                        <option t-foreach="state.bootstrap.sources" t-as="src" t-key="src.id" t-att-value="src.id" t-esc="src.name + (src.available ? '' : ' (unavailable)')"/>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="small text-muted">Report Type</label>
+                                    <select class="o_ra_select w-100" t-model="ui.report_type">
+                                        <option value="tabular">Tabular</option>
+                                        <option value="kpi">KPI</option>
+                                        <option value="chart">Chart</option>
+                                        <option value="summary">Summary</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="o_ra_card">
+                            <div class="o_ra_card_head">Filters</div>
+                            <select class="o_ra_select w-100 mb-2" t-model="ui.filters.property_id">
+                                <option value="">All Properties</option>
+                                <option t-foreach="state.bootstrap.properties" t-as="row" t-key="row.key" t-att-value="row.id" t-esc="row.name"/>
+                            </select>
+                            <select class="o_ra_select w-100 mb-2" t-model="ui.filters.date_range">
+                                <option value="last_7">Last 7 Days</option>
+                                <option value="last_30">Last 30 Days</option>
+                                <option value="last_90">Last 90 Days</option>
+                                <option value="this_year">This Year</option>
+                            </select>
+                            <input class="o_ra_input w-100" t-model="ui.filters.category" placeholder="Category"/>
+                        </div>
+                    </div>
+                    <div class="o_ra_builder_grid mt-3">
+                        <div class="o_ra_card">
+                            <div class="o_ra_card_head">Data Selection</div>
+                            <div class="d-flex gap-4">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between"><span class="small text-muted">Available Fields</span><a href="#" t-on-click.prevent="selectAll">Select All</a></div>
+                                    <div class="o_ra_check_col">
+                                        <label t-foreach="ui.fields" t-as="field" t-key="field.name">
+                                            <input type="checkbox" t-att-checked="ui.selected.includes(field.name)" t-on-change="() => this.toggleField(field.name)"/>
+                                            <t t-esc="field.label"/>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between"><span class="small text-muted">Metrics</span><a href="#" t-on-click.prevent="clearAll">Clear All</a></div>
+                                    <div class="o_ra_check_col">
+                                        <label t-foreach="ui.metrics" t-as="metric" t-key="metric.name">
+                                            <input type="checkbox" t-att-checked="ui.selectedMetrics.includes(metric.name)" t-on-change="() => this.toggleMetric(metric.name)"/>
+                                            <t t-esc="metric.label"/>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="o_ra_btn secondary mt-3" t-on-click="preview">Refresh Preview</button>
+                        </div>
+                        <div>
+                            <div class="o_ra_card mb-3">
+                                <div class="o_ra_card_head">Visualization</div>
+                                <div class="o_ra_viz_btns">
+                                    <button t-att-class="ui.visualization === 'table' ? 'active' : ''" t-on-click="() => this.setViz('table')" title="Table"><i class="fa fa-table"/></button>
+                                    <button t-att-class="ui.visualization === 'bar' ? 'active' : ''" t-on-click="() => this.setViz('bar')" title="Bar"><i class="fa fa-bar-chart"/></button>
+                                    <button t-att-class="ui.visualization === 'line' ? 'active' : ''" t-on-click="() => this.setViz('line')" title="Line"><i class="fa fa-line-chart"/></button>
+                                    <button t-att-class="ui.visualization === 'pie' ? 'active' : ''" t-on-click="() => this.setViz('pie')" title="Pie"><i class="fa fa-pie-chart"/></button>
+                                    <button t-att-class="ui.visualization === 'kpi' ? 'active' : ''" t-on-click="() => this.setViz('kpi')" title="KPI"><i class="fa fa-dashboard"/></button>
+                                    <button t-att-class="ui.visualization === 'area' ? 'active' : ''" t-on-click="() => this.setViz('area')" title="Area"><i class="fa fa-area-chart"/></button>
+                                </div>
+                            </div>
+                            <div class="o_ra_card">
+                                <div class="o_ra_card_head">Preview</div>
+                                <t t-if="ui.preview and !ui.preview.available">
+                                    <RaEmptyState title="'Data unavailable'" hint="ui.preview.reason"/>
+                                </t>
+                                <t t-elif="ui.preview">
+                                    <table class="o_ra_table">
+                                        <thead>
+                                            <tr>
+                                                <th t-foreach="ui.preview.columns" t-as="col" t-key="col.name" t-esc="col.label"/>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr t-foreach="previewRows" t-as="row" t-key="row.id">
+                                                <td t-foreach="ui.preview.columns" t-as="col" t-key="col.name" t-esc="row[col.name]"/>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </t>
+                                <RaEmptyState t-else="" title="'Preview based on queried data'" hint="'Select a source and refresh preview.'"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <t t-call="reports_analytics.AnalysisModal"/>
+            </RaAppShell>
+        </div>
+    </t>
+</templates>

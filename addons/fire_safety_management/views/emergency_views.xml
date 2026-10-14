@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_fs_emergency_list" model="ir.ui.view">
+        <field name="name">fire.safety.emergency.list</field>
+        <field name="model">fire.safety.emergency</field>
+        <field name="arch" type="xml">
+            <list class="o_fs_app">
+                <field name="name"/>
+                <field name="emergency_type"/>
+                <field name="severity"/>
+                <field name="activation_datetime"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_fs_emergency_form" model="ir.ui.view">
+        <field name="name">fire.safety.emergency.form</field>
+        <field name="model">fire.safety.emergency</field>
+        <field name="arch" type="xml">
+            <form class="o_fs_app">
+                <header>
+                    <button name="action_close_emergency" type="object" string="Close Emergency" class="btn-primary" invisible="state != 'active'" groups="fire_safety_management.group_fire_safety_manager"/>
+                    <field name="state" widget="statusbar" statusbar_visible="active,closed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title"><h1><field name="name"/></h1></div>
+                    <group>
+                        <group>
+                            <field name="emergency_type"/>
+                            <field name="severity"/>
+                            <field name="activation_datetime"/>
+                            <field name="activated_by_id"/>
+                            <field name="response_team"/>
+                            <field name="command_center_ref" groups="base.group_no_one"/>
+                        </group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="property_id"/>
+                            <field name="building_id"/>
+                            <field name="area_id"/>
+                            <field name="location_detail"/>
+                            <field name="closed_datetime"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Information">
+                            <field name="information"/>
+                        </page>
+                        <page string="Timeline">
+                            <field name="event_ids">
+                                <list>
+                                    <field name="event_datetime"/>
+                                    <field name="name"/>
+                                    <field name="user_id"/>
+                                    <field name="description"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Outcome">
+                            <field name="outcome"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_fs_emergency" model="ir.actions.act_window">
+        <field name="name">Emergency Response</field>
+        <field name="res_model">fire.safety.emergency</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

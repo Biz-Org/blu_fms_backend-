@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="reports_analytics.Alerts">
+        <div class="o_action o_ra_app">
+            <RaAppShell active="'alerts'" onNewAnalysis.bind="openAnalysis">
+                <div class="o_ra_shell">
+                    <div class="o_ra_page_header">
+                        <div>
+                            <h1>Analytics Alerts</h1>
+                            <p>Monitor and manage threshold-based operational alerts.</p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <select class="o_ra_select" t-model="ui.severity" t-on-change="() => this.reload()">
+                                <option value="">Severity: All</option>
+                                <option value="info">Informational</option>
+                                <option value="warning">Warning</option>
+                                <option value="high">High</option>
+                                <option value="critical">Critical</option>
+                            </select>
+                            <button class="o_ra_btn primary" t-on-click="openModal">Create Alert</button>
+                        </div>
+                    </div>
+                    <div class="o_ra_card">
+                        <table class="o_ra_table">
+                            <thead>
+                                <tr>
+                                    <th>Alert</th><th>Metric</th><th>Current Value</th><th>Threshold</th>
+                                    <th>Property</th><th>Severity</th><th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="ui.rows" t-as="row" t-key="row.id">
+                                    <td>
+                                        <div t-esc="row.name"/>
+                                        <div class="small text-muted" t-esc="row.module"/>
+                                    </td>
+                                    <td t-esc="row.metric"/>
+                                    <td t-esc="row.available ? row.current_value : 'No Data'"/>
+                                    <td t-esc="row.condition + ' ' + row.threshold"/>
+                                    <td t-esc="row.property_ref or '—'"/>
+                                    <td><RaStatusBadge state="row.severity"/></td>
+                                    <td>
+                                        <button class="o_ra_btn secondary" t-on-click="() => this.acknowledge(row)">Acknowledge</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <t t-if="!ui.rows.length">
+                            <RaEmptyState title="'No alerts'" hint="'Create an alert to evaluate KPI thresholds on a schedule.'"/>
+                        </t>
+                    </div>
+                </div>
+                <div t-if="ui.showModal" class="o_ra_modal_backdrop" t-on-click="closeModal">
+                    <div class="o_ra_modal" t-on-click.stop="">
+                        <h3>Create Analytics Alert</h3>
+                        <label>Alert Name</label>
+                        <input class="o_ra_input w-100" t-model="ui.form.name" placeholder="e.g. HVAC High Energy Consumption"/>
+                        <div class="d-flex gap-2">
+                            <div class="flex-grow-1">
+                                <label>Alert Type</label>
+                                <select class="o_ra_select w-100" t-model="ui.form.alert_type">
+                                    <option value="threshold">Threshold</option>
+                                    <option value="target">Target</option>
+                                    <option value="trend">Trend</option>
+                                </select>
+                            </div>
+                            <div class="flex-grow-1">
+                                <label>Severity</label>
+                                <select class="o_ra_select w-100" t-model="ui.form.severity">
+                                    <option value="info">Info</option>
+                                    <option value="warning">Warning</option>
+                                    <option value="high">High</option>
+                                    <option value="critical">Critical</option>
+                                </select>
+                            </div>
+                        </div>
+                        <label>Module</label>
+                        <input class="o_ra_input w-100" t-model="ui.form.module" placeholder="Energy, Compliance…"/>
+                        <label>KPI / Metric</label>
+                        <select class="o_ra_select w-100" t-model="ui.form.kpi_id">
+                            <option value="">Select KPI</option>
+                            <option t-foreach="ui.kpis" t-as="kpi" t-key="kpi.id" t-att-value="kpi.id" t-esc="kpi.name"/>
+                        </select>
+                        <div class="d-flex gap-2">
+                            <div class="flex-grow-1">
+                                <label>Condition</label>
+                                <select class="o_ra_select w-100" t-model="ui.form.condition">
+                                    <option value="gt">Greater Than</option>
+                                    <option value="gte">Greater or Equal</option>
+                                    <option value="lt">Less Than</option>
+                                    <option value="lte">Less or Equal</option>
+                                    <option value="eq">Equal</option>
+                                </select>
+                            </div>
+                            <div class="flex-grow-1">
+                                <label>Threshold / Target</label>
+                                <input class="o_ra_input w-100" type="number" t-model="ui.form.threshold"/>
+                            </div>
+                        </div>
+                        <label>Recipients</label>
+                        <div class="o_ra_check_col">
+                            <label t-foreach="state.bootstrap.users" t-as="userRow" t-key="userRow.id">
+                                <input type="checkbox" t-on-change="() => this.toggleRecipient(userRow.id)"/>
+                                <t t-esc="userRow.name"/>
+                            </label>
+                        </div>
+                        <label>Method</label>
+                        <div class="d-flex gap-3">
+                            <label><input type="checkbox" t-model="ui.form.notify_in_app"/> In-App</label>
+                            <label><input type="checkbox" t-model="ui.form.notify_email"/> Email</label>
+                            <label><input type="checkbox" t-model="ui.form.notify_sms"/> SMS</label>
+                        </div>
+                        <label>Frequency</label>
+                        <select class="o_ra_select w-100" t-model="ui.form.frequency">
+                            <option value="once">Once</option>
+                            <option value="every">Every evaluation</option>
+                            <option value="daily">Daily while persistent</option>
+                        </select>
+                        <div class="o_ra_modal_actions">
+                            <button class="o_ra_btn secondary" t-on-click="closeModal">Cancel</button>
+                            <button class="o_ra_btn primary" t-on-click="save">Create Alert</button>
+                        </div>
+                    </div>
+                </div>
+                <t t-call="reports_analytics.AnalysisModal"/>
+            </RaAppShell>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_iot_alert_list" model="ir.ui.view">
+        <field name="name">integration.iot.alert.list</field>
+        <field name="model">integration.iot.alert</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="alert_type"/>
+                <field name="priority"/>
+                <field name="state"/>
+                <field name="device_id"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_iot_alert_form" model="ir.ui.view">
+        <field name="name">integration.iot.alert.form</field>
+        <field name="model">integration.iot.alert</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_acknowledge" type="object" string="Acknowledge"/>
+                    <button name="action_close" type="object" string="Close"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="alert_type"/>
+                        <field name="priority"/>
+                        <field name="device_id"/>
+                        <field name="sensor_id"/>
+                        <field name="integration_id"/>
+                        <field name="automation_id"/>
+                        <field name="note"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_iot_alert" model="ir.actions.act_window">
+        <field name="name">Alerts (native)</field>
+        <field name="res_model">integration.iot.alert</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <record id="action_iot_log" model="ir.actions.act_window">
+        <field name="name">Operational Log</field>
+        <field name="res_model">integration.iot.log</field>
+        <field name="view_mode">list</field>
+    </record>
+    <record id="action_iot_alarm_event" model="ir.actions.act_window">
+        <field name="name">Fire Alarm Events</field>
+        <field name="res_model">integration.iot.alarm.event</field>
+        <field name="view_mode">list</field>
+    </record>
+</odoo>

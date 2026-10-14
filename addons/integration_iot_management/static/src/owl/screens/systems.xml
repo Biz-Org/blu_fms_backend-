@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="integration_iot_management.Systems">
+        <div class="o_action o_iot_app">
+            <IotAppShell active="state.tab">
+                <div class="o_iot_shell">
+                    <div class="o_iot_page_header">
+                        <div>
+                            <h1>Building Systems</h1>
+                            <p>Lighting, HVAC, fire alarm, and environmental monitoring.</p>
+                        </div>
+                        <button t-if="state.isAdmin and state.tab === 'lighting'" class="o_iot_btn primary" t-on-click="openSchedule">
+                            <i class="fa fa-plus"/> Create Schedule
+                        </button>
+                    </div>
+                    <div class="o_iot_tabs">
+                        <button t-att-class="state.tab === 'lighting' ? 'active' : ''" t-on-click="() => this.setTab('lighting')">Lighting</button>
+                        <button t-att-class="state.tab === 'hvac' ? 'active' : ''" t-on-click="() => this.setTab('hvac')">HVAC</button>
+                        <button t-att-class="state.tab === 'fire' ? 'active' : ''" t-on-click="() => this.setTab('fire')">Fire Alarm</button>
+                        <button t-att-class="state.tab === 'environment' ? 'active' : ''" t-on-click="() => this.setTab('environment')">Environment</button>
+                    </div>
+                    <div class="o_iot_toolbar">
+                        <select class="o_iot_select" t-att-value="state.buildingFilter" t-on-change="onBuilding">
+                            <option value="">All buildings</option>
+                            <t t-foreach="state.lookups.buildings or []" t-as="b" t-key="b.id">
+                                <option t-att-value="b.id" t-esc="b.name"/>
+                            </t>
+                        </select>
+                    </div>
+                    <div t-if="state.loading" class="o_iot_empty"><h3>Loading</h3></div>
+                    <div t-elif="state.error" class="o_iot_empty o_iot_error"><h3 t-esc="state.error"/></div>
+                    <t t-elif="state.tab === 'lighting'">
+                        <div class="o_iot_card">
+                            <div class="o_iot_card_head">Lighting status</div>
+                            <t t-if="state.data.devices and state.data.devices.length">
+                                <table class="o_iot_table">
+                                    <thead><tr><th>Location</th><th>Device</th><th>State</th><th>Status</th><th/></tr></thead>
+                                    <tbody>
+                                        <tr t-foreach="state.data.devices" t-as="row" t-key="row.id">
+                                            <td t-esc="row.location or '—'"/>
+                                            <td t-esc="row.name"/>
+                                            <td><IotStatusBadge state="row.power_state"/></td>
+                                            <td><IotStatusBadge state="row.status"/></td>
+                                            <td>
+                                                <button t-if="state.isAdmin" class="o_iot_btn secondary" t-on-click="() => this.control(row, true)">Turn On</button>
+                                                <button t-if="state.isAdmin" class="o_iot_btn secondary" t-on-click="() => this.control(row, false)">Turn Off</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </t>
+                            <IotEmptyState t-else="" title="'No lighting devices'" hint="'Register a lighting controller under Devices.'"/>
+                        </div>
+                        <div class="o_iot_card mt-3">
+                            <div class="o_iot_card_head">Active Schedules</div>
+                            <t t-if="state.data.schedules and state.data.schedules.length">
+                                <table class="o_iot_table">
+                                    <thead><tr><th>Name</th><th>Location</th><th>Action</th><th>Hours</th><th>Status</th></tr></thead>
+                                    <tbody>
+                                        <tr t-foreach="state.data.schedules" t-as="row" t-key="row.id">
+                                            <td t-esc="row.name"/>
+                                            <td t-esc="row.location or '—'"/>
+                                            <td t-esc="row.action"/>
+                                            <td><t t-esc="hourLabel(row.start_time)"/> – <t t-esc="hourLabel(row.end_time)"/></td>
+                                            <td><IotStatusBadge state="row.active ? 'active' : 'draft'" label="row.active ? 'Active' : 'Inactive'"/></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </t>
+                            <IotEmptyState t-else="" title="'No lighting schedules'" hint="'Create a schedule to automate lighting.'"/>
+                        </div>
+                    </t>
+                    <t t-elif="state.tab === 'hvac'">
+                        <div class="o_iot_card">
+                            <div class="o_iot_card_head">HVAC systems</div>
+                            <t t-if="state.data.devices and state.data.devices.length">
+                                <table class="o_iot_table">
+                                    <thead><tr><th>Location</th><th>Device</th><th>Mode</th><th>Setpoint</th><th>Status</th><th/></tr></thead>
+                                    <tbody>
+                                        <tr t-foreach="state.data.devices" t-as="row" t-key="row.id">
+                                            <td t-esc="row.location or '—'"/>
+                                            <td t-esc="row.name"/>
+                                            <td t-esc="row.hvac_mode or '—'"/>
+                                            <td t-esc="row.hvac_setpoint or '—'"/>
+                                            <td><IotStatusBadge state="row.status"/></td>
+                                            <td><button t-if="state.isAdmin" class="o_iot_btn secondary" t-on-click="() => this.setHvac(row)">Adjust</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </t>
+                            <IotEmptyState t-else="" title="'No HVAC controllers'" hint="'Register an HVAC controller under Devices.'"/>
+                        </div>
+                        <div class="o_iot_card mt-3">
+                            <div class="o_iot_card_head">Temperature &amp; humidity</div>
+                            <t t-foreach="state.data.environment or []" t-as="row" t-key="row.id">
+                                <div class="o_iot_status_row"><span t-esc="row.name + ' · ' + (row.location or '')"/><strong><t t-esc="row.value"/><t t-esc="' ' + (row.unit or '')"/></strong></div>
+                            </t>
+                            <IotEmptyState t-if="!(state.data.environment and state.data.environment.length)" title="'No environmental readings'" hint="'Ingest sensor data to populate HVAC monitoring.'"/>
+                        </div>
+                    </t>
+                    <t t-elif="state.tab === 'fire'">
+                        <div class="o_iot_card">
+                            <div class="o_iot_card_head">Fire alarm systems</div>
+                            <p class="small text-muted">Monitors connected fire alarm panels. Fire &amp; Safety incidents and drills are not duplicated here.</p>
+                            <t t-if="state.data.devices and state.data.devices.length">
+                                <table class="o_iot_table">
+                                    <thead><tr><th>Location</th><th>Panel</th><th>Condition</th><th>Status</th><th/></tr></thead>
+                                    <tbody>
+                                        <tr t-foreach="state.data.devices" t-as="row" t-key="row.id">
+                                            <td t-esc="row.location or '—'"/>
+                                            <td t-esc="row.name"/>
+                                            <td><IotStatusBadge state="row.fire_alarm_condition"/></td>
+                                            <td><IotStatusBadge state="row.status"/></td>
+                                            <td>
+                                                <select t-if="state.isAdmin" class="o_iot_select" t-on-change="(ev) => this.setFire(row, ev.target.value)">
+                                                    <option value="">Set condition</option>
+                                                    <option value="normal">Normal</option>
+                                                    <option value="alarm">Alarm</option>
+                                                    <option value="fault">Fault</option>
+                                                    <option value="communication_failure">Communication Failure</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </t>
+                            <IotEmptyState t-else="" title="'No fire alarm integrations'" hint="'Register a fire alarm panel under Devices.'"/>
+                        </div>
+                        <div class="o_iot_card mt-3">
+                            <div class="o_iot_card_head">Alarm history</div>
+                            <t t-if="state.data.events and state.data.events.length">
+                                <table class="o_iot_table">
+                                    <thead><tr><th>Time</th><th>Event</th><th>Condition</th><th>Location</th></tr></thead>
+                                    <tbody>
+                                        <tr t-foreach="state.data.events" t-as="row" t-key="row.id">
+                                            <td t-esc="row.time"/>
+                                            <td t-esc="row.name"/>
+                                            <td><IotStatusBadge state="row.condition"/></td>
+                                            <td t-esc="row.location or '—'"/>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </t>
+                            <IotEmptyState t-else="" title="'No alarm events'" hint="'Recorded fire alarm conditions will appear here.'"/>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <div class="o_iot_card">
+                            <div class="o_iot_card_head">Environmental sensors</div>
+                            <t t-if="state.data.sensors and state.data.sensors.length">
+                                <table class="o_iot_table">
+                                    <thead><tr><th>Sensor</th><th>Location</th><th>Parameter</th><th>Reading</th><th>Range</th></tr></thead>
+                                    <tbody>
+                                        <tr t-foreach="state.data.sensors" t-as="row" t-key="row.id">
+                                            <td t-esc="row.name"/>
+                                            <td t-esc="row.location or '—'"/>
+                                            <td t-esc="row.parameter"/>
+                                            <td><t t-esc="row.value"/><t t-esc="' ' + (row.unit or '')"/></td>
+                                            <td><t t-esc="row.min"/> – <t t-esc="row.max"/></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </t>
+                            <IotEmptyState t-else="" title="'No environmental sensors'" hint="'Add temperature, humidity, air quality, or CO₂ sensors.'"/>
+                        </div>
+                    </t>
+                </div>
+                <div t-if="state.showSchedule" class="o_iot_modal_backdrop" t-on-click.self="closeSchedule">
+                    <div class="o_iot_modal">
+                        <div class="o_iot_modal_head">
+                            <div><h2>Create Schedule</h2><p>Lighting schedule-based automation.</p></div>
+                            <button class="o_iot_modal_close" t-on-click="closeSchedule"><i class="fa fa-times"/></button>
+                        </div>
+                        <div class="o_iot_modal_body o_iot_form_section">
+                            <div class="o_iot_form_grid">
+                                <div class="o_iot_span_2"><label>Schedule name</label><input t-model="state.schedule.name"/></div>
+                                <div><label>Location</label>
+                                    <select t-model="state.schedule.building_id">
+                                        <option value="">All / unspecified</option>
+                                        <t t-foreach="state.lookups.buildings or []" t-as="b" t-key="b.id"><option t-att-value="b.id" t-esc="b.name"/></t>
+                                    </select>
+                                </div>
+                                <div><label>Lighting action</label>
+                                    <select t-model="state.schedule.lighting_action">
+                                        <option value="turn_on">Turn On</option>
+                                        <option value="turn_off">Turn Off</option>
+                                    </select>
+                                </div>
+                                <div><label>Start time</label><input type="time" t-model="state.schedule.start"/></div>
+                                <div><label>End time</label><input type="time" t-model="state.schedule.end"/></div>
+                                <div class="o_iot_span_2"><label>Repeat days</label>
+                                    <div class="o_iot_days">
+                                        <label><input type="checkbox" t-model="state.schedule.day_mon"/> Mon</label>
+                                        <label><input type="checkbox" t-model="state.schedule.day_tue"/> Tue</label>
+                                        <label><input type="checkbox" t-model="state.schedule.day_wed"/> Wed</label>
+                                        <label><input type="checkbox" t-model="state.schedule.day_thu"/> Thu</label>
+                                        <label><input type="checkbox" t-model="state.schedule.day_fri"/> Fri</label>
+                                        <label><input type="checkbox" t-model="state.schedule.day_sat"/> Sat</label>
+                                        <label><input type="checkbox" t-model="state.schedule.day_sun"/> Sun</label>
+                                    </div>
+                                </div>
+                                <div><label>Status</label>
+                                    <select t-model="state.schedule.active">
+                                        <option t-att-value="true">Active</option>
+                                        <option t-att-value="false">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="o_iot_modal_foot">
+                            <button class="o_iot_btn secondary" t-on-click="closeSchedule">Cancel</button>
+                            <button class="o_iot_btn primary" t-on-click="saveSchedule">Save schedule</button>
+                        </div>
+                    </div>
+                </div>
+            </IotAppShell>
+        </div>
+    </t>
+</templates>

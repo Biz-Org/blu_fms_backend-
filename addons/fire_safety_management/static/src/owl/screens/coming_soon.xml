@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="fire_safety_management.ComingSoon">
+        <div class="o_action o_fs_app">
+            <FsAppShell active="navId">
+                <div class="o_fs_shell">
+                    <div class="o_fs_page_header">
+                        <div>
+                            <h1 t-esc="copy.title"/>
+                            <p>This screen is part of a later Phase 2 slice.</p>
+                        </div>
+                    </div>
+                    <div class="o_fs_card">
+                        <div class="o_fs_empty">
+                            <h3>Not in this slice</h3>
+                            <p t-esc="copy.hint"/>
+                        </div>
+                    </div>
+                </div>
+            </FsAppShell>
+        </div>
+    </t>
+</templates>

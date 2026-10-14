@@ -1,0 +1,472 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="fire_safety_management.Inspections">
+        <div class="o_action o_fs_app">
+            <FsAppShell active="'inspections'">
+                <div class="o_fs_shell">
+                    <div t-if="state.error" class="o_fs_alert">
+                        <i class="fa fa-exclamation-circle"/>
+                        <div t-esc="state.error"/>
+                    </div>
+
+                    <t t-if="state.mode === 'list'">
+                        <div class="o_fs_page_header">
+                            <div>
+                                <h1>Inspections &amp; Audits</h1>
+                                <p>Schedule inspections, execute checklists, record findings, and close the corrective-action loop.</p>
+                            </div>
+                            <button t-if="canCreate" class="o_fs_btn primary" t-on-click="() => this.setMode('create')">
+                                <i class="fa fa-plus"/> Create Inspection
+                            </button>
+                        </div>
+
+                        <div t-if="state.loading" class="o_fs_empty">
+                            <h3>Loading inspections</h3>
+                            <p>Fetching live Fire &amp; Safety records.</p>
+                        </div>
+                        <t t-else="">
+                            <div class="o_fs_kpi_row">
+                                <FsKpiCard label="'All Inspections'" value="state.kpis.total" icon="'fa-clipboard'" onClick.bind="() => this.onFilter('all')"/>
+                                <FsKpiCard label="'Open'" value="state.kpis.open" icon="'fa-play-circle'" onClick.bind="() => this.onFilter('open')"/>
+                                <FsKpiCard label="'Pending Closure'" value="state.kpis.pending" icon="'fa-hourglass-half'" tone="state.kpis.pending ? 'warning' : ''" onClick.bind="() => this.onFilter('pending')"/>
+                                <FsKpiCard label="'Overdue'" value="state.kpis.overdue" icon="'fa-clock-o'" tone="state.kpis.overdue ? 'danger' : ''" onClick.bind="() => this.onFilter('overdue')"/>
+                            </div>
+
+                            <div class="o_fs_toolbar">
+                                <div class="o_fs_search">
+                                    <i class="fa fa-search"/>
+                                    <input type="text" placeholder="Search inspections..." t-att-value="state.search" t-on-change="onSearch"/>
+                                </div>
+                                <select class="o_fs_select" t-att-value="state.typeFilter" t-on-change="onTypeFilter">
+                                    <option value="">Type: All</option>
+                                    <option value="fire_inspection">Fire Inspection</option>
+                                    <option value="safety_audit">Safety Audit</option>
+                                </select>
+                                <div class="o_fs_chips">
+                                    <button t-att-class="state.filter === 'all' ? 'active' : ''" t-on-click="() => this.onFilter('all')">All</button>
+                                    <button t-att-class="state.filter === 'scheduled' ? 'active' : ''" t-on-click="() => this.onFilter('scheduled')">Scheduled</button>
+                                    <button t-att-class="state.filter === 'in_progress' ? 'active' : ''" t-on-click="() => this.onFilter('in_progress')">In Progress</button>
+                                    <button t-att-class="state.filter === 'pending' ? 'active' : ''" t-on-click="() => this.onFilter('pending')">Pending</button>
+                                    <button t-att-class="state.filter === 'completed' ? 'active' : ''" t-on-click="() => this.onFilter('completed')">Completed</button>
+                                    <button t-att-class="state.filter === 'closed' ? 'active' : ''" t-on-click="() => this.onFilter('closed')">Closed</button>
+                                    <button t-att-class="state.filter === 'overdue' ? 'active' : ''" t-on-click="() => this.onFilter('overdue')">Overdue</button>
+                                    <button t-att-class="state.filter === 'mine' ? 'active' : ''" t-on-click="() => this.onFilter('mine')">Assigned to me</button>
+                                </div>
+                            </div>
+
+                            <div class="o_fs_card">
+                                <div class="o_fs_card_head">Inspection schedule</div>
+                                <t t-if="state.records.length">
+                                    <table class="o_fs_table">
+                                        <thead>
+                                            <tr>
+                                                <th>Inspection</th>
+                                                <th>Type</th>
+                                                <th>Scheduled</th>
+                                                <th>Assignee</th>
+                                                <th>Findings</th>
+                                                <th>Status</th>
+                                                <th/>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr t-foreach="state.records" t-as="rec" t-key="rec.id" t-on-click="() => this.setMode('detail', rec.id)">
+                                                <td>
+                                                    <div class="o_fs_row_title" t-esc="rec.name"/>
+                                                    <div class="o_fs_row_sub">
+                                                        <t t-esc="m2oName(rec.property_id) or rec.location_detail or 'No property'"/>
+                                                        <t t-if="rec.line_count"> · <t t-esc="rec.line_count"/> checklist items</t>
+                                                    </div>
+                                                </td>
+                                                <td><span class="o_fs_pill" t-esc="typeLabel(rec.inspection_type)"/></td>
+                                                <td>
+                                                    <div t-esc="formatDate(rec.scheduled_date)"/>
+                                                    <div t-if="rec.is_overdue" class="o_fs_row_sub text-danger">Overdue</div>
+                                                </td>
+                                                <td t-esc="m2oName(rec.assigned_user_id) or m2oName(rec.inspector_id) or '—'"/>
+                                                <td>
+                                                    <t t-esc="rec.finding_count"/>
+                                                    <span class="o_fs_row_sub"> / <t t-esc="rec.action_count"/> CAs</span>
+                                                </td>
+                                                <td>
+                                                    <FsStatusBadge state="rec.state" label="stateLabel(rec.state)"/>
+                                                </td>
+                                                <td><button class="o_fs_link" t-on-click.stop="() => this.setMode('detail', rec.id)">Open</button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div class="o_fs_pager">
+                                        <span><t t-esc="pageFrom"/>–<t t-esc="pageTo"/> of <t t-esc="state.total"/></span>
+                                        <div class="o_fs_pager_pages">
+                                            <button t-att-disabled="state.page &lt;= 1" t-on-click="() => this.onPage(-1)">Prev</button>
+                                            <button t-att-disabled="state.page &gt;= pageCount" t-on-click="() => this.onPage(1)">Next</button>
+                                        </div>
+                                    </div>
+                                </t>
+                                <div t-else="" class="o_fs_empty">
+                                    <h3>No inspections match</h3>
+                                    <p t-if="canCreate">Schedule a fire inspection or safety audit to start the compliance loop.</p>
+                                    <p t-else="">Assigned and company inspections will appear here.</p>
+                                    <button t-if="canCreate" class="o_fs_btn primary mt-2" t-on-click="() => this.setMode('create')">
+                                        <i class="fa fa-plus"/> Create Inspection
+                                    </button>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+
+                    <t t-if="state.mode === 'create'">
+                        <button class="o_fs_back" t-on-click="() => this.setMode('list')"><i class="fa fa-arrow-left"/> Back to Inspections</button>
+                        <div class="o_fs_page_header">
+                            <div>
+                                <h1>Create Inspection</h1>
+                                <p>Safety Manager schedules the inspection. Security can start and execute it after it is assigned.</p>
+                            </div>
+                        </div>
+                        <div class="o_fs_form_section">
+                            <h3>Inspection details</h3>
+                            <div class="o_fs_form_grid">
+                                <div>
+                                    <label>Type *</label>
+                                    <select t-model="state.form.inspection_type">
+                                        <option value="fire_inspection">Fire Inspection</option>
+                                        <option value="safety_audit">Safety Audit</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Scheduled date *</label>
+                                    <input type="date" t-model="state.form.scheduled_date"/>
+                                </div>
+                                <div>
+                                    <label>Checklist template</label>
+                                    <select t-model="state.form.checklist_template_id">
+                                        <option value="">Select template</option>
+                                        <t t-foreach="filteredTemplates" t-as="tpl" t-key="tpl.id">
+                                            <option t-att-value="tpl.id" t-esc="tpl.name + (tpl.item_count ? ' (' + tpl.item_count + ' items)' : '')"/>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Assigned to</label>
+                                    <select t-model="state.form.assigned_user_id">
+                                        <option value="">Unassigned</option>
+                                        <t t-foreach="state.lookups.users" t-as="usr" t-key="usr.id">
+                                            <option t-att-value="usr.id" t-esc="usr.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Inspector</label>
+                                    <select t-model="state.form.inspector_id">
+                                        <t t-foreach="state.lookups.users" t-as="usr" t-key="usr.id">
+                                            <option t-att-value="usr.id" t-esc="usr.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Location detail</label>
+                                    <input type="text" t-model="state.form.location_detail" placeholder="Floor, wing, or room"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="o_fs_form_section">
+                            <h3>Location (placeholder)</h3>
+                            <p class="o_fs_hint">Property, building, and area are integration placeholders until Property Management exists. Leave blank if none are configured.</p>
+                            <div class="o_fs_form_grid">
+                                <div>
+                                    <label>Property</label>
+                                    <select t-model="state.form.property_id" t-on-change="onPropertyChange">
+                                        <option value="">None</option>
+                                        <t t-foreach="state.lookups.properties" t-as="row" t-key="row.id">
+                                            <option t-att-value="row.id" t-esc="row.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Building / Tower</label>
+                                    <select t-model="state.form.building_id" t-on-change="onBuildingChange">
+                                        <option value="">None</option>
+                                        <t t-foreach="filteredBuildings" t-as="row" t-key="row.id">
+                                            <option t-att-value="row.id" t-esc="row.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Area / Floor</label>
+                                    <select t-model="state.form.area_id">
+                                        <option value="">None</option>
+                                        <t t-foreach="filteredAreas" t-as="row" t-key="row.id">
+                                            <option t-att-value="row.id" t-esc="row.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="o_fs_form_section">
+                            <h3>Notes</h3>
+                            <textarea t-model="state.form.notes" placeholder="Scope or briefing notes for the assigned inspector"/>
+                        </div>
+                        <div class="o_fs_footer_bar">
+                            <span t-if="state.busy" class="o_fs_busy" t-esc="state.busy"/>
+                            <button class="o_fs_btn secondary" t-att-disabled="state.busy" t-on-click="() => this.setMode('list')">Cancel</button>
+                            <button class="o_fs_btn primary" t-att-disabled="state.busy" t-on-click="createInspection">
+                                <i class="fa fa-check"/> Schedule Inspection
+                            </button>
+                        </div>
+                    </t>
+
+                    <t t-if="state.mode === 'detail'">
+                        <button class="o_fs_back" t-on-click="() => this.setMode('list')"><i class="fa fa-arrow-left"/> Back to Inspections</button>
+                        <div t-if="state.loading" class="o_fs_empty">
+                            <h3>Loading inspection</h3>
+                        </div>
+                        <t t-elif="state.record">
+                            <div class="o_fs_page_header">
+                                <div>
+                                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                                        <h1 t-esc="inspection.name"/>
+                                        <FsStatusBadge state="inspection.state" label="stateLabel(inspection.state)"/>
+                                        <span t-if="inspection.is_overdue" class="o_fs_pill danger">Overdue</span>
+                                        <span class="o_fs_pill" t-esc="typeLabel(inspection.inspection_type)"/>
+                                    </div>
+                                    <p>
+                                        Scheduled <t t-esc="formatDate(inspection.scheduled_date)"/>
+                                        <t t-if="m2oName(inspection.assigned_user_id)"> · Assigned to <t t-esc="m2oName(inspection.assigned_user_id)"/></t>
+                                        <t t-if="m2oName(inspection.property_id)"> · <t t-esc="m2oName(inspection.property_id)"/></t>
+                                        <t t-if="inspection.location_detail"> · <t t-esc="inspection.location_detail"/></t>
+                                    </p>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button t-if="canStart" class="o_fs_btn primary" t-att-disabled="state.busy" t-on-click="startInspection">
+                                        <i class="fa fa-play"/> Start Inspection
+                                    </button>
+                                    <button t-if="canComplete" class="o_fs_btn primary" t-att-disabled="state.busy" t-on-click="completeInspection">
+                                        <i class="fa fa-check"/> Complete Inspection
+                                    </button>
+                                    <button t-if="canMarkCompleted" class="o_fs_btn primary" t-att-disabled="state.busy" t-on-click="markCompleted">
+                                        <i class="fa fa-check-circle"/> Mark Completed
+                                    </button>
+                                    <button t-if="canClose" class="o_fs_btn secondary" t-att-disabled="state.busy" t-on-click="closeInspection">
+                                        <i class="fa fa-lock"/> Close Inspection
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div t-if="canComplete and requiredOpenLines.length" class="o_fs_alert o_fs_alert_warn">
+                                <i class="fa fa-info-circle"/>
+                                <div><t t-esc="requiredOpenLines.length"/> required checklist items still need a result.</div>
+                            </div>
+                            <div t-if="canComplete and failedLines.length and !state.findings.length" class="o_fs_alert">
+                                <i class="fa fa-exclamation-circle"/>
+                                <div>Failed checklist items require at least one finding before completion.</div>
+                            </div>
+                            <div t-if="inspection.state === 'pending' and openActions.length" class="o_fs_alert o_fs_alert_warn">
+                                <i class="fa fa-wrench"/>
+                                <div><t t-esc="openActions.length"/> corrective action(s) must be verified and closed before this inspection can be completed.</div>
+                            </div>
+
+                            <div class="o_fs_detail_grid">
+                                <div class="o_fs_card">
+                                    <div class="o_fs_card_head">Inspection summary</div>
+                                    <div class="o_fs_meta">
+                                        <div><span>Inspector</span><strong t-esc="m2oName(inspection.inspector_id) or '—'"/></div>
+                                        <div><span>Template</span><strong t-esc="m2oName(inspection.checklist_template_id) or '—'"/></div>
+                                        <div><span>Started</span><strong t-esc="formatWhen(inspection.start_datetime)"/></div>
+                                        <div><span>Completed</span><strong t-esc="formatWhen(inspection.complete_datetime)"/></div>
+                                        <div><span>Checklist</span><strong><t t-esc="inspection.line_count"/> items · <t t-esc="inspection.failed_line_count"/> failed</strong></div>
+                                        <div><span>Findings / CAs</span><strong><t t-esc="inspection.finding_count"/> / <t t-esc="inspection.action_count"/></strong></div>
+                                    </div>
+                                    <p t-if="stripHtml(inspection.notes)" class="o_fs_notes" t-esc="stripHtml(inspection.notes)"/>
+                                    <div t-if="canApplyChecklist" class="o_fs_inline_form mt-3">
+                                        <select t-model="state.form.checklist_template_id">
+                                            <option value="">Replace checklist template</option>
+                                            <t t-foreach="state.lookups.templates" t-as="tpl" t-key="tpl.id">
+                                                <option t-att-value="tpl.id" t-esc="tpl.name"/>
+                                            </t>
+                                        </select>
+                                        <button class="o_fs_btn secondary" t-att-disabled="state.busy" t-on-click="applyChecklist">Apply checklist</button>
+                                    </div>
+                                </div>
+                                <div class="o_fs_card">
+                                    <div class="o_fs_card_head">Inspection evidence</div>
+                                    <t t-foreach="state.attachments" t-as="file" t-key="file.id">
+                                        <div class="o_fs_file">
+                                            <i class="fa fa-paperclip"/>
+                                            <a t-att-href="'/web/content/' + file.id + '?download=true'" t-esc="file.name"/>
+                                        </div>
+                                    </t>
+                                    <FsEmptyState t-if="!state.attachments.length" title="'No evidence yet'" hint="'Photos or documents can be attached to the inspection.'"/>
+                                    <label t-if="canOperate and inspection.state !== 'closed'" class="o_fs_upload">
+                                        <input type="file" multiple="multiple" t-on-change="onInspectionFiles"/>
+                                        Upload evidence
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="o_fs_card mt-3">
+                                <div class="o_fs_card_head">Checklist</div>
+                                <p class="o_fs_hint">Mark each required item Pass, Fail, or N/A. Failed items need a finding before a Safety Manager can complete the inspection.</p>
+                                <t t-if="state.lines.length">
+                                    <div class="o_fs_check_item" t-foreach="state.lines" t-as="line" t-key="line.id">
+                                        <div class="o_fs_check_main">
+                                            <div>
+                                                <div class="o_fs_row_title">
+                                                    <t t-esc="line.name"/>
+                                                    <span t-if="line.required" class="o_fs_pill muted">Required</span>
+                                                </div>
+                                                <div class="o_fs_row_sub" t-esc="categoryLabel(line.category)"/>
+                                            </div>
+                                            <div class="o_fs_result_btns">
+                                                <button t-att-class="line.result === 'pass' ? 'is-pass' : ''" t-att-disabled="!canEditChecklist or state.busy" t-on-click="() => this.setLineResult(line, 'pass')">Pass</button>
+                                                <button t-att-class="line.result === 'fail' ? 'is-fail' : ''" t-att-disabled="!canEditChecklist or state.busy" t-on-click="() => this.setLineResult(line, 'fail')">Fail</button>
+                                                <button t-att-class="line.result === 'na' ? 'is-na' : ''" t-att-disabled="!canEditChecklist or state.busy" t-on-click="() => this.setLineResult(line, 'na')">N/A</button>
+                                            </div>
+                                        </div>
+                                        <textarea
+                                            class="o_fs_line_notes"
+                                            placeholder="Checklist notes"
+                                            t-att-value="state.lineNotes[line.id]"
+                                            t-att-disabled="!canEditChecklist"
+                                            t-on-input="(ev) => this.state.lineNotes[line.id] = ev.target.value"
+                                            t-on-blur="() => this.saveLineNotes(line)"/>
+                                        <div class="o_fs_file_row">
+                                            <t t-foreach="lineAttachments(line)" t-as="file" t-key="file.id">
+                                                <a class="o_fs_file" t-att-href="'/web/content/' + file.id + '?download=true'" t-esc="file.name"/>
+                                            </t>
+                                            <label t-if="canEditChecklist" class="o_fs_upload compact">
+                                                <input type="file" multiple="multiple" t-on-change="(ev) => this.onLineFiles(line, ev)"/>
+                                                Add evidence
+                                            </label>
+                                        </div>
+                                    </div>
+                                </t>
+                                <FsEmptyState t-else="" title="'No checklist items'" hint="canApplyChecklist ? 'Apply a checklist template to execute this inspection.' : 'This inspection has no checklist lines.'"/>
+                            </div>
+
+                            <div class="o_fs_card mt-3">
+                                <div class="o_fs_card_head">Findings &amp; corrective actions</div>
+                                <p class="o_fs_hint">Canonical loop: Finding → Corrective Action → Verification → Closure. Security can mark assigned actions done; only a Safety Manager can verify and close.</p>
+
+                                <t t-foreach="state.findings" t-as="finding" t-key="finding.id">
+                                    <div class="o_fs_finding">
+                                        <div class="d-flex justify-content-between gap-2 flex-wrap">
+                                            <div>
+                                                <div class="o_fs_row_title" t-esc="finding.name"/>
+                                                <div class="o_fs_row_sub">
+                                                    <t t-esc="severityLabel(finding.severity)"/> severity
+                                                    <t t-if="m2oName(finding.line_id)"> · <t t-esc="m2oName(finding.line_id)"/></t>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex gap-2 align-items-center">
+                                                <FsStatusBadge state="finding.state" label="stateLabel(finding.state)"/>
+                                                <button t-if="canProgressFinding(finding)" class="o_fs_btn secondary" t-att-disabled="state.busy" t-on-click="() => this.markFindingProgress(finding)">In progress</button>
+                                                <button t-if="canCloseFinding(finding)" class="o_fs_btn secondary" t-att-disabled="state.busy" t-on-click="() => this.closeFinding(finding)">Close finding</button>
+                                            </div>
+                                        </div>
+                                        <p t-if="stripHtml(finding.description)" class="o_fs_notes" t-esc="stripHtml(finding.description)"/>
+
+                                        <t t-foreach="actionsFor(finding)" t-as="act" t-key="act.id">
+                                            <div class="o_fs_action">
+                                                <div class="d-flex justify-content-between gap-2 flex-wrap">
+                                                    <div>
+                                                        <div class="fw-semibold" t-esc="act.name"/>
+                                                        <div class="o_fs_row_sub">
+                                                            Due <t t-esc="formatDate(act.deadline)"/>
+                                                            <t t-if="m2oName(act.assigned_user_id)"> · <t t-esc="m2oName(act.assigned_user_id)"/></t>
+                                                            <t t-if="act.is_overdue"> · Overdue</t>
+                                                            <t t-if="m2oName(act.verified_by_id)"> · Verified by <t t-esc="m2oName(act.verified_by_id)"/></t>
+                                                        </div>
+                                                    </div>
+                                                    <FsStatusBadge state="act.state" label="actionStateLabel(act.state)"/>
+                                                </div>
+                                                <div class="d-flex gap-2 flex-wrap mt-2">
+                                                    <button t-if="canMarkDone(act)" class="o_fs_btn secondary" t-att-disabled="state.busy" t-on-click="() => this.markActionDone(act)">Mark done</button>
+                                                    <button t-if="canReopen(act)" class="o_fs_btn secondary" t-att-disabled="state.busy" t-on-click="() => this.reopenAction(act)">Reopen</button>
+                                                    <button t-if="canCloseAction(act)" class="o_fs_btn primary" t-att-disabled="state.busy" t-on-click="() => this.closeAction(act)">Close action</button>
+                                                </div>
+                                                <div t-if="canVerify(act)" class="o_fs_inline_form mt-2">
+                                                    <input type="text" placeholder="Verification notes" t-on-input="(ev) => this.state.verifyNotes[act.id] = ev.target.value"/>
+                                                    <button class="o_fs_btn secondary" t-att-disabled="state.busy" t-on-click="() => this.verifyAction(act)">Verify</button>
+                                                </div>
+                                                <div t-if="act.verification_notes" class="o_fs_notes">Verification: <t t-esc="act.verification_notes"/></div>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </t>
+                                <FsEmptyState t-if="!state.findings.length" title="'No findings'" hint="'Record a finding when a checklist item fails or a hazard is observed.'"/>
+
+                                <t t-if="canAddFinding">
+                                    <div class="o_fs_inline_panel">
+                                        <h4>Add finding</h4>
+                                        <div class="o_fs_form_grid">
+                                            <div>
+                                                <label>Title *</label>
+                                                <input type="text" t-model="state.findingForm.name" placeholder="Describe the finding"/>
+                                            </div>
+                                            <div>
+                                                <label>Severity</label>
+                                                <select t-model="state.findingForm.severity">
+                                                    <option value="low">Low</option>
+                                                    <option value="medium">Medium</option>
+                                                    <option value="high">High</option>
+                                                    <option value="critical">Critical</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label>Related checklist item</label>
+                                                <select t-model="state.findingForm.line_id">
+                                                    <option value="">None</option>
+                                                    <t t-foreach="state.lines" t-as="line" t-key="line.id">
+                                                        <option t-att-value="line.id" t-esc="line.name"/>
+                                                    </t>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <textarea class="mt-2" t-model="state.findingForm.description" placeholder="Details and recommended follow-up"/>
+                                        <button class="o_fs_btn secondary mt-2" t-att-disabled="state.busy" t-on-click="createFinding">Add finding</button>
+                                    </div>
+                                </t>
+
+                                <t t-if="canAddAction">
+                                    <div class="o_fs_inline_panel">
+                                        <h4>Add corrective action</h4>
+                                        <div class="o_fs_form_grid">
+                                            <div>
+                                                <label>Finding *</label>
+                                                <select t-model="state.actionForm.finding_id">
+                                                    <t t-foreach="openFindings" t-as="finding" t-key="finding.id">
+                                                        <option t-att-value="finding.id" t-esc="finding.name"/>
+                                                    </t>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label>Title *</label>
+                                                <input type="text" t-model="state.actionForm.name" placeholder="Action to take"/>
+                                            </div>
+                                            <div>
+                                                <label>Deadline *</label>
+                                                <input type="date" t-model="state.actionForm.deadline"/>
+                                            </div>
+                                            <div>
+                                                <label>Assignee</label>
+                                                <select t-model="state.actionForm.assigned_user_id">
+                                                    <option value="">Unassigned</option>
+                                                    <t t-foreach="state.lookups.users" t-as="usr" t-key="usr.id">
+                                                        <option t-att-value="usr.id" t-esc="usr.name"/>
+                                                    </t>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <textarea class="mt-2" t-model="state.actionForm.description" placeholder="What must be corrected"/>
+                                        <button class="o_fs_btn secondary mt-2" t-att-disabled="state.busy" t-on-click="createAction">Add corrective action</button>
+                                    </div>
+                                </t>
+                            </div>
+                            <div t-if="state.busy" class="o_fs_busy mt-3" t-esc="state.busy"/>
+                        </t>
+                    </t>
+                </div>
+            </FsAppShell>
+        </div>
+    </t>
+</templates>

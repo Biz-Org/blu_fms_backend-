@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <function model="community.communication.resident" name="_cc_sync_shared_access"/>
+</odoo>

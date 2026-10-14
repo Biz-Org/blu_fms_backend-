@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="reports_analytics.Scheduled">
+        <div class="o_action o_ra_app">
+            <RaAppShell active="'scheduled'" onNewAnalysis.bind="openAnalysis">
+                <div class="o_ra_shell">
+                    <div class="o_ra_page_header">
+                        <div><h1>Scheduled Reports</h1></div>
+                        <button class="o_ra_btn primary" t-on-click="openModal"><i class="fa fa-plus"/> Schedule Report</button>
+                    </div>
+                    <div class="o_ra_card">
+                        <table class="o_ra_table">
+                            <thead><tr><th>Report Name</th><th>Recipients</th><th>Frequency</th><th>Next Delivery</th><th>Status</th></tr></thead>
+                            <tbody>
+                                <tr t-foreach="ui.rows" t-as="row" t-key="row.id">
+                                    <td>
+                                        <div t-esc="row.report_id[1]"/>
+                                        <div class="small text-muted" t-esc="row.output_format"/>
+                                    </td>
+                                    <td t-esc="(row.recipient_ids || []).length"/>
+                                    <td t-esc="row.frequency"/>
+                                    <td t-esc="row.next_run or '—'"/>
+                                    <td><RaStatusBadge state="row.active ? 'active' : 'paused'"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <t t-if="!ui.rows.length">
+                            <RaEmptyState title="'No scheduled reports'" hint="'Create a schedule to generate and email a report on a cron.'"/>
+                        </t>
+                    </div>
+                </div>
+                <div t-if="ui.showModal" class="o_ra_modal_backdrop" t-on-click="closeModal">
+                    <div class="o_ra_modal" t-on-click.stop="">
+                        <h3>Schedule Report</h3>
+                        <p>Choose a report, recipients and delivery schedule.</p>
+                        <label>Report</label>
+                        <select class="o_ra_select w-100" t-model="ui.form.report_id">
+                            <option value="">Select</option>
+                            <option t-foreach="ui.reports" t-as="report" t-key="report.id" t-att-value="report.id" t-esc="report.name"/>
+                        </select>
+                        <label>Recipients</label>
+                        <div class="o_ra_check_col">
+                            <label t-foreach="state.bootstrap.users" t-as="userRow" t-key="userRow.id">
+                                <input type="checkbox" t-on-change="() => this.toggleRecipient(userRow.id)"/>
+                                <t t-esc="userRow.name"/>
+                            </label>
+                        </div>
+                        <label>Format</label>
+                        <select class="o_ra_select w-100" t-model="ui.form.output_format">
+                            <option value="pdf">PDF</option>
+                            <option value="xlsx">Excel</option>
+                            <option value="csv">CSV</option>
+                        </select>
+                        <label>Schedule</label>
+                        <select class="o_ra_select w-100" t-model="ui.form.frequency">
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                        <select t-if="ui.form.frequency === 'weekly'" class="o_ra_select w-100 mt-2" t-model="ui.form.weekday">
+                            <option value="0">Monday</option>
+                            <option value="1">Tuesday</option>
+                            <option value="2">Wednesday</option>
+                            <option value="3">Thursday</option>
+                            <option value="4">Friday</option>
+                        </select>
+                        <div class="o_ra_modal_actions">
+                            <button class="o_ra_btn secondary" t-on-click="closeModal">Cancel</button>
+                            <button class="o_ra_btn primary" t-on-click="save">Schedule Report</button>
+                        </div>
+                    </div>
+                </div>
+                <t t-call="reports_analytics.AnalysisModal"/>
+            </RaAppShell>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="config_default" model="ai.copilot.config">
+        <field name="name">AI Copilot</field>
+        <field name="provider">none</field>
+        <field name="enabled" eval="True"/>
+        <field name="base_url">https://api.openai.com/v1</field>
+        <field name="model_name">gpt-4o-mini</field>
+        <field name="temperature">0.2</field>
+    </record>
+</odoo>

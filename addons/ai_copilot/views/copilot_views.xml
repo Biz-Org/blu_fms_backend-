@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_ai_copilot_config" model="ir.actions.act_window">
+        <field name="name">AI Provider</field>
+        <field name="res_model">ai.copilot.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="path">ai-copilot-settings</field>
+    </record>
+    <record id="action_ai_copilot_document" model="ir.actions.act_window">
+        <field name="name">Knowledge Documents</field>
+        <field name="res_model">ai.copilot.document</field>
+        <field name="view_mode">list,form</field>
+        <field name="path">ai-copilot-documents</field>
+    </record>
+    <record id="action_ai_copilot_conversation" model="ir.actions.act_window">
+        <field name="name">Conversations</field>
+        <field name="res_model">ai.copilot.conversation</field>
+        <field name="view_mode">list,form</field>
+        <field name="path">ai-copilot-conversations</field>
+    </record>
+    <record id="action_ai_copilot_audit" model="ir.actions.act_window">
+        <field name="name">Audit History</field>
+        <field name="res_model">ai.copilot.audit</field>
+        <field name="view_mode">list,form</field>
+        <field name="path">ai-copilot-audit</field>
+    </record>
+
+    <record id="view_ai_copilot_config_list" model="ir.ui.view">
+        <field name="name">ai.copilot.config.list</field>
+        <field name="model">ai.copilot.config</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="provider"/>
+                <field name="model_name"/>
+                <field name="enabled"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_ai_copilot_config_form" model="ir.ui.view">
+        <field name="name">ai.copilot.config.form</field>
+        <field name="model">ai.copilot.config</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="enabled"/>
+                        <field name="provider"/>
+                        <field name="base_url"/>
+                        <field name="model_name"/>
+                        <field name="temperature"/>
+                        <field name="api_key" password="True"/>
+                        <field name="company_id" groups="base.group_multi_company"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_ai_copilot_document_list" model="ir.ui.view">
+        <field name="name">ai.copilot.document.list</field>
+        <field name="model">ai.copilot.document</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="category"/>
+                <field name="restricted"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_ai_copilot_document_form" model="ir.ui.view">
+        <field name="name">ai.copilot.document.form</field>
+        <field name="model">ai.copilot.document</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="category"/>
+                        <field name="summary"/>
+                        <field name="restricted"/>
+                        <field name="allowed_group_ids" widget="many2many_tags" invisible="not restricted"/>
+                        <field name="company_id" groups="base.group_multi_company"/>
+                    </group>
+                    <group>
+                        <field name="body"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_ai_copilot_conversation_list" model="ir.ui.view">
+        <field name="name">ai.copilot.conversation.list</field>
+        <field name="model">ai.copilot.conversation</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="user_id"/>
+                <field name="write_date"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_ai_copilot_conversation_form" model="ir.ui.view">
+        <field name="name">ai.copilot.conversation.form</field>
+        <field name="model">ai.copilot.conversation</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="user_id"/>
+                        <field name="company_id" groups="base.group_multi_company"/>
+                    </group>
+                    <field name="message_ids">
+                        <list>
+                            <field name="role"/>
+                            <field name="body"/>
+                            <field name="feedback"/>
+                            <field name="create_date"/>
+                        </list>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_ai_copilot_audit_list" model="ir.ui.view">
+        <field name="name">ai.copilot.audit.list</field>
+        <field name="model">ai.copilot.audit</field>
+        <field name="arch" type="xml">
+            <list create="false" edit="false">
+                <field name="create_date"/>
+                <field name="user_id"/>
+                <field name="name"/>
+                <field name="status"/>
+                <field name="source_summary"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_ai_copilot_audit_form" model="ir.ui.view">
+        <field name="name">ai.copilot.audit.form</field>
+        <field name="model">ai.copilot.audit</field>
+        <field name="arch" type="xml">
+            <form create="false" edit="false">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="user_id"/>
+                        <field name="status"/>
+                        <field name="question"/>
+                        <field name="source_summary"/>
+                        <field name="conversation_id"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="fire_safety_management.Dashboard">
+        <div class="o_action o_fs_app">
+            <FsAppShell active="'dashboard'">
+                <div class="o_fs_shell">
+                    <div class="o_fs_page_header">
+                        <div>
+                            <h1>Staff Dashboard</h1>
+                            <p>Operational Fire &amp; Safety status from live records.</p>
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button t-if="canCreateInspection" class="o_fs_btn primary" t-on-click="openCreateInspection">
+                                <i class="fa fa-plus"/> Create Inspection
+                            </button>
+                            <button t-if="canReportIncident" class="o_fs_btn secondary" t-on-click="openReportIncident">
+                                <i class="fa fa-exclamation-triangle"/> Report Incident
+                            </button>
+                            <button t-if="canCreateDrill" class="o_fs_btn secondary" t-on-click="openScheduleDrill">
+                                <i class="fa fa-bullhorn"/> Schedule Drill
+                            </button>
+                            <button t-if="canCreateEquipment" class="o_fs_btn secondary" t-on-click="openCreateEquipment">
+                                <i class="fa fa-fire-extinguisher"/> Add Equipment
+                            </button>
+                            <button t-if="canActivateEmergency" class="o_fs_btn danger" t-on-click="openActivateEmergency">
+                                <i class="fa fa-bell"/> Activate Emergency
+                            </button>
+                        </div>
+                    </div>
+
+                    <div t-if="state.loading" class="o_fs_empty">
+                        <h3>Loading dashboard</h3>
+                        <p>Fetching Fire &amp; Safety records.</p>
+                    </div>
+                    <div t-elif="state.error" class="o_fs_empty o_fs_error">
+                        <h3>Dashboard could not load</h3>
+                        <p t-esc="state.error"/>
+                        <button class="o_fs_btn primary" t-on-click="reload">Retry</button>
+                    </div>
+                    <t t-else="">
+                        <div t-if="activeEmergencies" class="o_fs_alert">
+                            <i class="fa fa-bell"/>
+                            <div>
+                                <strong>Active emergency</strong>
+                                <div>There is currently <t t-esc="activeEmergencies"/> active emergency record. Use Emergency Response to review the timeline.</div>
+                            </div>
+                            <button class="o_fs_btn secondary" t-on-click="() => this.openNav('fire_safety_management.action_emergency', 'Emergency Response')">Open</button>
+                        </div>
+
+                        <div class="o_fs_kpi_row">
+                            <FsKpiCard t-if="showInspectionKpis" label="'Open Inspections'" value="openInspections" icon="'fa-clipboard'" onClick.bind="() => this.openNav('fire_safety_management.action_inspections', 'Inspections &amp; Audits')"/>
+                            <FsKpiCard t-if="showInspectionKpis" label="'Overdue Inspections'" value="data.overdue_inspections || 0" icon="'fa-clock-o'" tone="'danger'"/>
+                            <FsKpiCard label="'Open Incidents'" value="openIncidents" icon="'fa-exclamation-triangle'" tone="openIncidents ? 'danger' : ''" onClick.bind="() => this.openNav('fire_safety_management.action_incidents', 'Incidents')"/>
+                            <FsKpiCard t-if="showEquipmentKpis" label="'Equipment Due / Expired'" value="equipmentDue" icon="'fa-fire-extinguisher'" tone="equipmentDue ? 'warning' : ''" onClick.bind="() => this.openNav('fire_safety_management.action_equipment', 'Fire Equipment')"/>
+                            <FsKpiCard t-if="showInspectionKpis" label="'Open Corrective Actions'" value="data.open_actions || 0" icon="'fa-wrench'"/>
+                            <FsKpiCard t-if="showDrillKpis" label="'Upcoming Drills'" value="scheduledDrills" icon="'fa-bullhorn'" onClick.bind="() => this.openNav('fire_safety_management.action_drills', 'Mock Drills')"/>
+                            <FsKpiCard t-if="showInspectionKpis" label="'Compliance'" value="complianceValue" icon="'fa-line-chart'" hint="complianceHint" onClick.bind="() => this.openNav('fire_safety_management.action_reports', 'Compliance Reports')"/>
+                        </div>
+
+                        <div class="o_fs_dash_grid">
+                            <div t-if="showInspectionKpis" class="o_fs_card">
+                                <div class="o_fs_card_head">Inspections by status</div>
+                                <t t-if="inspectionRows.length">
+                                    <div class="o_fs_stat_line" t-foreach="inspectionRows" t-as="row" t-key="row.state">
+                                        <FsStatusBadge state="row.state"/>
+                                        <span t-esc="row.count"/>
+                                    </div>
+                                </t>
+                                <FsEmptyState t-else="" title="'No inspections yet'" hint="'Scheduled inspections will appear here.'"/>
+                            </div>
+
+                            <div class="o_fs_card">
+                                <div class="o_fs_card_head">Recent incidents</div>
+                                <t t-foreach="recentIncidents" t-as="row" t-key="row.id">
+                                    <div class="o_fs_list_row">
+                                        <div>
+                                            <div class="fw-semibold" t-esc="row.name"/>
+                                            <div class="small text-muted"><t t-esc="row.incident_type"/> · <t t-esc="formatWhen(row.incident_datetime)"/></div>
+                                        </div>
+                                        <FsStatusBadge state="row.state"/>
+                                    </div>
+                                </t>
+                                <FsEmptyState t-if="!recentIncidents.length" title="'No incidents'" hint="'Reported incidents will appear here.'"/>
+                            </div>
+
+                            <div t-if="showDrillKpis" class="o_fs_card">
+                                <div class="o_fs_card_head">Upcoming mock drills</div>
+                                <t t-foreach="upcomingDrills" t-as="row" t-key="row.id">
+                                    <div class="o_fs_list_row">
+                                        <div>
+                                            <div class="fw-semibold" t-esc="row.name"/>
+                                            <div class="small text-muted"><t t-esc="row.drill_type"/> · <t t-esc="formatWhen(row.scheduled_datetime)"/></div>
+                                        </div>
+                                        <FsStatusBadge state="row.state" label="row.state === 'scheduled' ? 'Upcoming' : row.state"/>
+                                    </div>
+                                </t>
+                                <FsEmptyState t-if="!upcomingDrills.length" title="'No upcoming drills'" hint="'Scheduled drills will appear here.'"/>
+                            </div>
+
+                            <div t-if="showEquipmentKpis" class="o_fs_card">
+                                <div class="o_fs_card_head">Equipment status</div>
+                                <t t-if="equipmentRows.length">
+                                    <div class="o_fs_stat_line" t-foreach="equipmentRows" t-as="row" t-key="row.state">
+                                        <FsStatusBadge state="row.state"/>
+                                        <span t-esc="row.count"/>
+                                    </div>
+                                </t>
+                                <FsEmptyState t-else="" title="'No equipment records'" hint="'Fire equipment status will appear here.'"/>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </FsAppShell>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="mobile_application.MobileAppShell">
+        <div class="o_mob_app">
+            <MobileHeader
+                title="props.title"
+                subtitle="props.subtitle"
+                avatarUrl="props.avatarUrl"
+                unread="props.unread"
+                showBack="props.showBack"
+                onBack="props.onBack"
+                onAlerts="props.onAlerts"
+            />
+            <main class="o_mob_content">
+                <t t-slot="default"/>
+            </main>
+            <MobileBottomNav
+                t-if="!props.hideNav"
+                active="props.activeTab"
+                role="props.role"
+                modules="props.modules"
+                onNavigate="props.onNavigate"
+            />
+        </div>
+    </t>
+
+    <t t-name="mobile_application.MobileHeader">
+        <header class="o_mob_header">
+            <button t-if="props.showBack" type="button" class="o_mob_icon_btn" t-on-click="props.onBack">
+                <i class="fa fa-arrow-left"/>
+            </button>
+            <div class="o_mob_header_text">
+                <div class="o_mob_header_title" t-esc="props.title"/>
+                <div t-if="props.subtitle" class="o_mob_header_sub" t-esc="props.subtitle"/>
+            </div>
+            <button type="button" class="o_mob_icon_btn o_mob_bell" t-on-click="props.onAlerts">
+                <i class="fa fa-bell-o"/>
+                <span t-if="props.unread" class="o_mob_badge" t-esc="props.unread"/>
+            </button>
+            <img t-if="props.avatarUrl" class="o_mob_avatar" t-att-src="props.avatarUrl" alt=""/>
+        </header>
+    </t>
+
+    <t t-name="mobile_application.MobileBottomNav">
+        <nav class="o_mob_bottom_nav">
+            <t t-foreach="tabs" t-as="tab" t-key="tab.id">
+                <button type="button" t-att-class="tab.id === props.active ? 'active' : ''" t-on-click="() => props.onNavigate(tab.id)">
+                    <i t-attf-class="fa {{ tab.icon }}"/>
+                    <span t-esc="tab.label"/>
+                </button>
+            </t>
+        </nav>
+    </t>
+
+    <t t-name="mobile_application.MobileCard">
+        <div class="o_mob_card" t-att-class="props.className" t-on-click="props.onClick">
+            <t t-slot="default"/>
+        </div>
+    </t>
+
+    <t t-name="mobile_application.MobileSectionHeader">
+        <div class="o_mob_section_head">
+            <h2 t-esc="props.title"/>
+            <button t-if="props.actionLabel" type="button" class="o_mob_link" t-on-click="props.onAction" t-esc="props.actionLabel"/>
+        </div>
+    </t>
+
+    <t t-name="mobile_application.MobileEmptyState">
+        <div class="o_mob_empty">
+            <i t-if="props.icon" t-attf-class="fa {{ props.icon }}"/>
+            <h3 t-esc="props.title"/>
+            <p t-if="props.hint" t-esc="props.hint"/>
+        </div>
+    </t>
+
+    <t t-name="mobile_application.MobileStatusBadge">
+        <span t-attf-class="o_mob_pill tone-{{ props.tone }}" t-esc="props.label"/>
+    </t>
+
+    <t t-name="mobile_application.MobileQuickAction">
+        <button type="button" class="o_mob_quick" t-on-click="props.onClick">
+            <i t-attf-class="fa {{ props.icon }}"/>
+            <span t-esc="props.label"/>
+        </button>
+    </t>
+
+    <t t-name="mobile_application.MobileListCard">
+        <div class="o_mob_list_card" t-on-click="props.onClick">
+            <div class="o_mob_list_main">
+                <div class="o_mob_list_title" t-esc="props.title"/>
+                <div t-if="props.subtitle" class="o_mob_list_sub" t-esc="props.subtitle"/>
+            </div>
+            <MobileStatusBadge t-if="props.state" label="props.stateLabel" tone="props.stateTone"/>
+        </div>
+    </t>
+
+    <t t-name="mobile_application.MobileLoadingState">
+        <div class="o_mob_loading"><i class="fa fa-spinner fa-spin"/> Loading…</div>
+    </t>
+
+    <t t-name="mobile_application.MobileErrorState">
+        <div class="o_mob_error">
+            <h3 t-esc="props.title"/>
+            <p t-esc="props.message"/>
+        </div>
+    </t>
+
+    <t t-name="mobile_application.MobileModal">
+        <div class="o_mob_modal_backdrop" t-on-click="props.onClose">
+            <div class="o_mob_modal" t-on-click.stop="">
+                <t t-slot="default"/>
+            </div>
+        </div>
+    </t>
+</templates>

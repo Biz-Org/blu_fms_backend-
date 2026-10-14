@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="integration_iot_management.Energy">
+        <div class="o_action o_iot_app">
+            <IotAppShell active="'energy'">
+                <div class="o_iot_shell">
+                    <div class="o_iot_page_header">
+                        <div>
+                            <h1>Energy Management</h1>
+                            <p>Consumption, peaks, savings, and location comparison from stored meter data.</p>
+                        </div>
+                    </div>
+                    <div t-if="state.loading" class="o_iot_empty"><h3>Loading</h3></div>
+                    <div t-elif="state.error" class="o_iot_empty o_iot_error"><h3 t-esc="state.error"/></div>
+                    <t t-else="">
+                        <div class="o_iot_kpi_row">
+                            <IotKpiCard label="'Current Consumption'" value="data.kpis.current || 0" icon="'fa-bolt'" hint="'Latest kWh'"/>
+                            <IotKpiCard label="'Peak Consumption'" value="data.kpis.peak || 0" icon="'fa-line-chart'" hint="'Highest stored reading'"/>
+                            <IotKpiCard label="'Energy Savings'" value="data.kpis.savings || 0" icon="'fa-leaf'" hint="'Applied opportunities (kWh)'"/>
+                        </div>
+                        <div class="o_iot_dash_grid">
+                            <div class="o_iot_card">
+                                <div class="o_iot_card_head">Energy Trend</div>
+                                <div class="o_iot_bars">
+                                    <div t-foreach="data.trend" t-as="row" t-key="row.t" class="o_iot_bar fill" t-att-style="'height:' + barHeight(row.kwh)"/>
+                                </div>
+                                <IotEmptyState t-if="!data.trend.length" title="'No trend data'" hint="'Ingest meter readings to plot usage.'"/>
+                            </div>
+                            <div class="o_iot_card">
+                                <div class="o_iot_card_head">Optimization</div>
+                                <t t-foreach="data.opportunities" t-as="row" t-key="row.id">
+                                    <div class="o_iot_attention_row">
+                                        <div>
+                                            <div class="fw-semibold" t-esc="row.name"/>
+                                            <div class="small text-muted"><t t-esc="row.estimated_kwh"/> kWh estimated · <t t-esc="row.location or '—'"/></div>
+                                        </div>
+                                        <button t-if="state.isAdmin and row.state !== 'applied'" class="o_iot_btn secondary" t-on-click="() => this.applyOpportunity(row)">Apply</button>
+                                        <IotStatusBadge t-else="" state="row.state"/>
+                                    </div>
+                                </t>
+                                <IotEmptyState t-if="!data.opportunities.length" title="'No opportunities recorded'" hint="'Savings are tracked from applied optimization records, not a generated algorithm.'"/>
+                            </div>
+                            <div class="o_iot_card">
+                                <div class="o_iot_card_head">By Location</div>
+                                <t t-foreach="data.by_location" t-as="row" t-key="row.name">
+                                    <div class="o_iot_status_row">
+                                        <span t-esc="row.name"/>
+                                        <strong t-esc="row.kwh"/>
+                                    </div>
+                                    <div class="o_iot_bar fill" t-att-style="'height:8px;width:' + locWidth(row.kwh)"/>
+                                </t>
+                                <IotEmptyState t-if="!data.by_location.length" title="'No location totals'"/>
+                            </div>
+                            <div class="o_iot_card">
+                                <div class="o_iot_card_head">Attention Required</div>
+                                <t t-foreach="data.attention" t-as="row" t-key="row.id">
+                                    <div class="o_iot_attention_row">
+                                        <div>
+                                            <div class="fw-semibold" t-esc="row.title"/>
+                                            <div class="small text-muted" t-esc="row.location or '—'"/>
+                                        </div>
+                                        <IotStatusBadge state="row.priority"/>
+                                    </div>
+                                </t>
+                                <IotEmptyState t-if="!data.attention.length" title="'No abnormal consumption alerts'"/>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </IotAppShell>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="compliance_audit_management.Calendar">
+        <div class="o_action o_ca_app">
+            <CaAppShell active="'calendar'">
+                <div class="o_ca_shell">
+                    <div t-if="state.error" class="o_ca_alert">
+                        <i class="fa fa-exclamation-circle"/>
+                        <div t-esc="state.error"/>
+                    </div>
+
+                    <div class="o_ca_page_header">
+                        <div>
+                            <h1>Compliance Calendar</h1>
+                            <p>Checks, audits, document renewals, non-compliance and regulatory deadlines.</p>
+                        </div>
+                        <button class="o_ca_btn" t-on-click="goToday">Today</button>
+                    </div>
+
+                    <div t-if="state.loading" class="o_ca_empty">
+                        <h3>Loading calendar</h3>
+                        <p>Gathering scheduled compliance work.</p>
+                    </div>
+                    <t t-else="">
+                        <div class="o_ca_card mb-3">
+                            <div class="o_ca_cal_toolbar">
+                                <div class="d-flex gap-2 align-items-center">
+                                    <button class="o_ca_btn" t-on-click="() => this.shiftMonth(-1)">‹</button>
+                                    <b t-esc="monthLabel"/>
+                                    <button class="o_ca_btn" t-on-click="() => this.shiftMonth(1)">›</button>
+                                </div>
+                                <div class="o_ca_chips">
+                                    <t t-foreach="typeOptions" t-as="opt" t-key="opt.value">
+                                        <button
+                                            t-att-class="typeEnabled(opt.value) ? 'active' : ''"
+                                            t-on-click="() => this.toggleType(opt.value)"
+                                            t-esc="opt.label"
+                                        />
+                                    </t>
+                                </div>
+                            </div>
+
+                            <div class="o_ca_cal">
+                                <div class="o_ca_cal_head">SUN</div>
+                                <div class="o_ca_cal_head">MON</div>
+                                <div class="o_ca_cal_head">TUE</div>
+                                <div class="o_ca_cal_head">WED</div>
+                                <div class="o_ca_cal_head">THU</div>
+                                <div class="o_ca_cal_head">FRI</div>
+                                <div class="o_ca_cal_head">SAT</div>
+                                <t t-foreach="calendarDays" t-as="day" t-key="day.key">
+                                    <div
+                                        t-attf-class="o_ca_cal_day {{ day.muted ? 'muted' : '' }} {{ day.today ? 'today' : '' }} {{ day.selected ? 'selected' : '' }}"
+                                        t-on-click="() => this.selectDay(day)"
+                                    >
+                                        <span class="o_ca_cal_num" t-esc="day.num"/>
+                                        <t t-foreach="day.events.slice(0, 3)" t-as="ev" t-key="ev.key">
+                                            <div
+                                                t-attf-class="o_ca_cal_event tone-{{ ev.tone || 'muted' }}"
+                                                t-on-click.stop="() => this.openEvent(ev)"
+                                                t-att-title="ev.type_label + ': ' + ev.name"
+                                                t-esc="ev.name"
+                                            />
+                                        </t>
+                                        <div t-if="day.events.length > 3" class="o_ca_cal_more">
+                                            +<t t-esc="day.events.length - 3"/> more
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+
+                        <div class="o_ca_detail_grid">
+                            <div class="o_ca_form_section">
+                                <h3 t-if="state.selectedDay">
+                                    <t t-esc="formatDate(state.selectedDay)"/>
+                                </h3>
+                                <h3 t-else="">Select a day</h3>
+                                <t t-if="state.selectedDay">
+                                    <t t-if="selectedEvents.length">
+                                        <div t-foreach="selectedEvents" t-as="ev" t-key="ev.key" class="o_ca_checklist_row" t-on-click="() => this.openEvent(ev)">
+                                            <div class="o_ca_row_title">
+                                                <span t-attf-class="o_ca_pill {{ ev.tone === 'danger' ? 'danger' : (ev.tone === 'warning' ? 'warning' : 'info') }}" t-esc="ev.type_label"/>
+                                                <t t-esc="ev.name"/>
+                                            </div>
+                                            <div class="o_ca_row_sub">
+                                                <t t-esc="ev.location or '—'"/>
+                                                · <t t-esc="ev.assigned_to or 'Unassigned'"/>
+                                                · <t t-esc="ev.display_state"/>
+                                            </div>
+                                        </div>
+                                    </t>
+                                    <CaEmptyState t-else="" title="'No items this day'" hint="'Try another date or enable more event types.'"/>
+                                </t>
+                                <p t-else="" class="o_ca_hint">Click a calendar day to review its compliance items.</p>
+                            </div>
+
+                            <div class="o_ca_form_section">
+                                <h3>Upcoming in view</h3>
+                                <t t-if="upcomingEvents.length">
+                                    <div t-foreach="upcomingEvents" t-as="ev" t-key="'up-' + ev.key" class="o_ca_checklist_row" t-on-click="() => this.openEvent(ev)">
+                                        <div class="o_ca_row_title" t-esc="ev.name"/>
+                                        <div class="o_ca_row_sub">
+                                            <t t-esc="formatDate(ev.date)"/> · <t t-esc="ev.type_label"/>
+                                        </div>
+                                    </div>
+                                </t>
+                                <CaEmptyState t-else="" title="'Nothing upcoming'" hint="'Scheduled work in this month will appear here.'"/>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </CaAppShell>
+        </div>
+    </t>
+</templates>

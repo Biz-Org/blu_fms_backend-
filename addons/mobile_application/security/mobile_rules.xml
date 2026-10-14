@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="rule_mobile_notification_user" model="ir.rule">
+        <field name="name">Mobile notification: own</field>
+        <field name="model_id" ref="model_mobile_application_notification"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_mobile_resident')), (4, ref('group_mobile_staff')), (4, ref('group_mobile_security'))]"/>
+    </record>
+
+    <record id="rule_mobile_profile_user" model="ir.rule">
+        <field name="name">Mobile profile: own</field>
+        <field name="model_id" ref="model_mobile_application_profile"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_mobile_resident')), (4, ref('group_mobile_staff')), (4, ref('group_mobile_security'))]"/>
+    </record>
+
+    <record id="rule_mobile_service_request_resident" model="ir.rule">
+        <field name="name">Mobile service request: resident own</field>
+        <field name="model_id" ref="model_mobile_service_request"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_mobile_resident'))]"/>
+    </record>
+
+    <record id="rule_mobile_service_request_staff" model="ir.rule">
+        <field name="name">Mobile service request: staff assigned</field>
+        <field name="model_id" ref="model_mobile_service_request"/>
+        <field name="domain_force">['|', ('user_id', '=', user.id), ('assigned_user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_mobile_staff'))]"/>
+    </record>
+
+    <record id="rule_mobile_visitor_resident" model="ir.rule">
+        <field name="name">Mobile visitor: resident own</field>
+        <field name="model_id" ref="model_mobile_visitor"/>
+        <field name="domain_force">[('resident_user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_mobile_resident'))]"/>
+    </record>
+
+    <record id="rule_mobile_visitor_security" model="ir.rule">
+        <field name="name">Mobile visitor: security all</field>
+        <field name="model_id" ref="model_mobile_visitor"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_mobile_security'))]"/>
+    </record>
+
+    <record id="rule_mobile_visitor_staff" model="ir.rule">
+        <field name="name">Mobile visitor: staff read operational</field>
+        <field name="model_id" ref="model_mobile_visitor"/>
+        <field name="domain_force">[('state', '!=', 'cancelled')]</field>
+        <field name="groups" eval="[(4, ref('group_mobile_staff'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="rule_mobile_booking_resident" model="ir.rule">
+        <field name="name">Mobile booking: own</field>
+        <field name="model_id" ref="model_mobile_booking"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_mobile_resident'))]"/>
+    </record>
+
+    <record id="rule_mobile_payment_resident" model="ir.rule">
+        <field name="name">Mobile payment: own</field>
+        <field name="model_id" ref="model_mobile_payment_record"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_mobile_resident'))]"/>
+    </record>
+
+    <record id="rule_mobile_digital_id" model="ir.rule">
+        <field name="name">Mobile digital ID: own or verifier</field>
+        <field name="model_id" ref="model_mobile_digital_id"/>
+        <field name="domain_force">['|', ('user_id', '=', user.id), ('user_id', '!=', False)]</field>
+        <field name="groups" eval="[(4, ref('group_mobile_resident')), (4, ref('group_mobile_staff')), (4, ref('group_mobile_security'))]"/>
+    </record>
+
+    <record id="rule_mobile_sync_log" model="ir.rule">
+        <field name="name">Mobile sync log: own</field>
+        <field name="model_id" ref="model_mobile_sync_log"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_mobile_resident')), (4, ref('group_mobile_staff')), (4, ref('group_mobile_security'))]"/>
+    </record>
+
+    <record id="rule_mobile_session" model="ir.rule">
+        <field name="name">Mobile session: own</field>
+        <field name="model_id" ref="model_mobile_application_session"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_mobile_resident')), (4, ref('group_mobile_staff')), (4, ref('group_mobile_security'))]"/>
+    </record>
+</odoo>

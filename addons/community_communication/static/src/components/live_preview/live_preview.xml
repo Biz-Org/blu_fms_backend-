@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="community_communication.LivePreview">
+        <div class="o_cc_live_preview o_cc_shell">
+            <div class="o_cc_live_preview_banner"/>
+            <div class="o_cc_live_preview_body">
+                <div class="o_cc_live_preview_kicker" t-esc="kicker.toUpperCase()"/>
+                <div class="d-flex gap-1 flex-wrap mb-2">
+                    <span class="o_cc_pill" t-esc="category or 'General'"/>
+                    <span t-if="data.priority" class="o_cc_pill warning" t-esc="data.priority"/>
+                </div>
+                <div class="o_cc_live_preview_meta" t-esc="audience + ' • Just now'"/>
+                <h3 t-esc="title"/>
+                <div class="small" t-out="bodyHtml"/>
+                <t t-if="options.length">
+                    <div class="mt-2">
+                        <t t-foreach="options" t-as="option" t-key="option_index">
+                            <div class="o_cc_option_card" t-esc="option"/>
+                        </t>
+                    </div>
+                    <button class="btn o_cc_btn_primary w-100 mt-2" disabled="disabled">Submit Vote</button>
+                </t>
+                <div t-if="data.date_start" class="small text-muted mt-2" t-esc="data.date_start"/>
+                <div class="small text-muted mt-3">Preview updates as you type. Publish still runs as a server action.</div>
+            </div>
+        </div>
+    </t>
+</templates>

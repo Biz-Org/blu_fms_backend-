@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="community_communication.Announcements">
+        <div class="o_action o_cc_app">
+            <CcAppShell active="'announcements'">
+            <div class="o_cc_shell">
+                <t t-if="state.mode === 'list'">
+                    <CcPageHeader title="'Announcements'" subtitle="'Create, schedule and manage community announcements.'">
+                        <t t-set-slot="buttons">
+                            <CcActionButton t-if="state.isOfficer" label="'+ Create Announcement'" icon="'fa-plus'" onClick="() => this.setMode('create')"/>
+                        </t>
+                    </CcPageHeader>
+                    <div class="o_cc_kpi_row">
+                        <t t-foreach="state.kpis" t-as="card" t-key="card.key">
+                            <CcKpiCard label="card.label" value="card.value" icon="card.key === 'expiring' ? 'fa-exclamation-triangle' : 'fa-bullhorn'" tone="card.tone" onClick="() => this.onKpi(card)"/>
+                        </t>
+                    </div>
+                    <div class="o_cc_toolbar">
+                        <CcSearchBar value="state.search" placeholder="'Search announcements...'" onChange.bind="onSearch"/>
+                        <select class="o_cc_select" t-model="state.category" t-on-change="() => this.reload()">
+                            <option value="">Category: All</option>
+                            <t t-foreach="categories" t-as="cat" t-key="cat[0]">
+                                <option t-att-value="cat[0]" t-esc="cat[1]"/>
+                            </t>
+                        </select>
+                        <select t-if="state.isOfficer" class="o_cc_select" t-model="state.filter" t-on-change="() => { this.state.page = 1; this.reload(); }">
+                            <option value="all">Status: All</option>
+                            <option value="published">Published</option>
+                            <option value="scheduled">Scheduled</option>
+                            <option value="draft">Draft</option>
+                            <option value="expired">Expired</option>
+                            <option value="expiring_soon">Expiring Soon</option>
+                        </select>
+                        <select class="o_cc_select" t-model="state.audience" t-on-change="() => this.reload()">
+                            <option value="">Audience: All</option>
+                            <option value="community">Entire Community</option>
+                            <option value="buildings">Buildings</option>
+                            <option value="groups">Groups</option>
+                        </select>
+                    </div>
+                    <div class="o_cc_card">
+                        <div class="o_cc_card_head">Active Announcements</div>
+                        <t t-if="state.records.length">
+                            <table class="o_cc_table">
+                                <thead>
+                                    <tr>
+                                        <th>Announcement</th>
+                                        <th>Category</th>
+                                        <th>Audience</th>
+                                        <th>Date</th>
+                                        <th>Views</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="state.records" t-as="rec" t-key="rec.id" t-on-click="() => this.setMode('detail', rec.id)">
+                                        <td>
+                                            <div class="d-flex gap-2 align-items-start">
+                                                <i class="fa fa-bullhorn text-muted mt-1"/>
+                                                <div>
+                                                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                                                        <div class="o_cc_row_title" t-esc="rec.title"/>
+                                                        <span t-if="rec.is_pinned" class="o_cc_pill danger">Pinned</span>
+                                                    </div>
+                                                    <div t-attf-class="o_cc_row_sub {{ rec.priority === 'high' ? 'text-danger' : '' }}">
+                                                        <t t-if="rec.priority === 'high'">! High Priority</t>
+                                                        <t t-elif="rec.priority === 'low'">Low Priority</t>
+                                                        <t t-else="">Normal Priority</t>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td><span class="o_cc_pill" t-esc="categoryLabel(rec.category)"/></td>
+                                        <td t-esc="audienceText(rec)"/>
+                                        <td>
+                                            <div t-esc="formatDay(rec.date_publish)"/>
+                                            <div class="o_cc_row_sub" t-if="rec.date_expiry">Exp: <t t-esc="formatDay(rec.date_expiry)"/></div>
+                                        </td>
+                                        <td t-esc="rec.view_count"/>
+                                        <td><CcStatusBadge state="rec.state"/></td>
+                                        <td><button class="o_cc_link" t-on-click.stop="() => this.setMode('detail', rec.id)">View</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <CcPagination page="state.page" total="state.total" pageSize="pageSize" onPage.bind="onPage"/>
+                        </t>
+                        <CcEmptyState t-else="" title="'No announcements yet'" hint="state.isOfficer ? 'Create your first announcement to reach residents.' : 'Published announcements will appear here.'" actionLabel="state.isOfficer ? '+ Create Announcement' : ''" onAction="() => this.setMode('create')"/>
+                    </div>
+                </t>
+
+                <t t-if="state.mode === 'create' or state.mode === 'edit'">
+                    <button class="o_cc_back" t-on-click="() => this.setMode('list')"><i class="fa fa-arrow-left"/> Back to Announcements</button>
+                    <div class="o_cc_split">
+                        <div>
+                            <CcFormSection title="state.mode === 'edit' ? 'Edit Announcement' : 'Create Announcement'">
+                                <label>Title *</label>
+                                <input t-att-class="fieldClass('title')" t-model="state.form.title" placeholder="Enter announcement title"/>
+                                <CcFieldError message="fieldError('title')"/>
+                                <div class="o_cc_form_grid mt-3">
+                                    <div>
+                                        <label>Category *</label>
+                                        <select t-att-class="fieldClass('category')" t-model="state.form.category">
+                                            <t t-foreach="categories" t-as="cat" t-key="cat[0]"><option t-att-value="cat[0]" t-esc="cat[1]"/></t>
+                                        </select>
+                                        <CcFieldError message="fieldError('category')"/>
+                                    </div>
+                                    <div>
+                                        <label>Priority</label>
+                                        <select class="o_cc_input" t-model="state.form.priority">
+                                            <option value="low">Low</option>
+                                            <option value="medium">Medium (Important)</option>
+                                            <option value="high">High</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <label class="mt-3">Content *</label>
+                                <textarea t-att-class="fieldClass('body')" t-model="state.form.body" placeholder="Write your announcement here..."/>
+                                <CcFieldError message="fieldError('body')"/>
+                                <label class="mt-3">Attachments</label>
+                                <CcFileDropzone files="attachmentList" error="fieldError('attachments')" uploading="state.busy === 'Uploading...'" onAdd.bind="onFilesSelected" onRemove.bind="removeAttachment"/>
+                                <label class="o_cc_radio mt-2"><input type="checkbox" t-model="state.form.is_pinned"/> Pin announcement</label>
+                            </CcFormSection>
+                            <CcFormSection title="'Publishing Settings'">
+                                <label class="o_cc_radio"><input type="radio" t-model="state.form.publish_mode" value="now"/> Publish immediately</label>
+                                <label class="o_cc_radio"><input type="radio" t-model="state.form.publish_mode" value="later"/> Schedule for later</label>
+                                <div class="o_cc_form_grid">
+                                    <div t-if="state.form.publish_mode === 'later'">
+                                        <label>Publish Date *</label>
+                                        <input t-att-class="fieldClass('date_publish')" type="datetime-local" t-model="state.form.date_publish"/>
+                                        <CcFieldError message="fieldError('date_publish')"/>
+                                    </div>
+                                    <div>
+                                        <label>Expiry / Remove Date (Optional)</label>
+                                        <input t-att-class="fieldClass('date_expiry')" type="datetime-local" t-model="state.form.date_expiry"/>
+                                        <CcFieldError message="fieldError('date_expiry')"/>
+                                    </div>
+                                </div>
+                            </CcFormSection>
+                            <CcFormSection title="'Target Audience'">
+                                <CcAudiencePicker
+                                    audienceType="state.form.audience_type"
+                                    onType.bind="setAudienceType"
+                                    buildings="buildingsFor(communityId)"
+                                    groups="groupsFor(communityId)"
+                                    buildingIds="state.form.building_ids"
+                                    groupIds="state.form.audience_group_ids"
+                                    buildingQuery="state.form.buildingQuery"
+                                    groupQuery="state.form.groupQuery"
+                                    onBuildingQuery.bind="setBuildingQuery"
+                                    onGroupQuery.bind="setGroupQuery"
+                                    onToggleBuilding.bind="toggleBuilding"
+                                    onToggleGroup.bind="toggleGroup"
+                                    error="fieldError('audience')"
+                                    radioName="'announcement-audience'"/>
+                            </CcFormSection>
+                            <div class="o_cc_footer_bar">
+                                <span t-if="state.busy" class="o_cc_busy_hint" t-esc="state.busy"/>
+                                <button class="o_cc_btn ghost" t-att-disabled="state.busy" t-on-click="() => this.setMode('list')">Cancel</button>
+                                <button class="o_cc_btn secondary" t-att-disabled="state.busy" t-on-click="saveDraft">Save Draft</button>
+                                <button class="o_cc_btn primary" t-att-disabled="state.busy" t-on-click="publish"><i class="fa fa-paper-plane"/> Publish Announcement</button>
+                            </div>
+                        </div>
+                        <CcPreviewPanel kicker="'RESIDENT PREVIEW'" title="state.form.title" body="previewBody()" category="categoryLabel(state.form.category)" meta="previewMeta()"/>
+                    </div>
+                </t>
+
+                <t t-if="state.mode === 'detail' and state.record">
+                    <button class="o_cc_back" t-on-click="() => this.setMode('list')"><i class="fa fa-arrow-left"/> Back to Announcements / Detail View</button>
+                    <div class="o_cc_split">
+                        <div>
+                            <div class="o_cc_card mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <div class="d-flex gap-2 flex-wrap">
+                                        <span class="o_cc_pill info" t-esc="categoryLabel(state.record.category)"/>
+                                        <span t-attf-class="o_cc_pill {{ state.record.priority === 'high' ? 'danger' : 'warning' }}" t-esc="state.record.priority + ' priority'"/>
+                                        <span t-if="state.record.is_pinned" class="o_cc_pill danger">Pinned</span>
+                                        <CcStatusBadge state="state.record.state"/>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button t-if="state.isOfficer and (state.record.state === 'draft' or state.record.state === 'scheduled')" class="o_cc_btn secondary" t-on-click="() => this.setMode('edit', state.record.id)">Edit</button>
+                                        <button t-if="state.record.state === 'published' and !state.extras.acked" class="o_cc_btn primary" t-on-click="acknowledge">Acknowledge</button>
+                                    </div>
+                                </div>
+                                <h1 class="mt-3" t-esc="state.record.title"/>
+                                <div class="o_cc_meta mt-2">
+                                    <span>Published by <t t-esc="state.record.author_name || '—'"/></span>
+                                    <span t-esc="formatWhen(state.record.date_publish or state.record.create_date)"/>
+                                </div>
+                            </div>
+                            <div class="o_cc_card mb-3">
+                                <div class="o_cc_card_head">Announcement Details</div>
+                                <div t-out="html(state.record.body)"/>
+                            </div>
+                            <div class="o_cc_card">
+                                <div class="o_cc_card_head">Attachments <span class="o_cc_pill" t-esc="(state.extras.attachments or []).length + ' Files'"/></div>
+                                <t t-foreach="state.extras.attachments or []" t-as="file" t-key="file.id">
+                                    <div class="o_cc_file_row">
+                                        <i class="fa fa-file-o"/>
+                                        <span class="flex-grow-1">
+                                            <span t-esc="file.name"/>
+                                            <span class="o_cc_row_sub" t-esc="formatFileSize(file.file_size)"/>
+                                        </span>
+                                        <a t-att-href="'/web/content/' + file.id + '?download=1'"><i class="fa fa-download"/></a>
+                                    </div>
+                                </t>
+                                <div t-if="!(state.extras.attachments or []).length" class="text-muted small">No attachments.</div>
+                            </div>
+                        </div>
+                        <div class="o_cc_stack">
+                            <div class="o_cc_card">
+                                <div class="o_cc_card_head">Publication Details</div>
+                                <div class="small mb-2">Publish Date<br/><b t-esc="formatWhen(state.record.date_publish)"/></div>
+                                <div class="small mb-2">Expiry Date<br/><b t-esc="formatWhen(state.record.date_expiry)"/></div>
+                                <div class="small">Visibility<br/><b t-esc="audienceText(state.record)"/></div>
+                            </div>
+                            <div class="o_cc_card">
+                                <div class="o_cc_card_head">Audience Targeting</div>
+                                <span class="o_cc_pill" t-esc="audienceText(state.record)"/>
+                                <div class="small mt-2">Total estimated reach: <t t-esc="state.record.reach_count"/> users</div>
+                            </div>
+                            <div class="o_cc_card">
+                                <div class="o_cc_card_head">Engagement</div>
+                                <div class="o_cc_form_grid">
+                                    <div class="o_cc_stat_box"><div class="o_cc_kpi_label">Total Views</div><div class="o_cc_kpi_value" t-esc="state.record.view_count"/></div>
+                                    <div class="o_cc_stat_box"><div class="o_cc_kpi_label">Acknowledge</div><div class="o_cc_kpi_value" t-esc="state.record.ack_count"/></div>
+                                </div>
+                                <div class="small mt-2">Acknowledgment Rate</div>
+                                <div class="o_cc_progress"><div class="o_cc_progress_bar" t-att-style="'width:' + ackPct(state.record) + '%'"/></div>
+                                <div class="small text-muted"><t t-esc="ackPct(state.record)"/>%</div>
+                            </div>
+                            <div class="o_cc_card">
+                                <div class="o_cc_card_head">Activity Timeline</div>
+                                <ul class="o_cc_timeline">
+                                    <li t-if="state.record.date_publish">Published · <t t-esc="formatWhen(state.record.date_publish)"/></li>
+                                    <li>Created · <t t-esc="formatWhen(state.record.create_date)"/></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </div>
+            </CcAppShell>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="compliance_audit_management.Activities">
+        <div class="o_action o_ca_app">
+            <CaAppShell active="'activities'">
+                <div class="o_ca_shell">
+                    <div t-if="state.error" class="o_ca_alert">
+                        <i class="fa fa-exclamation-circle"/>
+                        <div t-esc="state.error"/>
+                    </div>
+
+                    <t t-if="state.mode === 'list'">
+                        <div class="o_ca_page_header">
+                            <div>
+                                <h1>Compliance Activities</h1>
+                                <p>Track statutory requirements and recurring compliance checks.</p>
+                            </div>
+                            <button t-if="canCreate" class="o_ca_btn primary" t-on-click="openCreate">
+                                <i class="fa fa-plus"/> Create Compliance Check
+                            </button>
+                        </div>
+
+                        <div t-if="state.loading" class="o_ca_empty">
+                            <h3>Loading activities</h3>
+                            <p>Fetching compliance checks.</p>
+                        </div>
+                        <t t-else="">
+                            <div class="o_ca_kpi_row">
+                                <CaKpiCard
+                                    label="'Overdue'"
+                                    value="state.kpis.overdue"
+                                    icon="'fa-exclamation-triangle'"
+                                    tone="state.kpis.overdue ? 'danger' : ''"
+                                    hint="state.kpis.overdue ? 'Immediate attention' : 'None overdue'"
+                                    onClick.bind="() => this.onFilter('overdue')"
+                                />
+                                <CaKpiCard
+                                    label="'Pending Review'"
+                                    value="state.kpis.pending"
+                                    icon="'fa-pencil-square-o'"
+                                    tone="state.kpis.pending ? 'warning' : ''"
+                                    hint="'Requires action'"
+                                    onClick.bind="() => this.onFilter('pending')"
+                                />
+                                <CaKpiCard
+                                    label="'Scheduled (30d)'"
+                                    value="state.kpis.scheduled_30d"
+                                    icon="'fa-calendar'"
+                                    hint="'Across all properties'"
+                                    onClick.bind="() => this.onFilter('scheduled')"
+                                />
+                                <CaKpiCard
+                                    label="'Completion Rate'"
+                                    value="(state.kpis.completion_rate || 0) + '%'"
+                                    icon="'fa-check-circle'"
+                                    tone="'success'"
+                                    hint="'Completed checks'"
+                                />
+                            </div>
+
+                            <div class="o_ca_toolbar">
+                                <div class="o_ca_chips">
+                                    <button t-att-class="state.filter === 'all' ? 'active' : ''" t-on-click="() => this.onFilter('all')">All</button>
+                                    <button t-att-class="state.filter === 'scheduled' ? 'active' : ''" t-on-click="() => this.onFilter('scheduled')">Scheduled</button>
+                                    <button t-att-class="state.filter === 'in_progress' ? 'active' : ''" t-on-click="() => this.onFilter('in_progress')">In Progress</button>
+                                    <button t-att-class="state.filter === 'pending' ? 'active' : ''" t-on-click="() => this.onFilter('pending')">Pending</button>
+                                    <button t-att-class="state.filter === 'completed' ? 'active' : ''" t-on-click="() => this.onFilter('completed')">Completed</button>
+                                    <button t-att-class="state.filter === 'overdue' ? 'active' : ''" t-on-click="() => this.onFilter('overdue')">Overdue</button>
+                                </div>
+                                <div class="o_ca_search">
+                                    <i class="fa fa-search"/>
+                                    <input type="text" placeholder="Search activities..." t-att-value="state.search" t-on-change="onSearch"/>
+                                </div>
+                                <select class="o_ca_select" t-att-value="state.categoryFilter" t-on-change="onCategoryFilter">
+                                    <option value="">Category</option>
+                                    <t t-foreach="categories" t-as="cat" t-key="cat.value">
+                                        <option t-att-value="cat.value" t-esc="cat.label"/>
+                                    </t>
+                                </select>
+                                <select class="o_ca_select" t-att-value="state.propertyFilter" t-on-change="onPropertyFilter">
+                                    <option value="">Property</option>
+                                    <t t-foreach="state.lookups.properties" t-as="prop" t-key="prop.id">
+                                        <option t-att-value="prop.id" t-esc="prop.name"/>
+                                    </t>
+                                </select>
+                            </div>
+
+                            <div class="o_ca_card">
+                                <div class="o_ca_card_head">Compliance activity register</div>
+                                <t t-if="state.records.length">
+                                    <table class="o_ca_table">
+                                        <thead>
+                                            <tr>
+                                                <th>Requirement / Activity</th>
+                                                <th>Category</th>
+                                                <th>Location</th>
+                                                <th>Assigned To</th>
+                                                <th>Due Date</th>
+                                                <th>Status</th>
+                                                <th/>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr t-foreach="state.records" t-as="rec" t-key="rec.id" t-on-click="() => this.setMode('detail', rec.id)">
+                                                <td>
+                                                    <div class="o_ca_row_title" t-esc="rec.name"/>
+                                                    <div class="o_ca_row_sub">
+                                                        <t t-esc="rec.reference"/>
+                                                        <t t-if="rec.line_count"> · <t t-esc="rec.line_count"/> checklist items</t>
+                                                    </div>
+                                                </td>
+                                                <td t-esc="categoryLabel(rec.category)"/>
+                                                <td t-esc="locationLabel(rec)"/>
+                                                <td t-esc="m2oName(rec.assigned_user_id) or '—'"/>
+                                                <td>
+                                                    <div t-att-class="rec.is_overdue ? 'text-danger' : ''" t-esc="formatDate(rec.due_date)"/>
+                                                </td>
+                                                <td>
+                                                    <CaStatusBadge state="displayState(rec)" label="displayStateLabel(rec)"/>
+                                                </td>
+                                                <td>
+                                                    <button class="o_ca_link" t-on-click.stop="() => this.setMode('detail', rec.id)">Open</button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div class="o_ca_pager">
+                                        <span><t t-esc="pageFrom"/>–<t t-esc="pageTo"/> of <t t-esc="state.total"/></span>
+                                        <div class="o_ca_pager_pages">
+                                            <button t-att-disabled="state.page &lt;= 1" t-on-click="() => this.onPage(-1)">Prev</button>
+                                            <button t-att-disabled="state.page &gt;= pageCount" t-on-click="() => this.onPage(1)">Next</button>
+                                        </div>
+                                    </div>
+                                </t>
+                                <CaEmptyState
+                                    t-else=""
+                                    title="'No activities match'"
+                                    hint="emptyListHint"
+                                />
+                            </div>
+                        </t>
+                    </t>
+
+                    <t t-if="state.mode === 'detail' and state.record">
+                        <button class="o_ca_back" t-on-click="() => this.setMode('list')">
+                            <i class="fa fa-arrow-left"/> Back to Activities
+                        </button>
+                        <div class="o_ca_page_header">
+                            <div>
+                                <h1 t-esc="state.record.name"/>
+                                <p>
+                                    <t t-esc="state.record.reference"/>
+                                    · <t t-esc="formatDate(state.record.due_date)"/>
+                                    · <CaStatusBadge state="displayState(state.record)" label="displayStateLabel(state.record)"/>
+                                </p>
+                            </div>
+                            <div class="d-flex gap-2 flex-wrap" t-if="canOperate">
+                                <button
+                                    t-if="state.record.state === 'scheduled'"
+                                    class="o_ca_btn primary"
+                                    t-att-disabled="!!state.busy"
+                                    t-on-click="() => this.runAction('action_start')"
+                                >Start Check</button>
+                                <button
+                                    t-if="['in_progress', 'scheduled'].includes(state.record.state)"
+                                    class="o_ca_btn"
+                                    t-att-disabled="!!state.busy"
+                                    t-on-click="() => this.runAction('action_mark_pending')"
+                                >Mark Pending</button>
+                                <button
+                                    t-if="['in_progress', 'pending'].includes(state.record.state)"
+                                    class="o_ca_btn"
+                                    t-att-disabled="!!state.busy"
+                                    t-on-click="saveProgress"
+                                >Save Progress</button>
+                                <button
+                                    t-if="['in_progress', 'pending'].includes(state.record.state)"
+                                    class="o_ca_btn primary"
+                                    t-att-disabled="!!state.busy"
+                                    t-on-click="() => this.runAction('action_complete')"
+                                >Complete</button>
+                            </div>
+                        </div>
+
+                        <div class="o_ca_detail_grid">
+                            <div class="o_ca_form_section">
+                                <h3>Checklist</h3>
+                                <p t-if="!state.lines.length" class="o_ca_hint">No checklist lines on this activity.</p>
+                                <div t-foreach="state.lines" t-as="line" t-key="line.id" class="o_ca_checklist_row">
+                                    <div class="o_ca_row_title">
+                                        <t t-esc="line.name"/>
+                                        <span t-if="line.required" class="o_ca_pill muted">Required</span>
+                                    </div>
+                                    <div class="o_ca_inline_form">
+                                        <select
+                                            t-att-disabled="!canOperate || state.record.state === 'completed'"
+                                            t-att-value="state.lineResults[line.id] || ''"
+                                            t-on-change="(ev) => this.state.lineResults[line.id] = ev.target.value"
+                                        >
+                                            <option value="">Result</option>
+                                            <t t-foreach="resultOptions" t-as="opt" t-key="opt.value">
+                                                <option t-att-value="opt.value" t-esc="opt.label"/>
+                                            </t>
+                                        </select>
+                                        <input
+                                            type="text"
+                                            placeholder="Remarks"
+                                            t-att-disabled="!canOperate || state.record.state === 'completed'"
+                                            t-att-value="state.lineRemarks[line.id] || ''"
+                                            t-on-change="(ev) => this.state.lineRemarks[line.id] = ev.target.value"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="o_ca_form_section">
+                                <h3>Details</h3>
+                                <div class="o_ca_meta">
+                                    <div>
+                                        <span>Requirement</span>
+                                        <strong t-esc="m2oName(state.record.requirement_id) or '—'"/>
+                                    </div>
+                                    <div>
+                                        <span>Category</span>
+                                        <strong t-esc="categoryLabel(state.record.category)"/>
+                                    </div>
+                                    <div>
+                                        <span>Location</span>
+                                        <strong t-esc="locationLabel(state.record)"/>
+                                    </div>
+                                    <div>
+                                        <span>Assigned To</span>
+                                        <strong t-esc="m2oName(state.record.assigned_user_id) or '—'"/>
+                                    </div>
+                                    <div>
+                                        <span>Template</span>
+                                        <strong t-esc="m2oName(state.record.template_id) or '—'"/>
+                                    </div>
+                                    <div>
+                                        <span>Repeat</span>
+                                        <strong t-esc="state.record.repeat || 'none'"/>
+                                    </div>
+                                </div>
+                                <p t-if="state.record.notes" class="o_ca_hint" t-esc="state.record.notes"/>
+                                <div t-if="state.busy" class="o_ca_busy" t-esc="state.busy"/>
+                            </div>
+                        </div>
+                    </t>
+
+                    <div t-if="state.showCreate" class="o_ca_modal_backdrop" t-on-click="closeCreate">
+                        <div class="o_ca_modal" t-on-click.stop="">
+                            <div class="o_ca_modal_head">
+                                <div>
+                                    <h2>Create Compliance Check</h2>
+                                    <p>Schedule and assign a statutory compliance check.</p>
+                                </div>
+                                <button class="o_ca_modal_close" t-on-click="closeCreate" aria-label="Close">
+                                    <i class="fa fa-times"/>
+                                </button>
+                            </div>
+                            <div class="o_ca_modal_body">
+                                <div class="o_ca_form_grid">
+                                    <div class="o_ca_span_2">
+                                        <label>Compliance Requirement *</label>
+                                        <select t-att-value="state.form.requirement_id" t-on-change="onRequirementChange">
+                                            <option value="">Select a requirement...</option>
+                                            <t t-foreach="state.lookups.requirements" t-as="req" t-key="req.id">
+                                                <option t-att-value="req.id" t-esc="req.name"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div class="o_ca_span_2">
+                                        <label>Checklist Template</label>
+                                        <select t-att-value="state.form.template_id" t-on-change="onTemplateChange">
+                                            <option value="">Select a template...</option>
+                                            <t t-foreach="filteredTemplates" t-as="tpl" t-key="tpl.id">
+                                                <option t-att-value="tpl.id" t-esc="tpl.name + (tpl.item_count ? ' (' + tpl.item_count + ')' : '')"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label>Property / Building *</label>
+                                        <select t-att-value="state.form.property_id" t-on-change="onPropertyChange">
+                                            <option value="">Select property...</option>
+                                            <t t-foreach="state.lookups.properties" t-as="prop" t-key="prop.id">
+                                                <option t-att-value="prop.id" t-esc="prop.name"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label>Building</label>
+                                        <select t-att-value="state.form.building_id" t-on-change="onBuildingChange">
+                                            <option value="">Select building...</option>
+                                            <t t-foreach="filteredBuildings" t-as="bldg" t-key="bldg.id">
+                                                <option t-att-value="bldg.id" t-esc="bldg.name"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label>Area / Floor</label>
+                                        <select t-model="state.form.area_id">
+                                            <option value="">Select area...</option>
+                                            <t t-foreach="filteredAreas" t-as="area" t-key="area.id">
+                                                <option t-att-value="area.id" t-esc="area.name"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label>Assigned To</label>
+                                        <select t-model="state.form.assigned_user_id">
+                                            <option value="">Select user...</option>
+                                            <t t-foreach="state.lookups.users" t-as="usr" t-key="usr.id">
+                                                <option t-att-value="usr.id" t-esc="usr.name"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label>Due Date *</label>
+                                        <input type="date" t-model="state.form.due_date"/>
+                                    </div>
+                                    <div>
+                                        <label>Repeat</label>
+                                        <select t-model="state.form.repeat">
+                                            <t t-foreach="repeatOptions" t-as="opt" t-key="opt.value">
+                                                <option t-att-value="opt.value" t-esc="opt.label"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div class="o_ca_span_2">
+                                        <label>Activity Name</label>
+                                        <input type="text" t-model="state.form.name" placeholder="Defaults to requirement name"/>
+                                    </div>
+                                    <div class="o_ca_span_2">
+                                        <label>Additional Notes</label>
+                                        <textarea t-model="state.form.notes" placeholder="Add any specific instructions for the inspector..."/>
+                                    </div>
+                                </div>
+                                <div t-if="state.previewItems.length" class="o_ca_preview_box">
+                                    <strong>Checklist includes:</strong>
+                                    <ul>
+                                        <li t-foreach="state.previewItems" t-as="item" t-key="item.id">
+                                            <i class="fa fa-check-circle"/> <t t-esc="item.name"/>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="o_ca_modal_foot">
+                                <span t-if="state.busy" class="o_ca_busy" t-esc="state.busy"/>
+                                <button class="o_ca_btn" t-on-click="closeCreate">Cancel</button>
+                                <button class="o_ca_btn primary" t-att-disabled="!!state.busy" t-on-click="createCheck">
+                                    Create Compliance Check <i class="fa fa-arrow-right"/>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </CaAppShell>
+        </div>
+    </t>
+</templates>

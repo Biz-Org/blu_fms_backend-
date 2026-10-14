@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_analytics_report_list" model="ir.ui.view">
+        <field name="name">analytics.report.list</field>
+        <field name="model">analytics.report</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="report_type"/>
+                <field name="source_module"/>
+                <field name="status"/>
+                <field name="generated_date"/>
+                <field name="created_by_id"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="active" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_analytics_report_form" model="ir.ui.view">
+        <field name="name">analytics.report.form</field>
+        <field name="model">analytics.report</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="status" widget="statusbar" statusbar_visible="draft,active,scheduled,archived"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="report_type"/>
+                            <field name="visualization"/>
+                            <field name="data_source_id"/>
+                            <field name="source_module"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="created_by_id"/>
+                            <field name="generated_date"/>
+                            <field name="execution_count"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description" name="description">
+                            <field name="description" placeholder="Describe the report purpose and audience..."/>
+                        </page>
+                        <page string="Data Sources" name="data_sources">
+                            <field name="data_source_ids" widget="many2many_tags"/>
+                        </page>
+                        <page string="Execution History" name="executions">
+                            <field name="execution_ids" readonly="1">
+                                <list>
+                                    <field name="execution_datetime"/>
+                                    <field name="user_id"/>
+                                    <field name="status"/>
+                                    <field name="duration_ms"/>
+                                    <field name="error_message"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_analytics_report_search" model="ir.ui.view">
+        <field name="name">analytics.report.search</field>
+        <field name="model">analytics.report</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="source_module"/>
+                <field name="created_by_id"/>
+                <filter string="Active" name="filter_active" domain="[('active', '=', True)]"/>
+                <filter string="Archived" name="filter_archived" domain="[('active', '=', False)]"/>
+                <separator/>
+                <filter string="Draft" name="filter_draft" domain="[('status', '=', 'draft')]"/>
+                <filter string="Active status" name="filter_status_active" domain="[('status', '=', 'active')]"/>
+                <filter string="Scheduled" name="filter_scheduled" domain="[('status', '=', 'scheduled')]"/>
+                <group>
+                    <filter string="Report Type" name="group_report_type" context="{'group_by': 'report_type'}"/>
+                    <filter string="Status" name="group_status" context="{'group_by': 'status'}"/>
+                    <filter string="Module / Source" name="group_source_module" context="{'group_by': 'source_module'}"/>
+                    <filter string="Company" name="group_company" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_analytics_report" model="ir.actions.act_window">
+        <field name="name">Report Definitions</field>
+        <field name="res_model">analytics.report</field>
+        <field name="path">analytics-report-definitions</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_analytics_report_search"/>
+        <field name="context">{'search_default_filter_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a report definition
+            </p>
+            <p>
+                Report definitions describe how authorized FMS operational data is presented. They do not store operational records.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_analytics_report_library" model="ir.actions.act_window">
+        <field name="name">Report Library</field>
+        <field name="res_model">analytics.report</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_analytics_report_search"/>
+        <field name="domain">[('status', 'in', ['active', 'scheduled']), ('active', '=', True)]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_empty_folder">
+                No published reports yet
+            </p>
+            <p>
+                Active and scheduled report definitions appear here for browsing and future execution.
+            </p>
+        </field>
+    </record>
+</odoo>

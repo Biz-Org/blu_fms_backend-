@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_iot_rule_list" model="ir.ui.view">
+        <field name="name">integration.iot.automation.rule.list</field>
+        <field name="model">integration.iot.automation.rule</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="trigger_parameter"/>
+                <field name="operator"/>
+                <field name="threshold"/>
+                <field name="action"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_iot_rule_form" model="ir.ui.view">
+        <field name="name">integration.iot.automation.rule.form</field>
+        <field name="model">integration.iot.automation.rule</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_run_now" type="object" string="Run Now"/>
+                    <button name="action_enable" type="object" string="Enable" invisible="active"/>
+                    <button name="action_disable" type="object" string="Disable" invisible="not active"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="active"/>
+                        <field name="property_id"/>
+                        <field name="building_id"/>
+                        <field name="area_id"/>
+                        <field name="trigger_parameter"/>
+                        <field name="operator"/>
+                        <field name="threshold"/>
+                        <field name="action"/>
+                        <field name="action_value"/>
+                        <field name="target_device_id"/>
+                        <field name="schedule_mode"/>
+                        <field name="start_time" widget="float_time"/>
+                        <field name="end_time" widget="float_time"/>
+                    </group>
+                    <field name="execution_ids">
+                        <list>
+                            <field name="executed_at"/>
+                            <field name="state"/>
+                            <field name="simulated"/>
+                            <field name="message"/>
+                        </list>
+                    </field>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_iot_rule" model="ir.actions.act_window">
+        <field name="name">Automation Rules</field>
+        <field name="res_model">integration.iot.automation.rule</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <record id="action_iot_execution" model="ir.actions.act_window">
+        <field name="name">Automation History</field>
+        <field name="res_model">integration.iot.automation.execution</field>
+        <field name="view_mode">list</field>
+    </record>
+</odoo>

@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Multi-company: applies to every user -->
+    <record id="community_company_rule" model="ir.rule">
+        <field name="name">Community: multi-company</field>
+        <field name="model_id" ref="model_community_communication_community"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="building_company_rule" model="ir.rule">
+        <field name="name">Building: multi-company</field>
+        <field name="model_id" ref="model_community_communication_building"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="unit_company_rule" model="ir.rule">
+        <field name="name">Unit: multi-company</field>
+        <field name="model_id" ref="model_community_communication_unit"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="venue_company_rule" model="ir.rule">
+        <field name="name">Venue: multi-company</field>
+        <field name="model_id" ref="model_community_communication_venue"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="resident_company_rule" model="ir.rule">
+        <field name="name">Resident: multi-company</field>
+        <field name="model_id" ref="model_community_communication_resident"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="announcement_company_rule" model="ir.rule">
+        <field name="name">Announcement: multi-company</field>
+        <field name="model_id" ref="model_community_communication_announcement"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="announcement_view_company_rule" model="ir.rule">
+        <field name="name">Announcement view: multi-company</field>
+        <field name="model_id" ref="model_community_communication_announcement_view"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="announcement_ack_company_rule" model="ir.rule">
+        <field name="name">Announcement ack: multi-company</field>
+        <field name="model_id" ref="model_community_communication_announcement_ack"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="discussion_company_rule" model="ir.rule">
+        <field name="name">Discussion: multi-company</field>
+        <field name="model_id" ref="model_community_communication_discussion"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="comment_company_rule" model="ir.rule">
+        <field name="name">Comment: multi-company</field>
+        <field name="model_id" ref="model_community_communication_discussion_comment"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="reaction_company_rule" model="ir.rule">
+        <field name="name">Reaction: multi-company</field>
+        <field name="model_id" ref="model_community_communication_reaction"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="follow_company_rule" model="ir.rule">
+        <field name="name">Follow: multi-company</field>
+        <field name="model_id" ref="model_community_communication_follow"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="report_company_rule" model="ir.rule">
+        <field name="name">Report: multi-company</field>
+        <field name="model_id" ref="model_community_communication_report"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="moderation_log_company_rule" model="ir.rule">
+        <field name="name">Moderation log: multi-company</field>
+        <field name="model_id" ref="model_community_communication_moderation_log"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="poll_company_rule" model="ir.rule">
+        <field name="name">Poll: multi-company</field>
+        <field name="model_id" ref="model_community_communication_poll"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="poll_option_company_rule" model="ir.rule">
+        <field name="name">Poll option: multi-company</field>
+        <field name="model_id" ref="model_community_communication_poll_option"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="poll_vote_company_rule" model="ir.rule">
+        <field name="name">Poll vote: multi-company</field>
+        <field name="model_id" ref="model_community_communication_poll_vote"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="event_company_rule" model="ir.rule">
+        <field name="name">Event: multi-company</field>
+        <field name="model_id" ref="model_community_communication_event"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="registration_company_rule" model="ir.rule">
+        <field name="name">Registration: multi-company</field>
+        <field name="model_id" ref="model_community_communication_event_registration"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="notice_company_rule" model="ir.rule">
+        <field name="name">Notice: multi-company</field>
+        <field name="model_id" ref="model_community_communication_notice"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="feedback_company_rule" model="ir.rule">
+        <field name="name">Feedback: multi-company</field>
+        <field name="model_id" ref="model_community_communication_feedback"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="feedback_note_company_rule" model="ir.rule">
+        <field name="name">Feedback note: multi-company</field>
+        <field name="model_id" ref="model_community_communication_feedback_note"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="feedback_response_company_rule" model="ir.rule">
+        <field name="name">Feedback response: multi-company</field>
+        <field name="model_id" ref="model_community_communication_feedback_response"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="group_company_rule" model="ir.rule">
+        <field name="name">Group: multi-company</field>
+        <field name="model_id" ref="model_community_communication_group"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="group_member_company_rule" model="ir.rule">
+        <field name="name">Group member: multi-company</field>
+        <field name="model_id" ref="model_community_communication_group_member"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+
+    <!-- Resident community scope -->
+    <record id="community_resident_rule" model="ir.rule">
+        <field name="name">Community: resident own communities</field>
+        <field name="model_id" ref="model_community_communication_community"/>
+        <field name="domain_force">[('id', 'in', user.cc_resident_ids.community_id.ids)]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+    <record id="building_resident_rule" model="ir.rule">
+        <field name="name">Building: resident community</field>
+        <field name="model_id" ref="model_community_communication_building"/>
+        <field name="domain_force">[('community_id', 'in', user.cc_resident_ids.community_id.ids)]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+    <record id="resident_profile_rule" model="ir.rule">
+        <field name="name">Resident: own profile</field>
+        <field name="model_id" ref="model_community_communication_resident"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+    <record id="announcement_resident_rule" model="ir.rule">
+        <field name="name">Announcement: resident published</field>
+        <field name="model_id" ref="model_community_communication_announcement"/>
+        <field name="domain_force">['&amp;', '&amp;', ('community_id', 'in', user.cc_resident_ids.community_id.ids), ('state', '=', 'published'), '|', '|', '|', '|', ('audience_type', '=', 'community'), '&amp;', ('audience_type', '=', 'buildings'), ('building_ids', 'in', user.cc_building_ids.ids), '&amp;', ('audience_type', '=', 'groups'), ('audience_group_ids', 'in', user.cc_member_group_ids.ids), '&amp;', ('audience_type', '=', 'residents'), ('audience_resident_ids', 'in', user.cc_resident_ids.ids), '&amp;', ('audience_type', '=', 'users'), ('audience_user_ids', 'in', [user.id])]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+    <record id="announcement_user_target_rule" model="ir.rule">
+        <field name="name">Announcement: targeted internal users</field>
+        <field name="model_id" ref="model_community_communication_announcement"/>
+        <field name="domain_force">['&amp;', ('state', '=', 'published'), ('audience_type', '=', 'users'), ('audience_user_ids', 'in', [user.id])]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+    <record id="announcement_officer_all_rule" model="ir.rule">
+        <field name="name">Announcement: community staff full access</field>
+        <field name="model_id" ref="model_community_communication_announcement"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_community_officer'))]"/>
+    </record>
+    <record id="announcement_ack_resident_rule" model="ir.rule">
+        <field name="name">Announcement ack: own</field>
+        <field name="model_id" ref="model_community_communication_announcement_ack"/>
+        <field name="domain_force">[('resident_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+    <record id="announcement_view_resident_rule" model="ir.rule">
+        <field name="name">Announcement view: own</field>
+        <field name="model_id" ref="model_community_communication_announcement_view"/>
+        <field name="domain_force">[('resident_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+    <record id="discussion_resident_rule" model="ir.rule">
+        <field name="name">Discussion: resident community not removed</field>
+        <field name="model_id" ref="model_community_communication_discussion"/>
+        <field name="domain_force">[('community_id', 'in', user.cc_resident_ids.community_id.ids), ('state', '!=', 'removed')]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+    <record id="comment_resident_rule" model="ir.rule">
+        <field name="name">Comment: resident community</field>
+        <field name="model_id" ref="model_community_communication_discussion_comment"/>
+        <field name="domain_force">[('community_id', 'in', user.cc_resident_ids.community_id.ids)]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+    <record id="poll_resident_rule" model="ir.rule">
+        <field name="name">Poll: resident open or closed</field>
+        <field name="model_id" ref="model_community_communication_poll"/>
+        <field name="domain_force">['&amp;', '&amp;', ('community_id', 'in', user.cc_resident_ids.community_id.ids), ('state', 'in', ['active', 'closed']), '|', '|', ('audience_type', '=', 'community'), '&amp;', ('audience_type', '=', 'buildings'), ('building_ids', 'in', user.cc_building_ids.ids), '&amp;', ('audience_type', '=', 'groups'), ('audience_group_ids', 'in', user.cc_member_group_ids.ids)]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+    <record id="poll_vote_resident_rule" model="ir.rule">
+        <field name="name">Poll vote: own</field>
+        <field name="model_id" ref="model_community_communication_poll_vote"/>
+        <field name="domain_force">[('voter_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+    <record id="event_resident_rule" model="ir.rule">
+        <field name="name">Event: resident published</field>
+        <field name="model_id" ref="model_community_communication_event"/>
+        <field name="domain_force">['&amp;', '&amp;', ('community_id', 'in', user.cc_resident_ids.community_id.ids), ('state', 'in', ['published', 'completed', 'cancelled']), '|', '|', ('audience_type', '=', 'community'), '&amp;', ('audience_type', '=', 'buildings'), ('building_ids', 'in', user.cc_building_ids.ids), '&amp;', ('audience_type', '=', 'groups'), ('audience_group_ids', 'in', user.cc_member_group_ids.ids)]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+    <record id="registration_resident_rule" model="ir.rule">
+        <field name="name">Registration: own</field>
+        <field name="model_id" ref="model_community_communication_event_registration"/>
+        <field name="domain_force">[('resident_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+    <record id="notice_resident_rule" model="ir.rule">
+        <field name="name">Notice: resident published</field>
+        <field name="model_id" ref="model_community_communication_notice"/>
+        <field name="domain_force">['&amp;', '&amp;', ('community_id', 'in', user.cc_resident_ids.community_id.ids), ('state', '=', 'published'), '|', '|', ('audience_type', '=', 'community'), '&amp;', ('audience_type', '=', 'buildings'), ('building_ids', 'in', user.cc_building_ids.ids), '&amp;', ('audience_type', '=', 'groups'), ('audience_group_ids', 'in', user.cc_member_group_ids.ids)]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+    <record id="feedback_resident_rule" model="ir.rule">
+        <field name="name">Feedback: own or anonymous own</field>
+        <field name="model_id" ref="model_community_communication_feedback"/>
+        <field name="domain_force">['|', ('resident_id.user_id', '=', user.id), '&amp;', ('anonymous', '=', True), ('create_uid', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+    <record id="group_resident_rule" model="ir.rule">
+        <field name="name">Group: resident community</field>
+        <field name="model_id" ref="model_community_communication_group"/>
+        <field name="domain_force">[('community_id', 'in', user.cc_resident_ids.community_id.ids), ('state', '=', 'active')]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+    <record id="group_member_resident_rule" model="ir.rule">
+        <field name="name">Group member: own memberships</field>
+        <field name="model_id" ref="model_community_communication_group_member"/>
+        <field name="domain_force">[('resident_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+    <record id="report_resident_rule" model="ir.rule">
+        <field name="name">Report: own reports</field>
+        <field name="model_id" ref="model_community_communication_report"/>
+        <field name="domain_force">[('reporter_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+    <record id="res_users_settings_resident_rule" model="ir.rule">
+        <field name="name">User settings: own entries</field>
+        <field name="model_id" ref="base.model_res_users_settings"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+</odoo>

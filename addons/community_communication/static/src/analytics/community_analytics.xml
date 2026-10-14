@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="community_communication.Analytics">
+        <div class="o_action o_cc_shell o_cc_dashboard">
+            <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+                <div>
+                    <h1 class="o_cc_dashboard_title">Community Engagement Analytics</h1>
+                    <p class="o_cc_dashboard_copy mb-0">Measure resident participation and communication effectiveness.</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <select class="form-select form-select-sm" t-on-change="onDaysChange">
+                        <option value="7">Last 7 Days</option>
+                        <option value="30" selected="selected">Last 30 Days</option>
+                        <option value="90">Last 90 Days</option>
+                    </select>
+                    <select class="form-select form-select-sm" t-on-change="onBuildingChange">
+                        <option value="">All Buildings</option>
+                        <t t-foreach="data.buildings" t-as="building" t-key="building.id">
+                            <option t-att-value="building.id" t-esc="building.name"/>
+                        </t>
+                    </select>
+                    <button class="btn o_cc_btn_primary btn-sm" t-on-click="exportReport">Export Report</button>
+                </div>
+            </div>
+
+            <div class="o_cc_card mb-3">
+                <div class="fw-bold mb-2">Overall Community Engagement Trend</div>
+                <svg viewBox="0 0 540 160" class="w-100" style="height:160px">
+                    <polyline fill="none" stroke="#6d28d9" stroke-width="2.5" t-att-points="trendPoints('announcements')"/>
+                    <polyline fill="none" stroke="#8b5cf6" stroke-width="2.5" t-att-points="trendPoints('discussions')"/>
+                    <polyline fill="none" stroke="#c4b5fd" stroke-width="2.5" t-att-points="trendPoints('polls')"/>
+                </svg>
+                <div class="small text-muted">Announcements · Discussions · Polls</div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-lg-4">
+                    <div class="o_cc_card h-100">
+                        <div class="fw-bold mb-2">Announcements</div>
+                        <div class="o_cc_kpi_row">
+                            <div><div class="o_cc_kpi_label">Published</div><div class="fw-bold" t-esc="data.announcements.published or 0"/></div>
+                            <div><div class="o_cc_kpi_label">Views</div><div class="fw-bold" t-esc="data.announcements.views or 0"/></div>
+                            <div><div class="o_cc_kpi_label">View rate</div><div class="fw-bold"><t t-esc="data.announcements.view_rate or 0"/>%</div></div>
+                            <div><div class="o_cc_kpi_label">Ack rate</div><div class="fw-bold"><t t-esc="data.announcements.ack_rate or 0"/>%</div></div>
+                        </div>
+                        <div class="small text-muted mt-2">MOST VIEWED</div>
+                        <t t-foreach="data.announcements.most_viewed" t-as="item" t-key="item.title">
+                            <div class="d-flex justify-content-between small py-1">
+                                <span t-esc="item.title"/>
+                                <span t-esc="item.views"/>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="o_cc_card h-100">
+                        <div class="fw-bold mb-2">Discussions &amp; Groups</div>
+                        <div class="mb-1"><span class="fs-3 fw-bold" t-esc="data.discussions.active or 0"/></div>
+                        <div class="small text-muted mb-2">Active threads · <t t-esc="data.discussions.interactions or 0"/> interactions</div>
+                        <t t-foreach="data.discussions.categories" t-as="cat" t-key="cat.name">
+                            <div class="d-flex justify-content-between small">
+                                <span t-esc="cat.name"/>
+                                <span t-esc="cat.pct + '%'"/>
+                            </div>
+                            <div class="o_cc_progress mb-2"><div class="o_cc_progress_bar" t-att-style="'width:' + cat.pct + '%'"/></div>
+                        </t>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="o_cc_card h-100">
+                        <div class="fw-bold mb-2">Feedback</div>
+                        <div>Submitted vs Resolved: <t t-esc="data.feedback.submitted or 0"/> / <t t-esc="data.feedback.resolved or 0"/></div>
+                        <div class="o_cc_progress my-2">
+                            <div class="o_cc_progress_bar" t-att-style="'width:' + ((data.feedback.submitted ? Math.round(100 * (data.feedback.resolved || 0) / data.feedback.submitted) : 0)) + '%'"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-lg-4">
+                    <div class="o_cc_card h-100">
+                        <div class="fw-bold mb-2">Polls</div>
+                        <div class="small text-muted mb-2"><t t-esc="data.polls.active or 0"/> active · <t t-esc="data.polls.participants or 0"/> participants</div>
+                        <div class="d-flex align-items-end gap-2" style="height:110px">
+                            <t t-foreach="data.polls.bars" t-as="bar" t-key="bar.name">
+                                <div class="flex-grow-1 text-center">
+                                    <div class="mx-auto" t-att-style="'height:' + barHeight(bar.value, data.polls.bars) + 'px;background:#6d28d9;width:70%;border-radius:6px 6px 0 0'"/>
+                                    <div class="small text-truncate" t-esc="bar.name"/>
+                                </div>
+                            </t>
+                        </div>
+                        <div class="o_cc_cta mt-3 py-2 text-center">AVG. RESPONSE RATE <t t-esc="data.polls.avg_rate or 0"/>%</div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="o_cc_card h-100">
+                        <div class="fw-bold mb-2">Events</div>
+                        <div><t t-esc="data.events.registrations or 0"/> registrations</div>
+                        <div><t t-esc="data.events.attendance or 0"/>% attendance</div>
+                        <div class="text-danger"><t t-esc="data.events.cancellations or 0"/> cancellations</div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="o_cc_card h-100">
+                        <div class="fw-bold mb-2">Quick Insights</div>
+                        <t t-foreach="data.insights" t-as="insight" t-key="insight.label">
+                            <div class="mb-2">
+                                <div class="small text-muted" t-esc="insight.label"/>
+                                <div class="fw-semibold" t-esc="insight.value"/>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+
+            <div class="o_cc_card">
+                <div class="fw-bold mb-2">Engagement by Building</div>
+                <div class="d-flex align-items-end gap-3" style="height:120px">
+                    <t t-foreach="data.by_building" t-as="row" t-key="row.name">
+                        <div class="flex-grow-1 text-center">
+                            <div class="mx-auto" t-att-style="'height:' + barHeight(row.value, data.by_building) + 'px;background:#6d28d9;width:60%;border-radius:6px 6px 0 0'"/>
+                            <div class="small" t-esc="row.name"/>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

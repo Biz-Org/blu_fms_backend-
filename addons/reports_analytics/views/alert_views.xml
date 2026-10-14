@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_analytics_alert_list" model="ir.ui.view">
+        <field name="name">analytics.alert.list</field>
+        <field name="model">analytics.alert</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="kpi_id"/>
+                <field name="severity"/>
+                <field name="condition"/>
+                <field name="threshold"/>
+                <field name="last_value"/>
+                <field name="is_triggered"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_analytics_alert_form" model="ir.ui.view">
+        <field name="name">analytics.alert.form</field>
+        <field name="model">analytics.alert</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="alert_type"/>
+                            <field name="severity"/>
+                            <field name="kpi_id"/>
+                            <field name="metric_label"/>
+                        </group>
+                        <group>
+                            <field name="condition"/>
+                            <field name="threshold"/>
+                            <field name="frequency"/>
+                            <field name="module"/>
+                            <field name="active"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <group string="Notifications">
+                        <field name="recipient_ids" widget="many2many_tags"/>
+                        <field name="notify_in_app"/>
+                        <field name="notify_email"/>
+                        <field name="notify_sms"/>
+                    </group>
+                    <group string="Evaluation">
+                        <field name="last_value"/>
+                        <field name="last_evaluated"/>
+                        <field name="last_triggered"/>
+                        <field name="is_triggered"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_analytics_alert" model="ir.actions.act_window">
+        <field name="name">Analytics Alerts</field>
+        <field name="res_model">analytics.alert</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

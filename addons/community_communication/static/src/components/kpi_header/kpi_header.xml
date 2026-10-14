@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="community_communication.KpiHeader">
+        <div class="o_cc_shell px-3 pt-3" t-if="state.cards.length">
+            <div class="o_cc_kpi_row">
+                <t t-foreach="state.cards" t-as="card" t-key="card.key">
+                    <div t-attf-class="o_cc_kpi {{ card.tone === 'danger' ? 'tone-danger' : '' }}" t-on-click="() => this.onCardClick(card)">
+                        <div class="o_cc_kpi_label" t-esc="card.label"/>
+                        <div class="o_cc_kpi_value" t-esc="card.value"/>
+                    </div>
+                </t>
+            </div>
+        </div>
+    </t>
+</templates>

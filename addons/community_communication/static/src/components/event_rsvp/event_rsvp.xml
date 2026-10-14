@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="community_communication.EventRsvp">
+        <div class="o_cc_shell o_cc_card mt-3" t-if="event.require_registration and event.state === 'published'">
+            <t t-if="state.registration">
+                <div class="o_cc_pill success mb-2" t-esc="state.registration.state"/>
+                <h4>You're registered</h4>
+                <p class="mb-0 text-muted">A confirmation email is on the way if a resident email is on file.</p>
+            </t>
+            <t t-else="">
+                <div class="fw-bold mb-1">Event registration</div>
+                <div class="small text-muted mb-2">
+                    <t t-esc="event.confirmed_count or 0"/> confirmed
+                    <t t-if="event.capacity"> · <t t-esc="event.spots_available"/> spots left</t>
+                </div>
+                <div t-if="state.error" class="text-danger small mb-2" t-esc="state.error"/>
+                <button class="btn o_cc_btn_primary" t-on-click="register">Confirm registration</button>
+            </t>
+        </div>
+    </t>
+</templates>

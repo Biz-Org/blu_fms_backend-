@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="mobile_application.MobileApplication">
+        <div class="o_action o_mob_root">
+            <t t-if="state.loading and !state.home">
+                <MobileLoadingState/>
+            </t>
+            <MobileErrorState t-elif="state.error" title="'Unable to load'" t-att-message="state.error"/>
+            <MobileAppShell
+                t-else=""
+                title="title"
+                t-att-subtitle="subtitle"
+                t-att-avatarUrl="state.profile ? state.profile.avatar_url : ''"
+                unread="state.unread"
+                activeTab="state.tab"
+                role="role"
+                modules="modules"
+                showBack="showBack"
+                hideNav="hideNav"
+                onBack.bind="onBack"
+                onAlerts.bind="onAlerts"
+                onNavigate.bind="onTab"
+            >
+                <t t-if="state.loading">
+                    <MobileLoadingState/>
+                </t>
+                <HomeScreen t-elif="state.route === 'home'" t-props="screenProps"/>
+                <ServicesScreen t-elif="state.route === 'services'" t-props="screenProps"/>
+                <AlertsScreen t-elif="state.route === 'alerts'" t-props="screenProps"/>
+                <ProfileScreen t-elif="state.route === 'profile'" t-props="screenProps"/>
+                <VisitorsScreen t-elif="state.route === 'visitors'" t-props="screenProps"/>
+                <DigitalIdScreen t-elif="state.route === 'digital_id'" t-props="screenProps"/>
+                <PaymentsScreen t-elif="state.route === 'payments'" t-props="screenProps"/>
+                <FormScreen t-elif="state.route === 'visitor_create'" t-props="screenProps"/>
+                <GenericListScreen t-else="" t-props="screenProps"/>
+            </MobileAppShell>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ca_document_list" model="ir.ui.view">
+        <field name="name">compliance.document.list</field>
+        <field name="model">compliance.document</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="document_type"/>
+                <field name="issuing_authority"/>
+                <field name="property_id"/>
+                <field name="issue_date"/>
+                <field name="expiry_date"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_ca_document_form" model="ir.ui.view">
+        <field name="name">compliance.document.form</field>
+        <field name="model">compliance.document</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_start_renewal" type="object" string="Start Renewal" invisible="state in ('under_renewal', 'archived')"/>
+                    <button name="action_archive" type="object" string="Archive" invisible="state == 'archived'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="document_type"/>
+                        <field name="issuing_authority"/>
+                        <field name="requirement_id"/>
+                        <field name="property_id"/>
+                        <field name="building_id"/>
+                        <field name="area_id"/>
+                        <field name="issue_date"/>
+                        <field name="expiry_date"/>
+                        <field name="renewal_reminder_days"/>
+                        <field name="company_id"/>
+                    </group>
+                    <field name="attachment_ids" widget="many2many_binary"/>
+                    <field name="history_ids" readonly="1">
+                        <list>
+                            <field name="event_type"/>
+                            <field name="previous_expiry_date"/>
+                            <field name="new_expiry_date"/>
+                            <field name="user_id"/>
+                            <field name="create_date"/>
+                        </list>
+                    </field>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_ca_document" model="ir.actions.act_window">
+        <field name="name">Compliance Documents</field>
+        <field name="res_model">compliance.document</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

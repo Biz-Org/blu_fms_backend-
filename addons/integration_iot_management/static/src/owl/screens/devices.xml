@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="integration_iot_management.Devices">
+        <div class="o_action o_iot_app">
+            <IotAppShell active="state.tab">
+                <div class="o_iot_shell">
+                    <div class="o_iot_page_header">
+                        <div>
+                            <h1>Devices &amp; Sensors</h1>
+                            <p>Manage connected equipment separately from the data those devices produce.</p>
+                        </div>
+                        <button t-if="state.isAdmin and state.tab === 'devices'" class="o_iot_btn primary" t-on-click="() => this.state.showDevice = true"><i class="fa fa-plus"/> Register Device</button>
+                        <button t-if="state.isAdmin and state.tab === 'sensors'" class="o_iot_btn primary" t-on-click="() => this.state.showSensor = true"><i class="fa fa-plus"/> Configure Sensor</button>
+                    </div>
+                    <div class="o_iot_tabs">
+                        <button t-att-class="state.tab === 'devices' ? 'active' : ''" t-on-click="() => this.setTab('devices')">Devices</button>
+                        <button t-att-class="state.tab === 'sensors' ? 'active' : ''" t-on-click="() => this.setTab('sensors')">Sensors</button>
+                    </div>
+                    <div t-if="state.loading" class="o_iot_empty"><h3>Loading</h3></div>
+                    <div t-elif="state.error" class="o_iot_empty o_iot_error"><h3 t-esc="state.error"/></div>
+                    <t t-elif="state.tab === 'devices'">
+                        <div class="o_iot_toolbar">
+                            <div class="o_iot_search"><i class="fa fa-search"/><input placeholder="Search devices..." t-att-value="state.search" t-on-change="onSearch"/></div>
+                            <select class="o_iot_select" t-att-value="state.status" t-on-change="onStatus">
+                                <option value="">All statuses</option>
+                                <option value="online">Online</option>
+                                <option value="offline">Offline</option>
+                                <option value="warning">Warning</option>
+                                <option value="faulty">Faulty</option>
+                                <option value="maintenance">Maintenance</option>
+                            </select>
+                        </div>
+                        <div class="o_iot_card">
+                            <t t-if="state.data.devices and state.data.devices.length">
+                                <table class="o_iot_table">
+                                    <thead><tr><th>Device</th><th>Type</th><th>Location</th><th>Status</th><th>Health</th><th/></tr></thead>
+                                    <tbody>
+                                        <tr t-foreach="state.data.devices" t-as="row" t-key="row.id">
+                                            <td><div class="fw-semibold" t-esc="row.name"/><div class="small text-muted" t-esc="row.code"/></td>
+                                            <td t-esc="row.type"/>
+                                            <td t-esc="row.location or '—'"/>
+                                            <td><IotStatusBadge state="row.status"/></td>
+                                            <td t-esc="row.health_score"/>
+                                            <td>
+                                                <button t-if="state.isAdmin" class="o_iot_link" t-on-click="() => this.toggleDevice(row, true)">Activate</button>
+                                                <button t-if="state.isAdmin" class="o_iot_link" t-on-click="() => this.toggleDevice(row, false)">Deactivate</button>
+                                                <button t-if="state.isAdmin" class="o_iot_link" t-on-click="() => this.archiveDevice(row)">Archive</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </t>
+                            <IotEmptyState t-else="" title="'No devices registered'" hint="'Register lighting, HVAC, meters, or sensors to begin monitoring.'"/>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <div class="o_iot_card">
+                            <div class="o_iot_card_head">Sensors</div>
+                            <t t-if="state.data.sensors and state.data.sensors.length">
+                                <table class="o_iot_table">
+                                    <thead><tr><th>Sensor</th><th>Device</th><th>Parameter</th><th>Last reading</th><th>Thresholds</th></tr></thead>
+                                    <tbody>
+                                        <tr t-foreach="state.data.sensors" t-as="row" t-key="row.id">
+                                            <td t-esc="row.name"/>
+                                            <td t-esc="row.device and row.device[1]"/>
+                                            <td t-esc="row.parameter"/>
+                                            <td><t t-esc="row.value"/><t t-esc="' ' + (row.unit or '')"/></td>
+                                            <td><t t-esc="row.min"/> – <t t-esc="row.max"/></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </t>
+                            <IotEmptyState t-else="" title="'No sensors'" hint="'Configure a sensor on a registered device.'"/>
+                        </div>
+                        <div t-if="state.isAdmin" class="o_iot_card mt-3">
+                            <div class="o_iot_card_head">Simulate / ingest a reading</div>
+                            <p class="small text-muted">Development ingestion. This does not connect to a live vendor.</p>
+                            <div class="o_iot_toolbar">
+                                <select class="o_iot_select" t-model="state.ingest.sensor_id">
+                                    <option value="">Sensor</option>
+                                    <t t-foreach="state.data.sensors or []" t-as="s" t-key="s.id"><option t-att-value="s.id" t-esc="s.name"/></t>
+                                </select>
+                                <input class="o_iot_select" placeholder="Value" t-model="state.ingest.value"/>
+                                <button class="o_iot_btn primary" t-on-click="ingestReading">Store reading</button>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+                <div t-if="state.showDevice" class="o_iot_modal_backdrop" t-on-click.self="() => this.state.showDevice = false">
+                    <div class="o_iot_modal">
+                        <div class="o_iot_modal_head"><div><h2>Register Device</h2></div><button class="o_iot_modal_close" t-on-click="() => this.state.showDevice = false"><i class="fa fa-times"/></button></div>
+                        <div class="o_iot_modal_body o_iot_form_section">
+                            <div class="o_iot_form_grid">
+                                <div class="o_iot_span_2"><label>Name</label><input t-model="state.deviceForm.name"/></div>
+                                <div><label>Type</label>
+                                    <select t-model="state.deviceForm.device_type">
+                                        <option value="lighting">Smart Lighting Controller</option>
+                                        <option value="hvac">HVAC Controller</option>
+                                        <option value="fire_alarm">Fire Alarm Panel</option>
+                                        <option value="environmental">Air Quality Sensor</option>
+                                        <option value="temperature">Temperature Sensor</option>
+                                        <option value="motion">Motion Sensor</option>
+                                        <option value="meter">Smart Meter</option>
+                                        <option value="gateway">IoT Gateway</option>
+                                    </select>
+                                </div>
+                                <div><label>Integration</label>
+                                    <select t-model="state.deviceForm.integration_id">
+                                        <option value="">None</option>
+                                        <t t-foreach="state.lookups.integrations or []" t-as="i" t-key="i.id"><option t-att-value="i.id" t-esc="i.name"/></t>
+                                    </select>
+                                </div>
+                                <div><label>Property</label>
+                                    <select t-model="state.deviceForm.property_id">
+                                        <option value="">—</option>
+                                        <t t-foreach="state.lookups.properties or []" t-as="p" t-key="p.id"><option t-att-value="p.id" t-esc="p.name"/></t>
+                                    </select>
+                                </div>
+                                <div><label>Building</label>
+                                    <select t-model="state.deviceForm.building_id">
+                                        <option value="">—</option>
+                                        <t t-foreach="state.lookups.buildings or []" t-as="b" t-key="b.id"><option t-att-value="b.id" t-esc="b.name"/></t>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="o_iot_modal_foot">
+                            <button class="o_iot_btn secondary" t-on-click="() => this.state.showDevice = false">Cancel</button>
+                            <button class="o_iot_btn primary" t-on-click="saveDevice">Register</button>
+                        </div>
+                    </div>
+                </div>
+                <div t-if="state.showSensor" class="o_iot_modal_backdrop" t-on-click.self="() => this.state.showSensor = false">
+                    <div class="o_iot_modal">
+                        <div class="o_iot_modal_head"><div><h2>Configure Sensor</h2></div><button class="o_iot_modal_close" t-on-click="() => this.state.showSensor = false"><i class="fa fa-times"/></button></div>
+                        <div class="o_iot_modal_body o_iot_form_section">
+                            <div class="o_iot_form_grid">
+                                <div class="o_iot_span_2"><label>Name</label><input t-model="state.sensorForm.name"/></div>
+                                <div><label>Device</label>
+                                    <select t-model="state.sensorForm.device_id">
+                                        <option value="">Select device</option>
+                                        <t t-foreach="state.lookups.devices or []" t-as="d" t-key="d.id"><option t-att-value="d.id" t-esc="d.name"/></t>
+                                    </select>
+                                </div>
+                                <div><label>Parameter</label>
+                                    <select t-model="state.sensorForm.parameter">
+                                        <option value="temperature">Temperature</option>
+                                        <option value="humidity">Humidity</option>
+                                        <option value="air_quality">Air Quality</option>
+                                        <option value="co2">CO₂</option>
+                                        <option value="occupancy">Occupancy</option>
+                                        <option value="energy">Energy</option>
+                                    </select>
+                                </div>
+                                <div><label>Unit</label><input t-model="state.sensorForm.unit"/></div>
+                                <div><label>Min threshold</label><input t-model="state.sensorForm.min_threshold"/></div>
+                                <div><label>Max threshold</label><input t-model="state.sensorForm.max_threshold"/></div>
+                            </div>
+                        </div>
+                        <div class="o_iot_modal_foot">
+                            <button class="o_iot_btn secondary" t-on-click="() => this.state.showSensor = false">Cancel</button>
+                            <button class="o_iot_btn primary" t-on-click="saveSensor">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </IotAppShell>
+        </div>
+    </t>
+</templates>

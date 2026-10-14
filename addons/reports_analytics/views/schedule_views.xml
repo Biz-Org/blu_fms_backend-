@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_analytics_schedule_list" model="ir.ui.view">
+        <field name="name">analytics.report.schedule.list</field>
+        <field name="model">analytics.report.schedule</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="report_id"/>
+                <field name="frequency"/>
+                <field name="output_format"/>
+                <field name="next_run"/>
+                <field name="last_run"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_analytics_schedule_form" model="ir.ui.view">
+        <field name="name">analytics.report.schedule.form</field>
+        <field name="model">analytics.report.schedule</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="report_id"/>
+                            <field name="frequency"/>
+                            <field name="output_format"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="weekday"/>
+                            <field name="month_day"/>
+                            <field name="hour"/>
+                            <field name="minute"/>
+                            <field name="interval_days"/>
+                            <field name="next_run"/>
+                            <field name="last_run"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <group string="Recipients">
+                        <field name="recipient_ids" widget="many2many_tags" nolabel="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_analytics_schedule" model="ir.actions.act_window">
+        <field name="name">Scheduled Reports</field>
+        <field name="res_model">analytics.report.schedule</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

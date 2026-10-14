@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_iot_sensor_list" model="ir.ui.view">
+        <field name="name">integration.iot.sensor.list</field>
+        <field name="model">integration.iot.sensor</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="device_id"/>
+                <field name="parameter"/>
+                <field name="last_value"/>
+                <field name="unit"/>
+                <field name="last_reading_at"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_iot_sensor_form" model="ir.ui.view">
+        <field name="name">integration.iot.sensor.form</field>
+        <field name="model">integration.iot.sensor</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="code"/>
+                        <field name="device_id"/>
+                        <field name="parameter"/>
+                        <field name="unit"/>
+                        <field name="min_threshold"/>
+                        <field name="max_threshold"/>
+                        <field name="stale_minutes"/>
+                        <field name="active"/>
+                    </group>
+                    <field name="reading_ids">
+                        <list>
+                            <field name="captured_at"/>
+                            <field name="value"/>
+                            <field name="quality"/>
+                            <field name="source"/>
+                        </list>
+                    </field>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_iot_sensor" model="ir.actions.act_window">
+        <field name="name">Sensors</field>
+        <field name="res_model">integration.iot.sensor</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_iot_reading_list" model="ir.ui.view">
+        <field name="name">integration.iot.reading.list</field>
+        <field name="model">integration.iot.reading</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="captured_at"/>
+                <field name="sensor_id"/>
+                <field name="parameter"/>
+                <field name="value"/>
+                <field name="quality"/>
+                <field name="source"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_iot_reading" model="ir.actions.act_window">
+        <field name="name">Sensor Readings</field>
+        <field name="res_model">integration.iot.reading</field>
+        <field name="view_mode">list</field>
+    </record>
+</odoo>

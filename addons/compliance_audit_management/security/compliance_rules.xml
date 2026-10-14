@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="rule_ca_property_company" model="ir.rule">
+        <field name="name">CA Property: multi-company</field>
+        <field name="model_id" ref="model_compliance_property"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_ca_building_company" model="ir.rule">
+        <field name="name">CA Building: multi-company</field>
+        <field name="model_id" ref="model_compliance_building"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_ca_area_company" model="ir.rule">
+        <field name="name">CA Area: multi-company</field>
+        <field name="model_id" ref="model_compliance_area"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_ca_requirement_company" model="ir.rule">
+        <field name="name">CA Requirement: multi-company</field>
+        <field name="model_id" ref="model_compliance_requirement"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_ca_checklist_tpl_company" model="ir.rule">
+        <field name="name">CA Checklist Template: multi-company</field>
+        <field name="model_id" ref="model_compliance_checklist_template"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_ca_checklist_item_company" model="ir.rule">
+        <field name="name">CA Checklist Item: multi-company</field>
+        <field name="model_id" ref="model_compliance_checklist_item"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_ca_check_company" model="ir.rule">
+        <field name="name">CA Check: multi-company</field>
+        <field name="model_id" ref="model_compliance_check"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_ca_check_line_company" model="ir.rule">
+        <field name="name">CA Check Line: multi-company</field>
+        <field name="model_id" ref="model_compliance_check_line"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_ca_audit_company" model="ir.rule">
+        <field name="name">CA Audit: multi-company</field>
+        <field name="model_id" ref="model_compliance_audit"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_ca_audit_line_company" model="ir.rule">
+        <field name="name">CA Audit Line: multi-company</field>
+        <field name="model_id" ref="model_compliance_audit_line"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_ca_finding_company" model="ir.rule">
+        <field name="name">CA Finding: multi-company</field>
+        <field name="model_id" ref="model_compliance_finding"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_ca_nc_company" model="ir.rule">
+        <field name="name">CA Non-Compliance: multi-company</field>
+        <field name="model_id" ref="model_compliance_non_compliance"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_ca_action_company" model="ir.rule">
+        <field name="name">CA Corrective Action: multi-company</field>
+        <field name="model_id" ref="model_compliance_action"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_ca_document_company" model="ir.rule">
+        <field name="name">CA Document: multi-company</field>
+        <field name="model_id" ref="model_compliance_document"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_ca_document_hist_company" model="ir.rule">
+        <field name="name">CA Document History: multi-company</field>
+        <field name="model_id" ref="model_compliance_document_history"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_ca_reg_report_company" model="ir.rule">
+        <field name="name">CA Regulatory Report: multi-company</field>
+        <field name="model_id" ref="model_compliance_regulatory_report"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_ca_alert_company" model="ir.rule">
+        <field name="name">CA Alert: multi-company</field>
+        <field name="model_id" ref="model_compliance_alert"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+</odoo>

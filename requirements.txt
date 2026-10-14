@@ -1,0 +1,12 @@
+# Extra Python packages for FMS custom addons (install into the SAME environment as Odoo).
+#
+# Odoo 19 already ships with most dependencies (including python-dateutil, psycopg2, etc.).
+# Custom FMS code in this repo uses only the standard library plus Odoo and python-dateutil.
+#
+# Install locally (example):
+#   cd /path/to/odoo && .venv/bin/pip install -r /path/to/blu_fms_backend/requirements.txt
+#
+# Docker: only packages listed below are installed on top of the official Odoo image.
+# Do not add `odoo` here — use the Odoo image / your Odoo source checkout.
+
+python-dateutil>=2.8.2,<3

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="community_communication.Notices">
+        <div class="o_action o_cc_app">
+            <CcAppShell active="'notices'">
+            <div class="o_cc_shell">
+                <t t-if="state.mode === 'list'">
+                    <CcPageHeader title="isBoard ? 'Digital Notice Board' : 'Community Notices'" subtitle="'Important updates and information from your community management team.'">
+                        <t t-set-slot="buttons">
+                            <CcActionButton t-if="!isBoard and state.isOfficer" label="'+ Create Notice'" icon="'fa-plus'" onClick="() => this.setMode('create')"/>
+                        </t>
+                    </CcPageHeader>
+                    <div class="o_cc_toolbar">
+                        <CcSearchBar value="state.search" placeholder="'Search notices...'" onChange.bind="onSearch"/>
+                        <select class="o_cc_select" t-model="state.category" t-on-change="() => this.reload()">
+                            <option value="">All Categories</option>
+                            <t t-foreach="categories" t-as="cat" t-key="cat[0]"><option t-att-value="cat[0]" t-esc="cat[1]"/></t>
+                        </select>
+                    </div>
+                    <t t-if="state.records.length">
+                        <div class="o_cc_notice_grid">
+                            <div class="o_cc_notice_card" t-foreach="state.records" t-as="rec" t-key="rec.id" t-on-click="() => this.setMode('detail', rec.id)">
+                                <div class="d-flex justify-content-between">
+                                    <div class="d-flex gap-2">
+                                        <span class="o_cc_pill" t-esc="categoryLabel(rec.category)"/>
+                                        <span t-if="rec.is_pinned" class="o_cc_pill danger">Pinned</span>
+                                    </div>
+                                    <span class="small text-muted" t-esc="formatDay(rec.date_publish or rec.create_date)"/>
+                                </div>
+                                <h3 t-esc="rec.title"/>
+                                <p t-esc="snippet(rec)"/>
+                                <button class="o_cc_link">Read More →</button>
+                            </div>
+                        </div>
+                    </t>
+                    <CcEmptyState t-else="" title="'No notices posted'" hint="'Published notices will appear on this board.'"/>
+                </t>
+
+                <t t-if="state.mode === 'create' or state.mode === 'edit'">
+                    <CcPageHeader title="'Create Notice'">
+                        <t t-set-slot="buttons">
+                            <button class="o_cc_btn ghost" t-att-disabled="state.busy" t-on-click="() => this.setMode('list')">Cancel</button>
+                            <button class="o_cc_btn secondary" t-att-disabled="state.busy" t-on-click="() => this.save(false)">Save Draft</button>
+                            <button class="o_cc_btn primary" t-att-disabled="state.busy" t-on-click="() => this.save(true)">Publish Notice</button>
+                        </t>
+                    </CcPageHeader>
+                    <div class="o_cc_split">
+                        <div>
+                            <CcFormSection title="'Notice Information'">
+                                <label>Title *</label>
+                                <input t-att-class="fieldClass('title')" t-model="state.form.title"/>
+                                <CcFieldError message="fieldError('title')"/>
+                                <label class="mt-3">Category</label>
+                                <select class="o_cc_input" t-model="state.form.category">
+                                    <t t-foreach="categories" t-as="cat" t-key="cat[0]"><option t-att-value="cat[0]" t-esc="cat[1]"/></t>
+                                </select>
+                                <label class="mt-3">Body *</label>
+                                <textarea t-att-class="fieldClass('body')" t-model="state.form.body"/>
+                                <CcFieldError message="fieldError('body')"/>
+                                <label class="mt-3">Attachments</label>
+                                <CcFileDropzone files="attachmentList" error="fieldError('attachments')" onAdd.bind="onFilesSelected" onRemove.bind="removeAttachment"/>
+                                <label class="o_cc_radio mt-2"><input type="checkbox" t-model="state.form.is_pinned"/> Pin to board</label>
+                                <label class="o_cc_radio"><input type="checkbox" t-model="state.form.is_important"/> Mark as important</label>
+                            </CcFormSection>
+                            <CcFormSection title="'Publishing'">
+                                <label class="o_cc_radio"><input type="radio" t-model="state.form.publish_mode" value="now"/> Publish immediately</label>
+                                <label class="o_cc_radio"><input type="radio" t-model="state.form.publish_mode" value="later"/> Schedule for later</label>
+                                <div class="o_cc_form_grid">
+                                    <div t-if="state.form.publish_mode === 'later'">
+                                        <label>Publish Date *</label>
+                                        <input t-att-class="fieldClass('date_publish')" type="datetime-local" t-model="state.form.date_publish"/>
+                                        <CcFieldError message="fieldError('date_publish')"/>
+                                    </div>
+                                    <div>
+                                        <label>Expiry / Remove Date (Optional)</label>
+                                        <input t-att-class="fieldClass('date_expiry')" type="datetime-local" t-model="state.form.date_expiry"/>
+                                        <CcFieldError message="fieldError('date_expiry')"/>
+                                    </div>
+                                </div>
+                            </CcFormSection>
+                            <CcFormSection title="'Target Audience'">
+                                <CcAudiencePicker
+                                    audienceType="state.form.audience_type"
+                                    onType.bind="setAudienceType"
+                                    buildings="buildingsFor(communityId)"
+                                    groups="groupsFor(communityId)"
+                                    buildingIds="state.form.building_ids"
+                                    groupIds="state.form.audience_group_ids"
+                                    buildingQuery="state.form.buildingQuery"
+                                    groupQuery="state.form.groupQuery"
+                                    onBuildingQuery.bind="setBuildingQuery"
+                                    onGroupQuery.bind="setGroupQuery"
+                                    onToggleBuilding.bind="toggleBuilding"
+                                    onToggleGroup.bind="toggleGroup"
+                                    error="fieldError('audience')"
+                                    radioName="'notice-audience'"/>
+                            </CcFormSection>
+                        </div>
+                        <CcPreviewPanel title="state.form.title" body="snippet(state.form)" category="categoryLabel(state.form.category)" meta="audiencePreviewLabel()"/>
+                    </div>
+                </t>
+
+                <t t-if="state.mode === 'detail' and state.record">
+                    <button class="o_cc_back" t-on-click="() => this.setMode('list')"><i class="fa fa-arrow-left"/> Back to Notices</button>
+                    <div class="o_cc_card">
+                        <div class="d-flex gap-2 mb-2">
+                            <span class="o_cc_pill" t-esc="categoryLabel(state.record.category)"/>
+                            <span t-if="state.record.is_pinned" class="o_cc_pill danger">Pinned</span>
+                            <CcStatusBadge state="state.record.state"/>
+                        </div>
+                        <h1 t-esc="state.record.title"/>
+                        <div class="o_cc_meta mb-3"><span t-esc="formatWhen(state.record.date_publish)"/><span t-esc="m2oName(state.record.author_id)"/></div>
+                        <div t-out="html(state.record.body)"/>
+                        <t t-foreach="state.extras.attachments or []" t-as="file" t-key="file.id">
+                            <div class="o_cc_file_row">
+                                <i class="fa fa-file-o"/>
+                                <span class="flex-grow-1" t-esc="file.name"/>
+                                <a t-att-href="'/web/content/' + file.id + '?download=1'"><i class="fa fa-download"/></a>
+                            </div>
+                        </t>
+                        <div class="o_cc_footer_actions" t-if="state.isOfficer and state.record.state === 'draft'">
+                            <button class="o_cc_btn secondary" t-on-click="() => this.setMode('edit', state.record.id)">Edit</button>
+                        </div>
+                    </div>
+                </t>
+            </div>
+            </CcAppShell>
+        </div>
+    </t>
+</templates>

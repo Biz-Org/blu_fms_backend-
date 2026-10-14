@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="seq_fire_safety_inspection" model="ir.sequence">
+        <field name="name">Fire &amp; Safety Inspection</field>
+        <field name="code">fire.safety.inspection</field>
+        <field name="prefix">FSI-</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="seq_fire_safety_incident" model="ir.sequence">
+        <field name="name">Fire &amp; Safety Incident</field>
+        <field name="code">fire.safety.incident</field>
+        <field name="prefix">FSN-</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="seq_fire_safety_emergency" model="ir.sequence">
+        <field name="name">Fire &amp; Safety Emergency</field>
+        <field name="code">fire.safety.emergency</field>
+        <field name="prefix">FSE-</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

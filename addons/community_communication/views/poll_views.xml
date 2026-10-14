@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_cc_poll_search" model="ir.ui.view">
+        <field name="name">community.communication.poll.search</field>
+        <field name="model">community.communication.poll</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="question"/>
+                <filter string="Active" name="active" domain="[('state', '=', 'active')]"/>
+                <filter string="Scheduled" name="scheduled" domain="[('state', '=', 'scheduled')]"/>
+                <filter string="Closed" name="closed" domain="[('state', '=', 'closed')]"/>
+            </search>
+        </field>
+    </record>
+    <record id="view_cc_poll_list" model="ir.ui.view">
+        <field name="name">community.communication.poll.list</field>
+        <field name="model">community.communication.poll</field>
+        <field name="arch" type="xml">
+            <list class="o_cc_shell">
+                <field name="question"/>
+                <field name="response_type"/>
+                <field name="audience_type"/>
+                <field name="participant_count"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_cc_poll_form" model="ir.ui.view">
+        <field name="name">community.communication.poll.form</field>
+        <field name="model">community.communication.poll</field>
+        <field name="arch" type="xml">
+            <form class="o_cc_shell">
+                <header>
+                    <button name="action_open" string="Publish Poll" type="object" class="btn-primary" invisible="state not in ('draft', 'scheduled')"/>
+                    <button name="action_schedule" string="Schedule" type="object" invisible="state != 'draft'"/>
+                    <button name="action_close" string="Close Poll" type="object" invisible="state != 'active'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,scheduled,active,closed"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="question"/>
+                            <field name="description"/>
+                            <field name="category"/>
+                            <field name="response_type"/>
+                            <field name="community_id" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="anonymous"/>
+                            <field name="one_per_unit"/>
+                            <field name="audience_type"/>
+                            <field name="building_ids" widget="many2many_tags" invisible="audience_type != 'buildings'"/>
+                            <field name="audience_group_ids" widget="many2many_tags" invisible="audience_type != 'groups'"/>
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                            <field name="participant_count"/>
+                        </group>
+                    </group>
+                    <field name="option_ids">
+                        <list editable="bottom">
+                            <field name="sequence" widget="handle"/>
+                            <field name="name"/>
+                            <field name="vote_count"/>
+                            <field name="vote_percent"/>
+                        </list>
+                    </field>
+                    <widget name="cc_poll_vote"/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_cc_poll" model="ir.actions.act_window">
+        <field name="name">Polls</field>
+        <field name="res_model">community.communication.poll</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

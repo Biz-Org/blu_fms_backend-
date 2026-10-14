@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="fire_safety_management.Incidents">
+        <div class="o_action o_fs_app">
+            <FsAppShell active="'incidents'">
+                <div class="o_fs_shell">
+                    <div t-if="state.error" class="o_fs_alert">
+                        <i class="fa fa-exclamation-circle"/>
+                        <div t-esc="state.error"/>
+                    </div>
+
+                    <t t-if="state.mode === 'list'">
+                        <div class="o_fs_page_header">
+                            <div>
+                                <h1>Safety Incidents</h1>
+                                <p>Report hazards, investigate, record findings, and resolve the corrective-action loop.</p>
+                            </div>
+                            <button t-if="canReport" class="o_fs_btn primary" t-on-click="() => this.setMode('create')">
+                                <i class="fa fa-plus"/> Report Incident
+                            </button>
+                        </div>
+
+                        <div t-if="state.loading" class="o_fs_empty">
+                            <h3>Loading incidents</h3>
+                            <p>Fetching live Fire &amp; Safety records.</p>
+                        </div>
+                        <t t-else="">
+                            <div class="o_fs_kpi_row">
+                                <FsKpiCard label="'All Incidents'" value="state.kpis.total" icon="'fa-exclamation-triangle'" onClick.bind="() => this.onFilter('all')"/>
+                                <FsKpiCard label="'Open'" value="state.kpis.open" icon="'fa-circle-o'" tone="state.kpis.open ? 'danger' : ''" onClick.bind="() => this.onFilter('open')"/>
+                                <FsKpiCard label="'Investigating'" value="state.kpis.investigating" icon="'fa-search'" tone="state.kpis.investigating ? 'warning' : ''" onClick.bind="() => this.onFilter('investigating')"/>
+                                <FsKpiCard label="'Resolved'" value="state.kpis.resolved" icon="'fa-check'" onClick.bind="() => this.onFilter('resolved')"/>
+                            </div>
+                            <div class="o_fs_toolbar">
+                                <div class="o_fs_search">
+                                    <i class="fa fa-search"/>
+                                    <input type="text" placeholder="Search incidents..." t-att-value="state.search" t-on-change="onSearch"/>
+                                </div>
+                                <select class="o_fs_select" t-att-value="state.typeFilter" t-on-change="onTypeFilter">
+                                    <option value="">Type: All</option>
+                                    <t t-foreach="types" t-as="row" t-key="row[0]">
+                                        <option t-att-value="row[0]" t-esc="row[1]"/>
+                                    </t>
+                                </select>
+                                <div class="o_fs_chips">
+                                    <button t-att-class="state.filter === 'all' ? 'active' : ''" t-on-click="() => this.onFilter('all')">All</button>
+                                    <button t-att-class="state.filter === 'open_loop' ? 'active' : ''" t-on-click="() => this.onFilter('open_loop')">Open loop</button>
+                                    <button t-att-class="state.filter === 'open' ? 'active' : ''" t-on-click="() => this.onFilter('open')">Open</button>
+                                    <button t-att-class="state.filter === 'investigating' ? 'active' : ''" t-on-click="() => this.onFilter('investigating')">Investigating</button>
+                                    <button t-att-class="state.filter === 'resolved' ? 'active' : ''" t-on-click="() => this.onFilter('resolved')">Resolved</button>
+                                    <button t-att-class="state.filter === 'mine' ? 'active' : ''" t-on-click="() => this.onFilter('mine')">Assigned / reported by me</button>
+                                </div>
+                            </div>
+                            <div class="o_fs_card">
+                                <div class="o_fs_card_head">Incident log</div>
+                                <t t-if="state.records.length">
+                                    <table class="o_fs_table">
+                                        <thead>
+                                            <tr>
+                                                <th>Incident</th>
+                                                <th>Type</th>
+                                                <th>When</th>
+                                                <th>Reported by</th>
+                                                <th>Severity</th>
+                                                <th>Status</th>
+                                                <th/>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr t-foreach="state.records" t-as="rec" t-key="rec.id" t-on-click="() => this.setMode('detail', rec.id)">
+                                                <td>
+                                                    <div class="o_fs_row_title" t-esc="rec.name"/>
+                                                    <div class="o_fs_row_sub" t-esc="rec.location_detail or m2oName(rec.property_id) or 'No location'"/>
+                                                </td>
+                                                <td><span class="o_fs_pill" t-esc="typeLabel(rec.incident_type)"/></td>
+                                                <td t-esc="formatWhen(rec.incident_datetime)"/>
+                                                <td t-esc="m2oName(rec.reported_by_id) or '—'"/>
+                                                <td>
+                                                    <span t-attf-class="o_fs_pill {{ rec.severity === 'critical' or rec.severity === 'high' ? 'danger' : rec.severity === 'medium' ? 'warning' : 'muted' }}" t-esc="severityLabel(rec.severity)"/>
+                                                </td>
+                                                <td><FsStatusBadge state="rec.state" label="stateLabel(rec.state)"/></td>
+                                                <td><button class="o_fs_link" t-on-click.stop="() => this.setMode('detail', rec.id)">Open</button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div class="o_fs_pager">
+                                        <span><t t-esc="pageFrom"/>–<t t-esc="pageTo"/> of <t t-esc="state.total"/></span>
+                                        <div class="o_fs_pager_pages">
+                                            <button t-att-disabled="state.page &lt;= 1" t-on-click="() => this.onPage(-1)">Prev</button>
+                                            <button t-att-disabled="state.page &gt;= pageCount" t-on-click="() => this.onPage(1)">Next</button>
+                                        </div>
+                                    </div>
+                                </t>
+                                <div t-else="" class="o_fs_empty">
+                                    <h3>No incidents match</h3>
+                                    <p t-if="canReport">Report a fire, alarm, or safety hazard to start the incident loop.</p>
+                                    <p t-else="">Reported incidents will appear here.</p>
+                                    <button t-if="canReport" class="o_fs_btn primary mt-2" t-on-click="() => this.setMode('create')">
+                                        <i class="fa fa-plus"/> Report Incident
+                                    </button>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+
+                    <t t-if="state.mode === 'create'">
+                        <button class="o_fs_back" t-on-click="() => this.setMode('list')"><i class="fa fa-arrow-left"/> Back to Incidents</button>
+                        <div class="o_fs_page_header">
+                            <div>
+                                <h1>Report Incident</h1>
+                                <p>Safety Manager, Security, and Security Guard can file a report. Only a Safety Manager can later resolve it.</p>
+                            </div>
+                        </div>
+                        <div class="o_fs_form_section">
+                            <h3>What happened</h3>
+                            <div class="o_fs_form_grid">
+                                <div>
+                                    <label>Type *</label>
+                                    <select t-model="state.form.incident_type">
+                                        <t t-foreach="types" t-as="row" t-key="row[0]">
+                                            <option t-att-value="row[0]" t-esc="row[1]"/>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Severity *</label>
+                                    <select t-model="state.form.severity">
+                                        <option value="low">Low</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="high">High</option>
+                                        <option value="critical">Critical</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Date and time *</label>
+                                    <input type="datetime-local" t-model="state.form.incident_datetime"/>
+                                </div>
+                                <div>
+                                    <label>Assigned to</label>
+                                    <select t-model="state.form.assigned_user_id">
+                                        <option value="">Me</option>
+                                        <t t-foreach="state.lookups.users" t-as="usr" t-key="usr.id">
+                                            <option t-att-value="usr.id" t-esc="usr.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Location detail</label>
+                                    <input type="text" t-model="state.form.location_detail" placeholder="Floor, wing, or room"/>
+                                </div>
+                            </div>
+                            <label class="mt-3">Description *</label>
+                            <textarea t-model="state.form.description" placeholder="What was seen, heard, or reported"/>
+                            <label class="mt-3">Immediate action taken</label>
+                            <textarea t-model="state.form.immediate_action" placeholder="Evacuation, isolation, first aid, alarm reset..."/>
+                        </div>
+                        <div class="o_fs_form_section">
+                            <h3>Location (placeholder)</h3>
+                            <p class="o_fs_hint">Property, building, and area are integration placeholders until Property Management exists.</p>
+                            <div class="o_fs_form_grid">
+                                <div>
+                                    <label>Property</label>
+                                    <select t-model="state.form.property_id" t-on-change="onPropertyChange">
+                                        <option value="">None</option>
+                                        <t t-foreach="state.lookups.properties" t-as="row" t-key="row.id">
+                                            <option t-att-value="row.id" t-esc="row.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Building / Tower</label>
+                                    <select t-model="state.form.building_id" t-on-change="onBuildingChange">
+                                        <option value="">None</option>
+                                        <t t-foreach="filteredBuildings" t-as="row" t-key="row.id">
+                                            <option t-att-value="row.id" t-esc="row.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Area / Floor</label>
+                                    <select t-model="state.form.area_id">
+                                        <option value="">None</option>
+                                        <t t-foreach="filteredAreas" t-as="row" t-key="row.id">
+                                            <option t-att-value="row.id" t-esc="row.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="o_fs_form_section">
+                            <h3>People involved</h3>
+                            <div t-foreach="state.form.persons" t-as="person" t-key="person_index" class="o_fs_form_grid mb-2">
+                                <input type="text" t-model="person.name" placeholder="Name"/>
+                                <input type="text" t-model="person.role" placeholder="Role (witness, injured, contractor...)"/>
+                                <input type="text" t-model="person.contact" placeholder="Contact"/>
+                                <button class="o_fs_btn secondary" t-on-click="() => this.removePersonRow(person_index)">Remove</button>
+                            </div>
+                            <button class="o_fs_btn secondary" t-on-click="addPersonRow"><i class="fa fa-plus"/> Add person</button>
+                        </div>
+                        <div class="o_fs_form_section">
+                            <h3>Evidence</h3>
+                            <t t-foreach="state.form.pendingFiles" t-as="file" t-key="file_index">
+                                <div class="o_fs_file">
+                                    <i class="fa fa-paperclip"/>
+                                    <span t-esc="file.name"/>
+                                    <button class="o_fs_link" t-on-click="() => this.removePendingFile(file_index)">Remove</button>
+                                </div>
+                            </t>
+                            <label class="o_fs_upload">
+                                <input type="file" multiple="multiple" t-on-change="onPendingFiles"/>
+                                Attach photos or documents
+                            </label>
+                        </div>
+                        <div class="o_fs_footer_bar">
+                            <span t-if="state.busy" class="o_fs_busy" t-esc="state.busy"/>
+                            <button class="o_fs_btn secondary" t-att-disabled="state.busy" t-on-click="() => this.setMode('list')">Cancel</button>
+                            <button class="o_fs_btn primary" t-att-disabled="state.busy" t-on-click="reportIncident">
+                                <i class="fa fa-exclamation-triangle"/> Submit Report
+                            </button>
+                        </div>
+                    </t>
+
+                    <t t-if="state.mode === 'detail'">
+                        <button class="o_fs_back" t-on-click="() => this.setMode('list')"><i class="fa fa-arrow-left"/> Back to Incidents</button>
+                        <div t-if="state.loading" class="o_fs_empty"><h3>Loading incident</h3></div>
+                        <t t-elif="state.record">
+                            <div class="o_fs_page_header">
+                                <div>
+                                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                                        <h1 t-esc="incident.name"/>
+                                        <FsStatusBadge state="incident.state" label="stateLabel(incident.state)"/>
+                                        <span class="o_fs_pill" t-esc="typeLabel(incident.incident_type)"/>
+                                        <span t-attf-class="o_fs_pill {{ incident.severity === 'critical' or incident.severity === 'high' ? 'danger' : 'warning' }}" t-esc="severityLabel(incident.severity)"/>
+                                    </div>
+                                    <p>
+                                        <t t-esc="formatWhen(incident.incident_datetime)"/>
+                                        <t t-if="m2oName(incident.reported_by_id)"> · Reported by <t t-esc="m2oName(incident.reported_by_id)"/></t>
+                                        <t t-if="incident.location_detail"> · <t t-esc="incident.location_detail"/></t>
+                                    </p>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button t-if="canInvestigate" class="o_fs_btn primary" t-att-disabled="state.busy" t-on-click="startInvestigation">
+                                        <i class="fa fa-search"/> Start Investigation
+                                    </button>
+                                    <button t-if="canResolve" class="o_fs_btn primary" t-att-disabled="state.busy" t-on-click="resolveIncident">
+                                        <i class="fa fa-check"/> Resolve Incident
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="o_fs_detail_grid">
+                                <div class="o_fs_card">
+                                    <div class="o_fs_card_head">Report</div>
+                                    <div class="o_fs_meta">
+                                        <div><span>Assignee</span><strong t-esc="m2oName(incident.assigned_user_id) or '—'"/></div>
+                                        <div><span>Resolved</span><strong t-esc="formatWhen(incident.resolved_datetime)"/></div>
+                                        <div><span>Property</span><strong t-esc="m2oName(incident.property_id) or '—'"/></div>
+                                        <div><span>Location</span><strong t-esc="incident.location_detail or '—'"/></div>
+                                    </div>
+                                    <p class="o_fs_notes" t-esc="stripHtml(incident.description) or 'No description'"/>
+                                    <p t-if="stripHtml(incident.immediate_action)" class="o_fs_notes"><strong>Immediate action: </strong><t t-esc="stripHtml(incident.immediate_action)"/></p>
+                                </div>
+                                <div class="o_fs_card">
+                                    <div class="o_fs_card_head">Evidence</div>
+                                    <t t-foreach="state.attachments" t-as="file" t-key="file.id">
+                                        <div class="o_fs_file">
+                                            <i class="fa fa-paperclip"/>
+                                            <a t-att-href="'/web/content/' + file.id + '?download=true'" t-esc="file.name"/>
+                                        </div>
+                                    </t>
+                                    <FsEmptyState t-if="!state.attachments.length" title="'No evidence yet'" hint="'Photos or documents can be attached to the report.'"/>
+                                    <label t-if="canUploadEvidence" class="o_fs_upload">
+                                        <input type="file" multiple="multiple" t-on-change="onEvidenceFiles"/>
+                                        Upload evidence
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="o_fs_card mt-3">
+                                <div class="o_fs_card_head">People involved</div>
+                                <t t-foreach="state.persons" t-as="person" t-key="person.id">
+                                    <div class="o_fs_list_row">
+                                        <div>
+                                            <div class="o_fs_row_title" t-esc="person.name"/>
+                                            <div class="o_fs_row_sub"><t t-esc="person.role or 'No role'"/> <t t-if="person.contact">· <t t-esc="person.contact"/></t></div>
+                                        </div>
+                                    </div>
+                                </t>
+                                <FsEmptyState t-if="!state.persons.length" title="'No people recorded'" hint="'Add witnesses or people involved in the incident.'"/>
+                                <t t-if="canAddPerson">
+                                    <div class="o_fs_inline_panel">
+                                        <div class="o_fs_form_grid">
+                                            <input type="text" t-model="state.personForm.name" placeholder="Name *"/>
+                                            <input type="text" t-model="state.personForm.role" placeholder="Role"/>
+                                            <input type="text" t-model="state.personForm.contact" placeholder="Contact"/>
+                                        </div>
+                                        <button class="o_fs_btn secondary mt-2" t-att-disabled="state.busy" t-on-click="addPerson">Add person</button>
+                                    </div>
+                                </t>
+                            </div>
+
+                            <div class="o_fs_card mt-3">
+                                <div class="o_fs_card_head">Investigation</div>
+                                <p class="o_fs_hint">Safety Manager or Security can investigate. Only a Safety Manager can resolve.</p>
+                                <t t-if="canEditInvestigation">
+                                    <label>Investigation notes</label>
+                                    <textarea t-model="state.notesForm.investigation_notes" placeholder="What was checked, who was interviewed, site observations"/>
+                                    <label class="mt-2">Root cause</label>
+                                    <textarea t-model="state.notesForm.root_cause" placeholder="Why it happened"/>
+                                    <label class="mt-2">Immediate action</label>
+                                    <textarea t-model="state.notesForm.immediate_action" placeholder="What was done immediately"/>
+                                    <button class="o_fs_btn secondary mt-2" t-att-disabled="state.busy" t-on-click="saveInvestigation">Save investigation</button>
+                                </t>
+                                <t t-else="">
+                                    <p class="o_fs_notes"><strong>Notes: </strong><t t-esc="stripHtml(incident.investigation_notes) or '—'"/></p>
+                                    <p class="o_fs_notes"><strong>Root cause: </strong><t t-esc="stripHtml(incident.root_cause) or '—'"/></p>
+                                </t>
+                            </div>
+
+                            <div class="o_fs_card mt-3">
+                                <div class="o_fs_card_head">Findings &amp; corrective actions</div>
+                                <p class="o_fs_hint">Same loop as inspections: Finding → Corrective Action → Verification → Closure.</p>
+                                <t t-foreach="state.findings" t-as="finding" t-key="finding.id">
+                                    <div class="o_fs_finding">
+                                        <div class="d-flex justify-content-between gap-2 flex-wrap">
+                                            <div>
+                                                <div class="o_fs_row_title" t-esc="finding.name"/>
+                                                <div class="o_fs_row_sub" t-esc="severityLabel(finding.severity) + ' severity'"/>
+                                            </div>
+                                            <div class="d-flex gap-2 align-items-center">
+                                                <FsStatusBadge state="finding.state" label="stateLabel(finding.state)"/>
+                                                <button t-if="canProgressFinding(finding)" class="o_fs_btn secondary" t-att-disabled="state.busy" t-on-click="() => this.markFindingProgress(finding)">In progress</button>
+                                                <button t-if="canCloseFinding(finding)" class="o_fs_btn secondary" t-att-disabled="state.busy" t-on-click="() => this.closeFinding(finding)">Close finding</button>
+                                            </div>
+                                        </div>
+                                        <p t-if="stripHtml(finding.description)" class="o_fs_notes" t-esc="stripHtml(finding.description)"/>
+                                        <t t-foreach="actionsFor(finding)" t-as="act" t-key="act.id">
+                                            <div class="o_fs_action">
+                                                <div class="d-flex justify-content-between gap-2 flex-wrap">
+                                                    <div>
+                                                        <div class="fw-semibold" t-esc="act.name"/>
+                                                        <div class="o_fs_row_sub">
+                                                            Due <t t-esc="formatDate(act.deadline)"/>
+                                                            <t t-if="m2oName(act.assigned_user_id)"> · <t t-esc="m2oName(act.assigned_user_id)"/></t>
+                                                            <t t-if="act.is_overdue"> · Overdue</t>
+                                                        </div>
+                                                    </div>
+                                                    <FsStatusBadge state="act.state" label="actionStateLabel(act.state)"/>
+                                                </div>
+                                                <div class="d-flex gap-2 flex-wrap mt-2">
+                                                    <button t-if="canMarkDone(act)" class="o_fs_btn secondary" t-att-disabled="state.busy" t-on-click="() => this.markActionDone(act)">Mark done</button>
+                                                    <button t-if="canReopen(act)" class="o_fs_btn secondary" t-att-disabled="state.busy" t-on-click="() => this.reopenAction(act)">Reopen</button>
+                                                    <button t-if="canCloseAction(act)" class="o_fs_btn primary" t-att-disabled="state.busy" t-on-click="() => this.closeAction(act)">Close action</button>
+                                                </div>
+                                                <div t-if="canVerify(act)" class="o_fs_inline_form mt-2">
+                                                    <input type="text" placeholder="Verification notes" t-on-input="(ev) => this.state.verifyNotes[act.id] = ev.target.value"/>
+                                                    <button class="o_fs_btn secondary" t-att-disabled="state.busy" t-on-click="() => this.verifyAction(act)">Verify</button>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </t>
+                                <FsEmptyState t-if="!state.findings.length" title="'No findings'" hint="'A Safety Manager can record findings from this incident.'"/>
+
+                                <t t-if="canAddFinding">
+                                    <div class="o_fs_inline_panel">
+                                        <h4>Add finding</h4>
+                                        <div class="o_fs_form_grid">
+                                            <div>
+                                                <label>Title *</label>
+                                                <input type="text" t-model="state.findingForm.name" placeholder="Describe the finding"/>
+                                            </div>
+                                            <div>
+                                                <label>Severity</label>
+                                                <select t-model="state.findingForm.severity">
+                                                    <option value="low">Low</option>
+                                                    <option value="medium">Medium</option>
+                                                    <option value="high">High</option>
+                                                    <option value="critical">Critical</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <textarea class="mt-2" t-model="state.findingForm.description" placeholder="Details"/>
+                                        <button class="o_fs_btn secondary mt-2" t-att-disabled="state.busy" t-on-click="createFinding">Add finding</button>
+                                    </div>
+                                </t>
+                                <t t-if="canAddAction">
+                                    <div class="o_fs_inline_panel">
+                                        <h4>Add corrective action</h4>
+                                        <div class="o_fs_form_grid">
+                                            <div>
+                                                <label>Finding *</label>
+                                                <select t-model="state.actionForm.finding_id">
+                                                    <t t-foreach="openFindings" t-as="finding" t-key="finding.id">
+                                                        <option t-att-value="finding.id" t-esc="finding.name"/>
+                                                    </t>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label>Title *</label>
+                                                <input type="text" t-model="state.actionForm.name" placeholder="Action to take"/>
+                                            </div>
+                                            <div>
+                                                <label>Deadline *</label>
+                                                <input type="date" t-model="state.actionForm.deadline"/>
+                                            </div>
+                                            <div>
+                                                <label>Assignee</label>
+                                                <select t-model="state.actionForm.assigned_user_id">
+                                                    <option value="">Unassigned</option>
+                                                    <t t-foreach="state.lookups.users" t-as="usr" t-key="usr.id">
+                                                        <option t-att-value="usr.id" t-esc="usr.name"/>
+                                                    </t>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <button class="o_fs_btn secondary mt-2" t-att-disabled="state.busy" t-on-click="createAction">Add corrective action</button>
+                                    </div>
+                                </t>
+                            </div>
+                            <div t-if="state.busy" class="o_fs_busy mt-3" t-esc="state.busy"/>
+                        </t>
+                    </t>
+                </div>
+            </FsAppShell>
+        </div>
+    </t>
+</templates>

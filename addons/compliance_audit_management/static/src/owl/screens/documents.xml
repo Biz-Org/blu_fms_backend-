@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="compliance_audit_management.Documents">
+        <div class="o_action o_ca_app">
+            <CaAppShell active="'documents'">
+                <div class="o_ca_shell">
+                    <div t-if="state.error" class="o_ca_alert">
+                        <i class="fa fa-exclamation-circle"/>
+                        <div t-esc="state.error"/>
+                    </div>
+
+                    <t t-if="state.mode === 'list'">
+                        <div class="o_ca_page_header">
+                            <div>
+                                <h1>Compliance Documents</h1>
+                                <p>Manage licenses, certificates, permits and compliance documents.</p>
+                            </div>
+                            <button t-if="canManage" class="o_ca_btn primary" t-on-click="openCreate">
+                                <i class="fa fa-plus"/> Add Document
+                            </button>
+                        </div>
+
+                        <div t-if="state.loading" class="o_ca_empty">
+                            <h3>Loading documents</h3>
+                            <p>Fetching the compliance document register.</p>
+                        </div>
+                        <t t-else="">
+                            <div class="o_ca_kpi_row">
+                                <CaKpiCard
+                                    label="'Active'"
+                                    value="state.kpis.active"
+                                    icon="'fa-check'"
+                                    onClick.bind="() => this.onFilter('active')"
+                                />
+                                <CaKpiCard
+                                    label="'Expiring Soon'"
+                                    value="state.kpis.expiring_soon"
+                                    icon="'fa-exclamation-triangle'"
+                                    tone="state.kpis.expiring_soon ? 'warning' : ''"
+                                    onClick.bind="() => this.onFilter('expiring_soon')"
+                                />
+                                <CaKpiCard
+                                    label="'Renewal Due'"
+                                    value="state.kpis.renewal_due"
+                                    icon="'fa-clock-o'"
+                                    tone="state.kpis.renewal_due ? 'warning' : ''"
+                                    onClick.bind="() => this.onFilter('renewal_due')"
+                                />
+                                <CaKpiCard
+                                    label="'Expired'"
+                                    value="state.kpis.expired"
+                                    icon="'fa-times-circle'"
+                                    tone="state.kpis.expired ? 'danger' : ''"
+                                    onClick.bind="() => this.onFilter('expired')"
+                                />
+                            </div>
+
+                            <div class="o_ca_toolbar">
+                                <div class="o_ca_chips">
+                                    <button t-att-class="state.filter === 'all' ? 'active' : ''" t-on-click="() => this.onFilter('all')">All</button>
+                                    <button t-att-class="state.filter === 'active' ? 'active' : ''" t-on-click="() => this.onFilter('active')">Active</button>
+                                    <button t-att-class="state.filter === 'expiring_soon' ? 'active' : ''" t-on-click="() => this.onFilter('expiring_soon')">Expiring Soon</button>
+                                    <button t-att-class="state.filter === 'renewal_due' ? 'active' : ''" t-on-click="() => this.onFilter('renewal_due')">Renewal Due</button>
+                                    <button t-att-class="state.filter === 'under_renewal' ? 'active' : ''" t-on-click="() => this.onFilter('under_renewal')">Under Renewal</button>
+                                    <button t-att-class="state.filter === 'expired' ? 'active' : ''" t-on-click="() => this.onFilter('expired')">Expired</button>
+                                    <button t-att-class="state.filter === 'archived' ? 'active' : ''" t-on-click="() => this.onFilter('archived')">Archived</button>
+                                </div>
+                                <div class="o_ca_search">
+                                    <i class="fa fa-search"/>
+                                    <input type="text" placeholder="Search documents..." t-att-value="state.search" t-on-change="onSearch"/>
+                                </div>
+                                <select class="o_ca_select" t-att-value="state.typeFilter" t-on-change="onTypeFilter">
+                                    <option value="">All Types</option>
+                                    <t t-foreach="typeOptions" t-as="opt" t-key="opt.value">
+                                        <option t-att-value="opt.value" t-esc="opt.label"/>
+                                    </t>
+                                </select>
+                                <select class="o_ca_select" t-att-value="state.propertyFilter" t-on-change="onPropertyFilter">
+                                    <option value="">All Locations</option>
+                                    <t t-foreach="state.lookups.properties" t-as="prop" t-key="prop.id">
+                                        <option t-att-value="prop.id" t-esc="prop.name"/>
+                                    </t>
+                                </select>
+                            </div>
+
+                            <div class="o_ca_card">
+                                <div class="o_ca_card_head">Document register</div>
+                                <t t-if="state.records.length">
+                                    <table class="o_ca_table">
+                                        <thead>
+                                            <tr>
+                                                <th>Document Name</th>
+                                                <th>Type</th>
+                                                <th>Issuing Authority</th>
+                                                <th>Location</th>
+                                                <th>Issue Date</th>
+                                                <th>Expiry Date</th>
+                                                <th>Status</th>
+                                                <th/>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr t-foreach="state.records" t-as="rec" t-key="rec.id" t-on-click="() => this.setMode('detail', rec.id)">
+                                                <td>
+                                                    <div class="o_ca_row_title">
+                                                        <i class="fa fa-file-text-o"/>
+                                                        <t t-esc="rec.name"/>
+                                                    </div>
+                                                </td>
+                                                <td t-esc="typeLabel(rec.document_type)"/>
+                                                <td t-esc="rec.issuing_authority or '—'"/>
+                                                <td t-esc="locationLabel(rec)"/>
+                                                <td t-esc="formatDate(rec.issue_date)"/>
+                                                <td>
+                                                    <div t-att-class="isExpiryUrgent(rec) ? 'text-danger' : ''" t-esc="formatDate(rec.expiry_date)"/>
+                                                </td>
+                                                <td>
+                                                    <CaStatusBadge state="rec.state" label="stateLabel(rec.state)"/>
+                                                </td>
+                                                <td>
+                                                    <button class="o_ca_link" t-on-click.stop="() => this.setMode('detail', rec.id)">Open</button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div class="o_ca_pager">
+                                        <span><t t-esc="pageFrom"/>–<t t-esc="pageTo"/> of <t t-esc="state.total"/></span>
+                                        <div class="o_ca_pager_pages">
+                                            <button t-att-disabled="state.page &lt;= 1" t-on-click="() => this.onPage(-1)">Prev</button>
+                                            <button t-att-disabled="state.page &gt;= pageCount" t-on-click="() => this.onPage(1)">Next</button>
+                                        </div>
+                                    </div>
+                                </t>
+                                <CaEmptyState t-else="" title="'No documents match'" hint="emptyListHint"/>
+                            </div>
+                        </t>
+                    </t>
+
+                    <t t-if="state.mode === 'detail' and state.record">
+                        <button class="o_ca_back" t-on-click="() => this.setMode('list')">
+                            <i class="fa fa-arrow-left"/> Back to Documents
+                        </button>
+                        <div class="o_ca_page_header">
+                            <div>
+                                <h1 t-esc="state.record.name"/>
+                                <p>
+                                    <t t-esc="typeLabel(state.record.document_type)"/>
+                                    · Expires <t t-esc="formatDate(state.record.expiry_date)"/>
+                                    · <CaStatusBadge state="state.record.state" label="stateLabel(state.record.state)"/>
+                                </p>
+                            </div>
+                            <div class="d-flex gap-2 flex-wrap" t-if="canManage and state.record.state !== 'archived'">
+                                <button
+                                    t-if="state.record.state !== 'under_renewal'"
+                                    class="o_ca_btn"
+                                    t-att-disabled="!!state.busy"
+                                    t-on-click="() => this.runAction('action_start_renewal')"
+                                >Start Renewal</button>
+                                <button class="o_ca_btn primary" t-att-disabled="!!state.busy" t-on-click="openRenew">
+                                    Mark Renewed
+                                </button>
+                                <button class="o_ca_btn" t-att-disabled="!!state.busy" t-on-click="() => this.runAction('action_archive')">
+                                    Archive
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="o_ca_detail_grid">
+                            <div class="o_ca_form_section">
+                                <h3>Document details</h3>
+                                <div class="o_ca_meta">
+                                    <div>
+                                        <span>Type</span>
+                                        <strong t-esc="typeLabel(state.record.document_type)"/>
+                                    </div>
+                                    <div>
+                                        <span>Issuing Authority</span>
+                                        <strong t-esc="state.record.issuing_authority or '—'"/>
+                                    </div>
+                                    <div>
+                                        <span>Requirement</span>
+                                        <strong t-esc="m2oName(state.record.requirement_id) or '—'"/>
+                                    </div>
+                                    <div>
+                                        <span>Location</span>
+                                        <strong t-esc="locationLabel(state.record)"/>
+                                    </div>
+                                    <div>
+                                        <span>Issue Date</span>
+                                        <strong t-esc="formatDate(state.record.issue_date)"/>
+                                    </div>
+                                    <div>
+                                        <span>Expiry Date</span>
+                                        <strong t-att-class="isExpiryUrgent(state.record) ? 'text-danger' : ''" t-esc="formatDate(state.record.expiry_date)"/>
+                                    </div>
+                                    <div>
+                                        <span>Renewal Reminder</span>
+                                        <strong t-esc="state.record.renewal_reminder_days + ' days before'"/>
+                                    </div>
+                                </div>
+                                <div class="o_ca_file_row">
+                                    <t t-foreach="state.attachments" t-as="att" t-key="att.id">
+                                        <a class="o_ca_file" t-att-href="'/web/content/' + att.id + '?download=true'" target="_blank">
+                                            <i class="fa fa-paperclip"/> <t t-esc="att.name"/>
+                                        </a>
+                                    </t>
+                                    <span t-if="!state.attachments.length" class="o_ca_hint">No files attached.</span>
+                                </div>
+                                <div t-if="state.busy" class="o_ca_busy" t-esc="state.busy"/>
+                            </div>
+                            <div class="o_ca_form_section">
+                                <h3>History</h3>
+                                <t t-if="state.history.length">
+                                    <div t-foreach="state.history" t-as="row" t-key="row.id" class="o_ca_attention_item">
+                                        <div>
+                                            <div class="o_ca_row_title" t-esc="row.event_type"/>
+                                            <div class="o_ca_row_sub">
+                                                <t t-esc="m2oName(row.user_id) or 'System'"/>
+                                                <t t-if="row.previous_expiry_date"> · prev <t t-esc="formatDate(row.previous_expiry_date)"/></t>
+                                                <t t-if="row.new_expiry_date"> → <t t-esc="formatDate(row.new_expiry_date)"/></t>
+                                            </div>
+                                            <div t-if="row.note" class="o_ca_row_sub" t-esc="row.note"/>
+                                        </div>
+                                    </div>
+                                </t>
+                                <p t-else="" class="o_ca_hint">No renewal or archive history yet.</p>
+                            </div>
+                        </div>
+                    </t>
+
+                    <div t-if="state.showCreate" class="o_ca_modal_backdrop" t-on-click="closeCreate">
+                        <div class="o_ca_modal" t-on-click.stop="">
+                            <div class="o_ca_modal_head">
+                                <div>
+                                    <h2>Add Compliance Document</h2>
+                                    <p>Register a license, certificate, permit, or approval.</p>
+                                </div>
+                                <button class="o_ca_modal_close" t-on-click="closeCreate" aria-label="Close">
+                                    <i class="fa fa-times"/>
+                                </button>
+                            </div>
+                            <div class="o_ca_modal_body">
+                                <div class="o_ca_form_grid">
+                                    <div class="o_ca_span_2">
+                                        <label>Document Name *</label>
+                                        <input type="text" t-model="state.form.name" placeholder="e.g., Annual Fire Safety Certificate"/>
+                                    </div>
+                                    <div>
+                                        <label>Document Type *</label>
+                                        <select t-model="state.form.document_type">
+                                            <t t-foreach="typeOptions" t-as="opt" t-key="opt.value">
+                                                <option t-att-value="opt.value" t-esc="opt.label"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label>Issuing Authority</label>
+                                        <input type="text" t-model="state.form.issuing_authority" placeholder="e.g., Local Fire Department"/>
+                                    </div>
+                                    <div>
+                                        <label>Property / Building *</label>
+                                        <select t-att-value="state.form.property_id" t-on-change="onPropertyChange">
+                                            <option value="">Select Property</option>
+                                            <t t-foreach="state.lookups.properties" t-as="prop" t-key="prop.id">
+                                                <option t-att-value="prop.id" t-esc="prop.name"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label>Compliance Requirement</label>
+                                        <select t-model="state.form.requirement_id">
+                                            <option value="">Link to Requirement</option>
+                                            <t t-foreach="state.lookups.requirements" t-as="req" t-key="req.id">
+                                                <option t-att-value="req.id" t-esc="req.name"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label>Building</label>
+                                        <select t-att-value="state.form.building_id" t-on-change="onBuildingChange">
+                                            <option value="">Select Building</option>
+                                            <t t-foreach="filteredBuildings" t-as="bldg" t-key="bldg.id">
+                                                <option t-att-value="bldg.id" t-esc="bldg.name"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label>Area</label>
+                                        <select t-model="state.form.area_id">
+                                            <option value="">Select Area</option>
+                                            <t t-foreach="filteredAreas" t-as="area" t-key="area.id">
+                                                <option t-att-value="area.id" t-esc="area.name"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label>Issue Date</label>
+                                        <input type="date" t-model="state.form.issue_date"/>
+                                    </div>
+                                    <div>
+                                        <label>Expiry Date *</label>
+                                        <input type="date" t-model="state.form.expiry_date"/>
+                                    </div>
+                                    <div class="o_ca_span_2">
+                                        <label>Renewal Reminder</label>
+                                        <select t-model="state.form.renewal_reminder_days">
+                                            <t t-foreach="reminderOptions" t-as="opt" t-key="opt.value">
+                                                <option t-att-value="opt.value" t-esc="opt.label"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div class="o_ca_span_2">
+                                        <label>Upload Document *</label>
+                                        <label class="o_ca_upload">
+                                            <i class="fa fa-cloud-upload"/> Click to upload PDF, JPG, PNG or DOCX
+                                            <input type="file" multiple="multiple" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" t-on-change="onCreateFiles"/>
+                                        </label>
+                                        <div t-if="state.pendingFiles.length" class="o_ca_row_sub">
+                                            <t t-esc="state.pendingFiles.length"/> file(s) selected
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="o_ca_modal_foot">
+                                <span t-if="state.busy" class="o_ca_busy" t-esc="state.busy"/>
+                                <button class="o_ca_btn" t-on-click="closeCreate">Cancel</button>
+                                <button class="o_ca_btn primary" t-att-disabled="!!state.busy" t-on-click="createDocument">
+                                    <i class="fa fa-plus"/> Add Document
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div t-if="state.showRenew" class="o_ca_modal_backdrop" t-on-click="closeRenew">
+                        <div class="o_ca_modal" t-on-click.stop="">
+                            <div class="o_ca_modal_head">
+                                <div>
+                                    <h2>Mark Document Renewed</h2>
+                                    <p>Record the new expiry date and optional renewed file.</p>
+                                </div>
+                                <button class="o_ca_modal_close" t-on-click="closeRenew" aria-label="Close">
+                                    <i class="fa fa-times"/>
+                                </button>
+                            </div>
+                            <div class="o_ca_modal_body">
+                                <div class="o_ca_form_grid">
+                                    <div class="o_ca_span_2">
+                                        <label>New Expiry Date *</label>
+                                        <input type="date" t-model="state.renewForm.new_expiry_date" t-att-min="todayIso()"/>
+                                    </div>
+                                    <div class="o_ca_span_2">
+                                        <label>Renewed File (optional)</label>
+                                        <label class="o_ca_upload">
+                                            <i class="fa fa-cloud-upload"/> Upload renewed document
+                                            <input type="file" multiple="multiple" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" t-on-change="onRenewFiles"/>
+                                        </label>
+                                        <div t-if="state.renewForm.files.length" class="o_ca_row_sub">
+                                            <t t-esc="state.renewForm.files.length"/> file(s) selected
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="o_ca_modal_foot">
+                                <span t-if="state.busy" class="o_ca_busy" t-esc="state.busy"/>
+                                <button class="o_ca_btn" t-on-click="closeRenew">Cancel</button>
+                                <button class="o_ca_btn primary" t-att-disabled="!!state.busy" t-on-click="confirmRenew">
+                                    Confirm Renewal
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </CaAppShell>
+        </div>
+    </t>
+</templates>

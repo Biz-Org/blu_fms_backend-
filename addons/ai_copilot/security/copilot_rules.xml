@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="rule_ai_copilot_conversation_company" model="ir.rule">
+        <field name="name">AI Copilot conversation: multi-company</field>
+        <field name="model_id" ref="model_ai_copilot_conversation"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_ai_copilot_conversation_user" model="ir.rule">
+        <field name="name">AI Copilot conversation: own conversations</field>
+        <field name="model_id" ref="model_ai_copilot_conversation"/>
+        <field name="groups" eval="[(4, ref('group_copilot_user'))]"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+    </record>
+    <record id="rule_ai_copilot_conversation_admin" model="ir.rule">
+        <field name="name">AI Copilot conversation: administrator</field>
+        <field name="model_id" ref="model_ai_copilot_conversation"/>
+        <field name="groups" eval="[(4, ref('group_copilot_admin'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+    <record id="rule_ai_copilot_message_company" model="ir.rule">
+        <field name="name">AI Copilot message: multi-company</field>
+        <field name="model_id" ref="model_ai_copilot_message"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_ai_copilot_message_user" model="ir.rule">
+        <field name="name">AI Copilot message: own conversations</field>
+        <field name="model_id" ref="model_ai_copilot_message"/>
+        <field name="groups" eval="[(4, ref('group_copilot_user'))]"/>
+        <field name="domain_force">[('conversation_id.user_id', '=', user.id)]</field>
+    </record>
+    <record id="rule_ai_copilot_message_admin" model="ir.rule">
+        <field name="name">AI Copilot message: administrator</field>
+        <field name="model_id" ref="model_ai_copilot_message"/>
+        <field name="groups" eval="[(4, ref('group_copilot_admin'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+    <record id="rule_ai_copilot_document_company" model="ir.rule">
+        <field name="name">AI Copilot document: multi-company</field>
+        <field name="model_id" ref="model_ai_copilot_document"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_ai_copilot_document_user" model="ir.rule">
+        <field name="name">AI Copilot document: authorized readers</field>
+        <field name="model_id" ref="model_ai_copilot_document"/>
+        <field name="groups" eval="[(4, ref('group_copilot_user'))]"/>
+        <field name="domain_force">['|', ('restricted', '=', False), ('allowed_group_ids', 'in', user.all_group_ids.ids)]</field>
+    </record>
+    <record id="rule_ai_copilot_document_admin" model="ir.rule">
+        <field name="name">AI Copilot document: administrator</field>
+        <field name="model_id" ref="model_ai_copilot_document"/>
+        <field name="groups" eval="[(4, ref('group_copilot_admin'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+    <record id="rule_ai_copilot_audit_company" model="ir.rule">
+        <field name="name">AI Copilot audit: multi-company</field>
+        <field name="model_id" ref="model_ai_copilot_audit"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_ai_copilot_audit_user" model="ir.rule">
+        <field name="name">AI Copilot audit: own events</field>
+        <field name="model_id" ref="model_ai_copilot_audit"/>
+        <field name="groups" eval="[(4, ref('group_copilot_user'))]"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+    </record>
+    <record id="rule_ai_copilot_audit_admin" model="ir.rule">
+        <field name="name">AI Copilot audit: administrator</field>
+        <field name="model_id" ref="model_ai_copilot_audit"/>
+        <field name="groups" eval="[(4, ref('group_copilot_admin'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+</odoo>

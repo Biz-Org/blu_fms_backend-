@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_analytics_dashboard_list" model="ir.ui.view">
+        <field name="name">analytics.dashboard.list</field>
+        <field name="model">analytics.dashboard</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="dashboard_type"/>
+                <field name="source_module"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="active" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_analytics_dashboard_form" model="ir.ui.view">
+        <field name="name">analytics.dashboard.form</field>
+        <field name="model">analytics.dashboard</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="dashboard_type"/>
+                            <field name="source_module"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <group string="Description">
+                        <field name="description" nolabel="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Reports" name="reports">
+                            <field name="report_ids" widget="many2many_tags"/>
+                        </page>
+                        <page string="KPIs" name="kpis">
+                            <field name="kpi_ids" widget="many2many_tags"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_analytics_dashboard_search" model="ir.ui.view">
+        <field name="name">analytics.dashboard.search</field>
+        <field name="model">analytics.dashboard</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="source_module"/>
+                <filter string="Active" name="filter_active" domain="[('active', '=', True)]"/>
+                <filter string="Archived" name="filter_archived" domain="[('active', '=', False)]"/>
+                <group>
+                    <filter string="Dashboard Type" name="group_dashboard_type" context="{'group_by': 'dashboard_type'}"/>
+                    <filter string="Module / Source" name="group_source_module" context="{'group_by': 'source_module'}"/>
+                    <filter string="Company" name="group_company" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_analytics_dashboard" model="ir.actions.act_window">
+        <field name="name">Dashboards</field>
+        <field name="res_model">analytics.dashboard</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_analytics_dashboard_search"/>
+        <field name="context">{'search_default_filter_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a dashboard definition
+            </p>
+            <p>
+                Dashboard definitions group report and KPI definitions for future visualization layers.
+            </p>
+        </field>
+    </record>
+</odoo>

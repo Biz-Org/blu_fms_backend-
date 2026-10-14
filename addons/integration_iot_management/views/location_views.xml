@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_iot_property_list" model="ir.ui.view">
+        <field name="name">integration.iot.property.list</field>
+        <field name="model">integration.iot.property</field>
+        <field name="arch" type="xml">
+            <list><field name="name"/><field name="code"/><field name="company_id"/><field name="active"/></list>
+        </field>
+    </record>
+    <record id="view_iot_property_form" model="ir.ui.view">
+        <field name="name">integration.iot.property.form</field>
+        <field name="model">integration.iot.property</field>
+        <field name="arch" type="xml">
+            <form string="Property">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="code"/>
+                        <field name="company_id"/>
+                        <field name="active"/>
+                    </group>
+                    <field name="note"/>
+                    <field name="building_ids">
+                        <list editable="bottom">
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="active"/>
+                        </list>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_iot_property" model="ir.actions.act_window">
+        <field name="name">Properties</field>
+        <field name="res_model">integration.iot.property</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_iot_building_list" model="ir.ui.view">
+        <field name="name">integration.iot.building.list</field>
+        <field name="model">integration.iot.building</field>
+        <field name="arch" type="xml">
+            <list><field name="name"/><field name="property_id"/><field name="code"/><field name="active"/></list>
+        </field>
+    </record>
+    <record id="view_iot_building_form" model="ir.ui.view">
+        <field name="name">integration.iot.building.form</field>
+        <field name="model">integration.iot.building</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="code"/>
+                        <field name="property_id"/>
+                        <field name="company_id"/>
+                        <field name="active"/>
+                    </group>
+                    <field name="area_ids">
+                        <list editable="bottom">
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="area_kind"/>
+                            <field name="active"/>
+                        </list>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_iot_building" model="ir.actions.act_window">
+        <field name="name">Buildings</field>
+        <field name="res_model">integration.iot.building</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_iot_area_list" model="ir.ui.view">
+        <field name="name">integration.iot.area.list</field>
+        <field name="model">integration.iot.area</field>
+        <field name="arch" type="xml">
+            <list><field name="name"/><field name="building_id"/><field name="area_kind"/><field name="code"/><field name="active"/></list>
+        </field>
+    </record>
+    <record id="view_iot_area_form" model="ir.ui.view">
+        <field name="name">integration.iot.area.form</field>
+        <field name="model">integration.iot.area</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="code"/>
+                        <field name="building_id"/>
+                        <field name="area_kind"/>
+                        <field name="active"/>
+                    </group>
+                    <field name="note"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_iot_area" model="ir.actions.act_window">
+        <field name="name">Areas</field>
+        <field name="res_model">integration.iot.area</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

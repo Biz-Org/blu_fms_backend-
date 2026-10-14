@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="reports_analytics.Dashboard">
+        <div class="o_action o_ra_app">
+            <RaAppShell active="'dashboard'" onNewAnalysis.bind="openAnalysis">
+                <div class="o_ra_shell">
+                    <div class="o_ra_page_header">
+                        <div>
+                            <h1 t-esc="ui.tab === 'management' ? 'Management Dashboard' : 'Analytics Dashboard'"/>
+                            <p t-esc="ui.tab === 'management' ? 'High-level view of facility performance and business performance.' : 'Monitor FMS performance, trends and key business insights.'"/>
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <select class="o_ra_select" t-model="state.filters.date_range" t-on-change="() => this.reload()">
+                                <option value="last_7">Last 7 Days</option>
+                                <option value="last_30">Last 30 Days</option>
+                                <option value="last_90">Last 90 Days</option>
+                                <option value="this_year">This Year</option>
+                            </select>
+                            <select class="o_ra_select" t-model="state.filters.property_id" t-on-change="() => this.reload()">
+                                <option value="">All Properties</option>
+                                <option t-foreach="state.bootstrap.properties" t-as="row" t-key="row.key" t-att-value="row.id" t-esc="row.name"/>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="o_ra_tabs">
+                        <button t-att-class="ui.tab === 'analytics' ? 'active' : ''" t-on-click="() => this.setTab('analytics')">Analytics Dashboard</button>
+                        <button t-att-class="ui.tab === 'management' ? 'active' : ''" t-on-click="() => this.setTab('management')">Management Dashboard</button>
+                    </div>
+                    <t t-if="state.loading"><div class="o_ra_empty"><h3>Loading…</h3></div></t>
+                    <t t-elif="ui.tab === 'analytics'">
+                        <div class="o_ra_kpi_row">
+                            <RaKpiCard t-foreach="kpis" t-as="kpi" t-key="kpi.label" label="kpi.label" value="kpi.display" hint="kpi.hint" available="kpi.available" change="kpi.change" tone="kpi.tone"/>
+                        </div>
+                        <div class="o_ra_grid_2">
+                            <div class="o_ra_card">
+                                <div class="o_ra_card_head">Performance Overview</div>
+                                <t t-if="performance.available">
+                                    <RaLineChart labels="performance.labels" current="performance.series[0].data"/>
+                                </t>
+                                <RaEmptyState t-else="" title="'No Data'" hint="'Not enough historical activity to chart.'"/>
+                            </div>
+                            <div>
+                                <div class="o_ra_card mb-3">
+                                    <div class="o_ra_card_head">Module Performance</div>
+                                    <table class="o_ra_table">
+                                        <thead><tr><th>Module</th><th>Perf %</th><th>Status</th></tr></thead>
+                                        <tbody>
+                                            <tr t-foreach="modules" t-as="row" t-key="row.module">
+                                                <td t-esc="row.module"/>
+                                                <td t-esc="row.available ? (row.score != null ? row.score : '—') : 'No Data'"/>
+                                                <td><RaStatusBadge state="row.status"/></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="o_ra_card o_ra_attn">
+                                    <div class="o_ra_card_head">Attention Required</div>
+                                    <t t-if="attention.length">
+                                        <ul class="o_ra_list">
+                                            <li t-foreach="attention" t-as="item" t-key="item.title">
+                                                <div t-esc="item.title"/>
+                                                <div class="muted" t-esc="item.detail"/>
+                                            </li>
+                                        </ul>
+                                    </t>
+                                    <RaEmptyState t-else="" title="'No attention items'" hint="'No overdue or high-priority items from available modules.'"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <t t-if="ui.management.restricted">
+                            <RaEmptyState title="'Restricted'" hint="ui.management.reason"/>
+                        </t>
+                        <t t-else="">
+                            <div class="o_ra_grid_eq">
+                                <div class="o_ra_card">
+                                    <div class="o_ra_card_head">FMS Performance</div>
+                                    <div class="o_ra_kpi_row">
+                                        <RaKpiCard label="'Overall Uptime'" value="ui.management.uptime.display" available="ui.management.uptime.available" hint="ui.management.uptime.hint"/>
+                                        <RaKpiCard label="'Open Work Orders'" value="ui.management.open_work_orders.display" available="ui.management.open_work_orders.available" hint="ui.management.open_work_orders.hint"/>
+                                    </div>
+                                </div>
+                                <div class="o_ra_card">
+                                    <div class="o_ra_card_head">Financial Overview</div>
+                                    <t t-if="ui.management.financial.available">
+                                        <div class="o_ra_kpi_row">
+                                            <RaKpiCard t-foreach="ui.management.financial.kpis" t-as="kpi" t-key="kpi.label" label="kpi.label" value="kpi.display" available="kpi.available"/>
+                                        </div>
+                                    </t>
+                                    <RaEmptyState t-else="" title="'Data unavailable'" hint="ui.management.financial.reason"/>
+                                </div>
+                                <div class="o_ra_card">
+                                    <div class="o_ra_card_head">Compliance</div>
+                                    <div class="o_ra_kpi_row">
+                                        <RaKpiCard label="'Audit Pass Rate'" value="ui.management.audit_pass.display" available="ui.management.audit_pass.available"/>
+                                        <RaKpiCard label="'Pending Certifications'" value="ui.management.pending_certs.display" available="ui.management.pending_certs.available"/>
+                                    </div>
+                                </div>
+                                <div class="o_ra_card">
+                                    <div class="o_ra_card_head">Energy</div>
+                                    <RaKpiCard label="'Total Consumption'" value="ui.management.energy.display" available="ui.management.energy.available" hint="ui.management.energy.hint"/>
+                                    <RaKpiCard label="'Carbon Footprint'" value="ui.management.carbon.display" available="ui.management.carbon.available" hint="ui.management.carbon.hint"/>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+                </div>
+                <t t-call="reports_analytics.AnalysisModal"/>
+            </RaAppShell>
+        </div>
+    </t>
+</templates>

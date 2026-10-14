@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="seq_mobile_service_request" model="ir.sequence">
+        <field name="name">Mobile Service Request</field>
+        <field name="code">mobile.service.request</field>
+        <field name="prefix">SR-</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="seq_mobile_visitor_pass" model="ir.sequence">
+        <field name="name">Mobile Visitor Pass</field>
+        <field name="code">mobile.visitor.pass</field>
+        <field name="prefix">VP-</field>
+        <field name="padding">6</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

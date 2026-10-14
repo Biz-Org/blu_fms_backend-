@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="module_category_fire_safety" model="ir.module.category">
+        <field name="name">Fire and Safety</field>
+        <field name="description">Fire &amp; Safety Management roles. Parallel FMS catalogue roles, not a privilege ladder. FUTURE / NOT IMPLEMENTED: central RBAC (#27) maps users to these groups.</field>
+        <field name="sequence">59</field>
+        <field name="parent_id" ref="base.module_category_services"/>
+    </record>
+
+    <!-- Separate privileges so FMS roles are independently assignable (not mutually exclusive). -->
+    <record id="privilege_fire_safety_manager" model="res.groups.privilege">
+        <field name="name">Safety Manager</field>
+        <field name="sequence">10</field>
+        <field name="category_id" ref="module_category_fire_safety"/>
+        <field name="placeholder">No access</field>
+    </record>
+    <record id="privilege_fire_safety_security" model="res.groups.privilege">
+        <field name="name">Security</field>
+        <field name="sequence">20</field>
+        <field name="category_id" ref="module_category_fire_safety"/>
+        <field name="placeholder">No access</field>
+    </record>
+    <record id="privilege_fire_safety_guard" model="res.groups.privilege">
+        <field name="name">Security Guard</field>
+        <field name="sequence">30</field>
+        <field name="category_id" ref="module_category_fire_safety"/>
+        <field name="placeholder">No access</field>
+    </record>
+    <record id="privilege_fire_safety_facility" model="res.groups.privilege">
+        <field name="name">Facility Manager</field>
+        <field name="sequence">40</field>
+        <field name="category_id" ref="module_category_fire_safety"/>
+        <field name="placeholder">No access</field>
+    </record>
+    <record id="privilege_fire_safety_auditor" model="res.groups.privilege">
+        <field name="name">Auditor</field>
+        <field name="sequence">50</field>
+        <field name="category_id" ref="module_category_fire_safety"/>
+        <field name="placeholder">No access</field>
+    </record>
+    <record id="privilege_fire_safety_executive" model="res.groups.privilege">
+        <field name="name">Management / CXO</field>
+        <field name="sequence">60</field>
+        <field name="category_id" ref="module_category_fire_safety"/>
+        <field name="placeholder">No access</field>
+    </record>
+
+    <record id="group_fire_safety_manager" model="res.groups">
+        <field name="name">Safety Manager</field>
+        <field name="sequence">10</field>
+        <field name="comment">Inspect, report, correct, verify, close, manage equipment, drills, checklists, procedures, contacts, and activate emergencies.</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        <field name="privilege_id" ref="privilege_fire_safety_manager"/>
+    </record>
+    <record id="group_fire_safety_security" model="res.groups">
+        <field name="name">Security</field>
+        <field name="sequence">20</field>
+        <field name="comment">Report incidents, view inspections, view and respond to emergencies. Cannot verify or close other users' corrective actions.</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        <field name="privilege_id" ref="privilege_fire_safety_security"/>
+    </record>
+    <record id="group_fire_safety_guard" model="res.groups">
+        <field name="name">Security Guard</field>
+        <field name="sequence">30</field>
+        <field name="comment">Create and read own incidents. View procedures and emergency contacts. No equipment master management.</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        <field name="privilege_id" ref="privilege_fire_safety_guard"/>
+    </record>
+    <record id="group_fire_safety_facility" model="res.groups">
+        <field name="name">Facility Manager</field>
+        <field name="sequence">40</field>
+        <field name="comment">Operational visibility: dashboards, reports, and Fire &amp; Safety records. Property-scope is FUTURE / NOT IMPLEMENTED until Property Management (#2) and RBAC (#27).</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        <field name="privilege_id" ref="privilege_fire_safety_facility"/>
+    </record>
+    <record id="group_fire_safety_auditor" model="res.groups">
+        <field name="name">Auditor</field>
+        <field name="sequence">50</field>
+        <field name="comment">Read-only inspections, evidence, logs, and reports.</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        <field name="privilege_id" ref="privilege_fire_safety_auditor"/>
+    </record>
+    <record id="group_fire_safety_executive" model="res.groups">
+        <field name="name">Management / CXO</field>
+        <field name="sequence">60</field>
+        <field name="comment">Dashboards, KPIs, trends, and exports.</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        <field name="privilege_id" ref="privilege_fire_safety_executive"/>
+    </record>
+</odoo>

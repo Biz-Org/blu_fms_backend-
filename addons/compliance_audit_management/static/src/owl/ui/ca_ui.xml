@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="compliance_audit_management.CaKpiCard">
+        <div t-attf-class="o_ca_kpi {{ props.tone ? 'tone-' + props.tone : '' }} {{ props.onClick ? 'is-clickable' : '' }}" t-on-click="onClick">
+            <div t-if="props.icon" class="o_ca_kpi_icon"><i t-attf-class="fa {{ props.icon }}"/></div>
+            <div class="o_ca_kpi_label" t-esc="props.label"/>
+            <div class="o_ca_kpi_value" t-esc="props.value"/>
+            <div t-if="props.hint" class="o_ca_kpi_hint" t-esc="props.hint"/>
+        </div>
+    </t>
+    <t t-name="compliance_audit_management.CaStatusBadge">
+        <span t-attf-class="o_ca_pill {{ tone }}" t-esc="text"/>
+    </t>
+    <t t-name="compliance_audit_management.CaEmptyState">
+        <div class="o_ca_empty">
+            <h3 t-esc="props.title"/>
+            <p t-if="props.hint" t-esc="props.hint"/>
+        </div>
+    </t>
+    <t t-name="compliance_audit_management.CaProgressBar">
+        <div class="o_ca_progress_row">
+            <div class="o_ca_progress_meta">
+                <span t-esc="props.label"/>
+                <strong t-esc="percentLabel"/>
+            </div>
+            <div class="o_ca_progress_track">
+                <div t-attf-class="o_ca_progress_fill {{ toneClass }}" t-att-style="'width: ' + width"/>
+            </div>
+        </div>
+    </t>
+</templates>

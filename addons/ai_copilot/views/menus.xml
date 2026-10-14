@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_ai_copilot" model="ir.actions.client">
+        <field name="name">AI Copilot</field>
+        <field name="tag">ai_copilot.action_copilot</field>
+        <field name="path">ai-copilot</field>
+    </record>
+
+    <menuitem
+        id="menu_ai_copilot_root"
+        name="AI Copilot"
+        web_icon="fa-magic,#7c3aed,#FFFFFF"
+        action="action_ai_copilot"
+        sequence="56"
+        groups="ai_copilot.group_copilot_user,ai_copilot.group_copilot_admin"
+    />
+    <record id="menu_ai_copilot_root" model="ir.ui.menu">
+        <field name="action" ref="action_ai_copilot"/>
+    </record>
+
+    <menuitem
+        id="menu_ai_copilot_chat"
+        name="AI Copilot"
+        parent="menu_ai_copilot_root"
+        action="action_ai_copilot"
+        sequence="1"
+    />
+    <menuitem
+        id="menu_ai_copilot_config_root"
+        name="Configuration"
+        parent="menu_ai_copilot_root"
+        sequence="90"
+        groups="ai_copilot.group_copilot_admin"
+    />
+    <menuitem
+        id="menu_ai_copilot_settings"
+        name="AI Provider"
+        parent="menu_ai_copilot_config_root"
+        action="action_ai_copilot_config"
+        sequence="10"
+        groups="ai_copilot.group_copilot_admin"
+    />
+    <menuitem
+        id="menu_ai_copilot_documents"
+        name="Knowledge Documents"
+        parent="menu_ai_copilot_config_root"
+        action="action_ai_copilot_document"
+        sequence="20"
+        groups="ai_copilot.group_copilot_admin"
+    />
+    <menuitem
+        id="menu_ai_copilot_conversations"
+        name="Conversations"
+        parent="menu_ai_copilot_config_root"
+        action="action_ai_copilot_conversation"
+        sequence="30"
+        groups="ai_copilot.group_copilot_admin"
+    />
+    <menuitem
+        id="menu_ai_copilot_audit"
+        name="Audit History"
+        parent="menu_ai_copilot_root"
+        action="action_ai_copilot_audit"
+        sequence="80"
+        groups="ai_copilot.group_copilot_admin"
+    />
+</odoo>

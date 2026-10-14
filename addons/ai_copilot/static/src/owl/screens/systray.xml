@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="ai_copilot.Systray">
+        <button t-if="state.allowed" type="button" class="o_ai_systray btn" title="AI Copilot" t-on-click="open">
+            <i class="fa fa-magic"/>
+        </button>
+    </t>
+</templates>

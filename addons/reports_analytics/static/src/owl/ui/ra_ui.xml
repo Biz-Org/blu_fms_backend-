@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="reports_analytics.RaKpiCard">
+        <div t-attf-class="o_ra_kpi tone-{{ tone }}">
+            <div class="o_ra_kpi_label" t-esc="props.label"/>
+            <div class="o_ra_kpi_value" t-esc="display"/>
+            <div t-if="props.change !== null and props.change !== undefined and props.available !== false" class="o_ra_kpi_hint">
+                <t t-esc="props.change"/>% vs previous
+            </div>
+            <div t-elif="props.hint" class="o_ra_kpi_hint" t-esc="props.hint"/>
+        </div>
+    </t>
+    <t t-name="reports_analytics.RaStatusBadge">
+        <span t-attf-class="o_ra_pill {{ tone }}" t-esc="text"/>
+    </t>
+    <t t-name="reports_analytics.RaEmptyState">
+        <div class="o_ra_empty">
+            <h3 t-esc="props.title"/>
+            <p t-if="props.hint" t-esc="props.hint"/>
+        </div>
+    </t>
+    <t t-name="reports_analytics.RaBarChart">
+        <div>
+            <div class="o_ra_bars">
+                <div t-foreach="props.data" t-as="value" t-key="value_index" class="o_ra_bar" t-att-style="'height:' + height(value)"/>
+            </div>
+            <div class="d-flex gap-2">
+                <div t-foreach="props.labels" t-as="label" t-key="label_index" class="o_ra_bar_label flex-grow-1" t-esc="label"/>
+            </div>
+        </div>
+    </t>
+    <t t-name="reports_analytics.RaLineChart">
+        <svg class="o_ra_chart_svg" viewBox="0 0 600 200" preserveAspectRatio="none">
+            <polyline fill="none" stroke="#6d28d9" stroke-width="3" t-att-points="points(props.current)"/>
+            <polyline t-if="props.previous" fill="none" stroke="#c4b5fd" stroke-width="2" stroke-dasharray="6 6" t-att-points="points(props.previous)"/>
+        </svg>
+        <div class="d-flex justify-content-between">
+            <span class="small text-muted" t-esc="props.labels[0]"/>
+            <span class="small text-muted" t-esc="props.labels[props.labels.length-1]"/>
+        </div>
+    </t>
+    <t t-name="reports_analytics.AnalysisModal">
+        <div t-if="state.showAnalysis" class="o_ra_modal_backdrop" t-on-click="closeAnalysis">
+            <div class="o_ra_modal" t-on-click.stop="">
+                <h3>Create New Analysis</h3>
+                <p>Select what you want to analyze across the FMS.</p>
+                <label>Analysis Type</label>
+                <select class="o_ra_select w-100" t-model="state.analysis.analysis_type">
+                    <option value="operational">Operational</option>
+                    <option value="financial">Financial</option>
+                    <option value="trends">Trend Analysis</option>
+                    <option value="cross_module">Cross-Module</option>
+                    <option value="predictive">Predictive</option>
+                </select>
+                <label>Module</label>
+                <select class="o_ra_select w-100" t-model="state.analysis.module">
+                    <option value="">Any available</option>
+                    <option t-foreach="state.bootstrap.sources" t-as="src" t-key="src.id" t-att-value="src.module" t-esc="src.name"/>
+                </select>
+                <label>Metric</label>
+                <input class="o_ra_input w-100" t-model="state.analysis.metric" placeholder="Work Orders, Incidents…"/>
+                <label>Date Range</label>
+                <select class="o_ra_select w-100" t-model="state.analysis.date_range">
+                    <option value="last_7">Last 7 Days</option>
+                    <option value="last_30">Last 30 Days</option>
+                    <option value="last_90">Last 90 Days</option>
+                </select>
+                <div class="o_ra_modal_actions">
+                    <button class="o_ra_btn secondary" t-on-click="closeAnalysis">Cancel</button>
+                    <button class="o_ra_btn primary" t-on-click="runAnalysis">Run Analysis</button>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

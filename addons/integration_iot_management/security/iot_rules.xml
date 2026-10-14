@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="rule_iot_property_company" model="ir.rule">
+        <field name="name">IoT Property: multi-company</field>
+        <field name="model_id" ref="model_integration_iot_property"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_iot_building_company" model="ir.rule">
+        <field name="name">IoT Building: multi-company</field>
+        <field name="model_id" ref="model_integration_iot_building"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_iot_area_company" model="ir.rule">
+        <field name="name">IoT Area: multi-company</field>
+        <field name="model_id" ref="model_integration_iot_area"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_iot_integration_company" model="ir.rule">
+        <field name="name">IoT Integration: multi-company</field>
+        <field name="model_id" ref="model_integration_iot_integration"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_iot_device_company" model="ir.rule">
+        <field name="name">IoT Device: multi-company</field>
+        <field name="model_id" ref="model_integration_iot_device"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_iot_sensor_company" model="ir.rule">
+        <field name="name">IoT Sensor: multi-company</field>
+        <field name="model_id" ref="model_integration_iot_sensor"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_iot_reading_company" model="ir.rule">
+        <field name="name">IoT Reading: multi-company</field>
+        <field name="model_id" ref="model_integration_iot_reading"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_iot_alarm_company" model="ir.rule">
+        <field name="name">IoT Alarm Event: multi-company</field>
+        <field name="model_id" ref="model_integration_iot_alarm_event"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_iot_schedule_company" model="ir.rule">
+        <field name="name">IoT Schedule: multi-company</field>
+        <field name="model_id" ref="model_integration_iot_schedule"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_iot_rule_company" model="ir.rule">
+        <field name="name">IoT Automation Rule: multi-company</field>
+        <field name="model_id" ref="model_integration_iot_automation_rule"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_iot_execution_company" model="ir.rule">
+        <field name="name">IoT Automation Execution: multi-company</field>
+        <field name="model_id" ref="model_integration_iot_automation_execution"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_iot_alert_company" model="ir.rule">
+        <field name="name">IoT Alert: multi-company</field>
+        <field name="model_id" ref="model_integration_iot_alert"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_iot_log_company" model="ir.rule">
+        <field name="name">IoT Log: multi-company</field>
+        <field name="model_id" ref="model_integration_iot_log"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_iot_energy_company" model="ir.rule">
+        <field name="name">IoT Energy Reading: multi-company</field>
+        <field name="model_id" ref="model_integration_iot_energy_reading"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_iot_opportunity_company" model="ir.rule">
+        <field name="name">IoT Energy Opportunity: multi-company</field>
+        <field name="model_id" ref="model_integration_iot_energy_opportunity"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+</odoo>

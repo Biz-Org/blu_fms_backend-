@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_community_dashboard" model="ir.actions.client">
+        <field name="name">Dashboard</field>
+        <field name="tag">community_communication.action_dashboard</field>
+    </record>
+    <record id="action_cc_announcement_ui" model="ir.actions.client">
+        <field name="name">Announcements</field>
+        <field name="tag">community_communication.action_announcements</field>
+    </record>
+    <record id="action_cc_discussion_ui" model="ir.actions.client">
+        <field name="name">Discussion Forums</field>
+        <field name="tag">community_communication.action_discussions</field>
+    </record>
+    <record id="action_cc_poll_ui" model="ir.actions.client">
+        <field name="name">Polls</field>
+        <field name="tag">community_communication.action_polls</field>
+    </record>
+    <record id="action_cc_event_ui" model="ir.actions.client">
+        <field name="name">Event Calendar</field>
+        <field name="tag">community_communication.action_events</field>
+    </record>
+    <record id="action_cc_registration_ui" model="ir.actions.client">
+        <field name="name">Event Registration</field>
+        <field name="tag">community_communication.action_registrations</field>
+        <field name="context">{'cc_mode': 'attendees'}</field>
+    </record>
+    <record id="action_cc_notice_ui" model="ir.actions.client">
+        <field name="name">Community Notices</field>
+        <field name="tag">community_communication.action_notices</field>
+    </record>
+    <record id="action_cc_notice_board_ui" model="ir.actions.client">
+        <field name="name">Digital Notice Board</field>
+        <field name="tag">community_communication.action_notices</field>
+        <field name="context">{'cc_board': True}</field>
+    </record>
+    <record id="action_cc_feedback_ui" model="ir.actions.client">
+        <field name="name">Resident Feedback</field>
+        <field name="tag">community_communication.action_feedback</field>
+    </record>
+    <record id="action_cc_group_ui" model="ir.actions.client">
+        <field name="name">Community Groups</field>
+        <field name="tag">community_communication.action_groups</field>
+    </record>
+    <record id="action_community_analytics" model="ir.actions.client">
+        <field name="name">Engagement Analytics</field>
+        <field name="tag">community_communication.action_analytics</field>
+    </record>
+
+    <menuitem
+        id="menu_community_communication_root"
+        name="Community"
+        web_icon="community_communication,static/description/icon.png"
+        action="action_cc_announcement_ui"
+        groups="community_communication.group_community_officer,community_communication.group_community_resident,base.group_user"
+        sequence="50"
+    />
+
+    <menuitem id="menu_community_dashboard" name="Dashboard" parent="menu_community_communication_root" action="action_community_dashboard" sequence="1"
+        groups="community_communication.group_community_officer,community_communication.group_community_resident"/>
+    <menuitem id="menu_cc_announcement" name="Announcements" parent="menu_community_communication_root" action="action_cc_announcement_ui" sequence="10"/>
+    <menuitem id="menu_cc_discussion" name="Discussion Forums" parent="menu_community_communication_root" action="action_cc_discussion_ui" sequence="20"
+        groups="community_communication.group_community_officer,community_communication.group_community_resident"/>
+    <menuitem id="menu_cc_poll" name="Polls" parent="menu_community_communication_root" action="action_cc_poll_ui" sequence="30"
+        groups="community_communication.group_community_officer,community_communication.group_community_resident"/>
+    <menuitem id="menu_cc_event" name="Event Calendar" parent="menu_community_communication_root" action="action_cc_event_ui" sequence="40"
+        groups="community_communication.group_community_officer,community_communication.group_community_resident"/>
+    <menuitem id="menu_cc_registration" name="Event Registration" parent="menu_community_communication_root" action="action_cc_registration_ui" groups="community_communication.group_community_officer" sequence="45"/>
+    <menuitem id="menu_cc_notice" name="Community Notices" parent="menu_community_communication_root" action="action_cc_notice_ui" sequence="50"
+        groups="community_communication.group_community_officer,community_communication.group_community_resident"/>
+    <menuitem id="menu_cc_notice_board" name="Digital Notice Board" parent="menu_community_communication_root" action="action_cc_notice_board_ui" sequence="55"
+        groups="community_communication.group_community_officer,community_communication.group_community_resident"/>
+    <menuitem id="menu_cc_feedback" name="Resident Feedback" parent="menu_community_communication_root" action="action_cc_feedback_ui" sequence="60"
+        groups="community_communication.group_community_officer,community_communication.group_community_resident"/>
+    <menuitem id="menu_cc_group" name="Community Groups" parent="menu_community_communication_root" action="action_cc_group_ui" sequence="70"
+        groups="community_communication.group_community_officer,community_communication.group_community_resident"/>
+    <menuitem id="menu_cc_analytics" name="Engagement Analytics" parent="menu_community_communication_root" action="action_community_analytics" groups="community_communication.group_community_officer" sequence="80"/>
+    <menuitem
+        id="menu_cc_config"
+        name="Configuration"
+        parent="menu_community_communication_root"
+        groups="community_communication.group_community_admin"
+        sequence="90"
+    />
+    <menuitem id="menu_cc_config_community" name="Communities" parent="menu_cc_config" action="action_cc_community" sequence="1"/>
+    <menuitem id="menu_cc_config_building" name="Buildings" parent="menu_cc_config" action="action_cc_building" sequence="2"/>
+    <menuitem id="menu_cc_config_unit" name="Units" parent="menu_cc_config" action="action_cc_unit" sequence="3"/>
+    <menuitem id="menu_cc_config_venue" name="Venues" parent="menu_cc_config" action="action_cc_venue" sequence="4"/>
+    <menuitem id="menu_cc_config_resident" name="Residents" parent="menu_cc_config" action="action_cc_resident" sequence="5"/>
+</odoo>

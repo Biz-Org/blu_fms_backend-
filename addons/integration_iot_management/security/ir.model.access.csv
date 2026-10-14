@@ -1,0 +1,17 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_iot_property_admin,iot.property.admin,model_integration_iot_property,group_integration_admin,1,1,1,1
+access_iot_building_admin,iot.building.admin,model_integration_iot_building,group_integration_admin,1,1,1,1
+access_iot_area_admin,iot.area.admin,model_integration_iot_area,group_integration_admin,1,1,1,1
+access_iot_integration_admin,iot.integration.admin,model_integration_iot_integration,group_integration_admin,1,1,1,1
+access_iot_device_admin,iot.device.admin,model_integration_iot_device,group_integration_admin,1,1,1,1
+access_iot_sensor_admin,iot.sensor.admin,model_integration_iot_sensor,group_integration_admin,1,1,1,1
+access_iot_reading_admin,iot.reading.admin,model_integration_iot_reading,group_integration_admin,1,1,1,1
+access_iot_alarm_admin,iot.alarm.admin,model_integration_iot_alarm_event,group_integration_admin,1,1,1,1
+access_iot_schedule_admin,iot.schedule.admin,model_integration_iot_schedule,group_integration_admin,1,1,1,1
+access_iot_rule_admin,iot.rule.admin,model_integration_iot_automation_rule,group_integration_admin,1,1,1,1
+access_iot_execution_admin,iot.execution.admin,model_integration_iot_automation_execution,group_integration_admin,1,1,1,1
+access_iot_alert_admin,iot.alert.admin,model_integration_iot_alert,group_integration_admin,1,1,1,1
+access_iot_log_admin,iot.log.admin,model_integration_iot_log,group_integration_admin,1,1,1,0
+access_iot_energy_admin,iot.energy.admin,model_integration_iot_energy_reading,group_integration_admin,1,1,1,1
+access_iot_opportunity_admin,iot.opportunity.admin,model_integration_iot_energy_opportunity,group_integration_admin,1,1,1,1
+access_iot_dashboard_admin,iot.dashboard.admin,model_integration_iot_dashboard,group_integration_admin,1,0,0,0

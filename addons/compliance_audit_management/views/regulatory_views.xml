@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ca_reg_report_list" model="ir.ui.view">
+        <field name="name">compliance.regulatory.report.list</field>
+        <field name="model">compliance.regulatory.report</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="reference"/>
+                <field name="name"/>
+                <field name="regulatory_authority"/>
+                <field name="reporting_period"/>
+                <field name="owner_id"/>
+                <field name="deadline"/>
+                <field name="is_overdue"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_ca_reg_report_form" model="ir.ui.view">
+        <field name="name">compliance.regulatory.report.form</field>
+        <field name="model">compliance.regulatory.report</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_prepare" type="object" string="In Preparation" invisible="state != 'draft'"/>
+                    <button name="action_submit" type="object" string="Mark Submitted" class="btn-primary" invisible="state == 'submitted'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="reference" readonly="1"/>
+                        <field name="regulatory_authority"/>
+                        <field name="requirement_id"/>
+                        <field name="reporting_period"/>
+                        <field name="owner_id"/>
+                        <field name="deadline"/>
+                        <field name="priority"/>
+                        <field name="submission_date" readonly="1"/>
+                        <field name="submission_reference"/>
+                        <field name="company_id"/>
+                    </group>
+                    <field name="description"/>
+                    <field name="attachment_ids" widget="many2many_binary"/>
+                    <field name="acknowledgement_ids" widget="many2many_binary"/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_ca_regulatory_report" model="ir.actions.act_window">
+        <field name="name">Regulatory Reporting</field>
+        <field name="res_model">compliance.regulatory.report</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

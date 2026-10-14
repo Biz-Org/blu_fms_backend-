@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_cc_group_kanban" model="ir.ui.view">
+        <field name="name">community.communication.group.kanban</field>
+        <field name="model">community.communication.group</field>
+        <field name="arch" type="xml">
+            <kanban class="o_cc_shell">
+                <field name="name"/>
+                <field name="category"/>
+                <field name="visibility"/>
+                <field name="member_count"/>
+                <templates>
+                    <t t-name="card">
+                        <div>
+                            <strong><field name="name"/></strong>
+                            <div class="text-muted">
+                                <field name="visibility"/> · <field name="category"/>
+                            </div>
+                            <div><field name="member_count"/> members</div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+    <record id="view_cc_group_list" model="ir.ui.view">
+        <field name="name">community.communication.group.list</field>
+        <field name="model">community.communication.group</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="category"/>
+                <field name="visibility"/>
+                <field name="member_count"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_cc_group_form" model="ir.ui.view">
+        <field name="name">community.communication.group.form</field>
+        <field name="model">community.communication.group</field>
+        <field name="arch" type="xml">
+            <form class="o_cc_shell">
+                <header>
+                    <button name="action_join" string="Join Group" type="object" class="btn-primary" invisible="state != 'active'"/>
+                    <button name="action_leave" string="Leave Group" type="object"/>
+                    <button name="action_archive_record" string="Archive" type="object" invisible="state != 'active'" groups="community_communication.group_community_officer"/>
+                    <button name="action_restore" string="Restore" type="object" invisible="state != 'archived'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <field name="image_1920" widget="image" class="oe_avatar"/>
+                    <group>
+                        <field name="name"/>
+                        <field name="category"/>
+                        <field name="visibility"/>
+                        <field name="community_id" invisible="1"/>
+                        <field name="member_count"/>
+                    </group>
+                    <field name="description"/>
+                    <notebook>
+                        <page string="Members" name="members">
+                            <field name="member_ids">
+                                <list editable="bottom">
+                                    <field name="resident_id"/>
+                                    <field name="role"/>
+                                    <field name="state"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Discussions" name="discussions">
+                            <field name="discussion_ids">
+                                <list>
+                                    <field name="title"/>
+                                    <field name="author_id"/>
+                                    <field name="state"/>
+                                    <field name="last_activity_at"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_cc_group" model="ir.actions.act_window">
+        <field name="name">Community Groups</field>
+        <field name="res_model">community.communication.group</field>
+        <field name="view_mode">kanban,list,form</field>
+    </record>
+</odoo>

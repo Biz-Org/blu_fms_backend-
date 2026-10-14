@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="fire_safety_management.Equipment">
+        <div class="o_action o_fs_app">
+            <FsAppShell active="'equipment'">
+                <div class="o_fs_shell">
+                    <div t-if="state.error" class="o_fs_alert">
+                        <i class="fa fa-exclamation-circle"/>
+                        <div t-esc="state.error"/>
+                    </div>
+
+                    <t t-if="state.mode === 'list'">
+                        <div class="o_fs_page_header">
+                            <div>
+                                <h1>Fire Equipment</h1>
+                                <p>Inventory extinguishers, hydrants, and alarms. Condition is manual; due and expired status is computed.</p>
+                            </div>
+                            <button t-if="canCreate" class="o_fs_btn primary" t-on-click="() => this.setMode('create')">
+                                <i class="fa fa-plus"/> Add Equipment
+                            </button>
+                        </div>
+
+                        <div t-if="state.loading" class="o_fs_empty">
+                            <h3>Loading equipment</h3>
+                            <p>Fetching live Fire &amp; Safety records.</p>
+                        </div>
+                        <t t-else="">
+                            <div class="o_fs_kpi_row">
+                                <FsKpiCard label="'All Equipment'" value="state.kpis.total" icon="'fa-fire-extinguisher'" onClick.bind="() => this.onFilter('all')"/>
+                                <FsKpiCard label="'Due / Expired'" value="state.kpis.due" icon="'fa-clock-o'" tone="state.kpis.due ? 'warning' : ''" onClick.bind="() => this.onFilter('due')"/>
+                                <FsKpiCard label="'Operational'" value="state.kpis.operational" icon="'fa-check'" onClick.bind="() => this.onFilter('operational')"/>
+                                <FsKpiCard label="'Expired'" value="state.kpis.expired" icon="'fa-ban'" tone="state.kpis.expired ? 'danger' : ''" onClick.bind="() => this.onFilter('expired')"/>
+                            </div>
+                            <div class="o_fs_toolbar">
+                                <div class="o_fs_search">
+                                    <i class="fa fa-search"/>
+                                    <input type="text" placeholder="Search code, name, or location..." t-att-value="state.search" t-on-change="onSearch"/>
+                                </div>
+                                <select class="o_fs_select" t-att-value="state.typeFilter" t-on-change="onTypeFilter">
+                                    <option value="">Type: All</option>
+                                    <t t-foreach="types" t-as="row" t-key="row.value">
+                                        <option t-att-value="row.value" t-esc="row.label"/>
+                                    </t>
+                                </select>
+                                <div class="o_fs_chips">
+                                    <button t-att-class="state.filter === 'all' ? 'active' : ''" t-on-click="() => this.onFilter('all')">All</button>
+                                    <button t-att-class="state.filter === 'due' ? 'active' : ''" t-on-click="() => this.onFilter('due')">Due / Expired</button>
+                                    <button t-att-class="state.filter === 'operational' ? 'active' : ''" t-on-click="() => this.onFilter('operational')">Operational</button>
+                                    <button t-att-class="state.filter === 'inspection_due' ? 'active' : ''" t-on-click="() => this.onFilter('inspection_due')">Inspection due</button>
+                                    <button t-att-class="state.filter === 'service_due' ? 'active' : ''" t-on-click="() => this.onFilter('service_due')">Service due</button>
+                                    <button t-att-class="state.filter === 'faulty' ? 'active' : ''" t-on-click="() => this.onFilter('faulty')">Faulty</button>
+                                    <button t-att-class="state.filter === 'replaced' ? 'active' : ''" t-on-click="() => this.onFilter('replaced')">Replaced</button>
+                                </div>
+                            </div>
+                            <div class="o_fs_card">
+                                <div class="o_fs_card_head">Equipment register</div>
+                                <t t-if="state.records.length">
+                                    <table class="o_fs_table">
+                                        <thead>
+                                            <tr>
+                                                <th>Equipment</th>
+                                                <th>Type</th>
+                                                <th>Inspection due</th>
+                                                <th>Service due</th>
+                                                <th>Expiry</th>
+                                                <th>Status</th>
+                                                <th/>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr t-foreach="state.records" t-as="rec" t-key="rec.id" t-on-click="() => this.setMode('detail', rec.id)">
+                                                <td>
+                                                    <div class="o_fs_row_title" t-esc="rec.code"/>
+                                                    <div class="o_fs_row_sub" t-esc="rec.name"/>
+                                                </td>
+                                                <td><span class="o_fs_pill" t-esc="typeLabel(rec.equipment_type)"/></td>
+                                                <td t-esc="formatDate(rec.inspection_due_date)"/>
+                                                <td t-esc="formatDate(rec.service_due_date)"/>
+                                                <td t-esc="formatDate(rec.expiry_date)"/>
+                                                <td><FsStatusBadge state="rec.state" label="stateLabel(rec.state)"/></td>
+                                                <td><button class="o_fs_link" t-on-click.stop="() => this.setMode('detail', rec.id)">Open</button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div class="o_fs_pager">
+                                        <span><t t-esc="pageFrom"/>–<t t-esc="pageTo"/> of <t t-esc="state.total"/></span>
+                                        <div class="o_fs_pager_pages">
+                                            <button t-att-disabled="state.page &lt;= 1" t-on-click="() => this.onPage(-1)">Prev</button>
+                                            <button t-att-disabled="state.page &gt;= pageCount" t-on-click="() => this.onPage(1)">Next</button>
+                                        </div>
+                                    </div>
+                                </t>
+                                <div t-else="" class="o_fs_empty">
+                                    <h3>No equipment matches</h3>
+                                    <p t-if="canCreate">Add extinguishers, hydrants, or alarms to start the register.</p>
+                                    <p t-else="">Fire equipment records will appear here.</p>
+                                    <button t-if="canCreate" class="o_fs_btn primary mt-2" t-on-click="() => this.setMode('create')">
+                                        <i class="fa fa-plus"/> Add Equipment
+                                    </button>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+
+                    <t t-if="state.mode === 'create'">
+                        <button class="o_fs_back" t-on-click="() => this.setMode('list')"><i class="fa fa-arrow-left"/> Back to Equipment</button>
+                        <div class="o_fs_page_header">
+                            <div>
+                                <h1>Add Equipment</h1>
+                                <p>Only a Safety Manager can create equipment or change condition. Security can view the register.</p>
+                            </div>
+                        </div>
+                        <div class="o_fs_form_section">
+                            <h3>Identity</h3>
+                            <div class="o_fs_form_grid">
+                                <div>
+                                    <label>Name *</label>
+                                    <input type="text" t-model="state.form.name" placeholder="Lobby CO2 extinguisher"/>
+                                </div>
+                                <div>
+                                    <label>Code *</label>
+                                    <input type="text" t-model="state.form.code" placeholder="FE-L1-01"/>
+                                </div>
+                                <div>
+                                    <label>Type *</label>
+                                    <select t-model="state.form.equipment_type">
+                                        <t t-foreach="types" t-as="row" t-key="row.value">
+                                            <option t-att-value="row.value" t-esc="row.label"/>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Condition *</label>
+                                    <select t-model="state.form.condition">
+                                        <option value="operational">Operational</option>
+                                        <option value="under_maintenance">Under Maintenance</option>
+                                        <option value="faulty">Faulty</option>
+                                        <option value="replaced">Replaced</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Assigned to</label>
+                                    <select t-model="state.form.assigned_user_id">
+                                        <option value="">Me</option>
+                                        <t t-foreach="state.lookups.users" t-as="usr" t-key="usr.id">
+                                            <option t-att-value="usr.id" t-esc="usr.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Location detail</label>
+                                    <input type="text" t-model="state.form.location_detail" placeholder="Floor, wing, or room"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="o_fs_form_section">
+                            <h3>Dates</h3>
+                            <p class="o_fs_hint">Due and expired status is computed from these dates. Do not write status directly.</p>
+                            <div class="o_fs_form_grid">
+                                <div>
+                                    <label>Install date</label>
+                                    <input type="date" t-model="state.form.install_date"/>
+                                </div>
+                                <div>
+                                    <label>Inspection due</label>
+                                    <input type="date" t-model="state.form.inspection_due_date"/>
+                                </div>
+                                <div>
+                                    <label>Service due</label>
+                                    <input type="date" t-model="state.form.service_due_date"/>
+                                </div>
+                                <div>
+                                    <label>Expiry</label>
+                                    <input type="date" t-model="state.form.expiry_date"/>
+                                </div>
+                            </div>
+                            <label class="mt-3">Notes</label>
+                            <textarea t-model="state.form.notes" placeholder="Capacity, contractor, or serial notes"/>
+                        </div>
+                        <div class="o_fs_form_section">
+                            <h3>Location (placeholder)</h3>
+                            <p class="o_fs_hint">Property, building, and area are integration placeholders until Property Management exists.</p>
+                            <div class="o_fs_form_grid">
+                                <div>
+                                    <label>Property</label>
+                                    <select t-model="state.form.property_id" t-on-change="onPropertyChange">
+                                        <option value="">None</option>
+                                        <t t-foreach="state.lookups.properties" t-as="row" t-key="row.id">
+                                            <option t-att-value="row.id" t-esc="row.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Building / Tower</label>
+                                    <select t-model="state.form.building_id" t-on-change="onBuildingChange">
+                                        <option value="">None</option>
+                                        <t t-foreach="filteredBuildings" t-as="row" t-key="row.id">
+                                            <option t-att-value="row.id" t-esc="row.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Area / Floor</label>
+                                    <select t-model="state.form.area_id">
+                                        <option value="">None</option>
+                                        <t t-foreach="filteredAreas" t-as="row" t-key="row.id">
+                                            <option t-att-value="row.id" t-esc="row.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="o_fs_footer_bar">
+                            <span t-if="state.busy" class="o_fs_busy" t-esc="state.busy"/>
+                            <button class="o_fs_btn secondary" t-att-disabled="state.busy" t-on-click="() => this.setMode('list')">Cancel</button>
+                            <button class="o_fs_btn primary" t-att-disabled="state.busy" t-on-click="createEquipment">
+                                <i class="fa fa-fire-extinguisher"/> Save Equipment
+                            </button>
+                        </div>
+                    </t>
+
+                    <t t-if="state.mode === 'detail'">
+                        <button class="o_fs_back" t-on-click="() => this.setMode('list')"><i class="fa fa-arrow-left"/> Back to Equipment</button>
+                        <div t-if="state.loading" class="o_fs_empty"><h3>Loading equipment</h3></div>
+                        <t t-elif="state.record">
+                            <div class="o_fs_page_header">
+                                <div>
+                                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                                        <h1 t-esc="equipment.code"/>
+                                        <FsStatusBadge state="equipment.state" label="stateLabel(equipment.state)"/>
+                                        <span class="o_fs_pill" t-esc="typeLabel(equipment.equipment_type)"/>
+                                    </div>
+                                    <p>
+                                        <t t-esc="equipment.name"/>
+                                        <t t-if="equipment.location_detail"> · <t t-esc="equipment.location_detail"/></t>
+                                        <t t-if="m2oName(equipment.property_id)"> · <t t-esc="m2oName(equipment.property_id)"/></t>
+                                    </p>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button t-if="canMarkOperational" class="o_fs_btn primary" t-att-disabled="state.busy" t-on-click="markOperational">Mark Operational</button>
+                                    <button t-if="canMarkMaintenance" class="o_fs_btn secondary" t-att-disabled="state.busy" t-on-click="markMaintenance">Under Maintenance</button>
+                                    <button t-if="canMarkFaulty" class="o_fs_btn secondary" t-att-disabled="state.busy" t-on-click="markFaulty">Mark Faulty</button>
+                                    <button t-if="canMarkReplaced" class="o_fs_btn secondary" t-att-disabled="state.busy" t-on-click="markReplaced">Mark Replaced</button>
+                                </div>
+                            </div>
+
+                            <div class="o_fs_detail_grid">
+                                <div class="o_fs_card">
+                                    <div class="o_fs_card_head">Record</div>
+                                    <div class="o_fs_meta">
+                                        <div><span>Condition</span><strong t-esc="conditionLabel(equipment.condition)"/></div>
+                                        <div><span>Assignee</span><strong t-esc="m2oName(equipment.assigned_user_id) or '—'"/></div>
+                                        <div><span>Last inspection</span><strong t-esc="formatDate(equipment.last_inspection_date)"/></div>
+                                        <div><span>Last service</span><strong t-esc="formatDate(equipment.last_service_date)"/></div>
+                                    </div>
+                                    <p class="o_fs_notes" t-esc="stripHtml(equipment.notes) or 'No notes'"/>
+                                </div>
+                                <div class="o_fs_card">
+                                    <div class="o_fs_card_head">Due dates</div>
+                                    <div class="o_fs_meta">
+                                        <div><span>Installed</span><strong t-esc="formatDate(equipment.install_date)"/></div>
+                                        <div><span>Inspection due</span><strong t-esc="formatDate(equipment.inspection_due_date)"/></div>
+                                        <div><span>Service due</span><strong t-esc="formatDate(equipment.service_due_date)"/></div>
+                                        <div><span>Expiry</span><strong t-esc="formatDate(equipment.expiry_date)"/></div>
+                                    </div>
+                                    <p class="o_fs_hint">Computed status overlays condition when a date is due or expired.</p>
+                                </div>
+                            </div>
+
+                            <div class="o_fs_card mt-3">
+                                <div class="o_fs_card_head">Service / replacement history</div>
+                                <t t-foreach="state.history" t-as="row" t-key="row.id">
+                                    <div class="o_fs_list_row">
+                                        <div>
+                                            <div class="o_fs_row_title" t-esc="row.summary"/>
+                                            <div class="o_fs_row_sub">
+                                                <t t-esc="eventLabel(row.event_type)"/> · <t t-esc="formatDate(row.event_date)"/>
+                                                <t t-if="m2oName(row.performed_by_id)"> · <t t-esc="m2oName(row.performed_by_id)"/></t>
+                                            </div>
+                                            <p t-if="row.notes" class="o_fs_notes" t-esc="row.notes"/>
+                                        </div>
+                                    </div>
+                                </t>
+                                <FsEmptyState t-if="!state.history.length" title="'No history yet'" hint="'Services, inspections, faults, and replacements are logged here.'"/>
+                                <t t-if="canAddHistory">
+                                    <div class="o_fs_inline_panel">
+                                        <h4>Add history</h4>
+                                        <div class="o_fs_form_grid">
+                                            <div>
+                                                <label>Type *</label>
+                                                <select t-model="state.historyForm.event_type">
+                                                    <option value="service">Service</option>
+                                                    <option value="inspection">Inspection</option>
+                                                    <option value="replacement">Replacement</option>
+                                                    <option value="fault">Fault</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label>Date *</label>
+                                                <input type="date" t-model="state.historyForm.event_date"/>
+                                            </div>
+                                            <div>
+                                                <label>Summary *</label>
+                                                <input type="text" t-model="state.historyForm.summary" placeholder="Annual service, cylinder swap..."/>
+                                            </div>
+                                        </div>
+                                        <textarea class="mt-2" t-model="state.historyForm.notes" placeholder="Notes"/>
+                                        <button class="o_fs_btn secondary mt-2" t-att-disabled="state.busy" t-on-click="addHistory">Add history</button>
+                                    </div>
+                                </t>
+                            </div>
+                            <div t-if="state.busy" class="o_fs_busy mt-3" t-esc="state.busy"/>
+                        </t>
+                    </t>
+                </div>
+            </FsAppShell>
+        </div>
+    </t>
+</templates>

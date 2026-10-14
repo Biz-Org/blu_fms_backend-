@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="compliance_audit_management.CaAppShell">
+        <div class="o_ca_layout">
+            <aside class="o_ca_sidebar">
+                <div class="o_ca_brand">
+                    <div class="o_ca_brand_mark"><i class="fa fa-shield"/></div>
+                    <div>
+                        <div class="o_ca_brand_title">FMS Compliance</div>
+                        <div class="o_ca_brand_sub">Management Portal</div>
+                    </div>
+                </div>
+                <nav class="o_ca_nav">
+                    <button t-foreach="nav" t-as="item" t-key="item.id"
+                        t-att-class="item.id === props.active ? 'active' : ''"
+                        t-on-click="() => this.open(item)">
+                        <i t-attf-class="fa {{ item.icon }}"/>
+                        <span t-esc="item.label"/>
+                    </button>
+                </nav>
+                <div class="o_ca_nav_foot">
+                    <button t-if="canOpenSettings" t-on-click="openSettings"><i class="fa fa-cog"/> Configuration</button>
+                    <button t-on-click="openProfile"><i class="fa fa-user-o"/> User Profile</button>
+                    <button class="o_ca_logout" t-on-click="logout"><i class="fa fa-sign-out"/> Logout</button>
+                </div>
+            </aside>
+            <div class="o_ca_main">
+                <header class="o_ca_topbar">
+                    <div class="o_ca_topbar_title">Compliance &amp; Audit</div>
+                    <div class="o_ca_topbar_search">
+                        <i class="fa fa-search"/>
+                        <input type="text" placeholder="Search records..."/>
+                    </div>
+                    <div class="o_ca_topbar_actions">
+                        <span class="o_ca_role_chip" t-esc="roleLabel"/>
+                        <button class="o_ca_icon_btn" title="Notifications"><i class="fa fa-bell-o"/></button>
+                        <button t-if="canOpenSettings" class="o_ca_icon_btn" title="Configuration" t-on-click="openSettings"><i class="fa fa-cog"/></button>
+                        <img class="o_ca_avatar" t-att-src="avatarUrl" t-att-alt="user.name" t-on-click="openProfile"/>
+                    </div>
+                </header>
+                <div class="o_ca_content">
+                    <t t-slot="default"/>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

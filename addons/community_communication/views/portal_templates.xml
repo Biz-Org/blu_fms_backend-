@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="portal_my_home_community" name="Community portal cards" inherit_id="portal.portal_my_home" customize_show="True" priority="22">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
+            <t t-set="portal_client_category_enable" t-value="True"/>
+        </xpath>
+        <div id="portal_client_category" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="title">Community</t>
+                <t t-set="url" t-value="'/my/community'"/>
+                <t t-set="text">Announcements, notices, polls, events and feedback</t>
+                <t t-set="placeholder_count" t-value="'cc_announcement_count'"/>
+                <t t-set="show_count" t-value="True"/>
+            </t>
+        </div>
+    </template>
+
+    <template id="portal_community_layout" name="Community portal layout">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+            <div class="o_cc_portal">
+                <t t-out="0"/>
+            </div>
+        </t>
+    </template>
+
+    <template id="portal_community_nav" name="Community portal nav">
+        <div class="o_cc_portal_nav">
+            <a href="/my/community" class="btn btn-sm btn-outline-primary">Home</a>
+            <a href="/my/community/announcements" class="btn btn-sm btn-outline-primary">Announcements</a>
+            <a href="/my/community/notices" class="btn btn-sm btn-outline-primary">Notices</a>
+            <a href="/my/community/discussions" class="btn btn-sm btn-outline-primary">Forums</a>
+            <a href="/my/community/polls" class="btn btn-sm btn-outline-primary">Polls</a>
+            <a href="/my/community/events" class="btn btn-sm btn-outline-primary">Events</a>
+            <a href="/my/community/feedback" class="btn btn-sm btn-outline-primary">Feedback</a>
+            <a href="/my/community/groups" class="btn btn-sm btn-outline-primary">Groups</a>
+        </div>
+    </template>
+
+    <template id="portal_community_home" name="Community Home">
+        <t t-call="community_communication.portal_community_layout">
+            <t t-call="community_communication.portal_community_nav"/>
+            <h3>Community</h3>
+            <p class="text-muted">Stay up to date with announcements, events and polls.</p>
+            <div class="o_cc_portal_grid">
+                <div class="o_cc_portal_card">
+                    <h5>Announcements</h5>
+                    <t t-foreach="announcements" t-as="item">
+                        <div class="mb-2"><a t-attf-href="/my/community/announcements/{{ item.id }}" t-esc="item.title"/></div>
+                    </t>
+                </div>
+                <div class="o_cc_portal_card">
+                    <h5>Events</h5>
+                    <t t-foreach="events" t-as="item">
+                        <div class="mb-2"><a t-attf-href="/my/community/events/{{ item.id }}" t-esc="item.name"/></div>
+                    </t>
+                </div>
+                <div class="o_cc_portal_card">
+                    <h5>Polls</h5>
+                    <t t-foreach="polls" t-as="item">
+                        <div class="mb-2"><a t-attf-href="/my/community/polls/{{ item.id }}" t-esc="item.question"/></div>
+                    </t>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="portal_announcement_list" name="Community announcements">
+        <t t-call="community_communication.portal_community_layout">
+            <t t-call="community_communication.portal_community_nav"/>
+            <h3>Announcements</h3>
+            <t t-foreach="announcements" t-as="item">
+                <div class="o_cc_portal_card">
+                    <a t-attf-href="/my/community/announcements/{{ item.id }}" class="fw-bold" t-esc="item.title"/>
+                    <div class="small text-muted"><t t-esc="item.category"/> · <t t-esc="item.state"/></div>
+                </div>
+            </t>
+            <div t-if="pager" class="o_portal_pager"><t t-call="portal.pager"/></div>
+        </t>
+    </template>
+
+    <template id="portal_announcement_detail" name="Announcement detail">
+        <t t-call="community_communication.portal_community_layout">
+            <t t-call="community_communication.portal_community_nav"/>
+            <a href="/my/community/announcements">Back</a>
+            <span class="badge text-bg-secondary" t-esc="announcement.category"/>
+            <h2 t-esc="announcement.title"/>
+            <div t-field="announcement.body"/>
+            <form t-if="announcement.state == 'published'" t-attf-action="/my/community/announcements/{{ announcement.id }}/acknowledge" method="post">
+                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                <button class="btn btn-primary">Acknowledge</button>
+            </form>
+        </t>
+    </template>
+
+    <template id="portal_notice_list" name="Community notices">
+        <t t-call="community_communication.portal_community_layout">
+            <t t-call="community_communication.portal_community_nav"/>
+            <h3>Digital Notice Board</h3>
+            <t t-foreach="notices" t-as="item">
+                <div class="o_cc_portal_card">
+                    <a t-attf-href="/my/community/notices/{{ item.id }}" class="fw-bold" t-esc="item.title"/>
+                    <div class="small text-muted" t-esc="item.category"/>
+                </div>
+            </t>
+            <div t-if="pager" class="o_portal_pager"><t t-call="portal.pager"/></div>
+        </t>
+    </template>
+
+    <template id="portal_notice_detail" name="Notice detail">
+        <t t-call="community_communication.portal_community_layout">
+            <t t-call="community_communication.portal_community_nav"/>
+            <a href="/my/community/notices">Back</a>
+            <h2 t-esc="notice.title"/>
+            <div t-field="notice.body"/>
+        </t>
+    </template>
+
+    <template id="portal_event_list" name="Community events">
+        <t t-call="community_communication.portal_community_layout">
+            <t t-call="community_communication.portal_community_nav"/>
+            <h3>Events</h3>
+            <t t-foreach="events" t-as="item">
+                <div class="o_cc_portal_card">
+                    <a t-attf-href="/my/community/events/{{ item.id }}" class="fw-bold" t-esc="item.name"/>
+                    <div class="small text-muted"><t t-field="item.date_start"/> · <t t-esc="item.location or item.venue_id.name"/></div>
+                </div>
+            </t>
+            <div t-if="pager" class="o_portal_pager"><t t-call="portal.pager"/></div>
+        </t>
+    </template>
+
+    <template id="portal_event_detail" name="Event detail">
+        <t t-call="community_communication.portal_community_layout">
+            <t t-call="community_communication.portal_community_nav"/>
+            <a href="/my/community/events">Back</a>
+            <h2 t-esc="event.name"/>
+            <div t-field="event.description"/>
+            <p t-if="error" class="text-danger" t-esc="error"/>
+            <form t-if="event.require_registration and event.state == 'published'" t-attf-action="/my/community/events/{{ event.id }}/register" method="post">
+                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                <button class="btn btn-primary">Confirm registration</button>
+            </form>
+        </t>
+    </template>
+
+    <template id="portal_poll_list" name="Community polls">
+        <t t-call="community_communication.portal_community_layout">
+            <t t-call="community_communication.portal_community_nav"/>
+            <h3>Polls</h3>
+            <t t-foreach="polls" t-as="item">
+                <div class="o_cc_portal_card">
+                    <a t-attf-href="/my/community/polls/{{ item.id }}" class="fw-bold" t-esc="item.question"/>
+                    <div class="small text-muted" t-esc="item.state"/>
+                </div>
+            </t>
+            <div t-if="pager" class="o_portal_pager"><t t-call="portal.pager"/></div>
+        </t>
+    </template>
+
+    <template id="portal_poll_detail" name="Poll vote">
+        <t t-call="community_communication.portal_community_layout">
+            <t t-call="community_communication.portal_community_nav"/>
+            <a href="/my/community/polls">Back</a>
+            <h2 t-esc="poll.question"/>
+            <p t-esc="poll.description"/>
+            <p t-if="error" class="text-danger" t-esc="error"/>
+            <t t-if="payload.get('has_voted')">
+                <div class="alert alert-success">Your vote is recorded.</div>
+                <t t-foreach="payload.get('options')" t-as="option">
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between"><span t-esc="option['name']"/><span t-esc="option['vote_percent']"/>%</div>
+                        <div class="progress"><div class="progress-bar" t-att-style="'width:%s%%' % option['vote_percent']"/></div>
+                    </div>
+                </t>
+            </t>
+            <form t-else="" t-attf-action="/my/community/polls/{{ poll.id }}/vote" method="post">
+                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                <t t-foreach="payload.get('options')" t-as="option">
+                    <label class="d-block border rounded p-2 mb-2">
+                        <input t-att-type="'radio' if poll.response_type == 'single' else 'checkbox'" name="option_ids" t-att-value="option['id']"/>
+                        <t t-esc="option['name']"/>
+                    </label>
+                </t>
+                <button class="btn btn-primary">Submit Vote</button>
+            </form>
+        </t>
+    </template>
+
+    <template id="portal_feedback_list" name="My feedback">
+        <t t-call="community_communication.portal_community_layout">
+            <t t-call="community_communication.portal_community_nav"/>
+            <div class="d-flex justify-content-between">
+                <h3>My Feedback</h3>
+                <a href="/my/community/feedback/new" class="btn btn-primary">Submit Feedback</a>
+            </div>
+            <t t-foreach="feedbacks" t-as="item">
+                <div class="o_cc_portal_card">
+                    <div class="fw-bold" t-esc="item.name"/> — <t t-esc="item.subject"/>
+                    <div class="small text-muted" t-esc="item.state"/>
+                </div>
+            </t>
+            <div t-if="pager" class="o_portal_pager"><t t-call="portal.pager"/></div>
+        </t>
+    </template>
+
+    <template id="portal_feedback_form" name="Submit feedback">
+        <t t-call="community_communication.portal_community_layout">
+            <t t-call="community_communication.portal_community_nav"/>
+            <h3>Submit Feedback</h3>
+            <p t-if="error" class="text-danger" t-esc="error"/>
+            <form action="/my/community/feedback/submit" method="post">
+                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                <div class="mb-2">
+                    <label class="form-label">Subject</label>
+                    <input class="form-control" name="subject" required="required"/>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Category</label>
+                    <select class="form-select" name="category">
+                        <option value="facility">Facility Maintenance</option>
+                        <option value="amenities">Amenities</option>
+                        <option value="events">Events</option>
+                        <option value="communication">Communication</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" name="description" rows="5"/>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="anonymous" id="anon"/>
+                    <label class="form-check-label" for="anon">Submit anonymously</label>
+                </div>
+                <button class="btn btn-primary">Submit</button>
+            </form>
+        </t>
+    </template>
+
+    <template id="portal_group_list" name="Community groups">
+        <t t-call="community_communication.portal_community_layout">
+            <t t-call="community_communication.portal_community_nav"/>
+            <h3>Community Groups</h3>
+            <div class="row g-3">
+                <t t-foreach="groups" t-as="group">
+                    <div class="col-md-4">
+                        <div class="o_cc_portal_card h-100">
+                            <div class="fw-bold" t-esc="group.name"/>
+                            <div class="small text-muted"><t t-esc="group.visibility"/> · <t t-esc="group.member_count"/> members</div>
+                            <form class="mt-2" t-attf-action="/my/community/groups/{{ group.id }}/join" method="post">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                <button class="btn btn-sm btn-primary">Join</button>
+                            </form>
+                        </div>
+                    </div>
+                </t>
+            </div>
+        </t>
+    </template>
+
+    <template id="portal_discussion_list" name="Community discussions">
+        <t t-call="community_communication.portal_community_layout">
+            <t t-call="community_communication.portal_community_nav"/>
+            <h3>Discussion Forums</h3>
+            <t t-foreach="discussions" t-as="item">
+                <div class="o_cc_portal_card">
+                    <a t-attf-href="/my/community/discussions/{{ item.id }}" class="fw-bold" t-esc="item.title"/>
+                    <div class="small text-muted"><t t-esc="item.comment_count"/> comments · <t t-esc="item.state"/></div>
+                </div>
+            </t>
+            <div t-if="pager" class="o_portal_pager"><t t-call="portal.pager"/></div>
+        </t>
+    </template>
+
+    <template id="portal_discussion_detail" name="Discussion thread">
+        <t t-call="community_communication.portal_community_layout">
+            <t t-call="community_communication.portal_community_nav"/>
+            <a href="/my/community/discussions">Back</a>
+            <h2 t-esc="discussion.title"/>
+            <div t-field="discussion.body"/>
+            <h5 class="mt-3">Comments</h5>
+            <t t-foreach="thread.get('comments')" t-as="comment">
+                <div class="border-bottom py-2">
+                    <div class="fw-semibold" t-esc="comment['author']"/>
+                    <div t-out="comment['body']"/>
+                </div>
+            </t>
+            <form class="mt-3" t-attf-action="/my/community/discussions/{{ discussion.id }}/comment" method="post">
+                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                <textarea class="form-control mb-2" name="body" placeholder="Write a reply..."/>
+                <button class="btn btn-primary">Post Reply</button>
+            </form>
+        </t>
+    </template>
+</odoo>

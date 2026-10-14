@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- OWL client actions -->
+    <record id="action_ca_dashboard_ui" model="ir.actions.client">
+        <field name="name">Dashboard</field>
+        <field name="tag">compliance_audit_management.action_dashboard</field>
+        <field name="path">ca-dashboard</field>
+    </record>
+    <record id="action_ca_activities_ui" model="ir.actions.client">
+        <field name="name">Compliance Activities</field>
+        <field name="tag">compliance_audit_management.action_activities</field>
+        <field name="path">ca-activities</field>
+    </record>
+    <record id="action_ca_documents_ui" model="ir.actions.client">
+        <field name="name">Compliance Documents</field>
+        <field name="tag">compliance_audit_management.action_documents</field>
+        <field name="path">ca-documents</field>
+    </record>
+    <record id="action_ca_calendar_ui" model="ir.actions.client">
+        <field name="name">Compliance Calendar</field>
+        <field name="tag">compliance_audit_management.action_calendar</field>
+        <field name="path">ca-calendar</field>
+    </record>
+    <record id="action_ca_audits_ui" model="ir.actions.client">
+        <field name="name">Audits &amp; Inspections</field>
+        <field name="tag">compliance_audit_management.action_audits</field>
+        <field name="path">ca-audits</field>
+    </record>
+    <record id="action_ca_nc_ui" model="ir.actions.client">
+        <field name="name">Non-Compliance</field>
+        <field name="tag">compliance_audit_management.action_non_compliance</field>
+        <field name="path">ca-non-compliance</field>
+    </record>
+    <record id="action_ca_regulatory_ui" model="ir.actions.client">
+        <field name="name">Regulatory Reporting</field>
+        <field name="tag">compliance_audit_management.action_regulatory</field>
+        <field name="path">ca-regulatory</field>
+    </record>
+    <record id="action_ca_reports_ui" model="ir.actions.client">
+        <field name="name">Compliance Reports</field>
+        <field name="tag">compliance_audit_management.action_reports</field>
+        <field name="path">ca-reports</field>
+    </record>
+
+    <menuitem
+        id="menu_compliance_root"
+        name="Compliance &amp; Audit"
+        web_icon="compliance_audit_management,static/description/icon.png"
+        action="action_ca_dashboard_ui"
+        groups="compliance_audit_management.group_compliance_manager,compliance_audit_management.group_compliance_auditor"
+        sequence="52"
+    />
+
+    <menuitem id="menu_ca_dashboard" name="Dashboard" parent="menu_compliance_root" action="action_ca_dashboard_ui" sequence="1"/>
+    <menuitem id="menu_ca_activities_ui" name="Compliance Activities" parent="menu_compliance_root" action="action_ca_activities_ui" sequence="10"/>
+    <menuitem id="menu_ca_documents_ui" name="Compliance Documents" parent="menu_compliance_root" action="action_ca_documents_ui" sequence="20"/>
+    <menuitem id="menu_ca_calendar_ui" name="Compliance Calendar" parent="menu_compliance_root" action="action_ca_calendar_ui" sequence="25"/>
+    <menuitem id="menu_ca_audits_ui" name="Audits &amp; Inspections" parent="menu_compliance_root" action="action_ca_audits_ui" sequence="30"/>
+    <menuitem id="menu_ca_nc_ui" name="Non-Compliance" parent="menu_compliance_root" action="action_ca_nc_ui" sequence="40"/>
+    <menuitem id="menu_ca_regulatory_ui" name="Regulatory Reporting" parent="menu_compliance_root" action="action_ca_regulatory_ui" sequence="50"/>
+    <menuitem id="menu_ca_reports_ui" name="Compliance Reports" parent="menu_compliance_root" action="action_ca_reports_ui" sequence="60"/>
+
+    <!-- Native ops kept under Configuration for managers / admins -->
+    <menuitem id="menu_ca_config" name="Configuration" parent="menu_compliance_root" sequence="90" groups="compliance_audit_management.group_compliance_manager"/>
+    <menuitem id="menu_ca_requirement" name="Requirements" parent="menu_ca_config" action="action_ca_requirement" sequence="10"/>
+    <menuitem id="menu_ca_checklist" name="Checklist Templates" parent="menu_ca_config" action="action_ca_checklist_template" sequence="20"/>
+    <menuitem id="menu_ca_property" name="Properties" parent="menu_ca_config" action="action_ca_property" sequence="30"/>
+    <menuitem id="menu_ca_building" name="Buildings" parent="menu_ca_config" action="action_ca_building" sequence="40"/>
+    <menuitem id="menu_ca_area" name="Areas" parent="menu_ca_config" action="action_ca_area" sequence="50"/>
+    <menuitem id="menu_ca_check_native" name="Activities (native)" parent="menu_ca_config" action="action_ca_check" sequence="60"/>
+    <menuitem id="menu_ca_document_native" name="Documents (native)" parent="menu_ca_config" action="action_ca_document" sequence="70"/>
+    <menuitem id="menu_ca_audit_native" name="Audits (native)" parent="menu_ca_config" action="action_ca_audit" sequence="80"/>
+    <menuitem id="menu_ca_finding_native" name="Findings (native)" parent="menu_ca_config" action="action_ca_finding" sequence="90"/>
+    <menuitem id="menu_ca_nc_native" name="Non-Compliance (native)" parent="menu_ca_config" action="action_ca_non_compliance" sequence="100"/>
+    <menuitem id="menu_ca_action_native" name="Corrective Actions (native)" parent="menu_ca_config" action="action_ca_action" sequence="110"/>
+    <menuitem id="menu_ca_reg_native" name="Regulatory Reports (native)" parent="menu_ca_config" action="action_ca_regulatory_report" sequence="120"/>
+    <menuitem id="menu_ca_alert_native" name="Alerts (native)" parent="menu_ca_config" action="action_ca_alert" sequence="130"/>
+</odoo>

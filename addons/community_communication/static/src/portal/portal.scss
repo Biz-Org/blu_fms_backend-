@@ -1,0 +1,86 @@
+.o_cc_portal {
+    --cc-color-primary: #6d28d9;
+    --cc-color-primary-soft: #ede9fe;
+    --cc-color-surface: #f6f3fb;
+    --cc-color-border: #eee7f7;
+    --cc-shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 8px 24px rgba(109, 40, 217, 0.06);
+    background: var(--cc-color-surface);
+    padding: 8px 0 32px;
+    font-family: Inter, "Odoo Unicode Support Noto", sans-serif;
+
+    h2, h3 { color: #111827; font-weight: 700; }
+    .text-muted { color: #6b7280 !important; }
+
+    .btn-primary {
+        background: #6d28d9;
+        border-color: #6d28d9;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    .btn-outline-primary {
+        color: #6d28d9;
+        border-color: #ddd6fe;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    .btn-outline-primary:hover,
+    .btn-outline-primary.active {
+        background: #ede9fe;
+        color: #5b21b6;
+        border-color: #ddd6fe;
+    }
+
+    .o_cc_portal_nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+
+    .o_cc_portal_card {
+        background: #fff;
+        border: 1px solid var(--cc-color-border);
+        border-radius: 12px;
+        box-shadow: var(--cc-shadow);
+        padding: 16px;
+        margin-bottom: 12px;
+    }
+
+    .o_cc_pill {
+        display: inline-flex;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        background: var(--cc-color-primary-soft);
+        color: var(--cc-color-primary);
+    }
+
+    .o_cc_portal_grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    textarea, .form-control, .form-select {
+        border-radius: 10px;
+        border-color: var(--cc-color-border);
+        background: #faf7ff;
+    }
+}
+
+@media (max-width: 768px) {
+    .o_cc_portal {
+        padding: 4px 0 24px;
+    }
+    .o_cc_portal .o_cc_portal_grid { grid-template-columns: 1fr; }
+    .o_cc_portal .o_cc_portal_nav {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 4px;
+        scrollbar-width: none;
+        &::-webkit-scrollbar { display: none; }
+        .btn { flex-shrink: 0; }
+    }
+}

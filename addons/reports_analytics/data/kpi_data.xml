@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="kpi_open_feedback" model="analytics.kpi">
+        <field name="name">Open Service Feedback</field>
+        <field name="category">service_requests</field>
+        <field name="data_source_id" ref="source_cc_feedback"/>
+        <field name="source_model">community.communication.feedback</field>
+        <field name="source_domain">[('state', 'in', ['submitted', 'in_progress'])]</field>
+        <field name="aggregation">count</field>
+        <field name="target">50</field>
+        <field name="higher_is_better" eval="False"/>
+    </record>
+    <record id="kpi_open_nc" model="analytics.kpi">
+        <field name="name">Open Non-Compliances</field>
+        <field name="category">compliance</field>
+        <field name="data_source_id" ref="source_cmp_nc"/>
+        <field name="source_model">compliance.non.compliance</field>
+        <field name="source_domain">[('state', 'not in', ['resolved', 'closed'])]</field>
+        <field name="aggregation">count</field>
+        <field name="target">10</field>
+        <field name="higher_is_better" eval="False"/>
+    </record>
+    <record id="kpi_inspections" model="analytics.kpi">
+        <field name="name">Fire Safety Inspections</field>
+        <field name="category">fire_safety</field>
+        <field name="data_source_id" ref="source_fs_inspection"/>
+        <field name="source_model">fire.safety.inspection</field>
+        <field name="aggregation">count</field>
+        <field name="target">20</field>
+        <field name="higher_is_better" eval="True"/>
+    </record>
+    <record id="kpi_iot_devices" model="analytics.kpi">
+        <field name="name">IoT Devices</field>
+        <field name="category">asset_performance</field>
+        <field name="data_source_id" ref="source_iot_device"/>
+        <field name="source_model">integration.iot.device</field>
+        <field name="aggregation">count</field>
+        <field name="target">1</field>
+        <field name="higher_is_better" eval="True"/>
+    </record>
+</odoo>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="ir_cron_analytics_schedules" model="ir.cron">
+        <field name="name">Analytics: run scheduled reports</field>
+        <field name="model_id" ref="model_analytics_report_schedule"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_run_schedules()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="user_id" ref="base.user_root"/>
+    </record>
+    <record id="ir_cron_analytics_alerts" model="ir.cron">
+        <field name="name">Analytics: evaluate alerts</field>
+        <field name="model_id" ref="model_analytics_alert"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_evaluate_alerts()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="user_id" ref="base.user_root"/>
+    </record>
+</odoo>

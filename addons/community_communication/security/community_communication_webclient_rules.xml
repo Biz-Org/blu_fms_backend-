@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="menu_resident_rule" model="ir.rule">
+        <field name="name">Menu: Community app only</field>
+        <field name="model_id" ref="base.model_ir_ui_menu"/>
+        <field name="domain_force" eval="[('id', 'child_of', ref('menu_community_communication_root'))]"/>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+    <record id="unit_resident_rule" model="ir.rule">
+        <field name="name">Unit: resident community</field>
+        <field name="model_id" ref="model_community_communication_unit"/>
+        <field name="domain_force">[('community_id', 'in', user.cc_resident_ids.community_id.ids)]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+    <record id="venue_resident_rule" model="ir.rule">
+        <field name="name">Venue: resident community</field>
+        <field name="model_id" ref="model_community_communication_venue"/>
+        <field name="domain_force">[('community_id', 'in', user.cc_resident_ids.community_id.ids)]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+    <record id="poll_option_resident_rule" model="ir.rule">
+        <field name="name">Poll option: resident visible polls</field>
+        <field name="model_id" ref="model_community_communication_poll_option"/>
+        <field name="domain_force">['&amp;', '&amp;', ('poll_id.community_id', 'in', user.cc_resident_ids.community_id.ids), ('poll_id.state', 'in', ['active', 'closed']), '|', '|', ('poll_id.audience_type', '=', 'community'), '&amp;', ('poll_id.audience_type', '=', 'buildings'), ('poll_id.building_ids', 'in', user.cc_building_ids.ids), '&amp;', ('poll_id.audience_type', '=', 'groups'), ('poll_id.audience_group_ids', 'in', user.cc_member_group_ids.ids)]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+    <record id="reaction_resident_rule" model="ir.rule">
+        <field name="name">Reaction: own</field>
+        <field name="model_id" ref="model_community_communication_reaction"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+    <record id="follow_resident_rule" model="ir.rule">
+        <field name="name">Follow: own</field>
+        <field name="model_id" ref="model_community_communication_follow"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+    </record>
+    <record id="comment_resident_own_write_rule" model="ir.rule">
+        <field name="name">Comment: own write</field>
+        <field name="model_id" ref="model_community_communication_discussion_comment"/>
+        <field name="domain_force">[('author_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_community_resident'))]"/>
+        <field name="perm_read" eval="False"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+</odoo>

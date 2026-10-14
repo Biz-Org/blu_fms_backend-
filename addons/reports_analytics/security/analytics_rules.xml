@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="rule_analytics_report_company" model="ir.rule">
+        <field name="name">Analytics Report: multi-company</field>
+        <field name="model_id" ref="model_analytics_report"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_analytics_report_execution_company" model="ir.rule">
+        <field name="name">Analytics Report Execution: multi-company</field>
+        <field name="model_id" ref="model_analytics_report_execution"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_analytics_kpi_company" model="ir.rule">
+        <field name="name">Analytics KPI: multi-company</field>
+        <field name="model_id" ref="model_analytics_kpi"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_analytics_dashboard_company" model="ir.rule">
+        <field name="name">Analytics Dashboard: multi-company</field>
+        <field name="model_id" ref="model_analytics_dashboard"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_analytics_audit_log_company" model="ir.rule">
+        <field name="name">Analytics Audit Log: multi-company</field>
+        <field name="model_id" ref="model_analytics_audit_log"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_analytics_schedule_company" model="ir.rule">
+        <field name="name">Analytics Schedule: multi-company</field>
+        <field name="model_id" ref="model_analytics_report_schedule"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_analytics_alert_company" model="ir.rule">
+        <field name="name">Analytics Alert: multi-company</field>
+        <field name="model_id" ref="model_analytics_alert"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+</odoo>

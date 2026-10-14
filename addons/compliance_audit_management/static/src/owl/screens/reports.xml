@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="compliance_audit_management.Reports">
+        <div class="o_action o_ca_app">
+            <CaAppShell active="'reports'">
+                <div class="o_ca_shell o_ca_print_area">
+                    <div t-if="state.error" class="o_ca_alert">
+                        <i class="fa fa-exclamation-circle"/>
+                        <div t-esc="state.error"/>
+                    </div>
+
+                    <div class="o_ca_page_header">
+                        <div>
+                            <h1>Compliance Reports</h1>
+                            <p>
+                                Management analytics across activities, audits, documents, non-compliance and regulatory filings.
+                                <t t-if="state.asOf"> As of <t t-esc="formatDate(state.asOf)"/>.</t>
+                            </p>
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap o_ca_no_print">
+                            <button class="o_ca_btn" t-on-click="exportCsv">
+                                <i class="fa fa-download"/> Export CSV
+                            </button>
+                            <button class="o_ca_btn primary" t-on-click="printReport">
+                                <i class="fa fa-print"/> Print
+                            </button>
+                        </div>
+                    </div>
+
+                    <div t-if="state.loading" class="o_ca_empty">
+                        <h3>Loading reports</h3>
+                        <p>Aggregating compliance datasets.</p>
+                    </div>
+                    <t t-else="">
+                        <div class="o_ca_kpi_row">
+                            <CaKpiCard
+                                label="'Overall Compliance'"
+                                value="overallCompliance"
+                                icon="'fa-line-chart'"
+                                hint="state.kpis.overall_hint or 'Checklist line results'"
+                            />
+                            <CaKpiCard
+                                label="'Pending Activities'"
+                                value="state.kpis.pending_activities || 0"
+                                icon="'fa-tasks'"
+                            />
+                            <CaKpiCard
+                                label="'Open Non-Compliance'"
+                                value="state.kpis.open_non_compliance || 0"
+                                icon="'fa-exclamation-triangle'"
+                                tone="state.kpis.open_non_compliance ? 'danger' : ''"
+                            />
+                            <CaKpiCard
+                                label="'Overdue Actions'"
+                                value="state.kpis.overdue_actions || 0"
+                                icon="'fa-clock-o'"
+                                tone="state.kpis.overdue_actions ? 'danger' : ''"
+                            />
+                            <CaKpiCard
+                                label="'Expiring Documents'"
+                                value="state.kpis.expiring_documents || 0"
+                                icon="'fa-folder-open-o'"
+                                tone="state.kpis.expiring_documents ? 'warning' : ''"
+                            />
+                            <CaKpiCard
+                                label="'Regulatory Due'"
+                                value="state.kpis.regulatory_due || 0"
+                                icon="'fa-file-text-o'"
+                                tone="state.kpis.regulatory_due ? 'warning' : ''"
+                            />
+                        </div>
+
+                        <div class="o_ca_detail_grid">
+                            <div class="o_ca_card">
+                                <div class="o_ca_card_head">Compliance health by category</div>
+                                <t t-if="state.health.length">
+                                    <CaProgressBar
+                                        t-foreach="state.health"
+                                        t-as="row"
+                                        t-key="row.key"
+                                        label="row.label"
+                                        value="row.rate"
+                                    />
+                                </t>
+                                <CaEmptyState t-else="" title="'No scored results yet'" hint="'Complete checklist items to populate category health.'"/>
+                            </div>
+                            <div class="o_ca_card">
+                                <div class="o_ca_card_head">Status counts</div>
+                                <div class="o_ca_status_blocks">
+                                    <div t-foreach="state.statusBlocks" t-as="block" t-key="block.id" class="o_ca_status_block">
+                                        <div class="o_ca_row_title" t-esc="block.label"/>
+                                        <div t-foreach="block.pairs" t-as="pair" t-key="pair.state" class="o_ca_stat_line">
+                                            <CaStatusBadge state="pair.state" label="stateLabel(pair.state)"/>
+                                            <span t-esc="pair.count"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="o_ca_toolbar o_ca_no_print">
+                            <div class="o_ca_chips">
+                                <button
+                                    t-foreach="state.datasets"
+                                    t-as="row"
+                                    t-key="row.id"
+                                    t-att-class="state.dataset === row.id ? 'active' : ''"
+                                    t-on-click="() => this.onDataset(row.id)"
+                                    t-esc="row.label"
+                                />
+                            </div>
+                            <select class="o_ca_select" t-att-value="state.propertyId" t-on-change="onProperty">
+                                <option value="">All properties</option>
+                                <t t-foreach="state.lookups.properties" t-as="p" t-key="p.id">
+                                    <option t-att-value="p.id" t-esc="p.name"/>
+                                </t>
+                            </select>
+                            <input class="o_ca_select" type="date" t-att-value="state.dateFrom" t-on-change="onDateFrom"/>
+                            <input class="o_ca_select" type="date" t-att-value="state.dateTo" t-on-change="onDateTo"/>
+                        </div>
+
+                        <div class="o_ca_card">
+                            <div class="o_ca_card_head"><t t-esc="state.datasetLabel"/> dataset</div>
+                            <t t-if="state.records.length">
+                                <table class="o_ca_table">
+                                    <thead>
+                                        <tr>
+                                            <th>Record</th>
+                                            <th>Status</th>
+                                            <th>When</th>
+                                            <th>Property</th>
+                                            <th>Assignee</th>
+                                            <th class="o_ca_no_print"/>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="state.records" t-as="rec" t-key="rec.id">
+                                            <td>
+                                                <div class="o_ca_row_title" t-esc="rec.name"/>
+                                                <div t-if="rec.secondary" class="o_ca_row_sub" t-esc="rec.secondary"/>
+                                            </td>
+                                            <td>
+                                                <CaStatusBadge state="rec.is_overdue ? 'overdue' : rec.state" label="rec.is_overdue ? 'Overdue' : stateLabel(rec.state)"/>
+                                            </td>
+                                            <td t-esc="formatDate(rec.when)"/>
+                                            <td t-esc="rec.property or '—'"/>
+                                            <td t-esc="rec.assignee or '—'"/>
+                                            <td class="o_ca_no_print">
+                                                <button class="o_ca_link" t-on-click="() => this.openRecord(rec)">Open</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="o_ca_pager o_ca_no_print">
+                                    <span><t t-esc="pageFrom"/>–<t t-esc="pageTo"/> of <t t-esc="state.total"/></span>
+                                    <div class="o_ca_pager_pages">
+                                        <button t-att-disabled="state.page &lt;= 1" t-on-click="() => this.onPage(-1)">Prev</button>
+                                        <button t-att-disabled="state.page &gt;= pageCount" t-on-click="() => this.onPage(1)">Next</button>
+                                    </div>
+                                </div>
+                            </t>
+                            <CaEmptyState t-else="" title="'No records in this dataset'" hint="'Adjust filters or create records in the related board.'"/>
+                        </div>
+                    </t>
+                </div>
+            </CaAppShell>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="reports_analytics.Reports">
+        <div class="o_action o_ra_app">
+            <RaAppShell active="'reports'" onNewAnalysis.bind="openAnalysis">
+                <div class="o_ra_shell">
+                    <div class="o_ra_page_header">
+                        <div>
+                            <h1>Reports</h1>
+                            <p>View and manage reports generated from FMS data.</p>
+                        </div>
+                        <button class="o_ra_btn primary" t-on-click="createReport"><i class="fa fa-plus"/> Create Report</button>
+                    </div>
+                    <div class="o_ra_card">
+                        <div class="o_ra_filters">
+                            <input class="o_ra_input flex-grow-1" placeholder="Search reports" t-model="ui.search" t-on-change="() => this.reload()"/>
+                            <select class="o_ra_select" t-model="ui.module" t-on-change="() => this.reload()">
+                                <option value="">Module</option>
+                                <option t-foreach="state.bootstrap.sources" t-as="src" t-key="src.id" t-att-value="src.module" t-esc="src.name"/>
+                            </select>
+                            <select class="o_ra_select" t-model="ui.report_type" t-on-change="() => this.reload()">
+                                <option value="">Report Type</option>
+                                <option value="tabular">Tabular</option>
+                                <option value="summary">Summary</option>
+                                <option value="kpi">KPI</option>
+                                <option value="chart">Chart</option>
+                                <option value="operational">Operational</option>
+                            </select>
+                            <select class="o_ra_select" t-model="ui.status" t-on-change="() => this.reload()">
+                                <option value="">Status</option>
+                                <option value="draft">Draft</option>
+                                <option value="active">Active</option>
+                                <option value="scheduled">Scheduled</option>
+                                <option value="archived">Archived</option>
+                            </select>
+                            <button class="o_ra_btn secondary" t-on-click="reset">Reset</button>
+                        </div>
+                        <div class="o_ra_table_wrap">
+                            <table class="o_ra_table">
+                                <thead>
+                                    <tr>
+                                        <th>Report Name</th><th>Module</th><th>Report Type</th>
+                                        <th>Last Generated</th><th>Created By</th><th>Status</th><th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="ui.rows" t-as="row" t-key="row.id">
+                                        <td><a href="#" t-on-click.prevent="() => this.openReport(row)" t-esc="row.name"/></td>
+                                        <td t-esc="row.source_module"/>
+                                        <td t-esc="row.report_type"/>
+                                        <td t-esc="row.generated_date or '—'"/>
+                                        <td t-esc="row.created_by"/>
+                                        <td><RaStatusBadge state="row.status"/></td>
+                                        <td>
+                                            <button class="o_ra_btn secondary" t-on-click="() => this.editReport(row)">Edit</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <t t-if="!ui.rows.length">
+                                <RaEmptyState title="'No reports yet'" hint="'Create a report in the Report Builder. Sample rows are not shown.'"/>
+                            </t>
+                        </div>
+                        <div class="o_ra_pager">Showing <t t-esc="ui.rows.length"/> of <t t-esc="ui.total"/> reports</div>
+                    </div>
+                </div>
+                <t t-call="reports_analytics.AnalysisModal"/>
+            </RaAppShell>
+        </div>
+    </t>
+
+    <t t-name="reports_analytics.Library">
+        <div class="o_action o_ra_app">
+            <RaAppShell active="'library'" onNewAnalysis.bind="openAnalysis">
+                <div class="o_ra_shell">
+                    <div class="o_ra_page_header">
+                        <div>
+                            <h1>Report Library</h1>
+                            <p>Browse and manage saved or generated FMS reports.</p>
+                        </div>
+                        <button class="o_ra_btn primary" t-on-click="createReport"><i class="fa fa-plus"/> Create Report</button>
+                    </div>
+                    <div class="o_ra_card">
+                        <div class="o_ra_filters">
+                            <input class="o_ra_input flex-grow-1" placeholder="Search reports by name, type, or module..." t-model="ui.search" t-on-change="() => this.reload()"/>
+                            <select class="o_ra_select" t-model="ui.module" t-on-change="() => this.reload()">
+                                <option value="">Module</option>
+                                <option t-foreach="state.bootstrap.sources" t-as="src" t-key="src.id" t-att-value="src.module" t-esc="src.name"/>
+                            </select>
+                            <select class="o_ra_select" t-model="ui.report_type" t-on-change="() => this.reload()">
+                                <option value="">Type</option>
+                                <option value="tabular">Tabular</option>
+                                <option value="chart">Chart</option>
+                                <option value="summary">Summary</option>
+                            </select>
+                        </div>
+                        <table class="o_ra_table">
+                            <thead><tr><th>Report Name</th><th>Type</th><th>Module</th><th>Created Date</th><th>Actions</th></tr></thead>
+                            <tbody>
+                                <tr t-foreach="ui.rows" t-as="row" t-key="row.id">
+                                    <td>
+                                        <a href="#" t-on-click.prevent="() => this.openReport(row)" t-esc="row.name"/>
+                                        <div class="small text-muted">REP-<t t-esc="row.id"/></div>
+                                    </td>
+                                    <td><RaStatusBadge state="row.visualization" label="row.report_type"/></td>
+                                    <td t-esc="row.source_module"/>
+                                    <td t-esc="row.generated_date or '—'"/>
+                                    <td><button class="o_ra_btn secondary" t-on-click="() => this.openReport(row)">Preview</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <t t-if="!ui.rows.length">
+                            <RaEmptyState title="'No published reports'" hint="'Active and scheduled reports appear here after they are generated.'"/>
+                        </t>
+                        <div class="o_ra_pager">Showing <t t-esc="ui.rows.length"/> of <t t-esc="ui.total"/> entries</div>
+                    </div>
+                </div>
+                <t t-call="reports_analytics.AnalysisModal"/>
+            </RaAppShell>
+        </div>
+    </t>
+</templates>

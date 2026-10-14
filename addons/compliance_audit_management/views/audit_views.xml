@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ca_audit_list" model="ir.ui.view">
+        <field name="name">compliance.audit.list</field>
+        <field name="model">compliance.audit</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="reference"/>
+                <field name="name"/>
+                <field name="kind"/>
+                <field name="property_id"/>
+                <field name="assigned_user_id"/>
+                <field name="date_planned"/>
+                <field name="finding_count"/>
+                <field name="is_overdue"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_ca_audit_form" model="ir.ui.view">
+        <field name="name">compliance.audit.form</field>
+        <field name="model">compliance.audit</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_start" type="object" string="Start" class="btn-primary" invisible="state != 'scheduled'"/>
+                    <button name="action_pending_review" type="object" string="Pending Review" invisible="state != 'in_progress'"/>
+                    <button name="action_complete" type="object" string="Complete" class="btn-primary" invisible="state not in ('in_progress', 'pending_review')"/>
+                    <button name="action_fail" type="object" string="Fail" invisible="state not in ('in_progress', 'pending_review')"/>
+                    <button name="action_close" type="object" string="Close" invisible="state not in ('completed', 'failed')"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="reference" readonly="1"/>
+                        <field name="kind"/>
+                        <field name="audit_type" invisible="kind != 'audit'" required="kind == 'audit'"/>
+                        <field name="inspection_type" invisible="kind != 'inspection'" required="kind == 'inspection'"/>
+                        <field name="template_id"/>
+                        <field name="property_id"/>
+                        <field name="building_id"/>
+                        <field name="area_id"/>
+                        <field name="assigned_user_id"/>
+                        <field name="date_planned"/>
+                        <field name="company_id"/>
+                        <field name="finding_count"/>
+                    </group>
+                    <field name="scope"/>
+                    <field name="notes"/>
+                    <field name="recommendations"/>
+                    <field name="outcome"/>
+                    <field name="line_ids">
+                        <list editable="bottom">
+                            <field name="sequence" widget="handle"/>
+                            <field name="name"/>
+                            <field name="required"/>
+                            <field name="result"/>
+                            <field name="remarks"/>
+                        </list>
+                    </field>
+                    <field name="attachment_ids" widget="many2many_binary"/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_ca_audit" model="ir.actions.act_window">
+        <field name="name">Audits &amp; Inspections</field>
+        <field name="res_model">compliance.audit</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

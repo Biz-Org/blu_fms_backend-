@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="community_communication.CcPageHeader">
+        <div class="o_cc_page_header">
+            <div>
+                <h1 t-esc="props.title"/>
+                <p t-if="props.subtitle" t-esc="props.subtitle"/>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <t t-slot="buttons"/>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="community_communication.CcKpiCard">
+        <div t-attf-class="o_cc_kpi {{ props.tone ? 'tone-' + props.tone : '' }}" t-on-click="onClick">
+            <div t-if="props.icon" class="o_cc_kpi_icon"><i t-attf-class="fa {{ props.icon }}"/></div>
+            <div class="o_cc_kpi_label" t-esc="props.label"/>
+            <div class="o_cc_kpi_value" t-esc="props.value"/>
+        </div>
+    </t>
+
+    <t t-name="community_communication.CcStatusBadge">
+        <span t-attf-class="o_cc_pill {{ tone }}" t-esc="text"/>
+    </t>
+
+    <t t-name="community_communication.CcSearchBar">
+        <div class="o_cc_search">
+            <i class="fa fa-search"/>
+            <input type="text" t-att-value="props.value or ''" t-att-placeholder="props.placeholder or 'Search...'" t-on-input="onInput"/>
+        </div>
+    </t>
+
+    <t t-name="community_communication.CcTabs">
+        <div class="o_cc_tabs">
+            <button t-foreach="props.items" t-as="item" t-key="item.id"
+                t-att-class="item.id === props.active ? 'active' : ''"
+                t-on-click="() => this.props.onSelect(item.id)">
+                <t t-esc="item.label"/>
+                <span t-if="item.badge" class="o_cc_tab_badge" t-esc="item.badge"/>
+            </button>
+        </div>
+    </t>
+
+    <t t-name="community_communication.CcEmptyState">
+        <div class="o_cc_empty">
+            <h3 t-esc="props.title"/>
+            <p t-if="props.hint" t-esc="props.hint"/>
+            <button t-if="props.actionLabel" class="o_cc_btn primary" t-on-click="() => this.props.onAction and this.props.onAction()">
+                <t t-esc="props.actionLabel"/>
+            </button>
+        </div>
+    </t>
+
+    <t t-name="community_communication.CcPagination">
+        <div class="o_cc_pager">
+            <div>Showing <t t-esc="from"/>-<t t-esc="to"/> of <t t-esc="props.total"/> results</div>
+            <div class="o_cc_pager_pages">
+                <button t-on-click="() => this.props.onPage(Math.max(1, props.page - 1))">‹</button>
+                <button t-foreach="pages" t-as="n" t-key="n" t-att-class="n === props.page ? 'active' : ''" t-on-click="() => this.props.onPage(n)" t-esc="n"/>
+                <button t-on-click="() => this.props.onPage(props.page + 1)">›</button>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="community_communication.CcPreviewPanel">
+        <div class="o_cc_preview">
+            <div class="o_cc_preview_banner"/>
+            <div class="o_cc_preview_body">
+                <div class="o_cc_preview_kicker">RESIDENT PREVIEW</div>
+                <span t-if="props.category" class="o_cc_pill" t-esc="props.category"/>
+                <div class="small text-muted mt-2" t-esc="props.meta"/>
+                <h3 t-esc="props.title or 'Your title will appear here'"/>
+                <p class="small" t-esc="props.body or 'Start typing to see a live preview.'"/>
+                <div class="small text-muted" t-esc="props.extra or 'FMS Management Team'"/>
+                <t t-slot="default"/>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="community_communication.CcFormSection">
+        <div class="o_cc_form_section">
+            <h3 t-if="props.title" t-esc="props.title"/>
+            <t t-slot="default"/>
+        </div>
+    </t>
+
+    <t t-name="community_communication.CcActionButton">
+        <button t-attf-class="o_cc_btn {{ props.variant or 'primary' }}" t-att-disabled="props.disabled" t-on-click="() => this.props.onClick()">
+            <i t-if="props.icon" t-attf-class="fa {{ props.icon }}"/>
+            <t t-esc="props.label"/>
+        </button>
+    </t>
+
+    <t t-name="community_communication.CcConfirmDialog">
+        <div class="o_cc_modal_backdrop" t-on-click="() => this.props.onCancel()">
+            <div class="o_cc_modal" t-on-click.stop="">
+                <h3 t-esc="props.title"/>
+                <p t-esc="props.message"/>
+                <div class="o_cc_footer_actions">
+                    <button class="o_cc_btn ghost" t-on-click="() => this.props.onCancel()">Cancel</button>
+                    <button class="o_cc_btn primary" t-on-click="() => this.props.onConfirm()">
+                        <t t-esc="props.confirmLabel or 'Confirm'"/>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="community_communication.CcChart">
+        <svg class="w-100" t-att-viewBox="'0 0 300 ' + (props.height or 120)" preserveAspectRatio="none" t-att-style="'height:' + (props.height or 120) + 'px'">
+            <polyline fill="none" t-att-stroke="props.color or '#6d28d9'" stroke-width="3" t-att-points="props.points or ''"/>
+        </svg>
+    </t>
+
+    <t t-name="community_communication.CcFieldError">
+        <div t-if="props.message" class="o_cc_field_error" t-esc="props.message"/>
+    </t>
+
+    <t t-name="community_communication.CcFileDropzone">
+        <div class="o_cc_upload">
+            <div t-attf-class="o_cc_dropzone {{ state.over ? 'is-over' : '' }}"
+                t-on-dragenter.prevent="onDragOver"
+                t-on-dragover.prevent="onDragOver"
+                t-on-dragleave="onDragLeave">
+                <input type="file" class="o_cc_file_input" t-ref="fileInput"
+                    t-att-multiple="!props.single"
+                    t-att-accept="props.accept or '.pdf,.png,.jpg,.jpeg,.svg,.docx,.doc,application/pdf,image/png,image/jpeg,image/svg+xml,application/vnd.openxmlformats-officedocument.wordprocessingml.document'"
+                    t-on-change="onInput"/>
+                <div class="o_cc_dropzone_copy">
+                    <i class="fa fa-cloud-upload"/>
+                    <t t-if="props.uploading">Uploading...</t>
+                    <t t-else="">
+                        <div>Click to upload or drag and drop</div>
+                        <div class="o_cc_row_sub">SVG, PNG, JPG, PDF or DOCX (max. 10MB)</div>
+                    </t>
+                </div>
+            </div>
+            <CcFieldError message="props.error"/>
+            <t t-foreach="props.files or []" t-as="file" t-key="file.id or file.key">
+                <div class="o_cc_file_row">
+                    <i t-attf-class="fa {{ fileIcon(file.mimetype) }}"/>
+                    <span class="flex-grow-1">
+                        <span t-esc="file.name"/>
+                        <span class="o_cc_row_sub" t-esc="formatFileSize(file.file_size or file.size)"/>
+                    </span>
+                    <button type="button" class="o_cc_link" t-on-click.stop="() => this.props.onRemove(file)">Remove</button>
+                </div>
+            </t>
+        </div>
+    </t>
+
+    <t t-name="community_communication.CcAudiencePicker">
+        <div class="o_cc_audience">
+            <label class="o_cc_radio">
+                <input type="radio" t-att-name="props.radioName or 'cc-audience'" t-att-checked="props.audienceType === 'community'" t-on-change="() => this.props.onType('community')"/>
+                Entire Community (All Residents)
+            </label>
+            <label class="o_cc_radio">
+                <input type="radio" t-att-name="props.radioName or 'cc-audience'" t-att-checked="props.audienceType === 'buildings'" t-on-change="() => this.props.onType('buildings')"/>
+                Specific Buildings / Towers
+            </label>
+            <label class="o_cc_radio">
+                <input type="radio" t-att-name="props.radioName or 'cc-audience'" t-att-checked="props.audienceType === 'groups'" t-on-change="() => this.props.onType('groups')"/>
+                Specific Resident Groups
+            </label>
+            <CcFieldError message="props.error"/>
+            <div t-if="props.audienceType === 'buildings'" class="o_cc_picker mt-2">
+                <label>Select Buildings / Towers</label>
+                <input class="o_cc_input" placeholder="Search buildings..." t-att-value="props.buildingQuery or ''" t-on-input="(ev) => this.props.onBuildingQuery(ev.target.value)"/>
+                <div t-if="!props.buildings.length" class="o_cc_empty_inline">No buildings found for this community.</div>
+                <t t-foreach="visibleBuildings" t-as="b" t-key="b.id">
+                    <label class="o_cc_radio">
+                        <input type="checkbox" t-att-checked="selectedBuildingIds.includes(b.id)" t-on-change="() => this.props.onToggleBuilding(b.id)"/>
+                        <t t-esc="b.name"/>
+                    </label>
+                </t>
+                <div t-if="selectedBuildings.length" class="mt-2">
+                    <div class="small text-muted mb-1">Selected:</div>
+                    <span class="o_cc_chip" t-foreach="selectedBuildings" t-as="b" t-key="'sel-b-' + b.id">
+                        <t t-esc="b.name"/>
+                        <button type="button" class="o_cc_chip_x" t-on-click="() => this.props.onToggleBuilding(b.id)">×</button>
+                    </span>
+                </div>
+            </div>
+            <div t-if="props.audienceType === 'groups'" class="o_cc_picker mt-2">
+                <label>Select Resident Groups</label>
+                <input class="o_cc_input" placeholder="Search groups..." t-att-value="props.groupQuery or ''" t-on-input="(ev) => this.props.onGroupQuery(ev.target.value)"/>
+                <div t-if="!props.groups.length" class="o_cc_empty_inline">No resident groups found for this community.</div>
+                <t t-foreach="visibleGroups" t-as="g" t-key="g.id">
+                    <label class="o_cc_radio">
+                        <input type="checkbox" t-att-checked="selectedGroupIds.includes(g.id)" t-on-change="() => this.props.onToggleGroup(g.id)"/>
+                        <t t-esc="g.name"/>
+                    </label>
+                </t>
+                <div t-if="selectedGroups.length" class="mt-2">
+                    <div class="small text-muted mb-1">Selected:</div>
+                    <span class="o_cc_chip" t-foreach="selectedGroups" t-as="g" t-key="'sel-g-' + g.id">
+                        <t t-esc="g.name"/>
+                        <button type="button" class="o_cc_chip_x" t-on-click="() => this.props.onToggleGroup(g.id)">×</button>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

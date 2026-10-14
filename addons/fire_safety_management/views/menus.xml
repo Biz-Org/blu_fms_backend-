@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_fs_dashboard_ui" model="ir.actions.client">
+        <field name="name">Staff Dashboard</field>
+        <field name="tag">fire_safety_management.action_dashboard</field>
+        <field name="path">fs-dashboard</field>
+    </record>
+    <record id="action_fs_inspections_ui" model="ir.actions.client">
+        <field name="name">Inspections &amp; Audits</field>
+        <field name="tag">fire_safety_management.action_inspections</field>
+        <field name="path">fs-inspections</field>
+    </record>
+    <record id="action_fs_inspection_create_ui" model="ir.actions.client">
+        <field name="name">Create Inspection</field>
+        <field name="tag">fire_safety_management.action_inspections</field>
+        <field name="path">fs-inspection-create</field>
+        <field name="context">{'fs_mode': 'create'}</field>
+    </record>
+    <record id="action_fs_incidents_ui" model="ir.actions.client">
+        <field name="name">Safety Incidents</field>
+        <field name="tag">fire_safety_management.action_incidents</field>
+        <field name="path">fs-incidents</field>
+    </record>
+    <record id="action_fs_incident_report_ui" model="ir.actions.client">
+        <field name="name">Report Incident</field>
+        <field name="tag">fire_safety_management.action_incidents</field>
+        <field name="path">fs-incident-report</field>
+        <field name="context">{'fs_mode': 'create'}</field>
+    </record>
+    <record id="action_fs_drills_ui" model="ir.actions.client">
+        <field name="name">Mock Drills</field>
+        <field name="tag">fire_safety_management.action_drills</field>
+        <field name="path">fs-drills</field>
+    </record>
+    <record id="action_fs_drill_create_ui" model="ir.actions.client">
+        <field name="name">Schedule Drill</field>
+        <field name="tag">fire_safety_management.action_drills</field>
+        <field name="path">fs-drill-create</field>
+        <field name="context">{'fs_mode': 'create'}</field>
+    </record>
+    <record id="action_fs_equipment_ui" model="ir.actions.client">
+        <field name="name">Fire Equipment</field>
+        <field name="tag">fire_safety_management.action_equipment</field>
+        <field name="path">fs-equipment</field>
+    </record>
+    <record id="action_fs_equipment_create_ui" model="ir.actions.client">
+        <field name="name">Add Equipment</field>
+        <field name="tag">fire_safety_management.action_equipment</field>
+        <field name="path">fs-equipment-create</field>
+        <field name="context">{'fs_mode': 'create'}</field>
+    </record>
+    <record id="action_fs_emergency_ui" model="ir.actions.client">
+        <field name="name">Emergency Response</field>
+        <field name="tag">fire_safety_management.action_emergency</field>
+        <field name="path">fs-emergency</field>
+    </record>
+    <record id="action_fs_emergency_activate_ui" model="ir.actions.client">
+        <field name="name">Activate Emergency</field>
+        <field name="tag">fire_safety_management.action_emergency</field>
+        <field name="path">fs-emergency-activate</field>
+        <field name="context">{'fs_mode': 'create'}</field>
+    </record>
+    <record id="action_fs_reports_ui" model="ir.actions.client">
+        <field name="name">Compliance Reports</field>
+        <field name="tag">fire_safety_management.action_reports</field>
+        <field name="path">fs-reports</field>
+    </record>
+
+    <menuitem
+        id="menu_fire_safety_root"
+        name="Fire &amp; Safety"
+        sequence="51"
+        action="action_fs_dashboard_ui"
+        groups="fire_safety_management.group_fire_safety_manager,fire_safety_management.group_fire_safety_security,fire_safety_management.group_fire_safety_guard,fire_safety_management.group_fire_safety_facility,fire_safety_management.group_fire_safety_auditor,fire_safety_management.group_fire_safety_executive,base.group_system"
+    />
+    <menuitem id="menu_fs_dashboard" name="Dashboard" parent="menu_fire_safety_root" action="action_fs_dashboard_ui" sequence="1"/>
+    <menuitem id="menu_fs_inspection" name="Inspections &amp; Audits" parent="menu_fire_safety_root" action="action_fs_inspections_ui" sequence="10"
+        groups="fire_safety_management.group_fire_safety_manager,fire_safety_management.group_fire_safety_security,fire_safety_management.group_fire_safety_facility,fire_safety_management.group_fire_safety_auditor,fire_safety_management.group_fire_safety_executive"/>
+    <menuitem id="menu_fs_incident" name="Safety Incidents" parent="menu_fire_safety_root" action="action_fs_incidents_ui" sequence="30"/>
+    <menuitem id="menu_fs_drill" name="Mock Drills" parent="menu_fire_safety_root" action="action_fs_drills_ui" sequence="40"
+        groups="fire_safety_management.group_fire_safety_manager,fire_safety_management.group_fire_safety_security,fire_safety_management.group_fire_safety_facility,fire_safety_management.group_fire_safety_auditor,fire_safety_management.group_fire_safety_executive"/>
+    <menuitem id="menu_fs_equipment" name="Fire Equipment" parent="menu_fire_safety_root" action="action_fs_equipment_ui" sequence="50"
+        groups="fire_safety_management.group_fire_safety_manager,fire_safety_management.group_fire_safety_security,fire_safety_management.group_fire_safety_facility,fire_safety_management.group_fire_safety_auditor,fire_safety_management.group_fire_safety_executive"/>
+    <menuitem id="menu_fs_emergency" name="Emergency Response" parent="menu_fire_safety_root" action="action_fs_emergency_ui" sequence="60"/>
+    <menuitem id="menu_fs_reports" name="Compliance Reports" parent="menu_fire_safety_root" action="action_fs_reports_ui" sequence="65"
+        groups="fire_safety_management.group_fire_safety_manager,fire_safety_management.group_fire_safety_security,fire_safety_management.group_fire_safety_facility,fire_safety_management.group_fire_safety_auditor,fire_safety_management.group_fire_safety_executive"/>
+    <menuitem id="menu_fs_procedure" name="Procedures" parent="menu_fire_safety_root" action="action_fs_procedure" sequence="70"/>
+    <menuitem id="menu_fs_contact" name="Emergency Contacts" parent="menu_fire_safety_root" action="action_fs_contact" sequence="80"/>
+    <menuitem id="menu_fs_config" name="Configuration" parent="menu_fire_safety_root" sequence="90"
+        groups="base.group_system,fire_safety_management.group_fire_safety_manager"/>
+    <menuitem id="menu_fs_config_property" name="Properties" parent="menu_fs_config" action="action_fs_property" sequence="1" groups="base.group_system"/>
+    <menuitem id="menu_fs_config_building" name="Buildings" parent="menu_fs_config" action="action_fs_building" sequence="2" groups="base.group_system"/>
+    <menuitem id="menu_fs_config_area" name="Areas" parent="menu_fs_config" action="action_fs_area" sequence="3" groups="base.group_system"/>
+    <menuitem id="menu_fs_config_checklist" name="Checklist Templates" parent="menu_fs_config" action="action_fs_checklist_template" sequence="4"
+        groups="base.group_system,fire_safety_management.group_fire_safety_manager"/>
+    <menuitem id="menu_fs_config_inspection" name="Inspections (native)" parent="menu_fs_config" action="action_fs_inspection" sequence="10"
+        groups="base.group_system,fire_safety_management.group_fire_safety_manager"/>
+    <menuitem id="menu_fs_config_finding" name="Findings" parent="menu_fs_config" action="action_fs_finding" sequence="15"
+        groups="base.group_system,fire_safety_management.group_fire_safety_manager"/>
+    <menuitem id="menu_fs_config_action" name="Corrective Actions" parent="menu_fs_config" action="action_fs_action" sequence="20"
+        groups="base.group_system,fire_safety_management.group_fire_safety_manager"/>
+</odoo>

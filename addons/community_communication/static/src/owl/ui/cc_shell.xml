@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="community_communication.CcAppShell">
+        <div class="o_cc_layout" t-att-class="{ 'o_cc_nav_open': state.mobileNavOpen }">
+            <div class="o_cc_nav_backdrop" t-if="state.mobileNavOpen" t-on-click="closeMobileNav"/>
+            <aside class="o_cc_sidebar">
+                <div class="o_cc_brand">
+                    <div class="o_cc_brand_mark"><i class="fa fa-building"/></div>
+                    <div>
+                        <div class="o_cc_brand_title">FMS Community</div>
+                        <div class="o_cc_brand_sub">Management Portal</div>
+                    </div>
+                </div>
+                <nav class="o_cc_nav">
+                    <button t-foreach="nav" t-as="item" t-key="item.id"
+                        t-att-class="item.id === props.active ? 'active' : ''"
+                        t-on-click="() => this.open(item)">
+                        <i t-attf-class="fa {{ item.icon }}"/>
+                        <span t-esc="item.label"/>
+                    </button>
+                </nav>
+                <div class="o_cc_nav_foot">
+                    <button t-if="state.isOfficer" t-on-click="openSettings"><i class="fa fa-cog"/> Settings</button>
+                    <button t-on-click="openProfile"><i class="fa fa-user-o"/> User Profile</button>
+                    <button class="o_cc_logout" t-on-click="logout"><i class="fa fa-sign-out"/> Logout</button>
+                </div>
+            </aside>
+            <div class="o_cc_main">
+                <header class="o_cc_topbar">
+                    <button type="button" class="o_cc_menu_btn o_cc_icon_btn" title="Menu" aria-label="Open menu" t-on-click="toggleMobileNav">
+                        <i class="fa fa-bars"/>
+                    </button>
+                    <div class="o_cc_topbar_title">Community &amp; Communication</div>
+                    <div class="o_cc_topbar_search">
+                        <i class="fa fa-search"/>
+                        <input type="text" placeholder="Search..."/>
+                    </div>
+                    <div class="o_cc_topbar_actions">
+                        <button class="o_cc_icon_btn" title="Notifications"><i class="fa fa-bell-o"/></button>
+                        <button t-if="state.isOfficer" class="o_cc_icon_btn" title="Settings" t-on-click="openSettings"><i class="fa fa-cog"/></button>
+                        <img class="o_cc_avatar" t-att-src="avatarUrl" t-att-alt="user.name" t-on-click="openProfile"/>
+                    </div>
+                </header>
+                <div class="o_cc_content">
+                    <t t-slot="default"/>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

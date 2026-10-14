@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="reports_analytics.Kpis">
+        <div class="o_action o_ra_app">
+            <RaAppShell active="'kpis'" onNewAnalysis.bind="openAnalysis">
+                <div class="o_ra_shell">
+                    <div class="o_ra_page_header">
+                        <div>
+                            <h1>KPI Dashboard</h1>
+                            <p>Monitor key performance indicators across the FMS.</p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="o_ra_btn secondary" t-on-click="createDashboard">Customize Dashboard</button>
+                        </div>
+                    </div>
+                    <div class="o_ra_filters">
+                        <select class="o_ra_select" t-model="state.filters.property_id" t-on-change="() => this.reload()">
+                            <option value="">All Properties</option>
+                            <option t-foreach="state.bootstrap.properties" t-as="row" t-key="row.key" t-att-value="row.id" t-esc="row.name"/>
+                        </select>
+                        <select class="o_ra_select" t-model="state.filters.building_id" t-on-change="() => this.reload()">
+                            <option value="">All Buildings</option>
+                            <option t-foreach="state.bootstrap.buildings" t-as="row" t-key="row.key" t-att-value="row.id" t-esc="row.name"/>
+                        </select>
+                        <select class="o_ra_select" t-model="state.filters.date_range" t-on-change="() => this.reload()">
+                            <option value="last_7">Last 7 Days</option>
+                            <option value="last_30">Last 30 Days</option>
+                            <option value="last_90">Last 90 Days</option>
+                        </select>
+                    </div>
+                    <div class="o_ra_kpi_row">
+                        <div t-foreach="ui.data.kpis" t-as="kpi" t-key="kpi.id" class="o_ra_kpi">
+                            <div class="o_ra_kpi_label" t-esc="kpi.name"/>
+                            <div class="o_ra_kpi_value" t-esc="kpi.available ? kpi.value : 'No Data'"/>
+                            <div class="o_ra_kpi_hint">
+                                Target: <t t-esc="kpi.target or '—'"/>
+                                <t t-if="kpi.available"> · previous <t t-esc="kpi.previous"/></t>
+                            </div>
+                            <RaStatusBadge state="kpi.status"/>
+                        </div>
+                    </div>
+                    <div class="o_ra_card">
+                        <div class="o_ra_card_head">Performance Trends</div>
+                        <t t-if="ui.data.available">
+                            <RaBarChart labels="ui.data.chart.labels" data="ui.data.chart.series[0].data"/>
+                        </t>
+                        <RaEmptyState t-else="" title="'No Data'" hint="'KPI sources did not return values for the selected filters.'"/>
+                    </div>
+                </div>
+                <t t-call="reports_analytics.AnalysisModal"/>
+            </RaAppShell>
+        </div>
+    </t>
+</templates>

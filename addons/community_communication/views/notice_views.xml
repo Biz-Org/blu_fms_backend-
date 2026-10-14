@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_cc_notice_kanban" model="ir.ui.view">
+        <field name="name">community.communication.notice.kanban</field>
+        <field name="model">community.communication.notice</field>
+        <field name="arch" type="xml">
+            <kanban class="o_cc_shell">
+                <field name="title"/>
+                <field name="category"/>
+                <field name="is_pinned"/>
+                <field name="is_important"/>
+                <field name="date_publish"/>
+                <templates>
+                    <t t-name="card">
+                        <div>
+                            <strong><field name="title"/></strong>
+                            <div class="text-muted">
+                                <field name="category"/>
+                                <span t-if="record.is_pinned.raw_value"> · Pinned</span>
+                            </div>
+                            <div><field name="date_publish"/></div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+    <record id="view_cc_notice_list" model="ir.ui.view">
+        <field name="name">community.communication.notice.list</field>
+        <field name="model">community.communication.notice</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="is_pinned"/>
+                <field name="title"/>
+                <field name="category"/>
+                <field name="is_important"/>
+                <field name="date_publish"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_cc_notice_form" model="ir.ui.view">
+        <field name="name">community.communication.notice.form</field>
+        <field name="model">community.communication.notice</field>
+        <field name="arch" type="xml">
+            <form class="o_cc_shell">
+                <header>
+                    <button name="action_publish" string="Publish Notice" type="object" class="btn-primary" invisible="state not in ('draft', 'scheduled')"/>
+                    <button name="action_schedule" string="Schedule" type="object" invisible="state != 'draft'"/>
+                    <button name="action_archive_record" string="Archive" type="object" invisible="state == 'archived'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,scheduled,published,archived"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="title"/>
+                            <field name="category"/>
+                            <field name="community_id" invisible="1"/>
+                            <field name="is_important"/>
+                            <field name="is_pinned"/>
+                        </group>
+                        <group>
+                            <field name="audience_type"/>
+                            <field name="building_ids" widget="many2many_tags" invisible="audience_type != 'buildings'"/>
+                            <field name="date_publish"/>
+                            <field name="date_expiry"/>
+                        </group>
+                    </group>
+                    <field name="body"/>
+                    <field name="attachment_ids" widget="many2many_binary"/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="view_cc_notice_search" model="ir.ui.view">
+        <field name="name">community.communication.notice.search</field>
+        <field name="model">community.communication.notice</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="title"/>
+                <filter string="Published" name="published" domain="[('state', '=', 'published')]"/>
+                <group>
+                    <filter string="Category" name="group_category" context="{'group_by': 'category'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="action_cc_notice" model="ir.actions.act_window">
+        <field name="name">Community Notices</field>
+        <field name="res_model">community.communication.notice</field>
+        <field name="view_mode">kanban,list,form</field>
+    </record>
+    <record id="action_cc_notice_board" model="ir.actions.act_window">
+        <field name="name">Digital Notice Board</field>
+        <field name="res_model">community.communication.notice</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('state', '=', 'published')]</field>
+        <field name="context">{'search_default_published': 1}</field>
+    </record>
+</odoo>

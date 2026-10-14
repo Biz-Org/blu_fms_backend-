@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="fire_safety_management.FsKpiCard">
+        <div t-attf-class="o_fs_kpi {{ props.tone ? 'tone-' + props.tone : '' }} {{ props.onClick ? 'is-clickable' : '' }}" t-on-click="onClick">
+            <div t-if="props.icon" class="o_fs_kpi_icon"><i t-attf-class="fa {{ props.icon }}"/></div>
+            <div class="o_fs_kpi_label" t-esc="props.label"/>
+            <div class="o_fs_kpi_value" t-esc="props.value"/>
+            <div t-if="props.hint" class="o_fs_kpi_hint" t-esc="props.hint"/>
+        </div>
+    </t>
+    <t t-name="fire_safety_management.FsStatusBadge">
+        <span t-attf-class="o_fs_pill {{ tone }}" t-esc="text"/>
+    </t>
+    <t t-name="fire_safety_management.FsEmptyState">
+        <div class="o_fs_empty">
+            <h3 t-esc="props.title"/>
+            <p t-if="props.hint" t-esc="props.hint"/>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="compliance_audit_management.Placeholder">
+        <div class="o_action o_ca_app">
+            <CaAppShell active="navId">
+                <div class="o_ca_shell">
+                    <div class="o_ca_page_header">
+                        <div>
+                            <h1 t-esc="copy.title"/>
+                            <p>This screen is part of a later Compliance &amp; Audit phase.</p>
+                        </div>
+                    </div>
+                    <div class="o_ca_card">
+                        <div class="o_ca_empty">
+                            <h3>Coming in a later phase</h3>
+                            <p t-esc="copy.hint"/>
+                        </div>
+                    </div>
+                </div>
+            </CaAppShell>
+        </div>
+    </t>
+</templates>

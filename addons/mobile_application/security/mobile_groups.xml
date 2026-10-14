@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="module_category_mobile_application" model="ir.module.category">
+        <field name="name">Mobile Application</field>
+        <field name="description">Mobile-first FMS application roles</field>
+        <field name="sequence">55</field>
+        <field name="parent_id" ref="base.module_category_services"/>
+    </record>
+
+    <record id="group_mobile_resident" model="res.groups">
+        <field name="name">Mobile Resident</field>
+        <field name="comment">Residents using the unified Mobile Application.</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <record id="group_mobile_staff" model="res.groups">
+        <field name="name">Mobile Staff</field>
+        <field name="comment">Staff operational access in the Mobile Application.</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <record id="group_mobile_security" model="res.groups">
+        <field name="name">Mobile Security</field>
+        <field name="comment">Security gate and visitor verification in the Mobile Application.</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+</odoo>

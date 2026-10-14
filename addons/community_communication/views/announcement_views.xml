@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_cc_announcement_search" model="ir.ui.view">
+        <field name="name">community.communication.announcement.search</field>
+        <field name="model">community.communication.announcement</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="title"/>
+                <filter string="Published" name="published" domain="[('state', '=', 'published')]"/>
+                <filter string="Scheduled" name="scheduled" domain="[('state', '=', 'scheduled')]"/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Expiring Soon" name="expiring_soon" domain="[('state', '=', 'published'), ('date_expiry', '!=', False)]"/>
+                <separator/>
+                <filter string="Pinned" name="pinned" domain="[('is_pinned', '=', True)]"/>
+                <group>
+                    <filter string="Category" name="group_category" context="{'group_by': 'category'}"/>
+                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="view_cc_announcement_list" model="ir.ui.view">
+        <field name="name">community.communication.announcement.list</field>
+        <field name="model">community.communication.announcement</field>
+        <field name="arch" type="xml">
+            <list class="o_cc_shell">
+                <field name="is_pinned" optional="show"/>
+                <field name="title"/>
+                <field name="category"/>
+                <field name="priority"/>
+                <field name="audience_type"/>
+                <field name="date_publish"/>
+                <field name="view_count"/>
+                <field name="state" decoration-success="state == 'published'" decoration-warning="state == 'scheduled'" decoration-muted="state in ('draft', 'archived', 'expired')"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_cc_announcement_form" model="ir.ui.view">
+        <field name="name">community.communication.announcement.form</field>
+        <field name="model">community.communication.announcement</field>
+        <field name="arch" type="xml">
+            <form class="o_cc_shell">
+                <header>
+                    <button name="action_publish" string="Publish" type="object" class="btn-primary" invisible="state not in ('draft', 'scheduled')"/>
+                    <button name="action_schedule" string="Schedule" type="object" invisible="state != 'draft'"/>
+                    <button name="action_acknowledge" string="Acknowledge" type="object" class="btn-primary" invisible="state != 'published'" groups="community_communication.group_community_resident"/>
+                    <button name="action_expire" string="Expire" type="object" invisible="state != 'published'"/>
+                    <button name="action_archive_record" string="Archive" type="object" invisible="state == 'archived'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,scheduled,published,expired,archived"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="title"/>
+                            <field name="category"/>
+                            <field name="priority"/>
+                            <field name="is_pinned"/>
+                            <field name="community_id" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="audience_type"/>
+                            <field name="building_ids" widget="many2many_tags" invisible="audience_type != 'buildings'"/>
+                            <field name="audience_group_ids" widget="many2many_tags" invisible="audience_type != 'groups'"/>
+                            <field name="audience_resident_ids" widget="many2many_tags" invisible="audience_type != 'residents'"/>
+                            <field name="audience_user_ids" widget="many2many_tags" invisible="audience_type != 'users'"/>
+                            <field name="date_publish"/>
+                            <field name="date_expiry"/>
+                            <field name="view_count"/>
+                            <field name="ack_count"/>
+                            <field name="ack_rate"/>
+                        </group>
+                    </group>
+                    <field name="body"/>
+                    <field name="attachment_ids" widget="many2many_binary"/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_cc_announcement" model="ir.actions.act_window">
+        <field name="name">Announcements</field>
+        <field name="res_model">community.communication.announcement</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_cc_announcement_search"/>
+        <field name="context">{'search_default_published': 1}</field>
+    </record>
+</odoo>

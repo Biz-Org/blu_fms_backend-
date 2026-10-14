@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_iot_energy_list" model="ir.ui.view">
+        <field name="name">integration.iot.energy.reading.list</field>
+        <field name="model">integration.iot.energy.reading</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="captured_at"/>
+                <field name="name"/>
+                <field name="kwh"/>
+                <field name="is_peak"/>
+                <field name="building_id"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_iot_energy" model="ir.actions.act_window">
+        <field name="name">Energy Readings</field>
+        <field name="res_model">integration.iot.energy.reading</field>
+        <field name="view_mode">list</field>
+    </record>
+    <record id="action_iot_opportunity" model="ir.actions.act_window">
+        <field name="name">Energy Opportunities</field>
+        <field name="res_model">integration.iot.energy.opportunity</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

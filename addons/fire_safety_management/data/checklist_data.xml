@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="checklist_template_fire_inspection" model="fire.safety.checklist.template">
+        <field name="name">Standard Fire Inspection</field>
+        <field name="code">FS-FIRE-STD</field>
+        <field name="inspection_type">fire_inspection</field>
+    </record>
+    <record id="checklist_item_extinguishers" model="fire.safety.checklist.item">
+        <field name="template_id" ref="checklist_template_fire_inspection"/>
+        <field name="name">Fire extinguishers are present, accessible, and in date</field>
+        <field name="category">fire_extinguishers</field>
+        <field name="sequence">10</field>
+        <field name="required" eval="True"/>
+    </record>
+    <record id="checklist_item_alarms" model="fire.safety.checklist.item">
+        <field name="template_id" ref="checklist_template_fire_inspection"/>
+        <field name="name">Fire alarm devices are operational</field>
+        <field name="category">fire_alarms</field>
+        <field name="sequence">20</field>
+        <field name="required" eval="True"/>
+    </record>
+    <record id="checklist_item_exits" model="fire.safety.checklist.item">
+        <field name="template_id" ref="checklist_template_fire_inspection"/>
+        <field name="name">Fire exits are clear and unlocked</field>
+        <field name="category">fire_exits</field>
+        <field name="sequence">30</field>
+        <field name="required" eval="True"/>
+    </record>
+    <record id="checklist_item_lighting" model="fire.safety.checklist.item">
+        <field name="template_id" ref="checklist_template_fire_inspection"/>
+        <field name="name">Emergency lighting is functional</field>
+        <field name="category">emergency_lighting</field>
+        <field name="sequence">40</field>
+        <field name="required" eval="True"/>
+    </record>
+    <record id="checklist_item_routes" model="fire.safety.checklist.item">
+        <field name="template_id" ref="checklist_template_fire_inspection"/>
+        <field name="name">Evacuation routes are marked and unobstructed</field>
+        <field name="category">evacuation_routes</field>
+        <field name="sequence">50</field>
+        <field name="required" eval="True"/>
+    </record>
+    <record id="checklist_template_safety_audit" model="fire.safety.checklist.template">
+        <field name="name">Standard Safety Audit</field>
+        <field name="code">FS-AUDIT-STD</field>
+        <field name="inspection_type">safety_audit</field>
+    </record>
+    <record id="checklist_item_signage" model="fire.safety.checklist.item">
+        <field name="template_id" ref="checklist_template_safety_audit"/>
+        <field name="name">Emergency signage is visible and current</field>
+        <field name="category">emergency_signage</field>
+        <field name="sequence">10</field>
+        <field name="required" eval="True"/>
+    </record>
+    <record id="checklist_item_equipment" model="fire.safety.checklist.item">
+        <field name="template_id" ref="checklist_template_safety_audit"/>
+        <field name="name">Fire safety equipment is inventoried and serviceable</field>
+        <field name="category">fire_safety_equipment</field>
+        <field name="sequence">20</field>
+        <field name="required" eval="True"/>
+    </record>
+</odoo>

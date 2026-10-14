@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_iot_dashboard_ui" model="ir.actions.client">
+        <field name="name">Dashboard</field>
+        <field name="tag">integration_iot_management.action_dashboard</field>
+        <field name="path">iot-dashboard</field>
+    </record>
+    <record id="action_iot_lighting_ui" model="ir.actions.client">
+        <field name="name">Lighting</field>
+        <field name="tag">integration_iot_management.action_systems</field>
+        <field name="path">iot-lighting</field>
+        <field name="context">{'iot_tab': 'lighting'}</field>
+    </record>
+    <record id="action_iot_hvac_ui" model="ir.actions.client">
+        <field name="name">HVAC</field>
+        <field name="tag">integration_iot_management.action_systems</field>
+        <field name="path">iot-hvac</field>
+        <field name="context">{'iot_tab': 'hvac'}</field>
+    </record>
+    <record id="action_iot_fire_ui" model="ir.actions.client">
+        <field name="name">Fire Alarm</field>
+        <field name="tag">integration_iot_management.action_systems</field>
+        <field name="path">iot-fire</field>
+        <field name="context">{'iot_tab': 'fire'}</field>
+    </record>
+    <record id="action_iot_environment_ui" model="ir.actions.client">
+        <field name="name">Environment</field>
+        <field name="tag">integration_iot_management.action_systems</field>
+        <field name="path">iot-environment</field>
+        <field name="context">{'iot_tab': 'environment'}</field>
+    </record>
+    <record id="action_iot_devices_ui" model="ir.actions.client">
+        <field name="name">Devices</field>
+        <field name="tag">integration_iot_management.action_devices</field>
+        <field name="path">iot-devices</field>
+        <field name="context">{'iot_tab': 'devices'}</field>
+    </record>
+    <record id="action_iot_sensors_ui" model="ir.actions.client">
+        <field name="name">Sensors</field>
+        <field name="tag">integration_iot_management.action_devices</field>
+        <field name="path">iot-sensors</field>
+        <field name="context">{'iot_tab': 'sensors'}</field>
+    </record>
+    <record id="action_iot_automation_ui" model="ir.actions.client">
+        <field name="name">Automation</field>
+        <field name="tag">integration_iot_management.action_automation</field>
+        <field name="path">iot-automation</field>
+    </record>
+    <record id="action_iot_energy_ui" model="ir.actions.client">
+        <field name="name">Energy</field>
+        <field name="tag">integration_iot_management.action_energy</field>
+        <field name="path">iot-energy</field>
+    </record>
+
+    <menuitem
+        id="menu_iot_root"
+        name="Integration &amp; IoT"
+        web_icon="integration_iot_management,static/description/icon.png"
+        action="action_iot_dashboard_ui"
+        groups="integration_iot_management.group_integration_admin"
+        sequence="53"
+    />
+
+    <menuitem id="menu_iot_dashboard" name="Dashboard" parent="menu_iot_root" action="action_iot_dashboard_ui" sequence="1"/>
+    <menuitem id="menu_iot_systems" name="Building Systems" parent="menu_iot_root" action="action_iot_lighting_ui" sequence="10"/>
+    <menuitem id="menu_iot_lighting" name="Lighting" parent="menu_iot_systems" action="action_iot_lighting_ui" sequence="10"/>
+    <menuitem id="menu_iot_hvac" name="HVAC" parent="menu_iot_systems" action="action_iot_hvac_ui" sequence="20"/>
+    <menuitem id="menu_iot_fire" name="Fire Alarm" parent="menu_iot_systems" action="action_iot_fire_ui" sequence="30"/>
+    <menuitem id="menu_iot_environment" name="Environment" parent="menu_iot_systems" action="action_iot_environment_ui" sequence="40"/>
+    <menuitem id="menu_iot_devices_root" name="Devices &amp; Sensors" parent="menu_iot_root" action="action_iot_devices_ui" sequence="20"/>
+    <menuitem id="menu_iot_devices" name="Devices" parent="menu_iot_devices_root" action="action_iot_devices_ui" sequence="10"/>
+    <menuitem id="menu_iot_sensors" name="Sensors" parent="menu_iot_devices_root" action="action_iot_sensors_ui" sequence="20"/>
+    <menuitem id="menu_iot_automation" name="Automation" parent="menu_iot_root" action="action_iot_automation_ui" sequence="30"/>
+    <menuitem id="menu_iot_energy_ui" name="Energy" parent="menu_iot_root" action="action_iot_energy_ui" sequence="40"/>
+
+    <menuitem id="menu_iot_config" name="Configuration" parent="menu_iot_root" sequence="90" groups="integration_iot_management.group_integration_admin"/>
+    <menuitem id="menu_iot_config_integration" name="Integrations" parent="menu_iot_config" action="action_iot_integration" sequence="10"/>
+    <menuitem id="menu_iot_config_property" name="Properties" parent="menu_iot_config" action="action_iot_property" sequence="20"/>
+    <menuitem id="menu_iot_config_building" name="Buildings" parent="menu_iot_config" action="action_iot_building" sequence="30"/>
+    <menuitem id="menu_iot_config_area" name="Areas" parent="menu_iot_config" action="action_iot_area" sequence="40"/>
+    <menuitem id="menu_iot_config_device" name="Devices (native)" parent="menu_iot_config" action="action_iot_device" sequence="50"/>
+    <menuitem id="menu_iot_config_sensor" name="Sensors (native)" parent="menu_iot_config" action="action_iot_sensor" sequence="60"/>
+    <menuitem id="menu_iot_config_schedule" name="Schedules (native)" parent="menu_iot_config" action="action_iot_schedule" sequence="70"/>
+    <menuitem id="menu_iot_config_rule" name="Automation (native)" parent="menu_iot_config" action="action_iot_rule" sequence="80"/>
+    <menuitem id="menu_iot_config_alert" name="Alerts (native)" parent="menu_iot_config" action="action_iot_alert" sequence="90"/>
+    <menuitem id="menu_iot_config_log" name="Operational Log" parent="menu_iot_config" action="action_iot_log" sequence="100"/>
+    <menuitem id="menu_iot_config_energy" name="Energy Readings" parent="menu_iot_config" action="action_iot_energy" sequence="110"/>
+</odoo>

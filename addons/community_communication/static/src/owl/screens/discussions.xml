@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="community_communication.Discussions">
+        <div class="o_action o_cc_app">
+            <CcAppShell active="'discussions'">
+            <div class="o_cc_shell">
+                <t t-if="state.mode === 'list'">
+                    <CcPageHeader title="'Discussion Forums'" subtitle="'Manage community discussions, questions and information sharing.'">
+                        <t t-set-slot="buttons">
+                            <CcActionButton label="'+ Create Discussion'" icon="'fa-plus'" onClick="() => this.setMode('create')"/>
+                        </t>
+                    </CcPageHeader>
+                    <div class="o_cc_kpi_row">
+                        <t t-foreach="state.kpis" t-as="card" t-key="card.key">
+                            <CcKpiCard label="card.label" value="card.value" icon="card.key === 'reported' ? 'fa-exclamation-circle' : 'fa-comments'" tone="card.tone"/>
+                        </t>
+                    </div>
+                    <div class="o_cc_card">
+                        <CcTabs items="tabs" active="state.filter" onSelect="(id) => { this.state.filter = id; this.state.page = 1; this.reload(); }"/>
+                        <div class="o_cc_toolbar">
+                            <CcSearchBar value="state.search" placeholder="'Search discussions...'" onChange.bind="onSearch"/>
+                            <select class="o_cc_select" t-model="state.category" t-on-change="() => this.reload()">
+                                <option value="">Category</option>
+                                <t t-foreach="categories" t-as="cat" t-key="cat[0]"><option t-att-value="cat[0]" t-esc="cat[1]"/></t>
+                            </select>
+                        </div>
+                        <t t-if="state.records.length">
+                            <table class="o_cc_table">
+                                <thead>
+                                    <tr>
+                                        <th>Discussion Title</th>
+                                        <th>Comments</th>
+                                        <th>Views</th>
+                                        <th>Last Activity</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="state.records" t-as="rec" t-key="rec.id" t-on-click="() => this.setMode('detail', rec.id)">
+                                        <td>
+                                            <div class="o_cc_row_title" t-esc="rec.title"/>
+                                            <div class="o_cc_row_sub">
+                                                <span class="o_cc_pill info" t-esc="categoryLabel(rec.category)"/>
+                                                <t t-esc="m2oName(rec.author_id)"/>
+                                            </div>
+                                        </td>
+                                        <td t-esc="rec.comment_count"/>
+                                        <td t-esc="rec.view_count"/>
+                                        <td t-esc="formatWhen(rec.last_activity_at)"/>
+                                        <td><CcStatusBadge state="rec.state"/></td>
+                                        <td><button class="o_cc_link">•••</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <CcPagination page="state.page" total="state.total" pageSize="pageSize" onPage.bind="onPage"/>
+                        </t>
+                        <CcEmptyState t-else="" title="'No discussions yet'" hint="'Start a conversation with residents.'" actionLabel="'+ Create Discussion'" onAction="() => this.setMode('create')"/>
+                    </div>
+                </t>
+
+                <t t-if="state.mode === 'create'">
+                    <button class="o_cc_back" t-on-click="() => this.setMode('list')"><i class="fa fa-arrow-left"/> Back to Forums</button>
+                    <div class="o_cc_split">
+                        <div>
+                            <CcFormSection title="'Create Discussion'">
+                                <label>Title *</label>
+                                <input t-att-class="fieldClass('title')" t-model="state.form.title" placeholder="What would you like to discuss?"/>
+                                <CcFieldError message="fieldError('title')"/>
+                                <label class="mt-3">Category</label>
+                                <select class="o_cc_input" t-model="state.form.category">
+                                    <t t-foreach="categories" t-as="cat" t-key="cat[0]"><option t-att-value="cat[0]" t-esc="cat[1]"/></t>
+                                </select>
+                                <label class="mt-3">Body *</label>
+                                <textarea t-att-class="fieldClass('body')" t-model="state.form.body" placeholder="Share details with the community..."/>
+                                <CcFieldError message="fieldError('body')"/>
+                                <label class="mt-3">Attachments</label>
+                                <CcFileDropzone files="attachmentList" error="fieldError('attachments')" onAdd.bind="onFilesSelected" onRemove.bind="removeAttachment"/>
+                                <label t-if="state.isOfficer" class="o_cc_radio mt-2"><input type="checkbox" t-model="state.form.is_pinned"/> Pin this discussion</label>
+                                <label class="o_cc_radio"><input type="checkbox" t-model="state.form.subscribe"/> Follow this discussion</label>
+                            </CcFormSection>
+                            <div class="o_cc_footer_bar">
+                                <span t-if="state.busy" class="o_cc_busy_hint" t-esc="state.busy"/>
+                                <button class="o_cc_btn ghost" t-att-disabled="state.busy" t-on-click="() => this.setMode('list')">Cancel</button>
+                                <button class="o_cc_btn primary" t-att-disabled="state.busy" t-on-click="save">Post Discussion</button>
+                            </div>
+                        </div>
+                        <CcPreviewPanel title="state.form.title" body="previewBody()" category="categoryLabel(state.form.category)"/>
+                    </div>
+                </t>
+
+                <t t-if="state.mode === 'detail' and state.extras.thread">
+                    <button class="o_cc_back" t-on-click="() => this.setMode('list')"><i class="fa fa-arrow-left"/> Discussion Forums / Discussion Detail</button>
+                    <div class="o_cc_split">
+                        <div>
+                            <div class="d-flex gap-2 mb-2">
+                                <span class="o_cc_pill info" t-esc="categoryLabel(state.extras.thread.category)"/>
+                                <CcStatusBadge state="state.extras.thread.state"/>
+                            </div>
+                            <h1 t-esc="state.extras.thread.title"/>
+                            <div class="o_cc_meta mb-3">
+                                <span t-esc="state.extras.thread.author"/>
+                                <span><i class="fa fa-eye"/> <t t-esc="state.extras.thread.view_count"/> Views</span>
+                                <span><i class="fa fa-comment"/> <t t-esc="state.extras.thread.comment_count"/> Comments</span>
+                            </div>
+                            <div class="o_cc_card mb-3">
+                                <div t-out="html(state.extras.thread.body)"/>
+                                <t t-foreach="state.extras.attachments or []" t-as="file" t-key="file.id">
+                                    <div class="o_cc_file_row">
+                                        <i class="fa fa-file-o"/>
+                                        <span class="flex-grow-1" t-esc="file.name"/>
+                                        <a t-att-href="'/web/content/' + file.id + '?download=1'"><i class="fa fa-download"/></a>
+                                    </div>
+                                </t>
+                                <div class="d-flex justify-content-between mt-3">
+                                    <div class="d-flex gap-2">
+                                        <button class="o_cc_btn secondary" t-on-click="() => this.react('support')"><i class="fa fa-thumbs-up"/> <t t-esc="state.extras.thread.support_count"/> Support</button>
+                                        <button class="o_cc_btn ghost" t-on-click="() => this.react('oppose')"><i class="fa fa-thumbs-down"/> <t t-esc="state.extras.thread.oppose_count"/></button>
+                                    </div>
+                                    <button class="o_cc_btn primary" t-on-click="follow">
+                                        <i class="fa fa-bell"/> <t t-esc="state.extras.thread.is_followed ? 'Following' : 'Follow Discussion'"/>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="o_cc_card">
+                                <div class="o_cc_card_head">Comments &amp; Replies <span class="small text-muted"><t t-esc="state.extras.thread.comment_count"/> total</span></div>
+                                <textarea t-att-class="fieldClass('reply')" t-model="state.form.reply" placeholder="Write a reply..."/>
+                                <CcFieldError message="fieldError('reply')"/>
+                                <div class="o_cc_footer_actions">
+                                    <span t-if="state.busy" class="o_cc_busy_hint" t-esc="state.busy"/>
+                                    <button class="o_cc_btn primary" t-att-disabled="state.busy" t-on-click="postReply">Post Reply</button>
+                                </div>
+                                <t t-foreach="state.extras.thread.comments" t-as="comment" t-key="comment.id">
+                                    <div t-attf-class="o_cc_thread_comment {{ comment.parent_id ? 'ms-4' : '' }}">
+                                        <div class="fw-semibold">
+                                            <t t-esc="comment.author"/>
+                                            <span t-if="comment.is_admin" class="o_cc_pill ms-2">ADMIN</span>
+                                            <span class="small text-muted ms-2" t-esc="formatWhen(comment.date)"/>
+                                        </div>
+                                        <div t-out="html(comment.body)"/>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                        <div class="o_cc_stack">
+                            <div class="o_cc_card" t-if="state.extras.thread.can_moderate">
+                                <div class="o_cc_card_head">Management Actions</div>
+                                <button class="o_cc_btn secondary w-100 mb-2" t-on-click="() => this.moderate('action_pin')"><i class="fa fa-thumb-tack"/> Pin Discussion</button>
+                                <button class="o_cc_btn secondary w-100 mb-2" t-on-click="() => this.moderate('action_lock')"><i class="fa fa-lock"/> Lock Discussion</button>
+                                <button class="o_cc_btn ghost w-100" t-on-click="() => this.moderate('action_remove')"><i class="fa fa-trash text-danger"/> Remove Content</button>
+                            </div>
+                            <div class="o_cc_card">
+                                <div class="o_cc_card_head">Report Content</div>
+                                <textarea t-att-class="fieldClass('reportReason')" t-model="state.form.reportReason" placeholder="Describe the issue..."/>
+                                <CcFieldError message="fieldError('reportReason')"/>
+                                <button class="o_cc_btn secondary w-100 mt-2" t-att-disabled="state.busy" t-on-click="reportDiscussion">Submit Report</button>
+                            </div>
+                            <div class="o_cc_card">
+                                <div class="o_cc_card_head">Engagement</div>
+                                <div class="o_cc_form_grid">
+                                    <div class="o_cc_stat_box"><div class="o_cc_kpi_label">Comments</div><div class="o_cc_kpi_value" t-esc="state.extras.thread.comment_count"/></div>
+                                    <div class="o_cc_stat_box"><div class="o_cc_kpi_label">Views</div><div class="o_cc_kpi_value" t-esc="state.extras.thread.view_count"/></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </div>
+            </CcAppShell>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_ra_dashboard" model="ir.actions.client">
+        <field name="name">Analytics Dashboard</field>
+        <field name="tag">reports_analytics.action_dashboard</field>
+        <field name="path">analytics-reports</field>
+    </record>
+    <record id="action_ra_management" model="ir.actions.client">
+        <field name="name">Management Dashboard</field>
+        <field name="tag">reports_analytics.action_management</field>
+        <field name="path">ra-management</field>
+    </record>
+    <record id="action_ra_reports" model="ir.actions.client">
+        <field name="name">Reports</field>
+        <field name="tag">reports_analytics.action_reports</field>
+        <field name="path">ra-reports</field>
+    </record>
+    <record id="action_ra_builder" model="ir.actions.client">
+        <field name="name">Report Builder</field>
+        <field name="tag">reports_analytics.action_builder</field>
+        <field name="path">ra-builder</field>
+    </record>
+    <record id="action_ra_kpis" model="ir.actions.client">
+        <field name="name">Dashboards</field>
+        <field name="tag">reports_analytics.action_kpis</field>
+        <field name="path">ra-kpis</field>
+    </record>
+    <record id="action_ra_scheduled" model="ir.actions.client">
+        <field name="name">Scheduled Reports</field>
+        <field name="tag">reports_analytics.action_scheduled</field>
+        <field name="path">ra-scheduled</field>
+    </record>
+    <record id="action_ra_operational" model="ir.actions.client">
+        <field name="name">Operational Analytics</field>
+        <field name="tag">reports_analytics.action_operational</field>
+        <field name="path">ra-operational</field>
+    </record>
+    <record id="action_ra_financial" model="ir.actions.client">
+        <field name="name">Financial Analytics</field>
+        <field name="tag">reports_analytics.action_financial</field>
+        <field name="path">ra-financial</field>
+    </record>
+    <record id="action_ra_trends" model="ir.actions.client">
+        <field name="name">Trend Analysis</field>
+        <field name="tag">reports_analytics.action_trends</field>
+        <field name="path">ra-trends</field>
+    </record>
+    <record id="action_ra_cross_module" model="ir.actions.client">
+        <field name="name">Cross-Module Analytics</field>
+        <field name="tag">reports_analytics.action_cross_module</field>
+        <field name="path">ra-cross-module</field>
+    </record>
+    <record id="action_ra_predictive" model="ir.actions.client">
+        <field name="name">Predictive Analytics</field>
+        <field name="tag">reports_analytics.action_predictive</field>
+        <field name="path">ra-predictive</field>
+    </record>
+    <record id="action_ra_library" model="ir.actions.client">
+        <field name="name">Report Library</field>
+        <field name="tag">reports_analytics.action_library</field>
+        <field name="path">ra-library</field>
+    </record>
+    <record id="action_ra_preview" model="ir.actions.client">
+        <field name="name">Report Preview</field>
+        <field name="tag">reports_analytics.action_preview</field>
+        <field name="path">ra-preview</field>
+    </record>
+    <record id="action_ra_alerts" model="ir.actions.client">
+        <field name="name">Analytics Alerts</field>
+        <field name="tag">reports_analytics.action_alerts</field>
+        <field name="path">ra-alerts</field>
+    </record>
+
+    <menuitem
+        id="menu_analytics_root"
+        name="Reports &amp; Analytics"
+        web_icon="fa-line-chart,#6d28d9,#FFFFFF"
+        action="action_ra_dashboard"
+        sequence="54"
+        groups="reports_analytics.group_analytics_management,reports_analytics.group_analytics_admin,reports_analytics.group_analytics_manager,base.group_system"
+    />
+    <record id="menu_analytics_root" model="ir.ui.menu">
+        <field name="action" ref="action_ra_dashboard"/>
+    </record>
+
+    <menuitem id="menu_analytics_dashboard_ui" name="Analytics Dashboard" parent="menu_analytics_root" action="action_ra_dashboard" sequence="1"/>
+    <menuitem id="menu_analytics_reports" name="Reports" parent="menu_analytics_root" action="action_ra_reports" sequence="10"/>
+    <menuitem id="menu_analytics_builder" name="Report Builder" parent="menu_analytics_root" action="action_ra_builder" sequence="12"/>
+    <menuitem id="menu_analytics_report_library" name="Report Library" parent="menu_analytics_root" action="action_ra_library" sequence="15"/>
+    <menuitem id="menu_analytics_kpis" name="Dashboards" parent="menu_analytics_root" action="action_ra_kpis" sequence="20"/>
+    <menuitem id="menu_analytics_scheduled" name="Scheduled Reports" parent="menu_analytics_root" action="action_ra_scheduled" sequence="25"/>
+    <menuitem id="menu_analytics_analytics_root" name="Analytics" parent="menu_analytics_root" action="action_ra_operational" sequence="30"/>
+    <menuitem id="menu_analytics_operational" name="Operational" parent="menu_analytics_analytics_root" action="action_ra_operational" sequence="10"/>
+    <menuitem id="menu_analytics_financial" name="Financial" parent="menu_analytics_analytics_root" action="action_ra_financial" sequence="20"/>
+    <menuitem id="menu_analytics_trends" name="Trend Analysis" parent="menu_analytics_analytics_root" action="action_ra_trends" sequence="30"/>
+    <menuitem id="menu_analytics_cross" name="Cross-Module" parent="menu_analytics_analytics_root" action="action_ra_cross_module" sequence="40"/>
+    <menuitem id="menu_analytics_predictive" name="Predictive" parent="menu_analytics_analytics_root" action="action_ra_predictive" sequence="50"/>
+    <menuitem id="menu_analytics_alerts" name="Analytics Alerts" parent="menu_analytics_root" action="action_ra_alerts" sequence="35"/>
+    <menuitem id="menu_analytics_dashboards" name="Dashboard Definitions" parent="menu_analytics_root" action="action_analytics_dashboard" sequence="70"/>
+    <menuitem id="menu_analytics_execution_history" name="Execution History" parent="menu_analytics_root" action="action_analytics_report_execution" sequence="75"/>
+
+    <menuitem
+        id="menu_analytics_configuration"
+        name="Configuration"
+        parent="menu_analytics_root"
+        sequence="80"
+        groups="reports_analytics.group_analytics_admin,base.group_system"
+    />
+    <menuitem id="menu_analytics_data_sources" name="Data Sources" parent="menu_analytics_configuration" action="action_analytics_data_source" sequence="10"/>
+    <menuitem id="menu_analytics_report_defs" name="Report Definitions" parent="menu_analytics_configuration" action="action_analytics_report" sequence="20"/>
+    <menuitem id="menu_analytics_kpi_defs" name="KPI Definitions" parent="menu_analytics_configuration" action="action_analytics_kpi" sequence="30"/>
+    <menuitem id="menu_analytics_schedule_defs" name="Schedules" parent="menu_analytics_configuration" action="action_analytics_schedule" sequence="40"/>
+    <menuitem id="menu_analytics_alert_defs" name="Alert Definitions" parent="menu_analytics_configuration" action="action_analytics_alert" sequence="50"/>
+
+    <menuitem
+        id="menu_analytics_audit_history"
+        name="Audit History"
+        parent="menu_analytics_root"
+        action="action_analytics_audit_log"
+        sequence="90"
+        groups="reports_analytics.group_analytics_admin,reports_analytics.group_analytics_management,base.group_system"
+    />
+</odoo>

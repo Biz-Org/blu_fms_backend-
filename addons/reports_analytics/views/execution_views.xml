@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_analytics_report_execution_list" model="ir.ui.view">
+        <field name="name">analytics.report.execution.list</field>
+        <field name="model">analytics.report.execution</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="execution_datetime"/>
+                <field name="report_id"/>
+                <field name="user_id"/>
+                <field name="status"/>
+                <field name="duration_ms"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_analytics_report_execution_form" model="ir.ui.view">
+        <field name="name">analytics.report.execution.form</field>
+        <field name="model">analytics.report.execution</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="report_id"/>
+                            <field name="user_id"/>
+                            <field name="execution_datetime"/>
+                            <field name="status"/>
+                        </group>
+                        <group>
+                            <field name="duration_ms"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <group string="Error" invisible="not error_message">
+                        <field name="error_message" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_analytics_report_execution_search" model="ir.ui.view">
+        <field name="name">analytics.report.execution.search</field>
+        <field name="model">analytics.report.execution</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="report_id"/>
+                <field name="user_id"/>
+                <separator/>
+                <filter string="Success" name="filter_success" domain="[('status', '=', 'success')]"/>
+                <filter string="Failed" name="filter_failed" domain="[('status', '=', 'failed')]"/>
+                <filter string="Running" name="filter_running" domain="[('status', '=', 'running')]"/>
+                <filter string="Scheduled runs" name="filter_scheduled_reports" domain="[('report_id.status', '=', 'scheduled')]"/>
+                <group>
+                    <filter string="Report" name="group_report" context="{'group_by': 'report_id'}"/>
+                    <filter string="Status" name="group_status" context="{'group_by': 'status'}"/>
+                    <filter string="User" name="group_user" context="{'group_by': 'user_id'}"/>
+                    <filter string="Execution Date" name="group_execution_date" context="{'group_by': 'execution_datetime:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_analytics_report_execution" model="ir.actions.act_window">
+        <field name="name">Execution History</field>
+        <field name="res_model">analytics.report.execution</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_analytics_report_execution_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_empty_folder">
+                No report executions yet
+            </p>
+            <p>
+                Execution history tracks report runs, including scheduled executions when enabled in a later phase.
+            </p>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="integration_iot_management.IotKpiCard">
+        <div t-attf-class="o_iot_kpi {{ props.tone ? 'tone-' + props.tone : '' }} {{ props.onClick ? 'is-clickable' : '' }}" t-on-click="onClick">
+            <div t-if="props.icon" class="o_iot_kpi_icon"><i t-attf-class="fa {{ props.icon }}"/></div>
+            <div class="o_iot_kpi_label" t-esc="props.label"/>
+            <div class="o_iot_kpi_value" t-esc="props.value"/>
+            <div t-if="props.hint" class="o_iot_kpi_hint" t-esc="props.hint"/>
+        </div>
+    </t>
+    <t t-name="integration_iot_management.IotStatusBadge">
+        <span t-attf-class="o_iot_pill {{ tone }}" t-esc="text"/>
+    </t>
+    <t t-name="integration_iot_management.IotEmptyState">
+        <div class="o_iot_empty">
+            <h3 t-esc="props.title"/>
+            <p t-if="props.hint" t-esc="props.hint"/>
+        </div>
+    </t>
+</templates>

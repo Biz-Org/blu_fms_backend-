@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="community_communication.Dashboard">
+        <div class="o_action o_cc_shell o_cc_dashboard">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h1 class="o_cc_dashboard_title">Community &amp; Communication</h1>
+                    <p class="o_cc_dashboard_copy mb-0">Operations overview for announcements, forums, polls, events and feedback.</p>
+                </div>
+                <button class="btn o_cc_btn_primary" t-on-click="createAnnouncement">+ Create Announcement</button>
+            </div>
+
+            <div class="o_cc_kpi_row">
+                <div class="o_cc_kpi" t-on-click="openAnnouncements">
+                    <i class="fa fa-bullhorn o_cc_kpi_icon"/>
+                    <div class="o_cc_kpi_label">Total Announcements</div>
+                    <div class="o_cc_kpi_value" t-esc="data.kpis.announcements or 0"/>
+                </div>
+                <div class="o_cc_kpi" t-on-click="() => this.action.doAction('community_communication.action_cc_discussion')">
+                    <i class="fa fa-comments o_cc_kpi_icon"/>
+                    <div class="o_cc_kpi_label">Active Discussions</div>
+                    <div class="o_cc_kpi_value" t-esc="data.kpis.discussions or 0"/>
+                </div>
+                <div class="o_cc_kpi" t-on-click="openPolls">
+                    <i class="fa fa-bar-chart o_cc_kpi_icon"/>
+                    <div class="o_cc_kpi_label">Active Polls</div>
+                    <div class="o_cc_kpi_value" t-esc="data.kpis.polls or 0"/>
+                </div>
+                <div class="o_cc_kpi" t-on-click="openEvents">
+                    <i class="fa fa-calendar o_cc_kpi_icon"/>
+                    <div class="o_cc_kpi_label">Upcoming Events</div>
+                    <div class="o_cc_kpi_value" t-esc="data.kpis.events or 0"/>
+                </div>
+                <div class="o_cc_kpi" t-on-click="() => this.action.doAction('community_communication.action_cc_feedback')">
+                    <i class="fa fa-inbox o_cc_kpi_icon"/>
+                    <div class="o_cc_kpi_label">Pending Feedback</div>
+                    <div class="o_cc_kpi_value" t-esc="data.kpis.feedback or 0"/>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-lg-4">
+                    <div class="o_cc_card h-100">
+                        <div class="fw-bold mb-3">Announcement Overview</div>
+                        <div class="d-flex align-items-center gap-3">
+                            <svg width="110" height="110" viewBox="0 0 110 110">
+                                <circle cx="55" cy="55" r="36" fill="none" stroke="#ede9fe" stroke-width="12"/>
+                                <circle cx="55" cy="55" r="36" fill="none" stroke="#6d28d9" stroke-width="12"
+                                    t-att-stroke-dasharray="donut.p + ' ' + donut.c" stroke-dashoffset="0"
+                                    transform="rotate(-90 55 55)"/>
+                                <circle cx="55" cy="55" r="36" fill="none" stroke="#8b5cf6" stroke-width="12"
+                                    t-att-stroke-dasharray="donut.s + ' ' + donut.c" t-att-stroke-dashoffset="'-' + donut.offsetS"
+                                    transform="rotate(-90 55 55)"/>
+                                <circle cx="55" cy="55" r="36" fill="none" stroke="#c4b5fd" stroke-width="12"
+                                    t-att-stroke-dasharray="donut.e + ' ' + donut.c" t-att-stroke-dashoffset="'-' + donut.offsetE"
+                                    transform="rotate(-90 55 55)"/>
+                            </svg>
+                            <div class="small">
+                                <div><span class="o_cc_pill">Published</span> <t t-esc="donut.published"/></div>
+                                <div class="mt-1"><span class="o_cc_pill muted">Scheduled</span> <t t-esc="donut.scheduled"/></div>
+                                <div class="mt-1"><span class="o_cc_pill warning">Expired</span> <t t-esc="donut.expired"/></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="o_cc_card h-100">
+                        <div class="fw-bold mb-3">Community Engagement</div>
+                        <svg class="o_cc_chart_line" viewBox="0 0 300 120" preserveAspectRatio="none">
+                            <polyline fill="none" stroke="#6d28d9" stroke-width="3" t-att-points="linePoints"/>
+                        </svg>
+                        <div class="d-flex justify-content-between small text-muted">
+                            <t t-foreach="data.engagement" t-as="row" t-key="row.label">
+                                <span t-esc="row.label"/>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="o_cc_card h-100">
+                        <div class="d-flex justify-content-between mb-2">
+                            <div class="fw-bold">Upcoming Events</div>
+                            <button class="btn btn-sm btn-link" t-on-click="createEvent">+</button>
+                        </div>
+                        <t t-foreach="data.upcoming_events" t-as="event" t-key="event.id">
+                            <div class="o_cc_event_chip">
+                                <div class="o_cc_event_date" t-esc="event.date_label"/>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold" t-esc="event.name"/>
+                                    <div class="small text-muted" t-esc="event.location"/>
+                                </div>
+                                <span class="o_cc_pill" t-esc="event.registrations + ' Reg'"/>
+                            </div>
+                        </t>
+                        <t t-if="!data.upcoming_events.length">
+                            <div class="text-muted small">No upcoming events.</div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-lg-8">
+                    <div class="o_cc_card">
+                        <div class="d-flex justify-content-between mb-2">
+                            <div class="fw-bold">Recent Community Activity</div>
+                            <button class="btn btn-link btn-sm" t-on-click="openAnnouncements">VIEW ALL</button>
+                        </div>
+                        <table class="o_cc_table">
+                            <thead>
+                                <tr>
+                                    <th>Activity</th>
+                                    <th>Type</th>
+                                    <th>User</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="data.activity" t-as="row" t-key="row.model + row.id" class="cursor-pointer" t-on-click="() => this.openRecord(row)">
+                                    <td t-esc="row.name"/>
+                                    <td t-esc="row.type"/>
+                                    <td t-esc="row.user"/>
+                                    <td><span t-attf-class="o_cc_pill {{ stateClass(row.state) }}" t-esc="row.state"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="o_cc_card h-100">
+                        <div class="fw-bold mb-3">Active Polls</div>
+                        <t t-foreach="data.active_polls" t-as="poll" t-key="poll.id">
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <div class="fw-semibold" t-esc="poll.question"/>
+                                    <span class="o_cc_pill success">Active</span>
+                                </div>
+                                <div class="o_cc_progress my-1">
+                                    <div class="o_cc_progress_bar" t-att-style="'width:' + poll.rate + '%'"/>
+                                </div>
+                                <div class="small text-muted"><t t-esc="poll.rate"/>% · <t t-esc="poll.votes"/> Votes</div>
+                            </div>
+                        </t>
+                        <button class="btn o_cc_btn_primary w-100" t-on-click="openPolls">View All Polls</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="reports_analytics.RaAppShell">
+        <div class="o_ra_layout">
+            <aside class="o_ra_sidebar">
+                <div class="o_ra_brand">
+                    <div class="o_ra_brand_mark"><i class="fa fa-building"/></div>
+                    <div>
+                        <div class="o_ra_brand_title">Facility Management</div>
+                        <div class="o_ra_brand_sub">Analytics &amp; BI</div>
+                    </div>
+                </div>
+                <button class="o_ra_new_btn" t-on-click="newAnalysis"><i class="fa fa-plus"/><span>New Analysis</span></button>
+                <nav class="o_ra_nav">
+                    <t t-foreach="nav" t-as="item" t-key="item.id">
+                        <button t-att-class="isActive(item) ? 'active' : ''" t-on-click="() => this.open(item)">
+                            <i t-attf-class="fa {{ item.icon }}"/>
+                            <span t-esc="item.label"/>
+                        </button>
+                        <div t-if="item.children" class="o_ra_nav_children">
+                            <button t-foreach="item.children" t-as="child" t-key="child.id"
+                                t-att-class="childActive(child) ? 'active' : ''"
+                                t-on-click="() => this.open(child)">
+                                <span t-esc="child.label"/>
+                            </button>
+                        </div>
+                    </t>
+                </nav>
+                <div class="o_ra_nav_foot">
+                    <button t-if="state.canConfigure" t-on-click="openSettings"><i class="fa fa-cog"/> <span>Settings</span></button>
+                    <button t-on-click="openSupport"><i class="fa fa-life-ring"/> <span>Support</span></button>
+                </div>
+            </aside>
+            <div class="o_ra_main">
+                <header class="o_ra_topbar">
+                    <div class="o_ra_topbar_title">Reports &amp; Analytics</div>
+                    <div class="o_ra_topbar_search">
+                        <i class="fa fa-search"/>
+                        <input type="text" placeholder="Search analytics, reports..."/>
+                    </div>
+                    <div class="o_ra_topbar_actions">
+                        <button class="o_ra_icon_btn" title="Profile" t-on-click="openProfile"><i class="fa fa-user-o"/></button>
+                        <img class="o_ra_avatar" t-att-src="avatarUrl" t-att-alt="user.name" t-on-click="openProfile"/>
+                    </div>
+                </header>
+                <div class="o_ra_content">
+                    <t t-slot="default"/>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

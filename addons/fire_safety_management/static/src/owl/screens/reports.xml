@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="fire_safety_management.Reports">
+        <div class="o_action o_fs_app">
+            <FsAppShell active="'reports'">
+                <div class="o_fs_shell o_fs_print_area">
+                    <div t-if="state.error" class="o_fs_alert">
+                        <i class="fa fa-exclamation-circle"/>
+                        <div t-esc="state.error"/>
+                    </div>
+
+                    <div class="o_fs_page_header">
+                        <div>
+                            <h1>Compliance Reports</h1>
+                            <p>Live Fire &amp; Safety datasets from the same methods as the Staff Dashboard. Weighted score is inspections 40%, equipment 30%, closed corrective actions 30%. Polished PDF export is reserved for FMS Reports.</p>
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap o_fs_no_print">
+                            <button class="o_fs_btn secondary" t-on-click="exportCsv">
+                                <i class="fa fa-download"/> Export CSV
+                            </button>
+                            <button class="o_fs_btn primary" t-on-click="printReport">
+                                <i class="fa fa-print"/> Print
+                            </button>
+                        </div>
+                    </div>
+
+                    <div t-if="state.loading" class="o_fs_empty">
+                        <h3>Loading compliance</h3>
+                        <p>Fetching live Fire &amp; Safety records.</p>
+                    </div>
+                    <t t-else="">
+                        <div class="o_fs_kpi_row">
+                            <FsKpiCard label="'Compliance'" value="hasCompliance ? (compliance.compliance + '%') : '—'" icon="'fa-line-chart'" tone="belowTarget ? 'warning' : ''" hint="hasCompliance ? ('Target ' + compliance.target + '%') : 'Not available for this role'"/>
+                            <FsKpiCard label="'Inspection score'" value="hasCompliance ? (compliance.inspection_score + '%') : '—'" icon="'fa-clipboard'"/>
+                            <FsKpiCard label="'Equipment score'" value="hasCompliance ? (compliance.equipment_score + '%') : '—'" icon="'fa-fire-extinguisher'"/>
+                            <FsKpiCard label="'Action score'" value="hasCompliance ? (compliance.action_score + '%') : '—'" icon="'fa-wrench'"/>
+                            <FsKpiCard label="'Open actions'" value="state.dashboard and state.dashboard.open_actions or 0" icon="'fa-exclamation-circle'" tone="state.dashboard and state.dashboard.open_actions ? 'warning' : ''"/>
+                            <FsKpiCard label="'Overdue inspections'" value="state.dashboard and state.dashboard.overdue_inspections or 0" icon="'fa-clock-o'" tone="state.dashboard and state.dashboard.overdue_inspections ? 'danger' : ''"/>
+                        </div>
+
+                        <div class="o_fs_card">
+                            <div class="o_fs_card_head">Status counts</div>
+                            <t t-if="countRows.length">
+                                <div class="o_fs_detail_grid">
+                                    <div t-foreach="countRows" t-as="block" t-key="block.id">
+                                        <div class="o_fs_row_title" t-esc="block.label"/>
+                                        <div class="o_fs_stat_line" t-foreach="block.pairs" t-as="pair" t-key="pair.state">
+                                            <FsStatusBadge state="pair.state" label="stateLabel(pair.state)"/>
+                                            <span t-esc="pair.count"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+                            <FsEmptyState t-else="" title="'No status counts'" hint="'Counts appear for models this role can read.'"/>
+                        </div>
+
+                        <div class="o_fs_toolbar o_fs_no_print">
+                            <div class="o_fs_chips">
+                                <button t-foreach="datasets" t-as="row" t-key="row.id"
+                                    t-att-class="state.dataset === row.id ? 'active' : ''"
+                                    t-on-click="() => this.onDataset(row.id)"
+                                    t-esc="row.label"/>
+                            </div>
+                            <select class="o_fs_select" t-att-value="state.propertyId" t-on-change="onProperty">
+                                <option value="">Property: All (placeholder)</option>
+                                <t t-foreach="state.lookups.properties" t-as="row" t-key="row.id">
+                                    <option t-att-value="row.id" t-esc="row.name"/>
+                                </t>
+                            </select>
+                            <input class="o_fs_select" type="date" t-att-value="state.dateFrom" t-on-change="onDateFrom"/>
+                            <input class="o_fs_select" type="date" t-att-value="state.dateTo" t-on-change="onDateTo"/>
+                        </div>
+
+                        <div class="o_fs_card">
+                            <div class="o_fs_card_head">
+                                <t t-esc="currentDataset.label"/> dataset
+                            </div>
+                            <t t-if="state.records.length">
+                                <table class="o_fs_table">
+                                    <thead>
+                                        <tr>
+                                            <th>Record</th>
+                                            <th>Status</th>
+                                            <th>When</th>
+                                            <th>Property</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="state.records" t-as="rec" t-key="rec.id">
+                                            <td>
+                                                <div class="o_fs_row_title" t-esc="rowPrimary(rec)"/>
+                                                <div class="o_fs_row_sub" t-esc="rowSecondary(rec)"/>
+                                            </td>
+                                            <td>
+                                                <FsStatusBadge state="rec.state" label="stateLabel(rec.state)"/>
+                                                <span t-if="rec.is_overdue" class="o_fs_pill danger">Overdue</span>
+                                            </td>
+                                            <td t-esc="formatWhen(rowWhen(rec))"/>
+                                            <td t-esc="m2oName(rec.property_id) or '—'"/>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="o_fs_pager o_fs_no_print">
+                                    <span><t t-esc="pageFrom"/>–<t t-esc="pageTo"/> of <t t-esc="state.total"/></span>
+                                    <div class="o_fs_pager_pages">
+                                        <button t-att-disabled="state.page &lt;= 1" t-on-click="() => this.onPage(-1)">Prev</button>
+                                        <button t-att-disabled="state.page &gt;= pageCount" t-on-click="() => this.onPage(1)">Next</button>
+                                    </div>
+                                </div>
+                            </t>
+                            <FsEmptyState t-else="" title="'No rows in this dataset'" hint="'Change the dataset, property, or date range. Filters use live Fire &amp; Safety records.'"/>
+                        </div>
+                    </t>
+                </div>
+            </FsAppShell>
+        </div>
+    </t>
+</templates>

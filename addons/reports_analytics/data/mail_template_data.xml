@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="mail_template_scheduled_report" model="mail.template">
+        <field name="name">Analytics: Scheduled Report</field>
+        <field name="model_id" ref="model_analytics_report_execution"/>
+        <field name="subject">Scheduled report: {{ object.report_id.name }}</field>
+        <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted) }}</field>
+        <field name="description">Sent when a scheduled analytics report is generated.</field>
+        <field name="body_html" type="html">
+<div style="font-size:14px;color:#111827;">
+    <p>A scheduled FMS analytics report is ready.</p>
+    <p style="font-size:18px;font-weight:700;color:#6d28d9;"><t t-out="object.report_id.name"/></p>
+    <p>Status: <t t-out="object.status"/> · Rows: <t t-out="object.row_count"/></p>
+    <p t-if="not object.result_json or not object.result_json.get('available')">
+        Data unavailable for this run. Open Reports &amp; Analytics for details.
+    </p>
+</div>
+        </field>
+        <field name="auto_delete" eval="True"/>
+    </record>
+
+    <record id="mail_template_analytics_alert" model="mail.template">
+        <field name="name">Analytics: Alert Triggered</field>
+        <field name="model_id" ref="model_analytics_alert"/>
+        <field name="subject">Analytics alert: {{ object.name }}</field>
+        <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted) }}</field>
+        <field name="description">Sent when an analytics alert condition is met.</field>
+        <field name="body_html" type="html">
+<div style="font-size:14px;color:#111827;">
+    <p>An analytics alert has been triggered.</p>
+    <p style="font-size:18px;font-weight:700;color:#6d28d9;"><t t-out="object.name"/></p>
+    <p>Severity: <t t-out="object.severity"/> · Current value: <t t-out="object.last_value"/> · Threshold: <t t-out="object.threshold"/></p>
+</div>
+        </field>
+        <field name="auto_delete" eval="True"/>
+    </record>
+</odoo>

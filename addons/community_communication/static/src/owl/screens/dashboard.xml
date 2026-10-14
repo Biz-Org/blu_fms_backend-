@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="community_communication.Dashboard">
+        <div class="o_action o_cc_app">
+            <CcAppShell active="'dashboard'">
+                <div class="o_cc_shell">
+                    <div class="o_cc_dash_hero">
+                    <CcPageHeader title="'Community &amp; Communication'" subtitle="'Manage community communication, engagement and resident participation.'">
+                        <t t-set-slot="buttons">
+                            <CcActionButton t-if="state.isOfficer" label="'+ Create Announcement'" icon="'fa-plus'" onClick.bind="createAnnouncement"/>
+                        </t>
+                    </CcPageHeader>
+                    </div>
+
+                    <div class="o_cc_kpi_row cols-5">
+                        <CcKpiCard label="'Total Announcements'" value="data.kpis.announcements or 0" icon="'fa-bullhorn'" onClick.bind="openAnnouncements"/>
+                        <CcKpiCard label="'Active Discussions'" value="data.kpis.discussions or 0" icon="'fa-comments'" onClick.bind="openDiscussions"/>
+                        <CcKpiCard label="'Active Polls'" value="data.kpis.polls or 0" icon="'fa-bar-chart'" onClick.bind="openPolls"/>
+                        <CcKpiCard label="'Upcoming Events'" value="data.kpis.events or 0" icon="'fa-calendar'" onClick.bind="openEvents"/>
+                        <CcKpiCard label="'Pending Feedback'" value="data.kpis.feedback or 0" icon="'fa-exclamation'" onClick.bind="openFeedback"/>
+                    </div>
+
+                    <div class="o_cc_dash_mid">
+                        <div class="o_cc_card">
+                            <div class="o_cc_card_head">Announcement Overview</div>
+                            <t t-if="donut.published or donut.scheduled or donut.expired">
+                                <div class="d-flex align-items-center gap-3">
+                                    <svg width="110" height="110" viewBox="0 0 110 110">
+                                        <circle cx="55" cy="55" r="36" fill="none" stroke="#ede9fe" stroke-width="12"/>
+                                        <circle cx="55" cy="55" r="36" fill="none" stroke="#6d28d9" stroke-width="12"
+                                            t-att-stroke-dasharray="donut.p + ' ' + donut.c" stroke-dashoffset="0"
+                                            transform="rotate(-90 55 55)"/>
+                                        <circle cx="55" cy="55" r="36" fill="none" stroke="#8b5cf6" stroke-width="12"
+                                            t-att-stroke-dasharray="donut.s + ' ' + donut.c" t-att-stroke-dashoffset="'-' + donut.offsetS"
+                                            transform="rotate(-90 55 55)"/>
+                                        <circle cx="55" cy="55" r="36" fill="none" stroke="#c4b5fd" stroke-width="12"
+                                            t-att-stroke-dasharray="donut.e + ' ' + donut.c" t-att-stroke-dashoffset="'-' + donut.offsetE"
+                                            transform="rotate(-90 55 55)"/>
+                                    </svg>
+                                    <div class="small">
+                                        <div><span class="o_cc_pill">Published</span> <t t-esc="donut.published"/></div>
+                                        <div class="mt-1"><span class="o_cc_pill muted">Scheduled</span> <t t-esc="donut.scheduled"/></div>
+                                        <div class="mt-1"><span class="o_cc_pill warning">Expired</span> <t t-esc="donut.expired"/></div>
+                                    </div>
+                                </div>
+                            </t>
+                            <CcEmptyState t-else="" title="'No announcement mix yet'" hint="'Publish or schedule announcements to populate this chart.'"/>
+                        </div>
+                        <div class="o_cc_card">
+                            <div class="o_cc_card_head">Community Engagement</div>
+                            <CcChart points="linePoints"/>
+                            <div class="d-flex justify-content-between small text-muted">
+                                <t t-foreach="data.engagement" t-as="row" t-key="row.label">
+                                    <span t-esc="row.label"/>
+                                </t>
+                            </div>
+                        </div>
+                        <div class="o_cc_card">
+                            <div class="o_cc_card_head">
+                                <span>Upcoming Events</span>
+                                <button t-if="state.isOfficer" class="o_cc_btn ghost" t-on-click="createEvent">+</button>
+                            </div>
+                            <t t-foreach="data.upcoming_events" t-as="event" t-key="event.id">
+                                <div class="o_cc_event_chip" t-on-click="() => this.openClient('community_communication.action_events', {mode: 'detail', resId: event.id})">
+                                    <div class="o_cc_event_date">
+                                        <span t-esc="eventDateParts(event).month"/>
+                                        <span class="o_cc_event_day" t-esc="eventDateParts(event).day"/>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold" t-esc="event.name"/>
+                                        <div class="small text-muted" t-esc="event.location"/>
+                                    </div>
+                                    <span class="o_cc_pill" t-esc="event.registrations + ' Reg'"/>
+                                </div>
+                            </t>
+                            <CcEmptyState t-if="!data.upcoming_events.length" title="'No upcoming events'" hint="'Published future events will show here.'"/>
+                        </div>
+                    </div>
+
+                    <div class="o_cc_dash_bottom">
+                        <div class="o_cc_card">
+                            <div class="o_cc_card_head">
+                                <span>Recent Community Activity</span>
+                                <button class="o_cc_link" t-on-click="openAnnouncements">VIEW ALL</button>
+                            </div>
+                            <t t-if="data.activity.length">
+                                <table class="o_cc_table">
+                                    <thead>
+                                        <tr>
+                                            <th>Activity</th>
+                                            <th>Type</th>
+                                            <th>User</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="data.activity" t-as="row" t-key="row.model + row.id" t-on-click="() => this.openRecord(row)">
+                                            <td class="o_cc_row_title" t-esc="row.name"/>
+                                            <td t-esc="row.type"/>
+                                            <td t-esc="row.user"/>
+                                            <td t-esc="activityWhen(row)"/>
+                                            <td><CcStatusBadge state="row.state"/></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </t>
+                            <CcEmptyState t-else="" title="'No recent activity'" hint="'Community activity will appear here as records are created.'"/>
+                        </div>
+                        <div class="o_cc_card">
+                            <div class="o_cc_card_head">Active Polls</div>
+                            <t t-foreach="data.active_polls" t-as="poll" t-key="poll.id">
+                                <div class="mb-3" t-on-click="() => this.openActivePoll(poll)">
+                                    <div class="d-flex justify-content-between gap-2">
+                                        <div class="fw-semibold" t-esc="poll.question"/>
+                                        <CcStatusBadge state="'active'"/>
+                                    </div>
+                                    <div class="o_cc_progress my-1">
+                                        <div class="o_cc_progress_bar" t-att-style="'width:' + poll.rate + '%'"/>
+                                    </div>
+                                    <div class="small text-muted"><t t-esc="poll.rate"/>% · <t t-esc="poll.votes"/> Votes</div>
+                                </div>
+                            </t>
+                            <CcEmptyState t-if="!data.active_polls.length" title="'No active polls'"/>
+                            <button class="o_cc_btn secondary w-100" t-on-click="openPolls">View All Polls</button>
+                        </div>
+                    </div>
+                </div>
+            </CcAppShell>
+        </div>
+    </t>
+</templates>

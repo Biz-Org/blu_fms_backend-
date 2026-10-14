@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="mail_template_announcement_published" model="mail.template">
+        <field name="name">Community: Announcement Published</field>
+        <field name="model_id" ref="model_community_communication_announcement"/>
+        <field name="subject">{{ object.title }}</field>
+        <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted) }}</field>
+        <field name="description">Sent to targeted residents when an announcement is published.</field>
+        <field name="body_html" type="html">
+<div style="margin:0;padding:0;font-size:14px;color:#1f1633;">
+    <p>Hello,</p>
+    <p>A new community announcement has been published:</p>
+    <p style="font-size:18px;font-weight:700;color:#6d28d9;"><t t-out="object.title"/></p>
+    <p>Category: <t t-out="object.category"/> · Priority: <t t-out="object.priority"/></p>
+    <p>Please open the Community portal to read the full notice and acknowledge it if required.</p>
+</div>
+        </field>
+        <field name="auto_delete" eval="True"/>
+    </record>
+
+    <record id="mail_template_notice_published" model="mail.template">
+        <field name="name">Community: Notice Published</field>
+        <field name="model_id" ref="model_community_communication_notice"/>
+        <field name="subject">Notice: {{ object.title }}</field>
+        <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted) }}</field>
+        <field name="description">Sent when a community notice is published.</field>
+        <field name="body_html" type="html">
+<div style="margin:0;padding:0;font-size:14px;color:#1f1633;">
+    <p>A new notice is on the digital notice board:</p>
+    <p style="font-size:18px;font-weight:700;color:#6d28d9;"><t t-out="object.title"/></p>
+</div>
+        </field>
+        <field name="auto_delete" eval="True"/>
+    </record>
+
+    <record id="mail_template_poll_opened" model="mail.template">
+        <field name="name">Community: Poll Opened</field>
+        <field name="model_id" ref="model_community_communication_poll"/>
+        <field name="subject">New poll: {{ object.question }}</field>
+        <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted) }}</field>
+        <field name="description">Sent when a poll is published for voting.</field>
+        <field name="body_html" type="html">
+<div style="margin:0;padding:0;font-size:14px;color:#1f1633;">
+    <p>A community poll is open for your vote:</p>
+    <p style="font-size:18px;font-weight:700;color:#6d28d9;"><t t-out="object.question"/></p>
+    <p t-if="object.date_end">Closes on <t t-out="format_datetime(object.date_end)"/></p>
+</div>
+        </field>
+        <field name="auto_delete" eval="True"/>
+    </record>
+
+    <record id="mail_template_event_confirm" model="mail.template">
+        <field name="name">Community: Event Registration Confirmed</field>
+        <field name="model_id" ref="model_community_communication_event"/>
+        <field name="subject">You're registered: {{ object.name }}</field>
+        <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted) }}</field>
+        <field name="description">Sent to a resident after RSVP.</field>
+        <field name="body_html" type="html">
+<div style="margin:0;padding:0;font-size:14px;color:#1f1633;">
+    <p>Your registration for <strong><t t-out="object.name"/></strong> is recorded.</p>
+    <p>When: <t t-out="format_datetime(object.date_start)"/> – <t t-out="format_datetime(object.date_end)"/></p>
+    <p t-if="object.location or object.venue_id">Where: <t t-out="object.location or object.venue_id.name"/></p>
+</div>
+        </field>
+        <field name="auto_delete" eval="True"/>
+    </record>
+
+    <record id="mail_template_event_reminder" model="mail.template">
+        <field name="name">Community: Event Reminder</field>
+        <field name="model_id" ref="model_community_communication_event"/>
+        <field name="subject">Reminder: {{ object.name }} starts soon</field>
+        <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted) }}</field>
+        <field name="description">Sent 24 hours before an event starts.</field>
+        <field name="body_html" type="html">
+<div style="margin:0;padding:0;font-size:14px;color:#1f1633;">
+    <p>Reminder: <strong><t t-out="object.name"/></strong> starts at
+    <t t-out="format_datetime(object.date_start)"/>.</p>
+    <p t-if="object.location or object.venue_id">Location: <t t-out="object.location or object.venue_id.name"/></p>
+</div>
+        </field>
+        <field name="auto_delete" eval="True"/>
+    </record>
+
+    <record id="mail_template_feedback_status" model="mail.template">
+        <field name="name">Community: Feedback Status Update</field>
+        <field name="model_id" ref="model_community_communication_feedback"/>
+        <field name="subject">{{ object.name }} is now {{ object.state }}</field>
+        <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted) }}</field>
+        <field name="description">Sent to the resident when feedback status changes.</field>
+        <field name="body_html" type="html">
+<div style="margin:0;padding:0;font-size:14px;color:#1f1633;">
+    <p>Your feedback <strong><t t-out="object.name"/></strong> — <t t-out="object.subject"/> — is now
+    <strong><t t-out="object.state"/></strong>.</p>
+</div>
+        </field>
+        <field name="auto_delete" eval="True"/>
+    </record>
+</odoo>

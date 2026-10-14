@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ca_finding_list" model="ir.ui.view">
+        <field name="name">compliance.finding.list</field>
+        <field name="model">compliance.finding</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="severity"/>
+                <field name="check_id"/>
+                <field name="audit_id"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_ca_finding_form" model="ir.ui.view">
+        <field name="name">compliance.finding.form</field>
+        <field name="model">compliance.finding</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_confirm" type="object" string="Confirm" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_convert_to_non_compliance" type="object" string="Convert to Non-Compliance" class="btn-primary" invisible="state not in ('draft', 'confirmed')"/>
+                    <button name="action_dismiss" type="object" string="Dismiss" invisible="state not in ('draft', 'confirmed')"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="severity"/>
+                        <field name="requirement_id"/>
+                        <field name="check_id"/>
+                        <field name="audit_id"/>
+                        <field name="non_compliance_id" readonly="1"/>
+                        <field name="property_id"/>
+                        <field name="assigned_user_id"/>
+                        <field name="company_id"/>
+                    </group>
+                    <field name="description"/>
+                    <field name="recommendation"/>
+                    <field name="evidence_ids" widget="many2many_binary"/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_ca_finding" model="ir.actions.act_window">
+        <field name="name">Findings</field>
+        <field name="res_model">compliance.finding</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

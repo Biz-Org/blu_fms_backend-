@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="seq_iot_device" model="ir.sequence">
+        <field name="name">IoT Device</field>
+        <field name="code">integration.iot.device</field>
+        <field name="prefix">IOT-%(year)s-</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

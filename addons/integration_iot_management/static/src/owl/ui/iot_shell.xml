@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="integration_iot_management.IotAppShell">
+        <div class="o_iot_layout">
+            <aside class="o_iot_sidebar">
+                <div class="o_iot_brand">
+                    <div class="o_iot_brand_mark"><i class="fa fa-wifi"/></div>
+                    <div>
+                        <div class="o_iot_brand_title">FMS Integration</div>
+                        <div class="o_iot_brand_sub">IoT &amp; BMS Portal</div>
+                    </div>
+                </div>
+                <nav class="o_iot_nav">
+                    <t t-foreach="nav" t-as="item" t-key="item.id">
+                        <button t-att-class="isActive(item) and !item.children ? 'active' : (isActive(item) ? 'active' : '')"
+                            t-on-click="() => this.open(item)">
+                            <i t-attf-class="fa {{ item.icon }}"/>
+                            <span t-esc="item.label"/>
+                        </button>
+                        <div t-if="item.children" class="o_iot_nav_children">
+                            <button t-foreach="item.children" t-as="child" t-key="child.id"
+                                t-att-class="childActive(child) ? 'active' : ''"
+                                t-on-click="() => this.open(child)">
+                                <span t-esc="child.label"/>
+                            </button>
+                        </div>
+                    </t>
+                </nav>
+                <div class="o_iot_nav_foot">
+                    <button t-if="canOpenSettings" t-on-click="openSettings"><i class="fa fa-cog"/> Configuration</button>
+                    <button t-on-click="openProfile"><i class="fa fa-user-o"/> User Profile</button>
+                    <button class="o_iot_logout" t-on-click="logout"><i class="fa fa-sign-out"/> Logout</button>
+                </div>
+            </aside>
+            <div class="o_iot_main">
+                <header class="o_iot_topbar">
+                    <div class="o_iot_topbar_title">Integration &amp; IoT</div>
+                    <div class="o_iot_topbar_search">
+                        <i class="fa fa-search"/>
+                        <input type="text" placeholder="Search devices, sensors, alerts..."/>
+                    </div>
+                    <div class="o_iot_topbar_actions">
+                        <span class="o_iot_role_chip" t-esc="roleLabel"/>
+                        <button class="o_iot_icon_btn" title="Notifications"><i class="fa fa-bell-o"/></button>
+                        <button t-if="canOpenSettings" class="o_iot_icon_btn" title="Configuration" t-on-click="openSettings"><i class="fa fa-cog"/></button>
+                        <img class="o_iot_avatar" t-att-src="avatarUrl" t-att-alt="user.name" t-on-click="openProfile"/>
+                    </div>
+                </header>
+                <div class="o_iot_content">
+                    <t t-slot="default"/>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

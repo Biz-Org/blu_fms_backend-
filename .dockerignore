@@ -1,0 +1,15 @@
+.git
+.gitignore
+**/__pycache__
+**/*.pyc
+**/.DS_Store
+.env
+.env.*
+!.env.example
+.venv
+venv
+*.md
+!README.md
+docker-compose*.yml
+.odoo-data
+.odoo_data

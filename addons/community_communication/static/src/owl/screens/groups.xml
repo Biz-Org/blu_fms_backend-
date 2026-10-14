@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="community_communication.Groups">
+        <div class="o_action o_cc_app">
+            <CcAppShell active="'groups'">
+            <div class="o_cc_shell">
+                <t t-if="state.mode === 'list'">
+                    <CcPageHeader title="'Community Groups'" subtitle="'Discover and manage resident groups and communities.'">
+                        <t t-set-slot="buttons">
+                            <CcActionButton t-if="state.isOfficer" label="'+ Create Group'" icon="'fa-plus'" onClick="() => this.setMode('create')"/>
+                        </t>
+                    </CcPageHeader>
+                    <div class="o_cc_kpi_row">
+                        <t t-foreach="state.kpis" t-as="card" t-key="card.key">
+                            <CcKpiCard label="card.label" value="card.value" icon="'fa-users'"/>
+                        </t>
+                    </div>
+                    <div class="o_cc_toolbar">
+                        <CcSearchBar value="state.search" placeholder="'Search groups...'" onChange.bind="onSearch"/>
+                        <select class="o_cc_select" t-model="state.category" t-on-change="() => this.reload()">
+                            <option value="">All Categories</option>
+                            <t t-foreach="categories" t-as="cat" t-key="cat[0]"><option t-att-value="cat[0]" t-esc="cat[1]"/></t>
+                        </select>
+                        <select class="o_cc_select" t-model="state.filter" t-on-change="() => this.reload()">
+                            <option value="all">All Visibility</option>
+                            <option value="public">Public</option>
+                            <option value="restricted">Restricted</option>
+                            <option value="invite">Invite-only</option>
+                        </select>
+                        <div class="ms-auto o_cc_view_toggle">
+                            <button t-att-class="!state.extras.listView ? 'active' : ''" t-on-click="() => this.state.extras.listView = false"><i class="fa fa-th"/></button>
+                            <button t-att-class="state.extras.listView ? 'active' : ''" t-on-click="() => this.state.extras.listView = true"><i class="fa fa-list"/></button>
+                        </div>
+                    </div>
+                    <t t-if="state.records.length and !state.extras.listView">
+                        <div class="o_cc_group_grid">
+                            <div class="o_cc_group_card" t-foreach="state.records" t-as="rec" t-key="rec.id">
+                                <img t-att-src="imageUrl(rec)" alt=""/>
+                                <span class="o_cc_pill" t-esc="rec.visibility"/>
+                                <h3 t-esc="rec.name"/>
+                                <span class="o_cc_pill info" t-esc="categoryLabel(rec.category)"/>
+                                <p t-esc="snippet(rec)"/>
+                                <div class="small text-muted mb-2"><t t-esc="rec.member_count"/> Members</div>
+                                <div class="d-flex gap-2">
+                                    <button class="o_cc_btn secondary" t-on-click="() => this.setMode('detail', rec.id)">View Details</button>
+                                    <button class="o_cc_btn primary" t-on-click="() => this.onGroupCta(rec)" t-esc="joinLabel(rec)"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                    <t t-if="state.records.length and state.extras.listView">
+                        <div class="o_cc_card">
+                            <table class="o_cc_table">
+                                <thead><tr><th>Group</th><th>Category</th><th>Visibility</th><th>Members</th></tr></thead>
+                                <tbody>
+                                    <tr t-foreach="state.records" t-as="rec" t-key="rec.id" t-on-click="() => this.setMode('detail', rec.id)">
+                                        <td class="o_cc_row_title" t-esc="rec.name"/>
+                                        <td t-esc="categoryLabel(rec.category)"/>
+                                        <td t-esc="rec.visibility"/>
+                                        <td t-esc="rec.member_count"/>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </t>
+                    <CcEmptyState t-if="!state.records.length" title="'No groups yet'" hint="state.isOfficer ? 'Create a group so residents can join.' : 'Community groups will appear here.'" actionLabel="state.isOfficer ? '+ Create Group' : ''" onAction="() => this.setMode('create')"/>
+                </t>
+
+                <t t-if="state.mode === 'create'">
+                    <button class="o_cc_back" t-on-click="() => this.setMode('list')">Back to Community Groups</button>
+                    <CcFormSection title="'Create Group'">
+                        <label>Name *</label>
+                        <input t-att-class="fieldClass('name')" t-model="state.form.name"/>
+                        <CcFieldError message="fieldError('name')"/>
+                        <label class="mt-3">Category</label>
+                        <select class="o_cc_input" t-model="state.form.category">
+                            <t t-foreach="categories" t-as="cat" t-key="cat[0]"><option t-att-value="cat[0]" t-esc="cat[1]"/></t>
+                        </select>
+                        <label class="mt-3">Visibility</label>
+                        <select class="o_cc_input" t-model="state.form.visibility">
+                            <option value="public">Public</option>
+                            <option value="restricted">Restricted</option>
+                            <option value="invite">Invite-only</option>
+                        </select>
+                        <p t-if="state.form.visibility === 'invite'" class="small text-muted">Invite-only groups do not accept public join requests. Officers can add members after the group is created.</p>
+                        <p t-if="state.form.visibility === 'restricted'" class="small text-muted">Residents can request to join. Officers approve membership.</p>
+                        <label class="mt-3">Cover image</label>
+                        <CcFileDropzone files="coverList" error="fieldError('cover')" single="true" accept="'.png,.jpg,.jpeg,.svg'" onAdd.bind="onCoverSelected" onRemove.bind="removeCover"/>
+                        <label class="mt-3">Description</label>
+                        <textarea t-model="state.form.description"/>
+                        <div class="o_cc_footer_actions">
+                            <span t-if="state.busy" class="o_cc_busy_hint" t-esc="state.busy"/>
+                            <button class="o_cc_btn primary" t-att-disabled="state.busy" t-on-click="create">Create Group</button>
+                        </div>
+                    </CcFormSection>
+                </t>
+
+                <t t-if="state.mode === 'detail' and state.record">
+                    <button class="o_cc_back" t-on-click="() => this.setMode('list')"><i class="fa fa-arrow-left"/> Back to Community Groups</button>
+                    <div class="o_cc_card mb-3 d-flex gap-3 align-items-center">
+                        <img t-att-src="imageUrl(state.record)" style="width:96px;height:96px;object-fit:cover;border-radius:12px" alt=""/>
+                        <div class="flex-grow-1">
+                            <h1 t-esc="state.record.name"/>
+                            <div class="o_cc_meta">
+                                <span t-esc="categoryLabel(state.record.category)"/>
+                                <span><t t-esc="state.record.member_count"/> Members</span>
+                                <span class="o_cc_pill info" t-esc="state.record.visibility"/>
+                            </div>
+                        </div>
+                        <button t-if="!(membership(state.record.id) and membership(state.record.id).state === 'member')" class="o_cc_btn primary" t-on-click="() => this.join(state.record.id)">Join Group</button>
+                        <button t-else="" class="o_cc_btn secondary" t-on-click="() => this.leave(state.record.id)">Leave</button>
+                    </div>
+                    <CcTabs items="detailTabs" active="state.extras.tab || 'overview'" onSelect="(id) => this.state.extras.tab = id"/>
+                    <t t-if="(state.extras.tab || 'overview') === 'overview'">
+                        <div class="o_cc_split">
+                            <div class="o_cc_card">
+                                <div class="o_cc_card_head">About this Group</div>
+                                <div t-out="html(state.record.description)"/>
+                                <div class="o_cc_form_grid mt-3">
+                                    <div class="o_cc_stat_box"><div class="o_cc_kpi_label">Established</div><div t-esc="formatDay(state.record.create_date)"/></div>
+                                    <div class="o_cc_stat_box"><div class="o_cc_kpi_label">Members</div><div t-esc="state.record.member_count"/></div>
+                                </div>
+                            </div>
+                            <div class="o_cc_card">
+                                <div class="o_cc_card_head">Leadership</div>
+                                <t t-foreach="leaders" t-as="m" t-key="m.id">
+                                    <div class="mb-2">
+                                        <div class="fw-semibold" t-esc="m2oName(m.resident_id)"/>
+                                        <div class="o_cc_pill" t-esc="m.role"/>
+                                    </div>
+                                </t>
+                                <div t-if="!leaders.length" class="small text-muted">No assigned leadership yet.</div>
+                            </div>
+                        </div>
+                    </t>
+                    <t t-if="state.extras.tab === 'members'">
+                        <div class="o_cc_card">
+                            <div t-if="state.isOfficer" class="o_cc_card_head">Add Member</div>
+                            <div t-if="state.isOfficer" class="d-flex gap-2 align-items-start flex-wrap mb-3">
+                                <select t-att-class="fieldClass('add_resident_id')" t-model.number="state.form.add_resident_id">
+                                    <option value="">Select a resident...</option>
+                                    <t t-foreach="availableResidents" t-as="r" t-key="r.id"><option t-att-value="r.id" t-esc="r.name"/></t>
+                                </select>
+                                <button class="o_cc_btn primary" t-att-disabled="state.busy" t-on-click="addMember">Add Member</button>
+                            </div>
+                            <CcFieldError message="fieldError('add_resident_id')"/>
+                            <div t-if="!availableResidents.length" class="small text-muted mb-3">No additional residents are available to add.</div>
+                            <table class="o_cc_table">
+                                <thead><tr><th>Member</th><th>Role</th><th>Status</th></tr></thead>
+                                <tbody>
+                                    <tr t-foreach="state.extras.members or []" t-as="m" t-key="m.id">
+                                        <td t-esc="m2oName(m.resident_id)"/>
+                                        <td t-esc="m.role"/>
+                                        <td><CcStatusBadge state="m.state"/></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <CcEmptyState t-if="!(state.extras.members or []).length" title="'No members yet'"/>
+                        </div>
+                    </t>
+                    <t t-if="state.extras.tab === 'discussions'">
+                        <div class="o_cc_card">
+                            <t t-foreach="state.extras.discussions or []" t-as="d" t-key="d.id">
+                                <div class="o_cc_thread_comment" t-on-click="() => this.openClient('community_communication.action_discussions', {mode:'detail', resId: d.id})">
+                                    <div class="fw-semibold" t-esc="d.title"/>
+                                    <div class="small text-muted"><t t-esc="m2oName(d.author_id)"/> · <t t-esc="d.comment_count"/> comments</div>
+                                </div>
+                            </t>
+                            <CcEmptyState t-if="!(state.extras.discussions or []).length" title="'No group discussions yet'"/>
+                        </div>
+                    </t>
+                </t>
+            </div>
+            </CcAppShell>
+        </div>
+    </t>
+</templates>

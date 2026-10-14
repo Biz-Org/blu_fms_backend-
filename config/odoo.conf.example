@@ -1,0 +1,25 @@
+[options]
+; Copy to odoo.conf and adjust for your environment.
+; Docker: mount as /etc/odoo/odoo.conf (see docker-compose.yml).
+
+addons_path = /usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons,/mnt/extra-addons/addons
+data_dir = /var/lib/odoo
+
+db_host = db
+db_port = 5432
+db_user = odoo
+db_password = odoo
+
+http_port = 8069
+; http_interface = 0.0.0.0
+
+; Change before exposing Odoo to a network
+admin_passwd = changeme
+
+; Optional dev helpers (disable in production)
+; dev_mode = xml,assets
+
+; workers = 2
+; limit_memory_hard = 2684354560
+; limit_time_cpu = 600
+; limit_time_real = 1200

@@ -1,0 +1,10 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ai_copilot_config_admin,ai.copilot.config.admin,model_ai_copilot_config,group_copilot_admin,1,1,1,1
+access_ai_copilot_conversation_user,ai.copilot.conversation.user,model_ai_copilot_conversation,group_copilot_user,1,1,1,0
+access_ai_copilot_conversation_admin,ai.copilot.conversation.admin,model_ai_copilot_conversation,group_copilot_admin,1,1,1,1
+access_ai_copilot_message_user,ai.copilot.message.user,model_ai_copilot_message,group_copilot_user,1,1,1,0
+access_ai_copilot_message_admin,ai.copilot.message.admin,model_ai_copilot_message,group_copilot_admin,1,1,1,1
+access_ai_copilot_document_user,ai.copilot.document.user,model_ai_copilot_document,group_copilot_user,1,0,0,0
+access_ai_copilot_document_admin,ai.copilot.document.admin,model_ai_copilot_document,group_copilot_admin,1,1,1,1
+access_ai_copilot_audit_user,ai.copilot.audit.user,model_ai_copilot_audit,group_copilot_user,1,0,1,0
+access_ai_copilot_audit_admin,ai.copilot.audit.admin,model_ai_copilot_audit,group_copilot_admin,1,0,1,0

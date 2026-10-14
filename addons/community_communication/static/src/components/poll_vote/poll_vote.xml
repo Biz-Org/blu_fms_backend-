@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="community_communication.PollVote">
+        <div class="o_cc_shell" t-if="state.payload">
+            <div class="row g-3">
+                <div class="col-lg-8">
+                    <div class="o_cc_card">
+                        <t t-if="state.confirmed">
+                            <div class="text-center py-4">
+                                <div class="o_cc_pill success mb-2">Vote recorded</div>
+                                <h3>Thank you for voting</h3>
+                                <p class="text-muted">Results update as more residents participate.</p>
+                            </div>
+                            <t t-foreach="state.payload.options" t-as="option" t-key="option.id">
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between small">
+                                        <span t-esc="option.name"/>
+                                        <span><t t-esc="option.vote_percent"/>% · <t t-esc="option.vote_count"/></span>
+                                    </div>
+                                    <div class="o_cc_progress"><div class="o_cc_progress_bar" t-att-style="'width:' + option.vote_percent + '%'"/></div>
+                                </div>
+                            </t>
+                        </t>
+                        <t t-else="">
+                            <span class="o_cc_pill" t-esc="state.payload.category"/>
+                            <h3 class="mt-2" t-esc="state.payload.question"/>
+                            <p class="text-muted" t-esc="state.payload.description"/>
+                            <div class="small text-muted text-uppercase mb-2">
+                                <t t-esc="state.payload.response_type === 'single' ? 'Select one option' : 'Select one or more'"/>
+                            </div>
+                            <t t-foreach="state.payload.options" t-as="option" t-key="option.id">
+                                <div t-attf-class="o_cc_option_card {{ state.selected.includes(option.id) ? 'selected' : '' }}"
+                                     t-on-click="() => this.toggle(option.id)">
+                                    <t t-esc="option.name"/>
+                                </div>
+                            </t>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <span t-if="state.payload.anonymous" class="small text-muted">Anonymous voting enabled</span>
+                                <button class="btn o_cc_btn_primary" t-on-click="submit" t-att-disabled="!state.selected.length">Submit Vote</button>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="o_cc_card mb-3">
+                        <div class="fw-bold mb-2">Poll Details</div>
+                        <div class="small mb-1">Audience: <t t-esc="state.payload.audience_type"/></div>
+                        <div class="small mb-1">Type: <t t-esc="state.payload.response_type"/></div>
+                        <div class="small" t-if="state.payload.date_end">Closes: <t t-esc="state.payload.date_end"/></div>
+                    </div>
+                    <div class="o_cc_cta">
+                        <div class="fw-bold">Your Voice Matters</div>
+                        <div class="small">Help shape community decisions by participating in active polls.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

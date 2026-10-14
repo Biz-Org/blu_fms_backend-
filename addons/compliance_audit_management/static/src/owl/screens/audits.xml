@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="compliance_audit_management.Audits">
+        <div class="o_action o_ca_app">
+            <CaAppShell active="'audits'">
+                <div class="o_ca_shell">
+                    <div t-if="state.error" class="o_ca_alert">
+                        <i class="fa fa-exclamation-circle"/>
+                        <div t-esc="state.error"/>
+                    </div>
+
+                    <t t-if="state.mode === 'list'">
+                        <div class="o_ca_page_header">
+                            <div>
+                                <h1>Audits &amp; Inspections</h1>
+                                <p>Plan, conduct and track compliance audits and inspections.</p>
+                            </div>
+                            <button t-if="canManage" class="o_ca_btn primary" t-on-click="openCreate">
+                                <i class="fa fa-plus"/> Create Audit / Inspection
+                            </button>
+                        </div>
+
+                        <div t-if="state.loading" class="o_ca_empty">
+                            <h3>Loading audits</h3>
+                            <p>Fetching audit and inspection records.</p>
+                        </div>
+                        <t t-else="">
+                            <div class="o_ca_kpi_row">
+                                <CaKpiCard
+                                    label="'Scheduled (Month)'"
+                                    value="state.kpis.scheduled_month"
+                                    icon="'fa-calendar'"
+                                    onClick.bind="() => this.onFilter('scheduled')"
+                                />
+                                <CaKpiCard
+                                    label="'In Progress'"
+                                    value="state.kpis.in_progress"
+                                    icon="'fa-play-circle'"
+                                    tone="state.kpis.in_progress ? 'warning' : ''"
+                                    onClick.bind="() => this.onFilter('in_progress')"
+                                />
+                                <CaKpiCard
+                                    label="'Overdue'"
+                                    value="state.kpis.overdue"
+                                    icon="'fa-exclamation-triangle'"
+                                    tone="state.kpis.overdue ? 'danger' : ''"
+                                    hint="state.kpis.overdue ? 'Action required' : ''"
+                                    onClick.bind="() => this.onFilter('overdue')"
+                                />
+                                <CaKpiCard
+                                    label="'Completion Rate'"
+                                    value="(state.kpis.completion_rate || 0) + '%'"
+                                    icon="'fa-check-circle'"
+                                    tone="'success'"
+                                />
+                            </div>
+
+                            <div class="o_ca_toolbar">
+                                <div class="o_ca_chips">
+                                    <button t-att-class="state.filter === 'all' ? 'active' : ''" t-on-click="() => this.onFilter('all')">All</button>
+                                    <button t-att-class="state.filter === 'audits' ? 'active' : ''" t-on-click="() => this.onFilter('audits')">Audits</button>
+                                    <button t-att-class="state.filter === 'inspections' ? 'active' : ''" t-on-click="() => this.onFilter('inspections')">Inspections</button>
+                                    <button t-att-class="state.filter === 'scheduled' ? 'active' : ''" t-on-click="() => this.onFilter('scheduled')">Scheduled</button>
+                                    <button t-att-class="state.filter === 'in_progress' ? 'active' : ''" t-on-click="() => this.onFilter('in_progress')">In Progress</button>
+                                    <button t-att-class="state.filter === 'completed' ? 'active' : ''" t-on-click="() => this.onFilter('completed')">Completed</button>
+                                    <button t-att-class="state.filter === 'overdue' ? 'active' : ''" t-on-click="() => this.onFilter('overdue')">Overdue</button>
+                                </div>
+                                <div class="o_ca_search">
+                                    <i class="fa fa-search"/>
+                                    <input type="text" placeholder="Search audits..." t-att-value="state.search" t-on-change="onSearch"/>
+                                </div>
+                            </div>
+
+                            <div class="o_ca_card">
+                                <div class="o_ca_card_head">Audit &amp; inspection schedule</div>
+                                <t t-if="state.records.length">
+                                    <table class="o_ca_table">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Type</th>
+                                                <th>Location</th>
+                                                <th>Assigned To</th>
+                                                <th>Date</th>
+                                                <th>Status</th>
+                                                <th>Findings</th>
+                                                <th/>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr t-foreach="state.records" t-as="rec" t-key="rec.id" t-on-click="() => this.setMode('detail', rec.id)">
+                                                <td>
+                                                    <div class="o_ca_row_title" t-esc="rec.name"/>
+                                                    <div class="o_ca_row_sub">Ref: <t t-esc="rec.reference"/></div>
+                                                </td>
+                                                <td>
+                                                    <span t-attf-class="o_ca_pill {{ rec.kind === 'audit' ? 'info' : 'muted' }}" t-esc="kindLabel(rec)"/>
+                                                    <div class="o_ca_row_sub" t-esc="typeLabel(rec)"/>
+                                                </td>
+                                                <td t-esc="locationLabel(rec)"/>
+                                                <td t-esc="m2oName(rec.assigned_user_id) or '—'"/>
+                                                <td>
+                                                    <div t-att-class="rec.is_overdue ? 'text-danger' : ''" t-esc="formatDate(rec.date_planned)"/>
+                                                </td>
+                                                <td>
+                                                    <CaStatusBadge state="displayState(rec)" label="displayStateLabel(rec)"/>
+                                                </td>
+                                                <td>
+                                                    <span t-if="rec.finding_count" class="o_ca_pill danger" t-esc="rec.finding_count"/>
+                                                    <span t-else="">—</span>
+                                                </td>
+                                                <td>
+                                                    <button class="o_ca_link" t-on-click.stop="() => this.setMode('detail', rec.id)">Open</button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div class="o_ca_pager">
+                                        <span><t t-esc="pageFrom"/>–<t t-esc="pageTo"/> of <t t-esc="state.total"/></span>
+                                        <div class="o_ca_pager_pages">
+                                            <button t-att-disabled="state.page &lt;= 1" t-on-click="() => this.onPage(-1)">Prev</button>
+                                            <button t-att-disabled="state.page &gt;= pageCount" t-on-click="() => this.onPage(1)">Next</button>
+                                        </div>
+                                    </div>
+                                </t>
+                                <CaEmptyState t-else="" title="'No audits match'" hint="emptyListHint"/>
+                            </div>
+                        </t>
+                    </t>
+
+                    <t t-if="state.mode === 'detail' and state.record">
+                        <button class="o_ca_back" t-on-click="() => this.setMode('list')">
+                            <i class="fa fa-arrow-left"/> Back to Audits
+                        </button>
+                        <div class="o_ca_page_header">
+                            <div>
+                                <h1 t-esc="state.record.name"/>
+                                <p>
+                                    <t t-esc="state.record.reference"/>
+                                    · <t t-esc="typeLabel(state.record)"/>
+                                    · <t t-esc="formatDate(state.record.date_planned)"/>
+                                    · <CaStatusBadge state="displayState(state.record)" label="displayStateLabel(state.record)"/>
+                                </p>
+                            </div>
+                            <div class="d-flex gap-2 flex-wrap" t-if="canManage">
+                                <button t-if="state.record.state === 'scheduled'" class="o_ca_btn primary" t-att-disabled="!!state.busy" t-on-click="() => this.runAction('action_start')">Start</button>
+                                <button t-if="state.record.state === 'in_progress'" class="o_ca_btn" t-att-disabled="!!state.busy" t-on-click="() => this.runAction('action_pending_review')">Pending Review</button>
+                                <button t-if="['in_progress', 'pending_review'].includes(state.record.state)" class="o_ca_btn" t-att-disabled="!!state.busy" t-on-click="saveProgress">Save Progress</button>
+                                <button t-if="['in_progress', 'pending_review'].includes(state.record.state)" class="o_ca_btn primary" t-att-disabled="!!state.busy" t-on-click="() => this.runAction('action_complete')">Complete</button>
+                                <button t-if="['in_progress', 'pending_review'].includes(state.record.state)" class="o_ca_btn" t-att-disabled="!!state.busy" t-on-click="() => this.runAction('action_fail')">Fail</button>
+                                <button t-if="['completed', 'failed'].includes(state.record.state)" class="o_ca_btn primary" t-att-disabled="!!state.busy" t-on-click="() => this.runAction('action_close')">Close</button>
+                                <button t-if="!['closed'].includes(state.record.state)" class="o_ca_btn" t-att-disabled="!!state.busy" t-on-click="openFinding">+ Log Finding</button>
+                            </div>
+                        </div>
+
+                        <div class="o_ca_detail_grid">
+                            <div class="o_ca_form_section">
+                                <h3>Checklist</h3>
+                                <p t-if="!state.lines.length" class="o_ca_hint">No checklist lines on this record.</p>
+                                <div t-foreach="state.lines" t-as="line" t-key="line.id" class="o_ca_checklist_row">
+                                    <div class="o_ca_row_title">
+                                        <t t-esc="line.name"/>
+                                        <span t-if="line.required" class="o_ca_pill muted">Required</span>
+                                    </div>
+                                    <div class="o_ca_inline_form">
+                                        <select
+                                            t-att-disabled="!canManage || ['completed', 'closed'].includes(state.record.state)"
+                                            t-att-value="state.lineResults[line.id] || ''"
+                                            t-on-change="(ev) => this.state.lineResults[line.id] = ev.target.value"
+                                        >
+                                            <option value="">Result</option>
+                                            <t t-foreach="resultOptions" t-as="opt" t-key="opt.value">
+                                                <option t-att-value="opt.value" t-esc="opt.label"/>
+                                            </t>
+                                        </select>
+                                        <input
+                                            type="text"
+                                            placeholder="Remarks"
+                                            t-att-disabled="!canManage || ['completed', 'closed'].includes(state.record.state)"
+                                            t-att-value="state.lineRemarks[line.id] || ''"
+                                            t-on-change="(ev) => this.state.lineRemarks[line.id] = ev.target.value"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="o_ca_form_section">
+                                    <h3>Details</h3>
+                                    <div class="o_ca_meta">
+                                        <div>
+                                            <span>Kind</span>
+                                            <strong t-esc="kindLabel(state.record)"/>
+                                        </div>
+                                        <div>
+                                            <span>Type</span>
+                                            <strong t-esc="typeLabel(state.record)"/>
+                                        </div>
+                                        <div>
+                                            <span>Location</span>
+                                            <strong t-esc="locationLabel(state.record)"/>
+                                        </div>
+                                        <div>
+                                            <span>Assigned To</span>
+                                            <strong t-esc="m2oName(state.record.assigned_user_id) or '—'"/>
+                                        </div>
+                                    </div>
+                                    <p t-if="state.record.scope" class="o_ca_hint" t-esc="state.record.scope"/>
+                                    <div t-if="state.busy" class="o_ca_busy" t-esc="state.busy"/>
+                                </div>
+                                <div class="o_ca_form_section">
+                                    <h3>Findings</h3>
+                                    <t t-if="state.findings.length">
+                                        <div t-foreach="state.findings" t-as="finding" t-key="finding.id" class="o_ca_attention_item">
+                                            <div>
+                                                <div class="o_ca_row_title" t-esc="finding.name"/>
+                                                <div class="o_ca_row_sub">
+                                                    <CaStatusBadge state="finding.severity" label="finding.severity"/>
+                                                    · <CaStatusBadge state="finding.state" label="finding.state"/>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex gap-2" t-if="canManage and !['converted', 'dismissed'].includes(finding.state)">
+                                                <button t-if="finding.state === 'draft'" class="o_ca_link" t-on-click="() => this.findingAction(finding.id, 'action_confirm')">Confirm</button>
+                                                <button class="o_ca_link" t-on-click="() => this.findingAction(finding.id, 'action_convert_to_non_compliance')">Convert to NC</button>
+                                                <button class="o_ca_link" t-on-click="() => this.findingAction(finding.id, 'action_dismiss')">Dismiss</button>
+                                            </div>
+                                        </div>
+                                    </t>
+                                    <p t-else="" class="o_ca_hint">No findings logged yet.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+
+                    <div t-if="state.showCreate" class="o_ca_modal_backdrop" t-on-click="closeCreate">
+                        <div class="o_ca_modal" t-on-click.stop="">
+                            <div class="o_ca_modal_head">
+                                <div>
+                                    <h2>Create Audit / Inspection</h2>
+                                    <p>Schedule a compliance audit or regulatory inspection.</p>
+                                </div>
+                                <button class="o_ca_modal_close" t-on-click="closeCreate" aria-label="Close">
+                                    <i class="fa fa-times"/>
+                                </button>
+                            </div>
+                            <div class="o_ca_modal_body">
+                                <div class="o_ca_form_grid">
+                                    <div class="o_ca_span_2">
+                                        <label>Name *</label>
+                                        <input type="text" t-model="state.form.name" placeholder="e.g., Q3 Safety Standards Review"/>
+                                    </div>
+                                    <div>
+                                        <label>Kind *</label>
+                                        <select t-model="state.form.kind">
+                                            <option value="audit">Audit</option>
+                                            <option value="inspection">Inspection</option>
+                                        </select>
+                                    </div>
+                                    <div t-if="state.form.kind === 'audit'">
+                                        <label>Audit Type *</label>
+                                        <select t-model="state.form.audit_type">
+                                            <t t-foreach="auditTypeOptions" t-as="opt" t-key="opt.value">
+                                                <option t-att-value="opt.value" t-esc="opt.label"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div t-if="state.form.kind === 'inspection'">
+                                        <label>Inspection Type *</label>
+                                        <select t-model="state.form.inspection_type">
+                                            <t t-foreach="inspectionTypeOptions" t-as="opt" t-key="opt.value">
+                                                <option t-att-value="opt.value" t-esc="opt.label"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label>Planned Date *</label>
+                                        <input type="date" t-model="state.form.date_planned"/>
+                                    </div>
+                                    <div>
+                                        <label>Checklist Template</label>
+                                        <select t-att-value="state.form.template_id" t-on-change="onTemplateChange">
+                                            <option value="">Select template...</option>
+                                            <t t-foreach="state.lookups.templates" t-as="tpl" t-key="tpl.id">
+                                                <option t-att-value="tpl.id" t-esc="tpl.name + (tpl.item_count ? ' (' + tpl.item_count + ')' : '')"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label>Property *</label>
+                                        <select t-att-value="state.form.property_id" t-on-change="onPropertyChange">
+                                            <option value="">Select property...</option>
+                                            <t t-foreach="state.lookups.properties" t-as="prop" t-key="prop.id">
+                                                <option t-att-value="prop.id" t-esc="prop.name"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label>Building</label>
+                                        <select t-att-value="state.form.building_id" t-on-change="onBuildingChange">
+                                            <option value="">Select building...</option>
+                                            <t t-foreach="filteredBuildings" t-as="bldg" t-key="bldg.id">
+                                                <option t-att-value="bldg.id" t-esc="bldg.name"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label>Area</label>
+                                        <select t-model="state.form.area_id">
+                                            <option value="">Select area...</option>
+                                            <t t-foreach="filteredAreas" t-as="area" t-key="area.id">
+                                                <option t-att-value="area.id" t-esc="area.name"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label>Assigned To</label>
+                                        <select t-model="state.form.assigned_user_id">
+                                            <option value="">Select user...</option>
+                                            <t t-foreach="state.lookups.users" t-as="usr" t-key="usr.id">
+                                                <option t-att-value="usr.id" t-esc="usr.name"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div class="o_ca_span_2">
+                                        <label>Scope / Requirements</label>
+                                        <textarea t-model="state.form.scope" placeholder="Define the audit or inspection scope..."/>
+                                    </div>
+                                    <div class="o_ca_span_2">
+                                        <label>Notes</label>
+                                        <textarea t-model="state.form.notes"/>
+                                    </div>
+                                </div>
+                                <div t-if="state.previewItems.length" class="o_ca_preview_box">
+                                    <strong>Checklist includes:</strong>
+                                    <ul>
+                                        <li t-foreach="state.previewItems" t-as="item" t-key="item.id">
+                                            <i class="fa fa-check-circle"/> <t t-esc="item.name"/>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="o_ca_modal_foot">
+                                <span t-if="state.busy" class="o_ca_busy" t-esc="state.busy"/>
+                                <button class="o_ca_btn" t-on-click="closeCreate">Cancel</button>
+                                <button class="o_ca_btn primary" t-att-disabled="!!state.busy" t-on-click="createAudit">
+                                    Create <i class="fa fa-arrow-right"/>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div t-if="state.showFinding" class="o_ca_modal_backdrop" t-on-click="closeFinding">
+                        <div class="o_ca_modal" t-on-click.stop="">
+                            <div class="o_ca_modal_head">
+                                <div>
+                                    <h2>Log Finding</h2>
+                                    <p>Record an observation from this audit or inspection.</p>
+                                </div>
+                                <button class="o_ca_modal_close" t-on-click="closeFinding" aria-label="Close">
+                                    <i class="fa fa-times"/>
+                                </button>
+                            </div>
+                            <div class="o_ca_modal_body">
+                                <div class="o_ca_form_grid">
+                                    <div class="o_ca_span_2">
+                                        <label>Title *</label>
+                                        <input type="text" t-model="state.findingForm.name"/>
+                                    </div>
+                                    <div>
+                                        <label>Severity</label>
+                                        <select t-model="state.findingForm.severity">
+                                            <t t-foreach="severityOptions" t-as="opt" t-key="opt.value">
+                                                <option t-att-value="opt.value" t-esc="opt.label"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label>Checklist Item</label>
+                                        <select t-model="state.findingForm.audit_line_id">
+                                            <option value="">Optional link</option>
+                                            <t t-foreach="state.lines" t-as="line" t-key="line.id">
+                                                <option t-att-value="line.id" t-esc="line.name"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div class="o_ca_span_2">
+                                        <label>Description</label>
+                                        <textarea t-model="state.findingForm.description"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="o_ca_modal_foot">
+                                <span t-if="state.busy" class="o_ca_busy" t-esc="state.busy"/>
+                                <button class="o_ca_btn" t-on-click="closeFinding">Cancel</button>
+                                <button class="o_ca_btn primary" t-att-disabled="!!state.busy" t-on-click="createFinding">
+                                    Log Finding
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </CaAppShell>
+        </div>
+    </t>
+</templates>

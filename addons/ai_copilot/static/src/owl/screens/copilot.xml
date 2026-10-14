@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="ai_copilot.Copilot">
+        <div class="o_action o_ai_app">
+            <AiAppShell
+                panel="state.panel"
+                apps="state.bootstrap.apps"
+                canAdmin="state.bootstrap.can_admin"
+                userName="state.bootstrap.user_name"
+                companyName="state.bootstrap.company_name"
+                navOpen="state.navOpen"
+                onPanel.bind="setPanel"
+                onApp.bind="openApp"
+                onToggleNav.bind="toggleNav">
+                <header class="o_ai_topbar">
+                    <button type="button" class="o_ai_icon_btn o_ai_menu_btn" title="Menu" t-on-click="toggleNav">
+                        <i class="fa fa-bars"/>
+                    </button>
+                    <h1>Facility Management System</h1>
+                    <div class="o_ai_search">
+                        <i class="fa fa-search"/>
+                        <input type="text" placeholder="Search facilities..." t-model="state.facilitySearch" t-on-keydown="onSearchKeydown"/>
+                    </div>
+                    <button type="button" class="o_ai_icon_btn" title="New conversation" t-on-click="newChat">
+                        <i class="fa fa-plus"/>
+                    </button>
+                </header>
+                <div class="o_ai_content">
+                    <t t-if="state.loading">
+                        <div class="o_ai_state"><h3>Loading AI Copilot…</h3></div>
+                    </t>
+                    <t t-elif="state.error">
+                        <div class="o_ai_state danger">
+                            <i class="fa fa-exclamation-circle"/>
+                            <h3>Something went wrong</h3>
+                            <p t-esc="state.error"/>
+                            <button type="button" t-on-click="boot">Retry</button>
+                        </div>
+                    </t>
+                    <t t-elif="state.panel === 'history'">
+                        <div class="o_ai_panel o_ai_history">
+                            <h2>Conversation history</h2>
+                            <p t-if="!state.conversations.length">No conversations yet.</p>
+                            <button t-foreach="state.conversations" t-as="conversation" t-key="conversation.id" t-on-click="() => this.openConversation(conversation)">
+                                <strong t-esc="conversation.name"/>
+                                <div class="text-muted small" t-esc="conversation.updated"/>
+                            </button>
+                        </div>
+                    </t>
+                    <t t-elif="state.panel === 'knowledge'">
+                        <div class="o_ai_panel">
+                            <h2>Knowledge base</h2>
+                            <p class="text-muted">Approved documents you are allowed to read. Administrators add and restrict sources.</p>
+                            <div class="o_ai_doc" t-foreach="state.documents" t-as="document" t-key="document.id">
+                                <strong t-esc="document.name"/>
+                                <div class="text-muted small">
+                                    <span t-esc="document.category"/>
+                                    <t t-if="document.restricted"> · Restricted</t>
+                                </div>
+                                <div t-esc="document.summary"/>
+                            </div>
+                            <t t-if="state.bootstrap.can_admin">
+                                <h3>Add a document</h3>
+                                <div class="o_ai_form">
+                                    <input type="text" placeholder="Title" t-model="state.docForm.name"/>
+                                    <select t-model="state.docForm.category">
+                                        <option value="policy">Policies &amp; Procedures</option>
+                                        <option value="sop">SOPs</option>
+                                        <option value="manual">Facility Manuals</option>
+                                        <option value="safety">Safety Guidelines</option>
+                                        <option value="compliance">Compliance Documents</option>
+                                        <option value="equipment">Equipment Manuals</option>
+                                        <option value="community">Community Guidelines</option>
+                                        <option value="internal">Internal Documents</option>
+                                    </select>
+                                    <input type="text" placeholder="Short summary" t-model="state.docForm.summary"/>
+                                    <textarea placeholder="Approved text" t-model="state.docForm.body"/>
+                                    <button type="button" class="o_ai_primary" t-on-click="saveDocument">Save document</button>
+                                </div>
+                            </t>
+                        </div>
+                    </t>
+                    <t t-elif="state.panel === 'settings'">
+                        <div class="o_ai_panel">
+                            <h2>AI provider</h2>
+                            <p class="text-muted">The API key is stored on the server and is not sent back to the browser.</p>
+                            <div class="o_ai_form">
+                                <label><input type="checkbox" t-model="state.settings.enabled"/> Enable generative responses</label>
+                                <select t-model="state.settings.provider">
+                                    <option value="none">Not configured</option>
+                                    <option value="openai">OpenAI</option>
+                                    <option value="compatible">OpenAI-compatible endpoint</option>
+                                </select>
+                                <input type="text" placeholder="https://api.openai.com/v1" t-model="state.settings.base_url"/>
+                                <input type="text" placeholder="Model name" t-model="state.settings.model_name"/>
+                                <input type="number" step="0.1" min="0" max="2" t-model="state.settings.temperature"/>
+                                <input type="password" t-att-placeholder="state.settings.api_key_set ? 'API key is set. Enter a new key to replace it.' : 'API key'" t-model="state.settings.api_key"/>
+                                <button type="button" class="o_ai_primary" t-on-click="saveSettings">Save settings</button>
+                                <p t-if="state.settingsMessage" t-esc="state.settingsMessage"/>
+                            </div>
+                        </div>
+                    </t>
+                    <t t-elif="state.panel === 'support'">
+                        <div class="o_ai_panel">
+                            <h2>Support</h2>
+                            <p>AI Copilot only answers from FMS records and knowledge documents your user can already read. An administrator controls the provider and who is an authorized user.</p>
+                            <p class="text-muted">Critical operational decisions should be checked against the source record before you act.</p>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <div class="o_ai_chat_head">
+                            <div class="o_ai_avatar"><i class="fa fa-magic"/></div>
+                            <div>
+                                <strong>AI Copilot</strong>
+                                <div>
+                                    <span t-attf-class="o_ai_status {{ providerReady ? '' : 'warn' }}">
+                                        <i class="fa fa-circle"/>
+                                        <t t-if="providerReady">Online / Ready</t>
+                                        <t t-else="">Provider unavailable</t>
+                                    </span>
+                                    <span class="text-muted small ms-2" t-if="contextLabel">Context: <t t-esc="contextLabel"/></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="o_ai_thread" t-ref="thread">
+                            <div class="o_ai_welcome" t-if="!state.messages.length and !state.sending">
+                                <div class="o_ai_welcome_mark"><i class="fa fa-magic"/></div>
+                                <h2>Hello, how can I help?</h2>
+                                <p>Ask questions, find information, or get help with facility operations.</p>
+                                <div class="o_ai_suggest_label">SUGGESTED QUERIES</div>
+                                <div class="o_ai_suggest_grid">
+                                    <button t-foreach="suggestions" t-as="suggestion" t-key="suggestion" type="button" t-on-click="() => this.useSuggestion(suggestion)">
+                                        <i class="fa fa-commenting-o"/>
+                                        <span t-esc="suggestion"/>
+                                    </button>
+                                </div>
+                            </div>
+                            <t t-foreach="state.messages" t-as="message" t-key="message.id">
+                                <div t-attf-class="o_ai_row {{ message.role === 'user' ? 'user' : 'assistant' }}">
+                                    <div class="o_ai_avatar" t-if="message.role !== 'user'"><i class="fa fa-magic"/></div>
+                                    <div class="o_ai_bubble">
+                                        <t t-if="message.role === 'user'">
+                                            <p t-esc="message.body"/>
+                                        </t>
+                                        <t t-elif="message.payload and message.payload.status === 'restricted'">
+                                            <div class="o_ai_state warn">
+                                                <i class="fa fa-lock"/>
+                                                <h3>Access Restricted</h3>
+                                                <p t-esc="message.body"/>
+                                                <button type="button" t-on-click="requestAccess">Request Access</button>
+                                            </div>
+                                        </t>
+                                        <t t-elif="message.payload and message.payload.status === 'no_results'">
+                                            <div class="o_ai_state">
+                                                <i class="fa fa-search"/>
+                                                <h3>No matching records found</h3>
+                                                <p t-esc="message.body"/>
+                                            </div>
+                                        </t>
+                                        <t t-elif="message.payload and message.payload.status === 'unavailable'">
+                                            <div class="o_ai_state">
+                                                <i class="fa fa-plug"/>
+                                                <h3>Source unavailable</h3>
+                                                <p t-esc="message.body"/>
+                                            </div>
+                                        </t>
+                                        <t t-elif="message.payload and message.payload.status === 'error' and !(message.payload.table or message.payload.stats)">
+                                            <div class="o_ai_state danger">
+                                                <i class="fa fa-exclamation-circle"/>
+                                                <h3>Something went wrong</h3>
+                                                <p t-esc="message.body"/>
+                                                <button type="button" t-on-click="retry">Retry</button>
+                                            </div>
+                                        </t>
+                                        <t t-else="">
+                                            <span class="o_ai_kind" t-esc="kindLabel(message.payload and message.payload.answer_kind)"/>
+                                            <p t-esc="message.body"/>
+                                            <div class="o_ai_card" t-if="message.payload and message.payload.stats">
+                                                <div class="o_ai_card_top">
+                                                    <span t-esc="message.payload.stats.title"/>
+                                                    <span t-esc="message.payload.stats.period"/>
+                                                </div>
+                                                <strong t-esc="message.payload.stats.total"/>
+                                                <div t-esc="message.payload.stats.total_label"/>
+                                                <div t-foreach="message.payload.stats.lines" t-as="line" t-key="line_index" t-attf-class="o_ai_stat_line {{ line.tone }}">
+                                                    <span t-esc="line.label"/>
+                                                    <span t-esc="line.count"/>
+                                                </div>
+                                            </div>
+                                            <div class="o_ai_table_wrap" t-if="message.payload and message.payload.table">
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th t-foreach="message.payload.table.columns" t-as="column" t-key="column.key" t-esc="column.label"/>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr t-foreach="message.payload.table.rows" t-as="row" t-key="row.id">
+                                                            <td t-foreach="row.cells" t-as="cell" t-key="cell_index" t-esc="cell"/>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                                <button type="button" class="o_ai_linkish" t-on-click="() => this.openTable(message.payload.table)">View all results</button>
+                                            </div>
+                                            <div class="o_ai_section" t-foreach="message.payload and message.payload.sections or []" t-as="section" t-key="section_index">
+                                                <span class="o_ai_kind" t-esc="kindLabel(section.kind)"/>
+                                                <strong t-esc="section.title"/>
+                                                <p t-esc="section.text"/>
+                                            </div>
+                                            <t t-if="message.payload and message.payload.recommendations.length">
+                                                <div class="o_ai_kind mt-2">Recommendations</div>
+                                                <div class="o_ai_reco" t-foreach="message.payload.recommendations" t-as="item" t-key="item_index">
+                                                    <div>
+                                                        <strong t-esc="item.title"/>
+                                                        <div t-esc="item.detail"/>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                            <t t-if="message.payload and message.payload.sources.length">
+                                                <div class="o_ai_kind mt-2">Sources</div>
+                                                <div class="o_ai_source" t-foreach="message.payload.sources" t-as="source" t-key="source_index">
+                                                    <span><i class="fa fa-file-text-o me-1"/> <t t-esc="source.label"/> <t t-if="source.count">(<t t-esc="source.count"/>)</t></span>
+                                                    <button t-if="source.res_id" type="button" class="o_ai_linkish" t-on-click="() => this.openRecord(source.model, source.res_id)">View source</button>
+                                                    <span t-else="" class="text-muted" t-esc="source.reason or source.status"/>
+                                                </div>
+                                            </t>
+                                            <div class="o_ai_proposal" t-if="message.payload and message.payload.proposal">
+                                                <strong t-esc="message.payload.proposal.title"/>
+                                                <div t-foreach="message.payload.proposal.lines" t-as="line" t-key="line_index">
+                                                    <span class="text-muted" t-esc="line.label"/>: <t t-esc="line.value"/>
+                                                </div>
+                                                <p t-if="message.payload.proposal.reason" t-esc="message.payload.proposal.reason"/>
+                                                <div class="o_ai_proposal_actions" t-if="message.payload.proposal.status === 'pending' and message.payload.proposal.can_confirm">
+                                                    <button type="button" class="ghost" t-on-click="() => this.cancelProposal(message)">Cancel</button>
+                                                    <button type="button" t-on-click="() => this.confirmProposal(message)">Confirm</button>
+                                                </div>
+                                                <p t-if="message.payload.proposal.status === 'done'">
+                                                    Created <button type="button" class="o_ai_linkish" t-on-click="() => this.openRecord(message.payload.proposal.res_model, message.payload.proposal.res_id)" t-esc="message.payload.proposal.result_label"/>
+                                                </p>
+                                                <p t-if="message.payload.proposal.status === 'cancelled'">This action was cancelled.</p>
+                                            </div>
+                                            <p class="o_ai_note" t-if="message.payload and message.payload.provider and message.payload.provider.error" t-esc="message.payload.provider.error"/>
+                                            <p class="o_ai_note" t-if="message.payload and message.payload.provider_note" t-esc="message.payload.provider_note"/>
+                                            <div class="o_ai_feedback">
+                                                <button type="button" title="Helpful" t-att-class="message.feedback === 'up' ? 'active' : ''" t-on-click="() => this.feedback(message, 'up')"><i class="fa fa-thumbs-up"/></button>
+                                                <button type="button" title="Not helpful" t-att-class="message.feedback === 'down' ? 'active' : ''" t-on-click="() => this.feedback(message, 'down')"><i class="fa fa-thumbs-down"/></button>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </div>
+                            </t>
+                            <div class="o_ai_row" t-if="state.sending">
+                                <div class="o_ai_avatar"><i class="fa fa-magic"/></div>
+                                <div class="o_ai_bubble o_ai_typing">ProManage AI is typing…</div>
+                            </div>
+                        </div>
+                        <div class="o_ai_composer_wrap">
+                            <div class="o_ai_composer">
+                                <textarea rows="1" placeholder="Ask Copilot anything about your facility..." t-model="state.draft" t-on-keydown="onComposerKeydown"/>
+                                <button type="button" class="o_ai_send" t-att-disabled="state.sending" t-on-click="send" title="Send">
+                                    <i class="fa fa-arrow-up"/>
+                                </button>
+                            </div>
+                            <p class="o_ai_disclaimer">AI responses may be inaccurate. Please verify critical operational data.</p>
+                        </div>
+                    </t>
+                </div>
+            </AiAppShell>
+        </div>
+    </t>
+</templates>

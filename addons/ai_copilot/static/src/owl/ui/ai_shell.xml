@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="ai_copilot.AppShell">
+        <div class="o_ai_layout" t-att-class="{ 'nav-open': props.navOpen }">
+            <aside class="o_ai_sidebar">
+                <div class="o_ai_brand">
+                    <div class="o_ai_brand_mark"><i class="fa fa-magic"/></div>
+                    <div>
+                        <div class="o_ai_brand_title">ProManage AI</div>
+                        <div class="o_ai_brand_sub" t-esc="props.companyName or 'Facility Management'"/>
+                    </div>
+                </div>
+                <nav class="o_ai_nav">
+                    <div class="o_ai_nav_label">Facility apps</div>
+                    <button t-foreach="apps" t-as="app" t-key="app.id" t-on-click="() => props.onApp(app)">
+                        <i t-attf-class="fa {{ app.icon }}"/>
+                        <span t-esc="app.label"/>
+                    </button>
+                    <button class="o_ai_copilot_link active" t-on-click="() => props.onPanel('chat')">
+                        <i class="fa fa-magic"/>
+                        <span>AI Copilot</span>
+                    </button>
+                    <button t-att-class="props.panel === 'history' ? 'active' : ''" t-on-click="() => props.onPanel('history')">
+                        <i class="fa fa-history"/>
+                        <span>History</span>
+                    </button>
+                    <button t-att-class="props.panel === 'knowledge' ? 'active' : ''" t-on-click="() => props.onPanel('knowledge')">
+                        <i class="fa fa-book"/>
+                        <span>Knowledge</span>
+                    </button>
+                </nav>
+                <div class="o_ai_nav_foot">
+                    <button t-if="props.canAdmin" t-att-class="props.panel === 'settings' ? 'active' : ''" t-on-click="() => props.onPanel('settings')">
+                        <i class="fa fa-cog"/> Settings
+                    </button>
+                    <button t-on-click="() => props.onPanel('support')">
+                        <i class="fa fa-life-ring"/> Support
+                    </button>
+                    <div class="px-2 pt-2 text-muted small" t-if="props.userName" t-esc="props.userName"/>
+                </div>
+            </aside>
+            <div class="o_ai_main">
+                <t t-slot="default"/>
+            </div>
+        </div>
+    </t>
+</templates>

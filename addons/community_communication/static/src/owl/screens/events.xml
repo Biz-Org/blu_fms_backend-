@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="community_communication.Events">
+        <div class="o_action o_cc_app">
+            <CcAppShell active="shellActive">
+            <div class="o_cc_shell">
+                <t t-if="state.mode === 'calendar' or state.mode === 'week'">
+                    <CcPageHeader title="'Event Calendar'" subtitle="'View upcoming community events, activities and important dates.'">
+                        <t t-set-slot="buttons">
+                            <CcActionButton t-if="state.isOfficer" label="'+ Create Event'" icon="'fa-plus'" onClick="() => this.setMode('create')"/>
+                        </t>
+                    </CcPageHeader>
+                    <div class="o_cc_card mb-3">
+                        <div class="o_cc_cal_toolbar flex-wrap gap-2">
+                            <div class="d-flex gap-2 align-items-center">
+                                <button class="o_cc_btn ghost" t-on-click="() => this.shiftPeriod(-1)">‹</button>
+                                <b t-esc="periodLabel()"/>
+                                <button class="o_cc_btn ghost" t-on-click="() => this.shiftPeriod(1)">›</button>
+                            </div>
+                            <div class="d-flex gap-2 align-items-center flex-wrap">
+                                <CcSearchBar value="state.search" placeholder="'Search events...'" onChange.bind="onSearch"/>
+                                <select class="o_cc_select" t-model="state.category" t-on-change="() => this.reload()">
+                                    <option value="">All Categories</option>
+                                    <t t-foreach="categories" t-as="cat" t-key="cat[0]"><option t-att-value="cat[0]" t-esc="cat[1]"/></t>
+                                </select>
+                                <div class="o_cc_view_toggle">
+                                    <button t-att-class="state.mode === 'calendar' ? 'active' : ''" t-on-click="() => this.setMode('calendar')">Month</button>
+                                    <button t-att-class="state.mode === 'week' ? 'active' : ''" t-on-click="() => this.setMode('week')">Week</button>
+                                </div>
+                            </div>
+                        </div>
+                        <t t-if="state.mode === 'calendar'">
+                            <div class="o_cc_cal">
+                                <div class="o_cc_cal_head">SUN</div><div class="o_cc_cal_head">MON</div><div class="o_cc_cal_head">TUE</div>
+                                <div class="o_cc_cal_head">WED</div><div class="o_cc_cal_head">THU</div><div class="o_cc_cal_head">FRI</div>
+                                <div class="o_cc_cal_head">SAT</div>
+                                <t t-foreach="calendarDays" t-as="day" t-key="day.key">
+                                    <div t-attf-class="o_cc_cal_day {{ day.muted ? 'muted' : '' }} {{ day.today ? 'today' : '' }}">
+                                        <span class="o_cc_cal_num" t-esc="day.num"/>
+                                        <t t-foreach="day.events.slice(0,2)" t-as="ev" t-key="ev.id">
+                                            <div class="o_cc_cal_event" t-on-click="() => this.setMode('detail', ev.id)" t-esc="ev.name"/>
+                                        </t>
+                                    </div>
+                                </t>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <div class="o_cc_cal" style="grid-template-columns: repeat(7, 1fr)">
+                                <t t-foreach="weekDays" t-as="day" t-key="day.key">
+                                    <div t-attf-class="o_cc_cal_day {{ day.today ? 'today' : '' }}">
+                                        <div class="small fw-bold" t-esc="day.label"/>
+                                        <t t-foreach="day.events" t-as="ev" t-key="ev.id">
+                                            <div class="o_cc_cal_event" t-on-click="() => this.setMode('detail', ev.id)" t-esc="ev.name"/>
+                                        </t>
+                                    </div>
+                                </t>
+                            </div>
+                        </t>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <b>Upcoming Events</b>
+                        <button t-if="state.isOfficer" class="o_cc_link" t-on-click="() => this.setMode('attendees')">View All</button>
+                    </div>
+                    <t t-foreach="state.extras.upcoming or []" t-as="ev" t-key="ev.id">
+                        <div class="o_cc_card mb-2" t-on-click="() => this.setMode('detail', ev.id)">
+                            <div class="d-flex gap-3 align-items-center">
+                                <div class="o_cc_event_date">
+                                    <span t-esc="eventDateParts(ev).month"/>
+                                    <span class="o_cc_event_day" t-esc="eventDateParts(ev).day"/>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex gap-2 mb-1">
+                                        <span class="o_cc_pill" t-esc="categoryLabel(ev.category)"/>
+                                        <span class="o_cc_pill success" t-if="ev.require_registration">Registration Open</span>
+                                    </div>
+                                    <div class="fw-bold" t-esc="ev.name"/>
+                                    <div class="o_cc_meta"><span t-esc="eventTime(ev)"/><span t-esc="ev.location or m2oName(ev.venue_id)"/></div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                    <CcEmptyState t-if="!(state.extras.upcoming or []).length" title="'No upcoming events'" hint="state.isOfficer ? 'Create and publish an event to show it on the calendar.' : 'Upcoming events will appear here.'"/>
+                </t>
+
+                <t t-if="state.mode === 'create' or state.mode === 'edit'">
+                    <CcPageHeader title="state.mode === 'edit' ? 'Edit Event' : 'Create Event'">
+                        <t t-set-slot="buttons">
+                            <button class="o_cc_btn ghost" t-att-disabled="state.busy" t-on-click="() => this.setMode('calendar')">Cancel</button>
+                            <button class="o_cc_btn secondary" t-att-disabled="state.busy" t-on-click="() => this.save(false)">Save Draft</button>
+                            <button class="o_cc_btn primary" t-att-disabled="state.busy" t-on-click="() => this.save(true)">Publish Event</button>
+                        </t>
+                    </CcPageHeader>
+                    <div class="o_cc_split">
+                        <div>
+                            <CcFormSection title="'Event Information'">
+                                <label>Event Name *</label>
+                                <input t-att-class="fieldClass('name')" t-model="state.form.name"/>
+                                <CcFieldError message="fieldError('name')"/>
+                                <div class="o_cc_form_grid mt-3">
+                                    <div>
+                                        <label>Category</label>
+                                        <select class="o_cc_input" t-model="state.form.category">
+                                            <t t-foreach="categories" t-as="cat" t-key="cat[0]"><option t-att-value="cat[0]" t-esc="cat[1]"/></t>
+                                        </select>
+                                    </div>
+                                </div>
+                                <label class="mt-3">Description</label>
+                                <textarea t-model="state.form.description"/>
+                                <label class="mt-3">Attachments</label>
+                                <CcFileDropzone files="attachmentList" error="fieldError('attachments')" onAdd.bind="onFilesSelected" onRemove.bind="removeAttachment"/>
+                            </CcFormSection>
+                            <CcFormSection title="'Schedule &amp; Venue'">
+                                <div class="o_cc_form_grid">
+                                    <div>
+                                        <label>Start *</label>
+                                        <input t-att-class="fieldClass('date_start')" type="datetime-local" t-model="state.form.date_start"/>
+                                        <CcFieldError message="fieldError('date_start')"/>
+                                    </div>
+                                    <div>
+                                        <label>End *</label>
+                                        <input t-att-class="fieldClass('date_end')" type="datetime-local" t-model="state.form.date_end"/>
+                                        <CcFieldError message="fieldError('date_end')"/>
+                                    </div>
+                                </div>
+                                <label class="mt-3">Location</label>
+                                <input class="o_cc_input" t-model="state.form.location"/>
+                                <label class="mt-3">Venue</label>
+                                <select class="o_cc_input" t-model.number="state.form.venue_id">
+                                    <option value="">None</option>
+                                    <t t-foreach="venuesFor(communityId)" t-as="v" t-key="v.id"><option t-att-value="v.id" t-esc="v.name"/></t>
+                                </select>
+                            </CcFormSection>
+                            <CcFormSection title="'Registration'">
+                                <label class="o_cc_radio"><input type="checkbox" t-model="state.form.require_registration"/> Require registration</label>
+                                <div t-if="state.form.require_registration" class="o_cc_form_grid">
+                                    <div><label>Capacity</label><input class="o_cc_input" type="number" t-model.number="state.form.capacity"/></div>
+                                    <div>
+                                        <label>Deadline</label>
+                                        <input t-att-class="fieldClass('date_deadline')" type="datetime-local" t-model="state.form.date_deadline"/>
+                                        <CcFieldError message="fieldError('date_deadline')"/>
+                                    </div>
+                                </div>
+                                <label class="o_cc_radio mt-2"><input type="checkbox" t-model="state.form.reminder_enabled"/> Send reminder 24h before</label>
+                            </CcFormSection>
+                            <CcFormSection title="'Audience'">
+                                <CcAudiencePicker
+                                    audienceType="state.form.audience_type"
+                                    onType.bind="setAudienceType"
+                                    buildings="buildingsFor(communityId)"
+                                    groups="groupsFor(communityId)"
+                                    buildingIds="state.form.building_ids"
+                                    groupIds="state.form.audience_group_ids"
+                                    buildingQuery="state.form.buildingQuery"
+                                    groupQuery="state.form.groupQuery"
+                                    onBuildingQuery.bind="setBuildingQuery"
+                                    onGroupQuery.bind="setGroupQuery"
+                                    onToggleBuilding.bind="toggleBuilding"
+                                    onToggleGroup.bind="toggleGroup"
+                                    error="fieldError('audience')"
+                                    radioName="'event-audience'"/>
+                            </CcFormSection>
+                        </div>
+                        <CcPreviewPanel title="state.form.name" body="previewBody()" category="categoryLabel(state.form.category)" meta="audiencePreviewLabel()"/>
+                    </div>
+                </t>
+
+                <t t-if="state.mode === 'detail' and state.record">
+                    <button class="o_cc_back" t-on-click="() => this.setMode('calendar')"><i class="fa fa-arrow-left"/> Back to Calendar</button>
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                        <div>
+                            <div class="d-flex gap-2 mb-2">
+                                <span class="o_cc_pill" t-esc="categoryLabel(state.record.category)"/>
+                                <CcStatusBadge state="state.record.state"/>
+                            </div>
+                            <h1 t-esc="state.record.name"/>
+                            <div class="o_cc_meta">
+                                <span><i class="fa fa-calendar"/> <t t-esc="formatDay(state.record.date_start)"/></span>
+                                <span><i class="fa fa-clock-o"/> <t t-esc="eventTime(state.record)"/></span>
+                                <span><i class="fa fa-map-marker"/> <t t-esc="state.record.location or m2oName(state.record.venue_id)"/></span>
+                            </div>
+                        </div>
+                        <div t-if="state.isOfficer" class="d-flex gap-2">
+                            <button t-if="state.record.state === 'draft'" class="o_cc_btn primary" t-on-click="publishEvent">Publish Event</button>
+                            <button class="o_cc_btn secondary" t-on-click="() => this.setMode('edit', state.record.id)">Edit Event</button>
+                            <button class="o_cc_btn ghost" t-on-click="cancelEvent">Cancel Event</button>
+                        </div>
+                    </div>
+                    <div class="o_cc_split mt-3">
+                        <div class="o_cc_card">
+                            <div class="o_cc_card_head">About this Event</div>
+                            <div t-out="html(state.record.description)"/>
+                            <t t-foreach="state.extras.attachments or []" t-as="file" t-key="file.id">
+                                <div class="o_cc_file_row">
+                                    <i class="fa fa-file-o"/>
+                                    <span class="flex-grow-1" t-esc="file.name"/>
+                                    <a t-att-href="'/web/content/' + file.id + '?download=1'"><i class="fa fa-download"/></a>
+                                </div>
+                            </t>
+                        </div>
+                        <div class="o_cc_stack">
+                            <div class="o_cc_card">
+                                <div class="o_cc_card_head">Registration Summary</div>
+                                <div class="o_cc_progress mb-2"><div class="o_cc_progress_bar" t-att-style="'width:' + capPct(state.record) + '%'"/></div>
+                                <div>Capacity: <t t-esc="state.record.confirmed_count"/> / <t t-esc="state.record.capacity or '∞'"/></div>
+                                <div t-if="state.record.capacity">Spots Available: <b t-esc="state.record.spots_available"/></div>
+                                <div class="small text-muted">Deadline: <t t-esc="formatWhen(state.record.date_deadline)"/></div>
+                                <div t-if="hasMine()" class="small mt-2">Your status: <b t-esc="state.extras.mine.state"/></div>
+                                <div t-if="registrationClosed(state.record) and state.record.require_registration" class="text-danger small mt-2">Registration is closed.</div>
+                                <button t-if="state.isOfficer" class="o_cc_btn secondary w-100 mt-2" t-on-click="() => this.setMode('attendees', state.record.id)">View Attendee List</button>
+                                <button t-if="canRegister(state.record)" class="o_cc_btn primary w-100 mt-2" t-on-click="() => this.setMode('rsvp', state.record.id)">Register</button>
+                                <button t-if="hasMine()" class="o_cc_btn secondary w-100 mt-2" t-on-click="() => this.setMode('rsvp', state.record.id)">Manage Registration</button>
+                            </div>
+                            <div class="o_cc_card">
+                                <div class="o_cc_card_head">Venue</div>
+                                <div class="fw-semibold" t-esc="state.record.location or m2oName(state.record.venue_id) or 'TBD'"/>
+                                <div class="small mt-2">Automated Reminders: <t t-esc="state.record.reminder_enabled ? 'Enabled (24h before)' : 'Off'"/></div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+
+                <t t-if="state.mode === 'rsvp' and state.record">
+                    <button class="o_cc_back" t-on-click="() => this.setMode('detail', state.record.id)">Back</button>
+                    <CcPageHeader title="'Event Registration'" subtitle="'Register for this community event.'"/>
+                    <div class="o_cc_split">
+                        <div class="o_cc_stack">
+                            <div class="o_cc_card">
+                                <span class="o_cc_pill" t-esc="categoryLabel(state.record.category)"/>
+                                <h3 t-esc="state.record.name"/>
+                                <div class="o_cc_meta">
+                                    <span t-esc="formatDay(state.record.date_start)"/>
+                                    <span t-esc="eventTime(state.record)"/>
+                                    <span t-esc="state.record.location or m2oName(state.record.venue_id)"/>
+                                </div>
+                                <div class="text-danger small mt-2" t-if="registrationClosed(state.record)">Registration is closed.</div>
+                                <div class="text-danger small mt-2" t-elif="state.record.date_deadline">Registration closes: <t t-esc="formatDay(state.record.date_deadline)"/></div>
+                            </div>
+                            <div class="o_cc_card">
+                                <div class="o_cc_card_head">Your Details</div>
+                                <t t-if="state.extras.me">
+                                    <label>Resident Name</label><input class="o_cc_input" t-att-value="state.extras.me.name" disabled="disabled"/>
+                                    <label class="mt-2">Contact Information</label><input class="o_cc_input" t-att-value="state.extras.me.email" disabled="disabled"/>
+                                    <div class="small text-muted mt-2">These details are pre-populated from your profile.</div>
+                                </t>
+                                <div t-else="" class="small text-muted">No resident profile is linked to this user. Officers can still manage attendees.</div>
+                            </div>
+                        </div>
+                        <div class="o_cc_stack">
+                            <div class="o_cc_card">
+                                <div class="o_cc_card_head">Event Capacity</div>
+                                <div class="o_cc_progress mb-2"><div class="o_cc_progress_bar" t-att-style="'width:' + capPct(state.record) + '%'"/></div>
+                                <div><t t-esc="state.record.confirmed_count"/> / <t t-esc="state.record.capacity or '∞'"/> registered</div>
+                                <div t-if="state.record.capacity"><b t-esc="state.record.spots_available"/> spots available</div>
+                            </div>
+                            <div class="o_cc_card">
+                                <div class="o_cc_card_head">Registration Summary</div>
+                                <div class="small">Event: <b t-esc="state.record.name"/></div>
+                                <div class="small">Status: <b t-esc="mineStatus()"/></div>
+                                <button t-if="canRegister(state.record)" class="o_cc_btn primary w-100 mt-3" t-att-disabled="state.busy" t-on-click="register">Confirm Registration</button>
+                                <button t-if="canUnregister(state.record)" class="o_cc_btn secondary w-100 mt-3" t-att-disabled="state.busy" t-on-click="cancelMine">Cancel RSVP</button>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+
+                <t t-if="state.mode === 'attendees'">
+                    <button class="o_cc_back" t-on-click="() => this.setMode(state.resId ? 'detail' : 'calendar', state.resId or false)"><i class="fa fa-arrow-left"/> Back</button>
+                    <CcPageHeader title="'Event Registration'" subtitle="'Review attendees and waitlist for community events.'"/>
+                    <t t-if="!state.resId">
+                        <div class="o_cc_card">
+                            <t t-if="state.records.length">
+                                <table class="o_cc_table">
+                                    <thead><tr><th>Event</th><th>Date</th><th>Registered</th><th>Waitlist</th><th>Status</th></tr></thead>
+                                    <tbody>
+                                        <tr t-foreach="state.records" t-as="ev" t-key="ev.id" t-on-click="() => this.setMode('attendees', ev.id)">
+                                            <td class="o_cc_row_title" t-esc="ev.name"/>
+                                            <td t-esc="formatDay(ev.date_start)"/>
+                                            <td t-esc="ev.confirmed_count"/>
+                                            <td t-esc="ev.waitlist_count"/>
+                                            <td><CcStatusBadge state="ev.state"/></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </t>
+                            <CcEmptyState t-else="" title="'No events'" hint="'Published events with registrations will appear here.'"/>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <div class="o_cc_card">
+                            <div class="o_cc_card_head">Attendee List · <t t-esc="state.record and state.record.name"/></div>
+                            <t t-if="(state.extras.attendees or []).length">
+                                <table class="o_cc_table">
+                                    <thead><tr><th>Resident</th><th>Unit</th><th>Registered</th><th>Status</th><th t-if="state.isOfficer">Actions</th></tr></thead>
+                                    <tbody>
+                                        <tr t-foreach="state.extras.attendees" t-as="row" t-key="row.id">
+                                            <td t-esc="row.partner_name"/>
+                                            <td t-esc="m2oName(row.unit_id)"/>
+                                            <td t-esc="formatWhen(row.registered_on)"/>
+                                            <td><CcStatusBadge state="row.state"/></td>
+                                            <td t-if="state.isOfficer">
+                                                <div class="d-flex gap-1 flex-wrap">
+                                                    <button t-if="row.state === 'pending' or row.state === 'waitlisted'" class="o_cc_btn ghost" t-att-disabled="state.busy" t-on-click="() => this.staffRegistrationAction(row, 'action_confirm')">Confirm</button>
+                                                    <button t-if="row.state === 'confirmed'" class="o_cc_btn ghost" t-att-disabled="state.busy" t-on-click="() => this.staffRegistrationAction(row, 'action_attended')">Attended</button>
+                                                    <button t-if="row.state === 'pending' or row.state === 'waitlisted'" class="o_cc_btn ghost" t-att-disabled="state.busy" t-on-click="() => this.staffRegistrationAction(row, 'action_reject')">Reject</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </t>
+                            <CcEmptyState t-else="" title="'No attendees yet'"/>
+                        </div>
+                    </t>
+                </t>
+            </div>
+            </CcAppShell>
+        </div>
+    </t>
+</templates>

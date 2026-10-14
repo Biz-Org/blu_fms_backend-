@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_iot_integration_list" model="ir.ui.view">
+        <field name="name">integration.iot.integration.list</field>
+        <field name="model">integration.iot.integration</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="system_kind"/>
+                <field name="state"/>
+                <field name="connection_mode"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_iot_integration_form" model="ir.ui.view">
+        <field name="name">integration.iot.integration.form</field>
+        <field name="model">integration.iot.integration</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_test_connection" type="object" string="Test Connection" class="btn-primary"/>
+                    <button name="action_disable" type="object" string="Disable" invisible="state == 'disabled'"/>
+                    <button name="action_enable" type="object" string="Enable" invisible="state != 'disabled'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="code"/>
+                        <field name="system_kind"/>
+                        <field name="connection_mode"/>
+                        <field name="endpoint_url"/>
+                        <field name="auth_type"/>
+                        <field name="auth_username"/>
+                        <field name="auth_secret" password="True"/>
+                        <field name="auth_secret_set" readonly="1"/>
+                        <field name="active"/>
+                    </group>
+                    <group>
+                        <field name="last_heartbeat"/>
+                        <field name="last_error"/>
+                        <field name="note"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_iot_integration" model="ir.actions.act_window">
+        <field name="name">Integrations</field>
+        <field name="res_model">integration.iot.integration</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

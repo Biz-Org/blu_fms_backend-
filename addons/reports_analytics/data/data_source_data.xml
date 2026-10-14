@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="source_fs_inspection" model="analytics.data.source">
+        <field name="name">Fire Safety Inspections</field>
+        <field name="technical_identifier">fs.inspection</field>
+        <field name="model_name">fire.safety.inspection</field>
+        <field name="module">fire_safety_management</field>
+        <field name="category">fire_safety</field>
+    </record>
+    <record id="source_fs_incident" model="analytics.data.source">
+        <field name="name">Fire Safety Incidents</field>
+        <field name="technical_identifier">fs.incident</field>
+        <field name="model_name">fire.safety.incident</field>
+        <field name="module">fire_safety_management</field>
+        <field name="category">fire_safety</field>
+    </record>
+    <record id="source_cmp_check" model="analytics.data.source">
+        <field name="name">Compliance Checks</field>
+        <field name="technical_identifier">cmp.check</field>
+        <field name="model_name">compliance.check</field>
+        <field name="module">compliance_audit_management</field>
+        <field name="category">compliance</field>
+    </record>
+    <record id="source_cmp_nc" model="analytics.data.source">
+        <field name="name">Non-Compliances</field>
+        <field name="technical_identifier">cmp.nc</field>
+        <field name="model_name">compliance.non.compliance</field>
+        <field name="module">compliance_audit_management</field>
+        <field name="category">compliance</field>
+    </record>
+    <record id="source_cc_feedback" model="analytics.data.source">
+        <field name="name">Community Feedback</field>
+        <field name="technical_identifier">cc.feedback</field>
+        <field name="model_name">community.communication.feedback</field>
+        <field name="module">community_communication</field>
+        <field name="category">service_requests</field>
+    </record>
+    <record id="source_iot_device" model="analytics.data.source">
+        <field name="name">IoT Devices</field>
+        <field name="technical_identifier">iot.device</field>
+        <field name="model_name">integration.iot.device</field>
+        <field name="module">integration_iot_management</field>
+        <field name="category">asset_performance</field>
+    </record>
+    <record id="source_iot_energy" model="analytics.data.source">
+        <field name="name">Energy Readings</field>
+        <field name="technical_identifier">iot.energy</field>
+        <field name="model_name">integration.iot.energy.reading</field>
+        <field name="module">integration_iot_management</field>
+        <field name="category">energy</field>
+    </record>
+    <record id="source_maint_request" model="analytics.data.source">
+        <field name="name">Maintenance Requests</field>
+        <field name="technical_identifier">maint.request</field>
+        <field name="model_name">maintenance.request</field>
+        <field name="module">maintenance</field>
+        <field name="category">maintenance</field>
+        <field name="description">Registered for when the Maintenance app is installed.</field>
+    </record>
+    <record id="source_account_move" model="analytics.data.source">
+        <field name="name">Accounting Entries</field>
+        <field name="technical_identifier">account.move</field>
+        <field name="model_name">account.move</field>
+        <field name="module">account</field>
+        <field name="category">finance</field>
+        <field name="description">Registered for when Accounting is installed.</field>
+    </record>
+</odoo>

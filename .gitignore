@@ -1,0 +1,15 @@
+*.pyc
+*.pyo
+__pycache__/
+*.egg-info/
+.DS_Store
+.idea/
+.vscode/
+*.log
+.pytest_cache/
+.venv/
+venv/
+.env
+.odoo-data/
+.odoo_data/
+*.swp

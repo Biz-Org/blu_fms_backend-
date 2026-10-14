@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="compliance_audit_management.Regulatory">
+        <div class="o_action o_ca_app">
+            <CaAppShell active="'regulatory'">
+                <div class="o_ca_shell">
+                    <div t-if="state.error" class="o_ca_alert">
+                        <i class="fa fa-exclamation-circle"/>
+                        <div t-esc="state.error"/>
+                    </div>
+
+                    <t t-if="state.mode === 'list'">
+                        <div class="o_ca_page_header">
+                            <div>
+                                <h1>Regulatory Reporting</h1>
+                                <p>Track authority submissions, deadlines and acknowledgements.</p>
+                            </div>
+                            <button t-if="canManage" class="o_ca_btn primary" t-on-click="openCreate">
+                                <i class="fa fa-plus"/> New Submission
+                            </button>
+                        </div>
+
+                        <div t-if="state.loading" class="o_ca_empty">
+                            <h3>Loading reports</h3>
+                            <p>Fetching regulatory submissions.</p>
+                        </div>
+                        <t t-else="">
+                            <div class="o_ca_kpi_row">
+                                <CaKpiCard
+                                    label="'Due in 30 Days'"
+                                    value="state.kpis.due_soon"
+                                    icon="'fa-calendar'"
+                                    tone="state.kpis.due_soon ? 'warning' : ''"
+                                    onClick.bind="() => this.onFilter('due_soon')"
+                                />
+                                <CaKpiCard
+                                    label="'Overdue'"
+                                    value="state.kpis.overdue"
+                                    icon="'fa-exclamation-triangle'"
+                                    tone="state.kpis.overdue ? 'danger' : ''"
+                                    onClick.bind="() => this.onFilter('overdue')"
+                                />
+                                <CaKpiCard
+                                    label="'In Preparation'"
+                                    value="state.kpis.in_preparation"
+                                    icon="'fa-pencil'"
+                                    onClick.bind="() => this.onFilter('in_preparation')"
+                                />
+                                <CaKpiCard
+                                    label="'Submitted'"
+                                    value="state.kpis.submitted"
+                                    icon="'fa-check-circle'"
+                                    tone="'success'"
+                                    onClick.bind="() => this.onFilter('submitted')"
+                                />
+                            </div>
+
+                            <div class="o_ca_toolbar">
+                                <div class="o_ca_chips">
+                                    <button t-att-class="state.filter === 'all' ? 'active' : ''" t-on-click="() => this.onFilter('all')">All</button>
+                                    <button t-att-class="state.filter === 'draft' ? 'active' : ''" t-on-click="() => this.onFilter('draft')">Draft</button>
+                                    <button t-att-class="state.filter === 'in_preparation' ? 'active' : ''" t-on-click="() => this.onFilter('in_preparation')">In Preparation</button>
+                                    <button t-att-class="state.filter === 'due_soon' ? 'active' : ''" t-on-click="() => this.onFilter('due_soon')">Due Soon</button>
+                                    <button t-att-class="state.filter === 'overdue' ? 'active' : ''" t-on-click="() => this.onFilter('overdue')">Overdue</button>
+                                    <button t-att-class="state.filter === 'submitted' ? 'active' : ''" t-on-click="() => this.onFilter('submitted')">Submitted</button>
+                                </div>
+                                <div class="o_ca_search">
+                                    <i class="fa fa-search"/>
+                                    <input type="text" placeholder="Search reports..." t-att-value="state.search" t-on-change="onSearch"/>
+                                </div>
+                            </div>
+
+                            <div class="o_ca_card">
+                                <div class="o_ca_card_head">Regulatory submissions</div>
+                                <t t-if="state.records.length">
+                                    <table class="o_ca_table">
+                                        <thead>
+                                            <tr>
+                                                <th>Report</th>
+                                                <th>Authority</th>
+                                                <th>Period</th>
+                                                <th>Owner</th>
+                                                <th>Deadline</th>
+                                                <th>Priority</th>
+                                                <th>Status</th>
+                                                <th/>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr t-foreach="state.records" t-as="rec" t-key="rec.id" t-on-click="() => this.setMode('detail', rec.id)">
+                                                <td>
+                                                    <div class="o_ca_row_title" t-esc="rec.name"/>
+                                                    <div class="o_ca_row_sub">Ref: <t t-esc="rec.reference"/></div>
+                                                </td>
+                                                <td t-esc="rec.regulatory_authority"/>
+                                                <td t-esc="rec.reporting_period"/>
+                                                <td t-esc="m2oName(rec.owner_id) or '—'"/>
+                                                <td>
+                                                    <div t-att-class="rec.is_overdue ? 'text-danger' : ''" t-esc="formatDate(rec.deadline)"/>
+                                                </td>
+                                                <td>
+                                                    <span t-attf-class="o_ca_pill {{ ['high','critical'].includes(rec.priority) ? 'danger' : 'muted' }}" t-esc="priorityLabel(rec.priority)"/>
+                                                </td>
+                                                <td>
+                                                    <CaStatusBadge state="displayState(rec)" label="displayStateLabel(rec)"/>
+                                                </td>
+                                                <td>
+                                                    <button class="o_ca_link" t-on-click.stop="() => this.setMode('detail', rec.id)">Open</button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div class="o_ca_pager">
+                                        <span><t t-esc="pageFrom"/>–<t t-esc="pageTo"/> of <t t-esc="state.total"/></span>
+                                        <div class="o_ca_pager_pages">
+                                            <button t-att-disabled="state.page &lt;= 1" t-on-click="() => this.onPage(-1)">Prev</button>
+                                            <button t-att-disabled="state.page &gt;= pageCount" t-on-click="() => this.onPage(1)">Next</button>
+                                        </div>
+                                    </div>
+                                </t>
+                                <CaEmptyState t-else="" title="'No reports match'" hint="emptyListHint"/>
+                            </div>
+                        </t>
+                    </t>
+
+                    <t t-if="state.mode === 'detail' and state.record">
+                        <button class="o_ca_back" t-on-click="() => this.setMode('list')">
+                            <i class="fa fa-arrow-left"/> Back to Regulatory Reporting
+                        </button>
+                        <div class="o_ca_page_header">
+                            <div>
+                                <h1 t-esc="state.record.name"/>
+                                <p>
+                                    <t t-esc="state.record.reference"/>
+                                    · <t t-esc="state.record.regulatory_authority"/>
+                                    · Due <t t-esc="formatDate(state.record.deadline)"/>
+                                    · <CaStatusBadge state="displayState(state.record)" label="displayStateLabel(state.record)"/>
+                                </p>
+                            </div>
+                            <div class="d-flex gap-2 flex-wrap" t-if="canManage">
+                                <button t-if="state.record.state === 'draft'" class="o_ca_btn primary" t-att-disabled="!!state.busy" t-on-click="() => this.runAction('action_prepare')">Start Preparation</button>
+                                <button t-if="state.record.state !== 'submitted'" class="o_ca_btn primary" t-att-disabled="!!state.busy" t-on-click="() => this.runAction('action_submit')">Mark Submitted</button>
+                                <button t-if="detailEditable" class="o_ca_btn" t-att-disabled="!!state.busy" t-on-click="saveDetail">Save</button>
+                            </div>
+                        </div>
+
+                        <div class="o_ca_detail_grid">
+                            <div class="o_ca_form_section">
+                                <h3>Submission details</h3>
+                                <div class="o_ca_form_grid">
+                                    <label>
+                                        <span>Owner</span>
+                                        <select t-model="state.detailForm.owner_id" t-att-disabled="!detailEditable">
+                                            <option value="">Unassigned</option>
+                                            <t t-foreach="state.lookups.users" t-as="u" t-key="u.id">
+                                                <option t-att-value="u.id" t-esc="u.name"/>
+                                            </t>
+                                        </select>
+                                    </label>
+                                    <label>
+                                        <span>Deadline</span>
+                                        <input type="date" t-model="state.detailForm.deadline" t-att-disabled="!detailEditable"/>
+                                    </label>
+                                    <label>
+                                        <span>Priority</span>
+                                        <select t-model="state.detailForm.priority" t-att-disabled="!detailEditable">
+                                            <t t-foreach="priorityOptions" t-as="opt" t-key="opt.value">
+                                                <option t-att-value="opt.value" t-esc="opt.label"/>
+                                            </t>
+                                        </select>
+                                    </label>
+                                    <label>
+                                        <span>Reporting period</span>
+                                        <input type="text" t-att-value="state.record.reporting_period" disabled="1"/>
+                                    </label>
+                                    <label>
+                                        <span>Submission reference</span>
+                                        <input type="text" t-model="state.detailForm.submission_reference" t-att-disabled="!detailEditable" placeholder="Authority receipt / filing number"/>
+                                    </label>
+                                    <label>
+                                        <span>Submitted on</span>
+                                        <input type="text" t-att-value="formatDate(state.record.submission_date)" disabled="1"/>
+                                    </label>
+                                    <label class="o_ca_span_2">
+                                        <span>Description</span>
+                                        <textarea t-model="state.detailForm.description" t-att-disabled="!detailEditable" rows="4"/>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="o_ca_form_section">
+                                <h3>Documents</h3>
+                                <p t-if="!state.attachments.length" class="o_ca_hint">No supporting documents yet.</p>
+                                <ul t-else="" class="o_ca_file_list">
+                                    <t t-foreach="state.attachments" t-as="file" t-key="file.id">
+                                        <li t-esc="file.name"/>
+                                    </t>
+                                </ul>
+                                <label t-if="detailEditable" class="mt-2">
+                                    <span>Add supporting files</span>
+                                    <input type="file" multiple="1" t-on-change="onCreateFiles"/>
+                                </label>
+
+                                <h3 class="mt-4">Acknowledgements</h3>
+                                <p t-if="!state.acknowledgements.length" class="o_ca_hint">No acknowledgement files yet.</p>
+                                <ul t-else="" class="o_ca_file_list">
+                                    <t t-foreach="state.acknowledgements" t-as="file" t-key="file.id">
+                                        <li t-esc="file.name"/>
+                                    </t>
+                                </ul>
+                                <label t-if="detailEditable" class="mt-2">
+                                    <span>Add acknowledgement files</span>
+                                    <input type="file" multiple="1" t-on-change="onAckFiles"/>
+                                </label>
+                            </div>
+                        </div>
+                    </t>
+
+                    <div t-if="state.showCreate" class="o_ca_modal_backdrop" t-on-click="closeCreate">
+                        <div class="o_ca_modal" style="width: 720px; max-width: 100%;" t-on-click.stop="">
+                            <div class="o_ca_modal_head">
+                                <h2>New Regulatory Submission</h2>
+                                <button class="o_ca_modal_close" t-on-click="closeCreate"><i class="fa fa-times"/></button>
+                            </div>
+                            <div class="o_ca_modal_body">
+                                <div class="o_ca_form_grid">
+                                    <label class="o_ca_span_2">
+                                        <span>Title *</span>
+                                        <input type="text" t-model="state.form.name" placeholder="e.g., Annual Fire Safety Return"/>
+                                    </label>
+                                    <label>
+                                        <span>Authority *</span>
+                                        <input type="text" t-model="state.form.regulatory_authority" placeholder="e.g., City Fire Department"/>
+                                    </label>
+                                    <label>
+                                        <span>Reporting period *</span>
+                                        <input type="text" t-model="state.form.reporting_period" placeholder="e.g., FY 2026"/>
+                                    </label>
+                                    <label>
+                                        <span>Deadline *</span>
+                                        <input type="date" t-model="state.form.deadline"/>
+                                    </label>
+                                    <label>
+                                        <span>Priority</span>
+                                        <select t-model="state.form.priority">
+                                            <t t-foreach="priorityOptions" t-as="opt" t-key="opt.value">
+                                                <option t-att-value="opt.value" t-esc="opt.label"/>
+                                            </t>
+                                        </select>
+                                    </label>
+                                    <label>
+                                        <span>Owner</span>
+                                        <select t-model="state.form.owner_id">
+                                            <t t-foreach="state.lookups.users" t-as="u" t-key="u.id">
+                                                <option t-att-value="u.id" t-esc="u.name"/>
+                                            </t>
+                                        </select>
+                                    </label>
+                                    <label>
+                                        <span>Property</span>
+                                        <select t-model="state.form.property_id">
+                                            <option value="">Optional</option>
+                                            <t t-foreach="state.lookups.properties" t-as="p" t-key="p.id">
+                                                <option t-att-value="p.id" t-esc="p.name"/>
+                                            </t>
+                                        </select>
+                                    </label>
+                                    <label class="o_ca_span_2">
+                                        <span>Requirement</span>
+                                        <select t-model="state.form.requirement_id">
+                                            <option value="">Optional</option>
+                                            <t t-foreach="state.lookups.requirements" t-as="r" t-key="r.id">
+                                                <option t-att-value="r.id"><t t-esc="r.code"/> — <t t-esc="r.name"/></option>
+                                            </t>
+                                        </select>
+                                    </label>
+                                    <label class="o_ca_span_2">
+                                        <span>Description</span>
+                                        <textarea t-model="state.form.description" rows="3"/>
+                                    </label>
+                                    <label class="o_ca_span_2">
+                                        <span>Supporting files</span>
+                                        <input type="file" multiple="1" t-on-change="onCreateFiles"/>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="o_ca_modal_foot">
+                                <button class="o_ca_btn" t-on-click="closeCreate">Cancel</button>
+                                <button class="o_ca_btn primary" t-att-disabled="!!state.busy" t-on-click="createReport">
+                                    <t t-esc="state.busy || 'Create'"/>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </CaAppShell>
+        </div>
+    </t>
+</templates>

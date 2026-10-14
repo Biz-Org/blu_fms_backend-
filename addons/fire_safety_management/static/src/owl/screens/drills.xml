@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="fire_safety_management.Drills">
+        <div class="o_action o_fs_app">
+            <FsAppShell active="'drills'">
+                <div class="o_fs_shell">
+                    <div t-if="state.error" class="o_fs_alert">
+                        <i class="fa fa-exclamation-circle"/>
+                        <div t-esc="state.error"/>
+                    </div>
+
+                    <t t-if="state.mode === 'list'">
+                        <div class="o_fs_page_header">
+                            <div>
+                                <h1>Mock Drills</h1>
+                                <p>Schedule evacuation drills, notify participants, record attendance, and close the loop.</p>
+                            </div>
+                            <button t-if="canCreate" class="o_fs_btn primary" t-on-click="() => this.setMode('create')">
+                                <i class="fa fa-plus"/> Schedule Drill
+                            </button>
+                        </div>
+
+                        <div t-if="state.loading" class="o_fs_empty">
+                            <h3>Loading drills</h3>
+                            <p>Fetching live Fire &amp; Safety records.</p>
+                        </div>
+                        <t t-else="">
+                            <div class="o_fs_kpi_row">
+                                <FsKpiCard label="'All Drills'" value="state.kpis.total" icon="'fa-bullhorn'" onClick.bind="() => this.onFilter('all')"/>
+                                <FsKpiCard label="'Upcoming'" value="state.kpis.upcoming" icon="'fa-calendar'" tone="state.kpis.upcoming ? 'info' : ''" onClick.bind="() => this.onFilter('upcoming')"/>
+                                <FsKpiCard label="'Completed'" value="state.kpis.completed" icon="'fa-check'" onClick.bind="() => this.onFilter('completed')"/>
+                                <FsKpiCard label="'Cancelled'" value="state.kpis.cancelled" icon="'fa-ban'" tone="state.kpis.cancelled ? 'danger' : ''" onClick.bind="() => this.onFilter('cancelled')"/>
+                            </div>
+                            <div class="o_fs_toolbar">
+                                <div class="o_fs_search">
+                                    <i class="fa fa-search"/>
+                                    <input type="text" placeholder="Search drills..." t-att-value="state.search" t-on-change="onSearch"/>
+                                </div>
+                                <select class="o_fs_select" t-att-value="state.typeFilter" t-on-change="onTypeFilter">
+                                    <option value="">Type: All</option>
+                                    <t t-foreach="types" t-as="row" t-key="row.value">
+                                        <option t-att-value="row.value" t-esc="row.label"/>
+                                    </t>
+                                </select>
+                                <div class="o_fs_chips">
+                                    <button t-att-class="state.filter === 'all' ? 'active' : ''" t-on-click="() => this.onFilter('all')">All</button>
+                                    <button t-att-class="state.filter === 'upcoming' ? 'active' : ''" t-on-click="() => this.onFilter('upcoming')">Upcoming</button>
+                                    <button t-att-class="state.filter === 'scheduled' ? 'active' : ''" t-on-click="() => this.onFilter('scheduled')">Scheduled</button>
+                                    <button t-att-class="state.filter === 'rescheduled' ? 'active' : ''" t-on-click="() => this.onFilter('rescheduled')">Rescheduled</button>
+                                    <button t-att-class="state.filter === 'completed' ? 'active' : ''" t-on-click="() => this.onFilter('completed')">Completed</button>
+                                    <button t-att-class="state.filter === 'cancelled' ? 'active' : ''" t-on-click="() => this.onFilter('cancelled')">Cancelled</button>
+                                </div>
+                            </div>
+                            <div class="o_fs_card">
+                                <div class="o_fs_card_head">Drill calendar</div>
+                                <t t-if="state.records.length">
+                                    <table class="o_fs_table">
+                                        <thead>
+                                            <tr>
+                                                <th>Drill</th>
+                                                <th>Type</th>
+                                                <th>When</th>
+                                                <th>Conducted by</th>
+                                                <th>Status</th>
+                                                <th/>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr t-foreach="state.records" t-as="rec" t-key="rec.id" t-on-click="() => this.setMode('detail', rec.id)">
+                                                <td>
+                                                    <div class="o_fs_row_title" t-esc="rec.name"/>
+                                                    <div class="o_fs_row_sub" t-esc="m2oName(rec.property_id) or 'No location'"/>
+                                                </td>
+                                                <td><span class="o_fs_pill" t-esc="typeLabel(rec.drill_type)"/></td>
+                                                <td t-esc="formatWhen(rec.scheduled_datetime)"/>
+                                                <td t-esc="rec.conducted_by or '—'"/>
+                                                <td><FsStatusBadge state="rec.state" label="stateLabel(rec.state)"/></td>
+                                                <td><button class="o_fs_link" t-on-click.stop="() => this.setMode('detail', rec.id)">Open</button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div class="o_fs_pager">
+                                        <span><t t-esc="pageFrom"/>–<t t-esc="pageTo"/> of <t t-esc="state.total"/></span>
+                                        <div class="o_fs_pager_pages">
+                                            <button t-att-disabled="state.page &lt;= 1" t-on-click="() => this.onPage(-1)">Prev</button>
+                                            <button t-att-disabled="state.page &gt;= pageCount" t-on-click="() => this.onPage(1)">Next</button>
+                                        </div>
+                                    </div>
+                                </t>
+                                <div t-else="" class="o_fs_empty">
+                                    <h3>No drills match</h3>
+                                    <p t-if="canCreate">Schedule a fire or evacuation drill to start the mock-drill loop.</p>
+                                    <p t-else="">Scheduled drills will appear here.</p>
+                                    <button t-if="canCreate" class="o_fs_btn primary mt-2" t-on-click="() => this.setMode('create')">
+                                        <i class="fa fa-plus"/> Schedule Drill
+                                    </button>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+
+                    <t t-if="state.mode === 'create'">
+                        <button class="o_fs_back" t-on-click="() => this.setMode('list')"><i class="fa fa-arrow-left"/> Back to Drills</button>
+                        <div class="o_fs_page_header">
+                            <div>
+                                <h1>Schedule Drill</h1>
+                                <p>Only a Safety Manager can create, complete, reschedule, or cancel a mock drill. Security can view the calendar.</p>
+                            </div>
+                        </div>
+                        <div class="o_fs_form_section">
+                            <h3>Plan</h3>
+                            <div class="o_fs_form_grid">
+                                <div>
+                                    <label>Name *</label>
+                                    <input type="text" t-model="state.form.name" placeholder="Fire Evacuation Q3"/>
+                                </div>
+                                <div>
+                                    <label>Type *</label>
+                                    <select t-model="state.form.drill_type">
+                                        <t t-foreach="types" t-as="row" t-key="row.value">
+                                            <option t-att-value="row.value" t-esc="row.label"/>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Date and time *</label>
+                                    <input type="datetime-local" t-model="state.form.scheduled_datetime"/>
+                                </div>
+                                <div>
+                                    <label>Conducted by *</label>
+                                    <input type="text" t-model="state.form.conducted_by" placeholder="Internal Safety Team"/>
+                                </div>
+                                <div>
+                                    <label>Expected participants</label>
+                                    <input type="number" min="0" t-model="state.form.expected_participants"/>
+                                </div>
+                                <div>
+                                    <label>Target participation %</label>
+                                    <input type="number" min="0" max="100" t-model="state.form.target_participation"/>
+                                </div>
+                                <div>
+                                    <label>Assigned to</label>
+                                    <select t-model="state.form.assigned_user_id">
+                                        <option value="">Me</option>
+                                        <t t-foreach="state.lookups.users" t-as="usr" t-key="usr.id">
+                                            <option t-att-value="usr.id" t-esc="usr.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                            </div>
+                            <label class="mt-3">Description</label>
+                            <textarea t-model="state.form.description" placeholder="Scope, assembly points, and what will be tested"/>
+                        </div>
+                        <div class="o_fs_form_section">
+                            <h3>Location (placeholder)</h3>
+                            <p class="o_fs_hint">Property, building, and area are integration placeholders until Property Management exists.</p>
+                            <div class="o_fs_form_grid">
+                                <div>
+                                    <label>Property</label>
+                                    <select t-model="state.form.property_id" t-on-change="onPropertyChange">
+                                        <option value="">None</option>
+                                        <t t-foreach="state.lookups.properties" t-as="row" t-key="row.id">
+                                            <option t-att-value="row.id" t-esc="row.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Building / Tower</label>
+                                    <select t-model="state.form.building_id" t-on-change="onBuildingChange">
+                                        <option value="">None</option>
+                                        <t t-foreach="filteredBuildings" t-as="row" t-key="row.id">
+                                            <option t-att-value="row.id" t-esc="row.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Area / Floor</label>
+                                    <select t-model="state.form.area_id">
+                                        <option value="">None</option>
+                                        <t t-foreach="filteredAreas" t-as="row" t-key="row.id">
+                                            <option t-att-value="row.id" t-esc="row.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="o_fs_form_section">
+                            <h3>Participants / Users</h3>
+                            <p class="o_fs_hint">Search and select the users who should receive the Community announcement for this drill.</p>
+                            <div class="o_fs_search mb-2">
+                                <i class="fa fa-search"/>
+                                <input type="text" placeholder="Search users by name or login..." t-att-value="state.participantQuery" t-on-input="onParticipantQuery"/>
+                            </div>
+                            <div t-if="state.selectedParticipants.length" class="o_fs_chips mb-2">
+                                <t t-foreach="state.selectedParticipants" t-as="usr" t-key="usr.id">
+                                    <button class="active" type="button" t-on-click="() => this.removeParticipant(usr.id)">
+                                        <t t-esc="usr.name"/> <i class="fa fa-times"/>
+                                    </button>
+                                </t>
+                            </div>
+                            <div t-if="state.participantResults.length" class="o_fs_chips">
+                                <t t-foreach="state.participantResults" t-as="usr" t-key="usr.id">
+                                    <button type="button" t-on-click="() => this.addParticipant(usr)">
+                                        <i class="fa fa-plus"/> <t t-esc="usr.name"/>
+                                    </button>
+                                </t>
+                            </div>
+                            <p t-elif="state.participantQuery" class="o_fs_hint">No matching users.</p>
+                            <p t-elif="!state.selectedParticipants.length" class="o_fs_hint">No participants selected yet.</p>
+                        </div>
+                        <div class="o_fs_footer_bar">
+                            <span t-if="state.busy" class="o_fs_busy" t-esc="state.busy"/>
+                            <button class="o_fs_btn secondary" t-att-disabled="state.busy" t-on-click="() => this.setMode('list')">Cancel</button>
+                            <button class="o_fs_btn primary" t-att-disabled="state.busy" t-on-click="createDrill">
+                                <i class="fa fa-bullhorn"/> Schedule Drill
+                            </button>
+                        </div>
+                    </t>
+
+                    <t t-if="state.mode === 'detail'">
+                        <button class="o_fs_back" t-on-click="() => this.setMode('list')"><i class="fa fa-arrow-left"/> Back to Drills</button>
+                        <div t-if="state.loading" class="o_fs_empty"><h3>Loading drill</h3></div>
+                        <t t-elif="state.record">
+                            <div class="o_fs_page_header">
+                                <div>
+                                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                                        <h1 t-esc="drill.name"/>
+                                        <FsStatusBadge state="drill.state" label="stateLabel(drill.state)"/>
+                                        <span class="o_fs_pill" t-esc="typeLabel(drill.drill_type)"/>
+                                    </div>
+                                    <p>
+                                        <t t-esc="formatWhen(drill.scheduled_datetime)"/>
+                                        <t t-if="drill.conducted_by"> · <t t-esc="drill.conducted_by"/></t>
+                                        <t t-if="m2oName(drill.property_id)"> · <t t-esc="m2oName(drill.property_id)"/></t>
+                                    </p>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button t-if="canNotify" class="o_fs_btn secondary" t-att-disabled="state.busy" t-on-click="notifyParticipants">
+                                        <i class="fa fa-envelope"/> Notify Participants
+                                    </button>
+                                    <button t-if="canConfirmSchedule" class="o_fs_btn primary" t-att-disabled="state.busy" t-on-click="confirmSchedule">
+                                        <i class="fa fa-check"/> Confirm Schedule
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="o_fs_detail_grid">
+                                <div class="o_fs_card">
+                                    <div class="o_fs_card_head">Plan</div>
+                                    <div class="o_fs_meta">
+                                        <div><span>Assignee</span><strong t-esc="m2oName(drill.assigned_user_id) or '—'"/></div>
+                                        <div><span>Expected</span><strong t-esc="drill.expected_participants"/></div>
+                                        <div><span>Target</span><strong t-esc="formatRate(drill.target_participation)"/></div>
+                                        <div><span>Location</span><strong t-esc="m2oName(drill.property_id) or '—'"/></div>
+                                    </div>
+                                    <p class="o_fs_notes" t-esc="stripHtml(drill.description) or 'No description'"/>
+                                </div>
+                                <div class="o_fs_card">
+                                    <div class="o_fs_card_head">Outcome</div>
+                                    <div class="o_fs_meta">
+                                        <div><span>Attendance</span><strong t-esc="drill.attendance_count"/></div>
+                                        <div><span>Participation</span><strong t-esc="formatRate(drill.participation_rate)"/></div>
+                                        <div><span>Response (min)</span><strong t-esc="drill.response_time_minutes || '—'"/></div>
+                                        <div><span>Completed</span><strong t-esc="formatWhen(drill.completed_datetime)"/></div>
+                                    </div>
+                                    <p t-if="stripHtml(drill.observations)" class="o_fs_notes"><strong>Observations: </strong><t t-esc="stripHtml(drill.observations)"/></p>
+                                    <p t-if="stripHtml(drill.issues)" class="o_fs_notes"><strong>Issues: </strong><t t-esc="stripHtml(drill.issues)"/></p>
+                                    <p t-if="drill.cancelled_reason" class="o_fs_notes"><strong>Cancelled: </strong><t t-esc="drill.cancelled_reason"/></p>
+                                </div>
+                            </div>
+
+                            <div class="o_fs_card mt-3">
+                                <div class="o_fs_card_head">Participants / Users</div>
+                                <p class="o_fs_hint">Selected users receive the linked Community announcement for this mock drill.</p>
+                                <t t-if="canOperate and isOpen">
+                                    <div class="o_fs_search mb-2">
+                                        <i class="fa fa-search"/>
+                                        <input type="text" placeholder="Search users by name or login..." t-att-value="state.participantQuery" t-on-input="onParticipantQuery"/>
+                                    </div>
+                                    <div t-if="state.selectedParticipants.length" class="o_fs_chips mb-2">
+                                        <t t-foreach="state.selectedParticipants" t-as="usr" t-key="usr.id">
+                                            <button class="active" type="button" t-on-click="() => this.removeParticipant(usr.id)">
+                                                <t t-esc="usr.name"/> <i class="fa fa-times"/>
+                                            </button>
+                                        </t>
+                                    </div>
+                                    <div t-if="state.participantResults.length" class="o_fs_chips mb-2">
+                                        <t t-foreach="state.participantResults" t-as="usr" t-key="usr.id">
+                                            <button type="button" t-on-click="() => this.addParticipant(usr)">
+                                                <i class="fa fa-plus"/> <t t-esc="usr.name"/>
+                                            </button>
+                                        </t>
+                                    </div>
+                                    <button class="o_fs_btn secondary" t-att-disabled="state.busy" t-on-click="saveParticipants">
+                                        <i class="fa fa-save"/> Save Participants
+                                    </button>
+                                </t>
+                                <p t-else="" class="o_fs_notes">
+                                    <t t-if="participantNames.length" t-esc="participantNames.join(', ')"/>
+                                    <t t-else="">None listed</t>
+                                </p>
+                            </div>
+
+                            <div t-if="canComplete" class="o_fs_card mt-3">
+                                <div class="o_fs_card_head">Complete drill</div>
+                                <p class="o_fs_hint">Safety Manager only. Records attendance and closes the drill.</p>
+                                <div class="o_fs_form_grid">
+                                    <div>
+                                        <label>Attendance count</label>
+                                        <input type="number" min="0" t-model="state.completeForm.attendance_count"/>
+                                    </div>
+                                    <div>
+                                        <label>Response time (minutes)</label>
+                                        <input type="number" min="0" step="0.1" t-model="state.completeForm.response_time_minutes"/>
+                                    </div>
+                                </div>
+                                <label class="mt-2">Observations</label>
+                                <textarea t-model="state.completeForm.observations" placeholder="How the drill ran"/>
+                                <label class="mt-2">Issues</label>
+                                <textarea t-model="state.completeForm.issues" placeholder="Gaps, blocked exits, slow response..."/>
+                                <button class="o_fs_btn primary mt-2" t-att-disabled="state.busy" t-on-click="completeDrill">
+                                    <i class="fa fa-check"/> Complete Drill
+                                </button>
+                            </div>
+
+                            <div t-if="canReschedule" class="o_fs_card mt-3">
+                                <div class="o_fs_card_head">Reschedule</div>
+                                <p class="o_fs_hint">Moves the drill to Rescheduled and notifies participants. Confirm schedule afterwards if the new date is accepted.</p>
+                                <div class="o_fs_form_grid">
+                                    <div>
+                                        <label>New date and time *</label>
+                                        <input type="datetime-local" t-model="state.rescheduleForm.new_datetime"/>
+                                    </div>
+                                    <div>
+                                        <label>Reason (posted on the record)</label>
+                                        <input type="text" t-model="state.rescheduleForm.reason" placeholder="Weather, occupancy, conflict..."/>
+                                    </div>
+                                </div>
+                                <button class="o_fs_btn secondary mt-2" t-att-disabled="state.busy" t-on-click="rescheduleDrill">
+                                    <i class="fa fa-calendar"/> Reschedule Drill
+                                </button>
+                            </div>
+
+                            <div t-if="canCancel" class="o_fs_card mt-3">
+                                <div class="o_fs_card_head">Cancel drill</div>
+                                <label>Reason</label>
+                                <textarea t-model="state.cancelReason" placeholder="Why this drill will not run"/>
+                                <button class="o_fs_btn secondary mt-2" t-att-disabled="state.busy" t-on-click="cancelDrill">
+                                    <i class="fa fa-ban"/> Cancel Drill
+                                </button>
+                            </div>
+                            <div t-if="state.busy" class="o_fs_busy mt-3" t-esc="state.busy"/>
+                        </t>
+                    </t>
+                </div>
+            </FsAppShell>
+        </div>
+    </t>
+</templates>

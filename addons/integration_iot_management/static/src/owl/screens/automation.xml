@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="integration_iot_management.Automation">
+        <div class="o_action o_iot_app">
+            <IotAppShell active="'automation'">
+                <div class="o_iot_shell">
+                    <div class="o_iot_page_header">
+                        <div>
+                            <h1>Building Automation</h1>
+                            <p>Rules run on the server. Simulated adapters never report a physical success.</p>
+                        </div>
+                        <button t-if="state.isAdmin" class="o_iot_btn primary" t-on-click="openCreate"><i class="fa fa-plus"/> Create Automation Rule</button>
+                    </div>
+                    <div t-if="state.loading" class="o_iot_empty"><h3>Loading</h3></div>
+                    <div t-elif="state.error" class="o_iot_empty o_iot_error"><h3 t-esc="state.error"/></div>
+                    <t t-else="">
+                        <div class="o_iot_card">
+                            <div class="o_iot_card_head">Rules</div>
+                            <t t-if="state.data.rules.length">
+                                <table class="o_iot_table">
+                                    <thead><tr><th>Rule</th><th>When</th><th>Then</th><th>Location</th><th>Status</th><th/></tr></thead>
+                                    <tbody>
+                                        <tr t-foreach="state.data.rules" t-as="row" t-key="row.id">
+                                            <td class="fw-semibold" t-esc="row.name"/>
+                                            <td><t t-esc="row.parameter"/> <t t-esc="operatorLabel(row.operator)"/> <t t-esc="row.threshold"/></td>
+                                            <td t-esc="row.action.replaceAll('_', ' ')"/>
+                                            <td t-esc="row.location or '—'"/>
+                                            <td><IotStatusBadge state="row.active ? 'active' : 'draft'" label="row.active ? 'Active' : 'Inactive'"/></td>
+                                            <td>
+                                                <button t-if="state.isAdmin" class="o_iot_link" t-on-click="() => this.toggle(row, !row.active)" t-esc="row.active ? 'Disable' : 'Enable'"/>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </t>
+                            <IotEmptyState t-else="" title="'No automation rules'" hint="'Create a rule such as Temperature &gt; 26°C → Increase HVAC Cooling.'"/>
+                        </div>
+                        <div class="o_iot_card mt-3">
+                            <div class="o_iot_card_head">Execution history</div>
+                            <t t-if="state.data.executions.length">
+                                <table class="o_iot_table">
+                                    <thead><tr><th>When</th><th>Rule</th><th>Result</th><th>Message</th><th/></tr></thead>
+                                    <tbody>
+                                        <tr t-foreach="state.data.executions" t-as="row" t-key="row.id">
+                                            <td t-esc="row.time"/>
+                                            <td t-esc="row.rule"/>
+                                            <td><IotStatusBadge state="row.state"/><span t-if="row.simulated" class="o_iot_sim"> Simulated</span></td>
+                                            <td t-esc="row.message"/>
+                                            <td><button t-if="state.isAdmin and row.state !== 'overridden'" class="o_iot_link" t-on-click="() => this.override(row)">Override</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </t>
+                            <IotEmptyState t-else="" title="'No executions yet'" hint="'Matching sensor readings will trigger server-side actions.'"/>
+                        </div>
+                    </t>
+                </div>
+                <div t-if="state.showRule" class="o_iot_modal_backdrop" t-on-click.self="() => this.state.showRule = false">
+                    <div class="o_iot_modal">
+                        <div class="o_iot_modal_head">
+                            <div><h2>Create Automation Rule</h2><p>WHEN a condition is met, THEN run a server-side action.</p></div>
+                            <button class="o_iot_modal_close" t-on-click="() => this.state.showRule = false"><i class="fa fa-times"/></button>
+                        </div>
+                        <div class="o_iot_modal_body o_iot_form_section">
+                            <div class="o_iot_form_grid">
+                                <div class="o_iot_span_2"><label>Rule name</label><input t-model="state.form.name"/></div>
+                                <div><label>Location</label>
+                                    <select t-model="state.form.building_id">
+                                        <option value="">Any</option>
+                                        <t t-foreach="state.data.lookups.buildings or []" t-as="b" t-key="b.id"><option t-att-value="b.id" t-esc="b.name"/></t>
+                                    </select>
+                                </div>
+                                <div class="o_iot_span_2"><h3>WHEN</h3></div>
+                                <div><label>Parameter</label>
+                                    <select t-model="state.form.trigger_parameter">
+                                        <option value="temperature">Temperature</option>
+                                        <option value="humidity">Humidity</option>
+                                        <option value="air_quality">Air Quality</option>
+                                        <option value="co2">CO₂</option>
+                                        <option value="occupancy">Occupancy</option>
+                                        <option value="energy">Energy</option>
+                                    </select>
+                                </div>
+                                <div><label>Operator</label>
+                                    <select t-model="state.form.operator">
+                                        <option value="gt">&gt;</option>
+                                        <option value="gte">≥</option>
+                                        <option value="lt">&lt;</option>
+                                        <option value="lte">≤</option>
+                                        <option value="eq">=</option>
+                                    </select>
+                                </div>
+                                <div><label>Threshold</label><input t-model="state.form.threshold"/></div>
+                                <div class="o_iot_span_2"><h3>THEN</h3></div>
+                                <div><label>Action</label>
+                                    <select t-model="state.form.action">
+                                        <option value="increase_hvac_cooling">Increase HVAC Cooling</option>
+                                        <option value="decrease_hvac_cooling">Decrease HVAC Cooling</option>
+                                        <option value="set_hvac_setpoint">Set HVAC Setpoint</option>
+                                        <option value="lighting_on">Turn Lighting On</option>
+                                        <option value="lighting_off">Turn Lighting Off</option>
+                                        <option value="raise_alert">Raise Alert</option>
+                                    </select>
+                                </div>
+                                <div><label>Action configuration</label><input t-model="state.form.action_value" placeholder="Setpoint or step"/></div>
+                                <div class="o_iot_span_2"><h3>SCHEDULE</h3></div>
+                                <div><label>Schedule</label>
+                                    <select t-model="state.form.schedule_mode">
+                                        <option value="always">Always Active</option>
+                                        <option value="scheduled">Set Schedule</option>
+                                    </select>
+                                </div>
+                                <div><label>Start</label><input type="time" t-model="state.form.start"/></div>
+                                <div><label>End</label><input type="time" t-model="state.form.end"/></div>
+                            </div>
+                        </div>
+                        <div class="o_iot_modal_foot">
+                            <button class="o_iot_btn secondary" t-on-click="() => this.state.showRule = false">Cancel</button>
+                            <button class="o_iot_btn primary" t-on-click="saveRule">Save rule</button>
+                        </div>
+                    </div>
+                </div>
+            </IotAppShell>
+        </div>
+    </t>
+</templates>

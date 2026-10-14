@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="compliance_audit_management.Dashboard">
+        <div class="o_action o_ca_app">
+            <CaAppShell active="'dashboard'">
+                <div class="o_ca_shell">
+                    <div class="o_ca_page_header">
+                        <div>
+                            <h1>Compliance Overview</h1>
+                            <p>Monitor regulatory requirements, audits, documents and compliance risks.</p>
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button t-if="canLogActivity" class="o_ca_btn primary" t-on-click="openLogActivity">
+                                <i class="fa fa-plus"/> Log Activity
+                            </button>
+                        </div>
+                    </div>
+
+                    <div t-if="state.loading" class="o_ca_empty">
+                        <h3>Loading dashboard</h3>
+                        <p>Fetching compliance records.</p>
+                    </div>
+                    <div t-elif="state.error" class="o_ca_empty o_ca_error">
+                        <h3>Dashboard could not load</h3>
+                        <p t-esc="state.error"/>
+                        <button class="o_ca_btn primary" t-on-click="reload">Retry</button>
+                    </div>
+                    <t t-else="">
+                        <div class="o_ca_kpi_row">
+                            <CaKpiCard
+                                label="'Overall Compliance'"
+                                value="overallCompliance"
+                                icon="'fa-line-chart'"
+                                hint="kpis.overall_hint or 'Based on checklist results'"
+                                onClick.bind="() => this.openNav('compliance_audit_management.action_reports')"
+                            />
+                            <CaKpiCard
+                                label="'Pending Activities'"
+                                value="kpis.pending_activities || 0"
+                                icon="'fa-tasks'"
+                                hint="kpis.pending_hint or ''"
+                                onClick.bind="() => this.openNav('compliance_audit_management.action_activities')"
+                            />
+                            <CaKpiCard
+                                label="'Overdue'"
+                                value="kpis.overdue_activities || 0"
+                                icon="'fa-clock-o'"
+                                tone="kpis.overdue_activities ? 'danger' : ''"
+                                hint="kpis.overdue_activities ? 'Immediate action required' : 'None overdue'"
+                                onClick.bind="() => this.openNav('compliance_audit_management.action_activities')"
+                            />
+                            <CaKpiCard
+                                label="'Expiring Documents'"
+                                value="kpis.expiring_documents || 0"
+                                icon="'fa-file-text-o'"
+                                tone="kpis.expiring_documents ? 'warning' : ''"
+                                hint="'Next 30 days'"
+                                onClick.bind="() => this.openNav('compliance_audit_management.action_documents')"
+                            />
+                            <CaKpiCard
+                                label="'Open Non-Compliance'"
+                                value="kpis.open_non_compliance || 0"
+                                icon="'fa-exclamation-triangle'"
+                                tone="kpis.open_non_compliance ? 'danger' : ''"
+                                hint="kpis.nc_hint or ''"
+                                onClick.bind="() => this.openNav('compliance_audit_management.action_non_compliance')"
+                            />
+                        </div>
+
+                        <div class="o_ca_dash_grid">
+                            <div class="o_ca_card">
+                                <div class="o_ca_card_head o_ca_card_head_row">
+                                    <span>Compliance Health by Category</span>
+                                    <button class="o_ca_link" t-on-click="() => this.openNav('compliance_audit_management.action_reports')">View Report</button>
+                                </div>
+                                <t t-if="data.health_by_category.length">
+                                    <CaProgressBar
+                                        t-foreach="data.health_by_category"
+                                        t-as="row"
+                                        t-key="row.key"
+                                        label="row.label"
+                                        value="row.rate"
+                                    />
+                                </t>
+                                <CaEmptyState t-else="" title="'No scored checklist results yet'" hint="'Complete compliance checks to populate category health.'"/>
+                            </div>
+
+                            <div class="o_ca_card">
+                                <div class="o_ca_card_head">Attention Required</div>
+                                <t t-foreach="data.attention" t-as="item" t-key="item.key">
+                                    <div class="o_ca_attention_row">
+                                        <div>
+                                            <div class="fw-semibold" t-esc="item.title"/>
+                                            <div class="small text-muted" t-esc="item.detail"/>
+                                        </div>
+                                        <button class="o_ca_link" t-on-click="() => this.openAttention(item)" t-esc="item.action_label || 'Open'"/>
+                                    </div>
+                                </t>
+                                <CaEmptyState t-if="!data.attention.length" title="'Nothing needs attention'" hint="'Overdue checks, expiring documents, and high-priority issues will appear here.'"/>
+                            </div>
+                        </div>
+
+                        <div class="o_ca_card mt-3">
+                            <div class="o_ca_card_head o_ca_card_head_row">
+                                <span>Upcoming Compliance Activities</span>
+                                <button t-if="canLogActivity" class="o_ca_btn primary" t-on-click="openLogActivity">
+                                    <i class="fa fa-plus"/> Log Activity
+                                </button>
+                            </div>
+                            <t t-if="data.upcoming_activities.length">
+                                <table class="o_ca_table">
+                                    <thead>
+                                        <tr>
+                                            <th>Activity</th>
+                                            <th>Type</th>
+                                            <th>Location</th>
+                                            <th>Assigned To</th>
+                                            <th>Due Date</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="data.upcoming_activities" t-as="row" t-key="row.key">
+                                            <td class="fw-semibold" t-esc="row.name"/>
+                                            <td t-esc="row.type_label"/>
+                                            <td t-esc="row.location || '—'"/>
+                                            <td t-esc="row.assigned_to || '—'"/>
+                                            <td t-esc="formatDue(row.due_date)"/>
+                                            <td>
+                                                <CaStatusBadge state="row.display_state" label="row.status_label"/>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </t>
+                            <CaEmptyState t-else="" title="'No upcoming activities'" hint="'Scheduled checks and audits will appear here.'"/>
+                        </div>
+                    </t>
+                </div>
+            </CaAppShell>
+        </div>
+    </t>
+</templates>

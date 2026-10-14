@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_cc_discussion_search" model="ir.ui.view">
+        <field name="name">community.communication.discussion.search</field>
+        <field name="model">community.communication.discussion</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="title"/>
+                <filter string="Active" name="active" domain="[('state', '=', 'active')]"/>
+                <filter string="Reported" name="dummy_reported" domain="[]"/>
+                <group>
+                    <filter string="Category" name="group_category" context="{'group_by': 'category'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="view_cc_discussion_list" model="ir.ui.view">
+        <field name="name">community.communication.discussion.list</field>
+        <field name="model">community.communication.discussion</field>
+        <field name="arch" type="xml">
+            <list class="o_cc_shell">
+                <field name="is_pinned" optional="show"/>
+                <field name="title"/>
+                <field name="category"/>
+                <field name="author_id"/>
+                <field name="comment_count"/>
+                <field name="view_count"/>
+                <field name="last_activity_at"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_cc_discussion_form" model="ir.ui.view">
+        <field name="name">community.communication.discussion.form</field>
+        <field name="model">community.communication.discussion</field>
+        <field name="arch" type="xml">
+            <form class="o_cc_shell">
+                <header>
+                    <button name="action_pin" string="Pin" type="object" invisible="is_pinned" groups="community_communication.group_community_moderator"/>
+                    <button name="action_unpin" string="Unpin" type="object" invisible="not is_pinned" groups="community_communication.group_community_moderator"/>
+                    <button name="action_lock" string="Lock" type="object" invisible="state == 'locked'" groups="community_communication.group_community_moderator"/>
+                    <button name="action_unlock" string="Unlock" type="object" invisible="state != 'locked'" groups="community_communication.group_community_moderator"/>
+                    <button name="action_resolve" string="Resolve" type="object" invisible="state != 'active'"/>
+                    <button name="action_remove" string="Remove" type="object" groups="community_communication.group_community_moderator"/>
+                    <button name="action_follow" string="Follow" type="object" invisible="is_followed"/>
+                    <button name="action_unfollow" string="Unfollow" type="object" invisible="not is_followed"/>
+                    <field name="state" widget="statusbar" statusbar_visible="active,resolved,locked"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="title"/>
+                        <field name="category"/>
+                        <field name="community_id" invisible="1"/>
+                        <field name="group_id"/>
+                        <field name="is_pinned"/>
+                        <field name="support_count"/>
+                        <field name="oppose_count"/>
+                    </group>
+                    <field name="body"/>
+                    <field name="attachment_ids" widget="many2many_binary"/>
+                    <widget name="cc_discussion_thread"/>
+                    <field name="comment_ids" invisible="1">
+                        <list editable="bottom">
+                            <field name="author_id"/>
+                            <field name="body"/>
+                            <field name="parent_id"/>
+                            <field name="state"/>
+                        </list>
+                    </field>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_cc_discussion" model="ir.actions.act_window">
+        <field name="name">Discussion Forums</field>
+        <field name="res_model">community.communication.discussion</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('state', '!=', 'removed')]</field>
+    </record>
+    <record id="action_cc_report" model="ir.actions.act_window">
+        <field name="name">Reported Content</field>
+        <field name="res_model">community.communication.report</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

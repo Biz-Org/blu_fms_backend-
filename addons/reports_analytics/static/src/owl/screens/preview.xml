@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="reports_analytics.Preview">
+        <div class="o_action o_ra_app">
+            <RaAppShell active="'library'" onNewAnalysis.bind="openAnalysis">
+                <div class="o_ra_shell">
+                    <t t-if="!ui.reportId">
+                        <RaEmptyState title="'Select a report'" hint="'Open a report from the library to preview generated data.'"/>
+                    </t>
+                    <t t-else="">
+                        <div class="o_ra_page_header">
+                            <div>
+                                <h1 t-esc="ui.detail.name or 'Report'"/>
+                                <p>
+                                    Generated: <t t-esc="ui.detail.generated_date or '—'"/>
+                                    · Created by <t t-esc="ui.detail.created_by"/>
+                                </p>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a class="o_ra_btn secondary" t-att-href="exportUrl('pdf')">Download PDF</a>
+                                <a class="o_ra_btn secondary" t-att-href="exportUrl('xlsx')">Excel</a>
+                                <a class="o_ra_btn secondary" t-att-href="exportUrl('csv')">CSV</a>
+                                <button class="o_ra_btn primary" t-on-click="generate">Generate</button>
+                            </div>
+                        </div>
+                        <t t-if="!ui.result.available">
+                            <RaEmptyState title="'Data unavailable'" hint="ui.result.reason or 'Generate the report to load live data.'"/>
+                        </t>
+                        <t t-else="">
+                            <div class="o_ra_kpi_row">
+                                <RaKpiCard t-foreach="ui.result.kpis or []" t-as="kpi" t-key="kpi.label" label="kpi.label" value="kpi.value" available="kpi.available"/>
+                            </div>
+                            <div class="o_ra_grid_2">
+                                <div class="o_ra_card">
+                                    <div class="o_ra_card_head">Results</div>
+                                    <t t-if="(ui.result.visualization or 'table') !== 'table' and ui.result.chart">
+                                        <RaBarChart labels="ui.result.chart.labels" data="(ui.result.chart.series[0] and ui.result.chart.series[0].data) or []"/>
+                                    </t>
+                                    <div class="o_ra_table_wrap">
+                                        <table class="o_ra_table">
+                                            <thead>
+                                                <tr><th t-foreach="ui.result.columns or []" t-as="col" t-key="col.name" t-esc="col.label"/></tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr t-foreach="ui.result.rows or []" t-as="row" t-key="row.id">
+                                                    <td t-foreach="ui.result.columns or []" t-as="col" t-key="col.name" t-esc="row[col.name]"/>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="o_ra_card">
+                                    <div class="o_ra_card_head">Key Observations</div>
+                                    <ul class="o_ra_list">
+                                        <li t-foreach="ui.result.insights or []" t-as="note" t-key="note.title">
+                                            <strong t-esc="note.title"/>
+                                            <div class="muted" t-esc="note.body"/>
+                                        </li>
+                                    </ul>
+                                    <t t-if="!(ui.result.insights or []).length">
+                                        <RaEmptyState title="'No observations'" hint="'Insights appear when the generated result has enough rows.'"/>
+                                    </t>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+                </div>
+                <t t-call="reports_analytics.AnalysisModal"/>
+            </RaAppShell>
+        </div>
+    </t>
+</templates>

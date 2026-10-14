@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="config_compliance_target" model="ir.config_parameter">
+        <field name="key">fire_safety_management.compliance_target</field>
+        <field name="value">95</field>
+    </record>
+</odoo>

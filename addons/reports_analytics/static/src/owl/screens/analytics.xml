@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="reports_analytics.AnalyticsHub">
+        <div class="o_action o_ra_app">
+            <RaAppShell active="activeNav" onNewAnalysis.bind="openAnalysis">
+                <div class="o_ra_shell">
+                    <div class="o_ra_tabs">
+                        <button t-att-class="ui.tab === 'operational' ? 'active' : ''" t-on-click="() => this.setTab('operational')">Operational</button>
+                        <button t-att-class="ui.tab === 'financial' ? 'active' : ''" t-on-click="() => this.setTab('financial')">Financial</button>
+                        <button t-att-class="ui.tab === 'trends' ? 'active' : ''" t-on-click="() => this.setTab('trends')">Trends</button>
+                        <button t-att-class="ui.tab === 'cross' ? 'active' : ''" t-on-click="() => this.setTab('cross')">Cross-Module</button>
+                        <button t-att-class="ui.tab === 'predictive' ? 'active' : ''" t-on-click="() => this.setTab('predictive')">Predictive</button>
+                    </div>
+
+                    <t t-if="ui.tab === 'operational'">
+                        <div class="o_ra_page_header">
+                            <div><h1>Operational Analytics</h1><p>Focus on workflow metrics and maintenance efficiency.</p></div>
+                        </div>
+                        <div class="o_ra_kpi_row">
+                            <RaKpiCard t-foreach="ui.operational.kpis" t-as="kpi" t-key="kpi.label" label="kpi.label" value="kpi.display" available="kpi.available" hint="kpi.hint" change="kpi.change"/>
+                        </div>
+                        <div class="o_ra_grid_2">
+                            <div class="o_ra_card">
+                                <div class="o_ra_card_head">Maintenance Types</div>
+                                <t t-if="ui.operational.maintenance.available">
+                                    <RaBarChart labels="ui.operational.maintenance.labels" data="(ui.operational.maintenance.series[0] and ui.operational.maintenance.series[0].data) or []"/>
+                                    <p class="small text-muted" t-esc="ui.operational.maintenance.reason"/>
+                                </t>
+                                <RaEmptyState t-else="" title="'Data unavailable'" hint="ui.operational.maintenance.reason"/>
+                            </div>
+                            <div class="o_ra_card">
+                                <div class="o_ra_card_head">Vendor Performance</div>
+                                <RaEmptyState title="'Data unavailable'" hint="ui.operational.vendors.reason"/>
+                            </div>
+                        </div>
+                    </t>
+
+                    <t t-if="ui.tab === 'financial'">
+                        <div class="o_ra_page_header"><div><h1>Financial Analytics</h1><p>Ledger overview and fiscal performance metrics.</p></div></div>
+                        <t t-if="!ui.financial.available">
+                            <RaEmptyState title="'Data unavailable'" hint="ui.financial.reason"/>
+                        </t>
+                        <t t-else="">
+                            <div class="o_ra_kpi_row">
+                                <RaKpiCard t-foreach="ui.financial.kpis" t-as="kpi" t-key="kpi.label" label="kpi.label" value="kpi.display" available="kpi.available"/>
+                            </div>
+                            <div class="o_ra_grid_eq">
+                                <div class="o_ra_card">
+                                    <div class="o_ra_card_head">Budget vs. Actual Variance</div>
+                                    <RaEmptyState title="'No budget source'" hint="ui.financial.budget.reason"/>
+                                </div>
+                                <div class="o_ra_card">
+                                    <div class="o_ra_card_head">Operating Expenses by Month</div>
+                                    <t t-if="ui.financial.opex_chart and ui.financial.opex_chart.available">
+                                        <RaBarChart labels="ui.financial.opex_chart.labels" data="ui.financial.opex_chart.series[0].data"/>
+                                    </t>
+                                    <RaEmptyState t-else="" title="'No Data'"/>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+
+                    <t t-if="ui.tab === 'trends'">
+                        <div class="o_ra_page_header"><div><h1>Trend Analysis</h1></div></div>
+                        <div class="o_ra_filters">
+                            <select class="o_ra_select" t-model="ui.metric" t-on-change="analyze">
+                                <option value="">Metric</option>
+                                <option t-foreach="ui.trends.metrics" t-as="src" t-key="src.id" t-att-value="src.technical_identifier" t-esc="src.name"/>
+                            </select>
+                            <select class="o_ra_select" t-model="state.filters.date_range" t-on-change="analyze">
+                                <option value="last_7">Last 7 Days</option>
+                                <option value="last_30">Last 30 Days</option>
+                                <option value="last_90">Last 90 Days</option>
+                            </select>
+                        </div>
+                        <t t-if="!ui.trends.available">
+                            <RaEmptyState title="'Data unavailable'" hint="ui.trends.reason"/>
+                        </t>
+                        <t t-else="">
+                            <div class="o_ra_kpi_row">
+                                <RaKpiCard t-foreach="ui.trends.kpis" t-as="kpi" t-key="kpi.label" label="kpi.label" value="kpi.display" available="kpi.available" hint="kpi.trend or kpi.hint" change="kpi.change"/>
+                            </div>
+                            <div class="o_ra_card">
+                                <div class="o_ra_card_head">Current vs Previous</div>
+                                <RaLineChart labels="ui.trends.chart.labels" current="ui.trends.chart.current" previous="ui.trends.chart.previous"/>
+                                <p class="small text-muted">Trend: <t t-esc="ui.trends.trend"/></p>
+                            </div>
+                        </t>
+                    </t>
+
+                    <t t-if="ui.tab === 'cross'">
+                        <div class="o_ra_page_header"><div><h1>Cross-Module Analytics</h1><p>Analyze relationships between data from different FMS modules.</p></div></div>
+                        <div class="o_ra_filters">
+                            <select class="o_ra_select" t-model="ui.moduleA">
+                                <option t-foreach="state.bootstrap.sources" t-as="src" t-key="src.id" t-att-value="src.id" t-esc="src.name"/>
+                            </select>
+                            <select class="o_ra_select" t-model="ui.moduleB">
+                                <option t-foreach="state.bootstrap.sources" t-as="src" t-key="'b'+src.id" t-att-value="src.id" t-esc="src.name"/>
+                            </select>
+                            <button class="o_ra_btn primary" t-on-click="analyze">Analyze</button>
+                        </div>
+                        <t t-if="!ui.cross.available">
+                            <RaEmptyState title="'Cannot analyze'" hint="ui.cross.reason"/>
+                        </t>
+                        <t t-else="">
+                            <div class="o_ra_grid_2">
+                                <div class="o_ra_card">
+                                    <div class="o_ra_card_head">Daily volume comparison</div>
+                                    <RaLineChart labels="ui.cross.chart.labels" current="ui.cross.chart.a" previous="ui.cross.chart.b"/>
+                                </div>
+                                <div class="o_ra_card">
+                                    <div class="o_ra_card_head">Primary Insight</div>
+                                    <t t-if="ui.cross.insight">
+                                        <h4 t-esc="ui.cross.insight.title"/>
+                                        <p t-esc="ui.cross.insight.body"/>
+                                    </t>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+
+                    <t t-if="ui.tab === 'predictive'">
+                        <div class="o_ra_page_header">
+                            <div>
+                                <h1>Predictive Analytics</h1>
+                                <p>Use historical FMS data to identify potential future trends when a model exists.</p>
+                            </div>
+                        </div>
+                        <RaEmptyState title="'No prediction available — insufficient data'" hint="ui.predictive.historical_basis or ui.predictive.reason"/>
+                    </t>
+                </div>
+                <t t-call="reports_analytics.AnalysisModal"/>
+            </RaAppShell>
+        </div>
+    </t>
+</templates>
