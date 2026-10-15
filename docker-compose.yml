@@ -22,15 +22,8 @@ services:
       PASSWORD: ${PASSWORD:-odoo}
     volumes:
       - fms-web-data:/var/lib/odoo
-      # Live-mount addons for development (optional; comment out for image-only deploy)
-      - ./addons:/mnt/extra-addons/addons:ro
-      - ./property_management:/mnt/extra-addons/property_management:ro
-      - ./apartment_management:/mnt/extra-addons/apartment_management:ro
-      - ./esg_management:/mnt/extra-addons/esg_management:ro
-      - ./gate_management:/mnt/extra-addons/gate_management:ro
-      - ./owner_tenant_management:/mnt/extra-addons/owner_tenant_management:ro
-      - ./resident_management:/mnt/extra-addons/resident_management:ro
-      - ./workforce_management:/mnt/extra-addons/workforce_management:ro
+      # Live-mount all root-level modules for development (optional; comment out for image-only deploy)
+      - .:/mnt/extra-addons:ro
     restart: unless-stopped
 
 volumes:

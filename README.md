@@ -1,82 +1,86 @@
 # blu_fms_backend
 
-Odoo 19 backend for the Blu Facility Management System: custom addons, Docker deployment, and configuration.
+Odoo 19 custom addons for the Blu Facility Management System, with Docker deployment helpers.
 
-This repository is **not** a standalone Python application. Run the official Odoo 19 server with `addons_path` pointing at the custom modules here (see [config/odoo.conf.example](config/odoo.conf.example)).
+Run the official Odoo 19 server with `addons_path` including this repository root (see [config/odoo.conf.example](config/odoo.conf.example)). Each subdirectory below is one installable Odoo module.
 
-## Repository layout
+## Repository layout (15 modules at root)
+
+All custom addons live **directly at the repository root** (no nested `addons/` directory):
+
+| Module | Summary |
+|--------|---------|
+| `apartment_management` | Apartments (existing) |
+| `esg_management` | ESG (existing) |
+| `gate_management` | Gate (existing) |
+| `owner_tenant_management` | Owners & tenants (existing) |
+| `property_management` | Property portfolio (existing) |
+| `resident_management` | Residents (existing) |
+| `workforce_management` | Workforce (existing) |
+| `ai_copilot` | AI assistant (OWL + HTTP providers) |
+| `community_communication` | Community portal & backend app |
+| `compliance_audit_management` | Compliance & audit |
+| `fire_safety_community` | Fire safety ↔ community bridge |
+| `fire_safety_management` | Fire & safety |
+| `integration_iot_management` | IoT integration |
+| `mobile_application` | Mobile JSON API + OWL shell |
+| `reports_analytics` | Reports & analytics |
+
+Supporting files:
 
 ```
 blu_fms_backend/
-├── addons/                          # FMS application suite (from fmss)
-│   ├── ai_copilot/
-│   ├── community_communication/
-│   ├── compliance_audit_management/
-│   ├── fire_safety_community/
-│   ├── fire_safety_management/
-│   ├── integration_iot_management/
-│   ├── mobile_application/
-│   └── reports_analytics/
-├── apartment_management/            # Additional FMS modules (repo root)
-├── esg_management/
-├── gate_management/
-├── owner_tenant_management/
-├── property_management/
-├── resident_management/
-├── workforce_management/
+├── <module_name>/          # 15 Odoo addons (see table)
 ├── config/odoo.conf.example
 ├── requirements.txt
 ├── Dockerfile
 ├── docker-compose.yml
-└── .env.example
+├── .env.example
+└── docs/
 ```
 
-**Path mapping from local development:** if your Odoo checkout uses `/path/to/fmss` as addons path, modules under `addons/<name>/` here correspond to `fmss/<name>/`.
+**Local fmss mapping:** `~/fmss/<module_name>/` corresponds to `~/blu_fms_backend/<module_name>/` for the eight FMS suite modules listed above.
 
-## FMS modules (`addons/`)
+## Module dependencies (eight-module suite)
 
-| Technical name | Depends on (Odoo modules) | Notes |
-|----------------|---------------------------|--------|
-| `community_communication` | `mail`, `portal` | Portal templates + OWL backend app |
+| Technical name | `depends` (Odoo) | Notes |
+|----------------|------------------|--------|
+| `community_communication` | `mail`, `portal` | |
 | `compliance_audit_management` | `mail` | |
 | `fire_safety_management` | `mail` | |
-| `fire_safety_community` | `fire_safety_management`, `community_communication` | Bridge only; no UI |
+| `fire_safety_community` | `fire_safety_management`, `community_communication` | No UI |
 | `integration_iot_management` | `mail` | |
 | `reports_analytics` | `mail` | |
-| `ai_copilot` | `web` | LLM via HTTP (stdlib); API keys in Odoo config |
-| `mobile_application` | `mail`, `web` | JSON routes under `/mobile/api/*` |
+| `ai_copilot` | `web` | API keys in Odoo settings |
+| `mobile_application` | `mail`, `web` | `/mobile/api/*` routes |
 
-Suggested install set for the core FMS apps:
+Example install set:
 
 ```text
 community_communication,fire_safety_management,fire_safety_community,compliance_audit_management,integration_iot_management,reports_analytics,ai_copilot,mobile_application
 ```
 
-Install order is handled by Odoo from manifest `depends`; `fire_safety_community` must be installed after its two dependencies.
+The seven property/resident modules are independent unless you add manifest dependencies later.
 
 ## Python dependencies
 
-Custom addon Python code uses **Odoo**, **python-dateutil** (`relativedelta`), and the **standard library** (including `urllib` in AI Copilot). No extra pip packages are required beyond [requirements.txt](requirements.txt) for typical Odoo 19 environments.
-
-Install into your Odoo virtualenv:
+See [requirements.txt](requirements.txt). Custom code uses Odoo, **python-dateutil**, and the standard library. Install into your Odoo venv:
 
 ```bash
 /path/to/odoo/.venv/bin/pip install -r requirements.txt
 ```
 
-Do not `pip install odoo` into the same environment unless you maintain Odoo from source intentionally.
-
 ## Local development (without Docker)
 
-1. PostgreSQL running (`pg_isready`).
-2. Odoo 19 source with venv (see your `fmss/run_setup` in the source project).
-3. Add both addon roots:
+1. PostgreSQL running.
+2. Odoo 19 source + venv.
+3. Point addons path at **this repo root**:
 
 ```bash
---addons-path="/path/to/odoo/odoo/addons,/path/to/odoo/addons,/path/to/blu_fms_backend,/path/to/blu_fms_backend/addons"
+--addons-path="/path/to/odoo/odoo/addons,/path/to/odoo/addons,/path/to/blu_fms_backend"
 ```
 
-Example first-time install:
+Example install:
 
 ```bash
 .venv/bin/python odoo-bin \
@@ -94,18 +98,20 @@ docker compose build
 docker compose up -d
 ```
 
-Open http://localhost:8069 and create a database. Install apps from **Apps** (developer mode) or use `-i` on the CLI.
+- **Image:** `odoo:19.0` with repo copied to `/mnt/extra-addons` and [config/odoo.conf.example](config/odoo.conf.example) as `/etc/odoo/odoo.conf`.
+- **addons_path:** standard Odoo addons + `/mnt/extra-addons` (all 15 root modules).
+- **Compose:** PostgreSQL 16 + Odoo on port `8069`. Optional bind mount `.:/mnt/extra-addons:ro` for live code during development; remove that volume for production image-only runs.
 
-The image extends `odoo:19.0`, copies all custom modules to `/mnt/extra-addons`, and uses `config/odoo.conf.example` as `/etc/odoo/odoo.conf`. Compose bind-mounts addon directories for development; remove volume mounts for production image-only deploys.
+Open http://localhost:8069, create a database, and install apps from **Apps** (developer mode).
 
 ## Security
 
-- Never commit `.env`, API keys, or `admin_passwd` production values.
-- Assign FMS security groups per app (Community, Fire & Safety, Compliance, IoT, Analytics, Mobile, Copilot) after install.
+- Do not commit `.env`, API keys, or production `admin_passwd`.
+- Assign module security groups after install (Community, Fire & Safety, Compliance, IoT, Analytics, Mobile, Copilot, etc.).
 
 ## Tests
 
-Each addon includes `tests/` tagged Odoo tests. Run from your Odoo source:
+Odoo tests live under each module’s `tests/`. Example:
 
 ```bash
 .venv/bin/python odoo-bin --addons-path="..." -d fms_test --test-enable --stop-after-init -i reports_analytics
@@ -113,4 +119,4 @@ Each addon includes `tests/` tagged Odoo tests. Run from your Odoo source:
 
 ## Related repositories
 
-- UI assets mirror: `Biz-Org/blu_fms_ui` (OWL/SCSS sources under `ui/`).
+- UI mirror: `Biz-Org/blu_fms_ui` (frontend sources under `ui/`).

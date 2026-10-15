@@ -11,7 +11,7 @@ RUN set -eux; \
     fi; \
     rm -f /tmp/fms-requirements.txt
 
-# All custom modules: legacy modules at repo root + FMS suite under addons/
+# All 15 custom Odoo modules live at the repository root (copied to /mnt/extra-addons).
 COPY . /mnt/extra-addons/
 
 COPY config/odoo.conf.example /etc/odoo/odoo.conf

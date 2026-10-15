@@ -1,6 +1,8 @@
 # FMS addon audit (Odoo 19)
 
-Generated from the `fmss` source tree published into `addons/`.
+Generated from the `fmss` source tree. The eight custom FMS modules in this audit live **at the repository root** of `blu_fms_backend` (same layout as `fmss/<module_name>/`), alongside the seven existing root modules (`apartment_management`, `esg_management`, `gate_management`, `owner_tenant_management`, `property_management`, `resident_management`, `workforce_management`). There is no nested `addons/` directory for these modules.
+
+This document does not audit the seven property/resident modules unless they are added to the dependency graph later.
 
 ## Third-party Python imports (custom code)
 

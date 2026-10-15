@@ -2,7 +2,7 @@
 ; Copy to odoo.conf and adjust for your environment.
 ; Docker: mount as /etc/odoo/odoo.conf (see docker-compose.yml).
 
-addons_path = /usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons,/mnt/extra-addons/addons
+addons_path = /usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons
 data_dir = /var/lib/odoo
 
 db_host = db
