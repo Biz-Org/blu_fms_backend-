@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="maintenance.PlantApp">
+        <div class="o_pm_app o_pm_app--content-only">
+            <main class="o_pm_app__main">
+                <MaintenancePlantDashboardScreen/>
+            </main>
+        </div>
+    </t>
+</templates>

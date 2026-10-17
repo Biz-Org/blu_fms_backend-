@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Optional: load this file manually to remove SN-DEMO / WO-DEMO records. Not loaded by default. -->
+<odoo>
+    <data noupdate="0">
+        <function model="maintenance.demo.cleanup" name="remove_plant_demo_data"/>
+    </data>
+</odoo>

@@ -1,0 +1,669 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Vehicle fleet + work orders (corrective / preventive / predictive) -->
+<record id="maintenance_team_workflow_examples" model="maintenance.team">
+            <field name="name">Plant Maintenance Workflow Team</field>
+            <field name="color">4</field>
+            <field name="member_ids" eval="[(4, ref('base.user_admin'))]"/>
+        </record>
+
+        <record id="equipment_category_fleet_vehicles" model="maintenance.equipment.category">
+            <field name="name">Fleet - Vehicles</field>
+            <field name="color">2</field>
+            <field name="note"><![CDATA[
+                <p>Plant fleet category for trucks, vans, flatbeds, forklifts, and trailers.</p>
+            ]]></field>
+            <field name="corrective_responsible_user_id" ref="base.user_admin"/>
+            <field name="preventive_responsible_user_id" ref="base.user_admin"/>
+            <field name="predictive_responsible_user_id" ref="base.user_admin"/>
+            <field name="technician_user_id" ref="base.user_admin"/>
+        </record>
+
+        <record id="equipment_vehicle_01_truck" model="maintenance.equipment">
+            <field name="name">Vehicle-01 (Truck)</field>
+            <field name="category_id" ref="equipment_category_fleet_vehicles"/>
+            <field name="maintenance_team_id" ref="maintenance_team_workflow_examples"/>
+            <field name="serial_no">SN-DEMO-TRK-01</field>
+            <field name="model">Freightliner Cascadia</field>
+            <field name="location">Bay A - Loading Dock</field>
+            <field name="owner_user_id" ref="base.user_admin"/>
+            <field name="corrective_responsible_user_id" ref="base.user_admin"/>
+            <field name="preventive_responsible_user_id" ref="base.user_admin"/>
+            <field name="predictive_responsible_user_id" ref="base.user_admin"/>
+            <field name="assign_date" eval="(DateTime.today() - relativedelta(months=24)).strftime('%Y-%m-%d')"/>
+            <field name="effective_date" eval="(DateTime.today() - relativedelta(months=24)).strftime('%Y-%m-%d')"/>
+            <field name="expected_mtbf">90</field>
+            <field name="cost">125000</field>
+            <field name="warranty_date" eval="(DateTime.today() + relativedelta(months=6)).strftime('%Y-%m-%d')"/>
+            <field name="color">1</field>
+        </record>
+
+        <record id="equipment_vehicle_02_van" model="maintenance.equipment">
+            <field name="name">Vehicle-02 (Van)</field>
+            <field name="category_id" ref="equipment_category_fleet_vehicles"/>
+            <field name="maintenance_team_id" ref="maintenance_team_workflow_examples"/>
+            <field name="serial_no">SN-DEMO-VAN-02</field>
+            <field name="model">Ford Transit 350</field>
+            <field name="location">Bay B - Service Yard</field>
+            <field name="owner_user_id" ref="base.user_admin"/>
+            <field name="corrective_responsible_user_id" ref="base.user_admin"/>
+            <field name="preventive_responsible_user_id" ref="base.user_admin"/>
+            <field name="predictive_responsible_user_id" ref="base.user_admin"/>
+            <field name="assign_date" eval="(DateTime.today() - relativedelta(months=18)).strftime('%Y-%m-%d')"/>
+            <field name="effective_date" eval="(DateTime.today() - relativedelta(months=18)).strftime('%Y-%m-%d')"/>
+            <field name="expected_mtbf">120</field>
+            <field name="cost">42000</field>
+            <field name="color">3</field>
+        </record>
+
+        <record id="equipment_vehicle_03_flatbed" model="maintenance.equipment">
+            <field name="name">Vehicle-03 (Flatbed)</field>
+            <field name="category_id" ref="equipment_category_fleet_vehicles"/>
+            <field name="maintenance_team_id" ref="maintenance_team_workflow_examples"/>
+            <field name="serial_no">SN-DEMO-FLT-03</field>
+            <field name="model">Isuzu NPR Flatbed</field>
+            <field name="location">Bay C - Yard</field>
+            <field name="owner_user_id" ref="base.user_admin"/>
+            <field name="corrective_responsible_user_id" ref="base.user_admin"/>
+            <field name="preventive_responsible_user_id" ref="base.user_admin"/>
+            <field name="predictive_responsible_user_id" ref="base.user_admin"/>
+            <field name="assign_date" eval="(DateTime.today() - relativedelta(months=14)).strftime('%Y-%m-%d')"/>
+            <field name="effective_date" eval="(DateTime.today() - relativedelta(months=14)).strftime('%Y-%m-%d')"/>
+            <field name="expected_mtbf">100</field>
+            <field name="life_consumed_percent">55</field>
+            <field name="cost">68000</field>
+            <field name="color">5</field>
+        </record>
+
+        <record id="equipment_vehicle_04_forklift" model="maintenance.equipment">
+            <field name="name">Vehicle-04 (Forklift)</field>
+            <field name="category_id" ref="equipment_category_fleet_vehicles"/>
+            <field name="maintenance_team_id" ref="maintenance_team_workflow_examples"/>
+            <field name="serial_no">SN-DEMO-FLK-04</field>
+            <field name="model">Toyota 8FGU25</field>
+            <field name="location">Warehouse - Aisle 3</field>
+            <field name="owner_user_id" ref="base.user_admin"/>
+            <field name="corrective_responsible_user_id" ref="base.user_admin"/>
+            <field name="preventive_responsible_user_id" ref="base.user_admin"/>
+            <field name="assign_date" eval="(DateTime.today() - relativedelta(months=10)).strftime('%Y-%m-%d')"/>
+            <field name="effective_date" eval="(DateTime.today() - relativedelta(months=10)).strftime('%Y-%m-%d')"/>
+            <field name="expected_mtbf">60</field>
+            <field name="cost">38000</field>
+            <field name="color">8</field>
+        </record>
+
+        <record id="equipment_vehicle_05_trailer" model="maintenance.equipment">
+            <field name="name">Vehicle-05 (Trailer)</field>
+            <field name="category_id" ref="equipment_category_fleet_vehicles"/>
+            <field name="maintenance_team_id" ref="maintenance_team_workflow_examples"/>
+            <field name="serial_no">SN-DEMO-TRL-05</field>
+            <field name="model">Great Dane 53ft Dry Van</field>
+            <field name="location">Parking Row 2</field>
+            <field name="owner_user_id" ref="base.user_admin"/>
+            <field name="corrective_responsible_user_id" ref="base.user_admin"/>
+            <field name="preventive_responsible_user_id" ref="base.user_admin"/>
+            <field name="assign_date" eval="(DateTime.today() - relativedelta(months=8)).strftime('%Y-%m-%d')"/>
+            <field name="effective_date" eval="(DateTime.today() - relativedelta(months=8)).strftime('%Y-%m-%d')"/>
+            <field name="expected_mtbf">150</field>
+            <field name="cost">52000</field>
+            <field name="color">2</field>
+        </record>
+<!-- ========== HISTORY (MTBF / RUL / Analytics) ========== -->
+        <record id="request_demo_history_truck_alternator_2025" model="maintenance.request">
+            <field name="name">Alternator failure - intermittent charging</field>
+            <field name="equipment_id" ref="equipment_vehicle_01_truck"/>
+            <field name="maintenance_team_id" ref="maintenance_team_workflow_examples"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="owner_user_id" ref="base.user_admin"/>
+            <field name="maintenance_type">corrective</field>
+            <field name="planning_maintenance_type">breakdown</field>
+            <field name="work_order_sequence">WO-DEMO-HIST-TRK-ALT</field>
+            <field name="work_area">Bay A</field>
+            <field name="priority">2</field>
+            <field name="impact_level">high</field>
+            <field name="request_date" eval="(DateTime.today() - relativedelta(days=220)).strftime('%Y-%m-%d')"/>
+            <field name="close_date" eval="(DateTime.today() - relativedelta(days=218)).strftime('%Y-%m-%d')"/>
+            <field name="schedule_date" eval="DateTime.now() - relativedelta(days=219)"/>
+            <field name="stage_id" ref="stage_3"/>
+            <field name="execution_status">completed</field>
+            <field name="go_no_go_decision">go</field>
+            <field name="final_root_cause">Worn alternator belt and failing voltage regulator</field>
+            <field name="vibration_level">critical_high</field>
+            <field name="bearing_temp_state">high</field>
+            <field name="failure_risk_percent">78</field>
+            <field name="planned_hours">5</field>
+            <field name="actual_hours">6</field>
+            <field name="mechanical_cost">280</field>
+            <field name="electrical_cost">190</field>
+            <field name="kanban_state">done</field>
+        </record>
+
+        <record id="request_demo_history_van_compressor_2025" model="maintenance.request">
+            <field name="name">A/C compressor noise - corrective</field>
+            <field name="equipment_id" ref="equipment_vehicle_02_van"/>
+            <field name="maintenance_team_id" ref="maintenance_team_workflow_examples"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="maintenance_type">corrective</field>
+            <field name="planning_maintenance_type">breakdown</field>
+            <field name="work_order_sequence">WO-DEMO-HIST-VAN-AC</field>
+            <field name="request_date" eval="(DateTime.today() - relativedelta(days=150)).strftime('%Y-%m-%d')"/>
+            <field name="close_date" eval="(DateTime.today() - relativedelta(days=148)).strftime('%Y-%m-%d')"/>
+            <field name="stage_id" ref="stage_3"/>
+            <field name="execution_status">completed</field>
+            <field name="go_no_go_decision">go</field>
+            <field name="final_root_cause">Compressor bearing wear</field>
+            <field name="failure_risk_percent">45</field>
+            <field name="actual_hours">4</field>
+            <field name="mechanical_cost">420</field>
+            <field name="kanban_state">done</field>
+        </record>
+
+        <record id="request_demo_history_flatbed_brakes_2025" model="maintenance.request">
+            <field name="name">Rear brake drag - flatbed</field>
+            <field name="equipment_id" ref="equipment_vehicle_03_flatbed"/>
+            <field name="maintenance_team_id" ref="maintenance_team_workflow_examples"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="maintenance_type">corrective</field>
+            <field name="planning_maintenance_type">breakdown</field>
+            <field name="work_order_sequence">WO-DEMO-HIST-FLT-BRK</field>
+            <field name="request_date" eval="(DateTime.today() - relativedelta(days=100)).strftime('%Y-%m-%d')"/>
+            <field name="close_date" eval="(DateTime.today() - relativedelta(days=98)).strftime('%Y-%m-%d')"/>
+            <field name="stage_id" ref="stage_3"/>
+            <field name="execution_status">completed</field>
+            <field name="go_no_go_decision">go</field>
+            <field name="final_root_cause">Seized caliper slider pins</field>
+            <field name="bearing_temp_state">high</field>
+            <field name="failure_risk_percent">62</field>
+            <field name="actual_hours">5</field>
+            <field name="kanban_state">done</field>
+        </record>
+
+        <record id="request_demo_history_forklift_hydraulic_2025" model="maintenance.request">
+            <field name="name">Hydraulic hose leak - forklift</field>
+            <field name="equipment_id" ref="equipment_vehicle_04_forklift"/>
+            <field name="maintenance_team_id" ref="maintenance_team_workflow_examples"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="maintenance_type">corrective</field>
+            <field name="planning_maintenance_type">breakdown</field>
+            <field name="work_order_sequence">WO-DEMO-HIST-FLK-HYD</field>
+            <field name="request_date" eval="(DateTime.today() - relativedelta(days=80)).strftime('%Y-%m-%d')"/>
+            <field name="close_date" eval="(DateTime.today() - relativedelta(days=79)).strftime('%Y-%m-%d')"/>
+            <field name="stage_id" ref="stage_3"/>
+            <field name="execution_status">completed</field>
+            <field name="go_no_go_decision">go</field>
+            <field name="final_root_cause">Abraded hose at mast pivot</field>
+            <field name="actual_hours">3</field>
+            <field name="kanban_state">done</field>
+        </record>
+
+        <record id="request_rul_demo_v01_oil" model="maintenance.request">
+            <field name="name">PM - Engine oil &amp; filter (Truck)</field>
+            <field name="equipment_id" ref="equipment_vehicle_01_truck"/>
+            <field name="maintenance_team_id" ref="maintenance_team_workflow_examples"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="maintenance_type">preventive</field>
+            <field name="planning_maintenance_type">preventive</field>
+            <field name="work_order_sequence">WO-DEMO-PM-TRK-OIL</field>
+            <field name="request_date" eval="(DateTime.today() - relativedelta(days=65)).strftime('%Y-%m-%d')"/>
+            <field name="close_date" eval="(DateTime.today() - relativedelta(days=65)).strftime('%Y-%m-%d')"/>
+            <field name="stage_id" ref="stage_3"/>
+            <field name="execution_status">completed</field>
+            <field name="go_no_go_decision">go</field>
+            <field name="planned_hours">2</field>
+            <field name="actual_hours">2.5</field>
+            <field name="failure_risk_percent">10</field>
+            <field name="kanban_state">done</field>
+        </record>
+
+        <record id="request_rul_demo_v02_followup" model="maintenance.request">
+            <field name="name">Follow-up driveline inspection (Truck)</field>
+            <field name="equipment_id" ref="equipment_vehicle_01_truck"/>
+            <field name="maintenance_team_id" ref="maintenance_team_workflow_examples"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="maintenance_type">preventive</field>
+            <field name="planning_maintenance_type">preventive</field>
+            <field name="request_date" eval="(DateTime.today() - relativedelta(days=35)).strftime('%Y-%m-%d')"/>
+            <field name="close_date" eval="(DateTime.today() - relativedelta(days=34)).strftime('%Y-%m-%d')"/>
+            <field name="stage_id" ref="stage_3"/>
+            <field name="execution_status">completed</field>
+            <field name="go_no_go_decision">go</field>
+            <field name="actual_hours">1.5</field>
+            <field name="kanban_state">done</field>
+        </record>
+
+        <record id="request_rul_demo_v04_inspection" model="maintenance.request">
+            <field name="name">Quarterly safety inspection (Van)</field>
+            <field name="equipment_id" ref="equipment_vehicle_02_van"/>
+            <field name="maintenance_team_id" ref="maintenance_team_workflow_examples"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="maintenance_type">preventive</field>
+            <field name="planning_maintenance_type">preventive</field>
+            <field name="request_date" eval="(DateTime.today() - relativedelta(days=75)).strftime('%Y-%m-%d')"/>
+            <field name="close_date" eval="(DateTime.today() - relativedelta(days=74)).strftime('%Y-%m-%d')"/>
+            <field name="stage_id" ref="stage_3"/>
+            <field name="execution_status">completed</field>
+            <field name="go_no_go_decision">go</field>
+            <field name="actual_hours">3</field>
+            <field name="kanban_state">done</field>
+        </record>
+
+        <record id="request_rul_demo_v05_brake" model="maintenance.request">
+            <field name="name">Brake pad replacement (Van)</field>
+            <field name="equipment_id" ref="equipment_vehicle_02_van"/>
+            <field name="maintenance_team_id" ref="maintenance_team_workflow_examples"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="maintenance_type">corrective</field>
+            <field name="planning_maintenance_type">breakdown</field>
+            <field name="request_date" eval="(DateTime.today() - relativedelta(days=50)).strftime('%Y-%m-%d')"/>
+            <field name="close_date" eval="(DateTime.today() - relativedelta(days=48)).strftime('%Y-%m-%d')"/>
+            <field name="stage_id" ref="stage_3"/>
+            <field name="execution_status">completed</field>
+            <field name="go_no_go_decision">go</field>
+            <field name="failure_risk_percent">35</field>
+            <field name="actual_hours">4</field>
+            <field name="kanban_state">done</field>
+        </record>
+
+        <!-- ========== CORRECTIVE - COMPLETED (full workflow + RCA) ========== -->
+        <record id="request_example_truck_not_starting" model="maintenance.request">
+            <field name="name">Truck not starting - starter / electrical</field>
+            <field name="equipment_id" ref="equipment_vehicle_01_truck"/>
+            <field name="maintenance_team_id" ref="maintenance_team_workflow_examples"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="owner_user_id" ref="base.user_admin"/>
+            <field name="maintenance_type">corrective</field>
+            <field name="planning_maintenance_type">breakdown</field>
+            <field name="work_order_sequence">WO-DEMO-TRK-01</field>
+            <field name="work_area">Bay A</field>
+            <field name="priority">3</field>
+            <field name="impact_level">high</field>
+            <field name="affected_department">Transport</field>
+            <field name="request_date" eval="(DateTime.today() - relativedelta(days=8)).strftime('%Y-%m-%d')"/>
+            <field name="close_date" eval="(DateTime.today() - relativedelta(days=5)).strftime('%Y-%m-%d')"/>
+            <field name="planned_date" eval="(DateTime.today() - relativedelta(days=7)).strftime('%Y-%m-%d')"/>
+            <field name="schedule_date" eval="DateTime.now() - relativedelta(days=7)"/>
+            <field name="planned_hours">4</field>
+            <field name="planned_duration">4</field>
+            <field name="actual_hours">5.5</field>
+            <field name="duration">5.5</field>
+            <field name="stage_id" ref="stage_3"/>
+            <field name="kanban_state">done</field>
+            <field name="execution_status">completed</field>
+            <field name="go_no_go_decision">go</field>
+            <field name="decision_resolution_notes">Vehicle cleared for linehaul after starter service and charging system verification.</field>
+            <field name="execution_notes">Replaced starter solenoid; cleaned battery terminals; load-tested alternator output.</field>
+            <field name="mechanic_required" eval="True"/>
+            <field name="electrician_required" eval="True"/>
+            <field name="mechanical_cost">320</field>
+            <field name="electrical_cost">185</field>
+            <field name="vibration_level">critical_high</field>
+            <field name="bearing_temp_state">high</field>
+            <field name="failure_risk_percent">82</field>
+            <field name="rca_method">five_why</field>
+            <field name="final_root_cause">Corroded battery terminals causing voltage drop and starter failure</field>
+            <field name="fishbone_summary">Man: missed terminal inspection on PM. Machine: high vibration at alternator. Method: no torque spec on clamps. Material: corroded terminals. Environment: road salt exposure.</field>
+            <field name="fault_tree_summary">No-crank AND low voltage AND high resistance at terminals â†’ starter inrush insufficient.</field>
+            <field name="mom_discussion">Morning shift no-crank. Manual vibration reading at alternator pulley flagged critical.</field>
+            <field name="mom_decision">Replace starter components; add terminal inspection to monthly PM.</field>
+            <field name="mom_action_owner">Plant Maintenance Lead</field>
+            <field name="instruction_type">text</field>
+            <field name="instruction_text"><![CDATA[<p>Lock-out starter circuit. Verify battery voltage &gt; 12.4V before crank test.</p>]]></field>
+        </record>
+
+        <record id="request_example_truck_spare_battery" model="maintenance.request.spare.line">
+            <field name="request_id" ref="request_example_truck_not_starting"/>
+            <field name="spare_name">Starter solenoid assembly</field>
+            <field name="critical" eval="True"/>
+            <field name="quantity">1</field>
+            <field name="cost">145</field>
+            <field name="stock_status">available</field>
+            <field name="procurement_status">issued_from_store</field>
+            <field name="dependency_component">Electrical - starting system</field>
+            <field name="lead_time">Same day</field>
+        </record>
+        <record id="request_example_truck_spare_fuse" model="maintenance.request.spare.line">
+            <field name="request_id" ref="request_example_truck_not_starting"/>
+            <field name="spare_name">Battery terminal kit</field>
+            <field name="quantity">1</field>
+            <field name="cost">28</field>
+            <field name="stock_status">available</field>
+            <field name="procurement_status">issued_from_store</field>
+        </record>
+        <record id="request_example_truck_manpower_1" model="maintenance.request.manpower.line">
+            <field name="request_id" ref="request_example_truck_not_starting"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="skill_type">mechanical</field>
+            <field name="status">available</field>
+            <field name="assigned_task">Starter removal &amp; installation</field>
+        </record>
+        <record id="request_example_truck_manpower_2" model="maintenance.request.manpower.line">
+            <field name="request_id" ref="request_example_truck_not_starting"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="skill_type">electrical</field>
+            <field name="status">available</field>
+            <field name="assigned_task">Charging system test &amp; terminal service</field>
+        </record>
+        <record id="request_example_truck_doc_1" model="maintenance.request.document">
+            <field name="request_id" ref="request_example_truck_not_starting"/>
+            <field name="name">No-crank - operator walk-around photo</field>
+            <field name="document_type">photo</field>
+        </record>
+        <record id="request_example_truck_doc_2" model="maintenance.request.document">
+            <field name="request_id" ref="request_example_truck_not_starting"/>
+            <field name="name">Starter circuit wiring diagram</field>
+            <field name="document_type">diagram</field>
+        </record>
+        <record id="request_example_truck_doc_3" model="maintenance.request.document">
+            <field name="request_id" ref="request_example_truck_not_starting"/>
+            <field name="name">OEM starter replacement guide</field>
+            <field name="document_type">manual</field>
+        </record>
+        <record id="request_example_truck_rca_why_1" model="maintenance.request.rca.line">
+            <field name="request_id" ref="request_example_truck_not_starting"/>
+            <field name="sequence">1</field>
+            <field name="problem_statement">Why did the truck not start?</field>
+            <field name="cause_statement">Starter did not engage / insufficient crank voltage</field>
+        </record>
+        <record id="request_example_truck_rca_why_2" model="maintenance.request.rca.line">
+            <field name="request_id" ref="request_example_truck_not_starting"/>
+            <field name="sequence">2</field>
+            <field name="problem_statement">Why was crank voltage low?</field>
+            <field name="cause_statement">High resistance at battery terminals</field>
+        </record>
+        <record id="request_example_truck_rca_why_3" model="maintenance.request.rca.line">
+            <field name="request_id" ref="request_example_truck_not_starting"/>
+            <field name="sequence">3</field>
+            <field name="problem_statement">Why were terminals high resistance?</field>
+            <field name="cause_statement">Corrosion and loose clamps; terminal check missing from PM</field>
+        </record>
+        <record id="request_example_truck_corrective_1" model="maintenance.request.corrective.action">
+            <field name="request_id" ref="request_example_truck_not_starting"/>
+            <field name="name">Add battery terminal check to monthly truck PM</field>
+            <field name="done" eval="True"/>
+        </record>
+        <record id="request_example_truck_corrective_2" model="maintenance.request.corrective.action">
+            <field name="request_id" ref="request_example_truck_not_starting"/>
+            <field name="name">Train drivers to report slow-crank before no-start</field>
+            <field name="done" eval="False"/>
+        </record>
+        <record id="request_example_truck_corrective_3" model="maintenance.request.corrective.action">
+            <field name="request_id" ref="request_example_truck_not_starting"/>
+            <field name="name">Stock spare terminal kits on critical routes</field>
+            <field name="done" eval="False"/>
+        </record>
+
+        <!-- ========== CORRECTIVE - IN PROGRESS ========== -->
+        <record id="request_example_van_brake_warning" model="maintenance.request">
+            <field name="name">ABS / brake warning lamp - Van</field>
+            <field name="equipment_id" ref="equipment_vehicle_02_van"/>
+            <field name="maintenance_team_id" ref="maintenance_team_workflow_examples"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="maintenance_type">corrective</field>
+            <field name="planning_maintenance_type">breakdown</field>
+            <field name="work_order_sequence">WO-DEMO-VAN-02</field>
+            <field name="work_area">Bay B</field>
+            <field name="priority">2</field>
+            <field name="impact_level">medium</field>
+            <field name="request_date" eval="(DateTime.today() - relativedelta(days=3)).strftime('%Y-%m-%d')"/>
+            <field name="planned_date" eval="(DateTime.today() - relativedelta(days=2)).strftime('%Y-%m-%d')"/>
+            <field name="schedule_date" eval="DateTime.now() - relativedelta(days=2)"/>
+            <field name="planned_hours">3</field>
+            <field name="stage_id" ref="stage_1"/>
+            <field name="kanban_state">normal</field>
+            <field name="execution_status">in_progress</field>
+            <field name="go_no_go_decision">no_go</field>
+            <field name="vibration_level">normal</field>
+            <field name="bearing_temp_state">normal</field>
+            <field name="failure_risk_percent">48</field>
+            <field name="execution_notes">OBD scan: rear wheel speed sensor fault. Awaiting spare.</field>
+            <field name="mechanic_required" eval="True"/>
+            <field name="fishbone_summary">Machine: sensor gap. Method: no post-repair road test. Measurement: intermittent signal.</field>
+        </record>
+        <record id="request_example_van_spare_sensor" model="maintenance.request.spare.line">
+            <field name="request_id" ref="request_example_van_brake_warning"/>
+            <field name="spare_name">Wheel speed sensor - rear left</field>
+            <field name="critical" eval="True"/>
+            <field name="quantity">1</field>
+            <field name="cost">89</field>
+            <field name="stock_status">out_of_stock</field>
+            <field name="procurement_status">pr_created</field>
+            <field name="lead_time">2 days</field>
+        </record>
+        <record id="request_example_van_manpower_1" model="maintenance.request.manpower.line">
+            <field name="request_id" ref="request_example_van_brake_warning"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="skill_type">mechanical</field>
+            <field name="status">busy</field>
+            <field name="assigned_task">ABS diagnostic &amp; sensor R&amp;R</field>
+        </record>
+
+        <!-- ========== CORRECTIVE - NEW (manual sensor entry) ========== -->
+        <record id="request_example_flatbed_tire_sensor" model="maintenance.request">
+            <field name="name">Low tire pressure - Flatbed (manual sensor log)</field>
+            <field name="equipment_id" ref="equipment_vehicle_03_flatbed"/>
+            <field name="maintenance_team_id" ref="maintenance_team_workflow_examples"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="maintenance_type">corrective</field>
+            <field name="planning_maintenance_type">breakdown</field>
+            <field name="work_order_sequence">WO-DEMO-FLT-03</field>
+            <field name="work_area">Bay C</field>
+            <field name="priority">3</field>
+            <field name="impact_level">high</field>
+            <field name="request_date" eval="DateTime.today().strftime('%Y-%m-%d')"/>
+            <field name="planned_date" eval="(DateTime.today() + relativedelta(days=1)).strftime('%Y-%m-%d')"/>
+            <field name="stage_id" ref="stage_0"/>
+            <field name="kanban_state">normal</field>
+            <field name="execution_status">in_progress</field>
+            <field name="go_no_go_decision">no_go</field>
+            <field name="vibration_level">critical_high</field>
+            <field name="bearing_temp_state">high</field>
+            <field name="failure_risk_percent">72</field>
+            <field name="mom_discussion">TPMS alert logged; maintenance entered vibration/temp manually from walk-around.</field>
+        </record>
+        <record id="request_example_flatbed_spare_tire" model="maintenance.request.spare.line">
+            <field name="request_id" ref="request_example_flatbed_tire_sensor"/>
+            <field name="spare_name">Steer tire 11R22.5</field>
+            <field name="critical" eval="True"/>
+            <field name="quantity">1</field>
+            <field name="cost">420</field>
+            <field name="stock_status">available</field>
+            <field name="procurement_status">none</field>
+        </record>
+
+        <!-- ========== CORRECTIVE - FORKLIFT (execution) ========== -->
+        <record id="request_example_forklift_hydraulic" model="maintenance.request">
+            <field name="name">Hydraulic drift - mast slow descent</field>
+            <field name="equipment_id" ref="equipment_vehicle_04_forklift"/>
+            <field name="maintenance_team_id" ref="maintenance_team_workflow_examples"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="maintenance_type">corrective</field>
+            <field name="planning_maintenance_type">breakdown</field>
+            <field name="work_order_sequence">WO-DEMO-FLK-04</field>
+            <field name="work_area">Warehouse Aisle 3</field>
+            <field name="request_date" eval="(DateTime.today() - relativedelta(days=1)).strftime('%Y-%m-%d')"/>
+            <field name="planned_date" eval="DateTime.today().strftime('%Y-%m-%d')"/>
+            <field name="stage_id" ref="stage_1"/>
+            <field name="execution_status">in_progress</field>
+            <field name="go_no_go_decision">no_go</field>
+            <field name="planned_hours">2</field>
+            <field name="actual_hours">1</field>
+            <field name="execution_notes">Inspecting lift cylinder seals.</field>
+            <field name="failure_risk_percent">55</field>
+            <field name="third_party_vendor" eval="False"/>
+            <field name="mechanic_required" eval="True"/>
+        </record>
+        <record id="request_example_forklift_manpower" model="maintenance.request.manpower.line">
+            <field name="request_id" ref="request_example_forklift_hydraulic"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="skill_type">mechanical</field>
+            <field name="assigned_task">Cylinder seal inspection</field>
+        </record>
+
+        <!-- ========== NO-GO DASHBOARD ========== -->
+        <record id="request_example_trailer_axle_nogo" model="maintenance.request">
+            <field name="name">Trailer axle hub temp high - NO GO</field>
+            <field name="equipment_id" ref="equipment_vehicle_05_trailer"/>
+            <field name="maintenance_team_id" ref="maintenance_team_workflow_examples"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="maintenance_type">corrective</field>
+            <field name="planning_maintenance_type">breakdown</field>
+            <field name="work_order_sequence">WO-DEMO-TRL-NOGO</field>
+            <field name="request_date" eval="(DateTime.today() - relativedelta(days=4)).strftime('%Y-%m-%d')"/>
+            <field name="planned_date" eval="(DateTime.today() - relativedelta(days=3)).strftime('%Y-%m-%d')"/>
+            <field name="stage_id" ref="stage_1"/>
+            <field name="execution_status">paused</field>
+            <field name="go_no_go_decision">no_go</field>
+            <field name="decision_resolution_notes">Hub temperature 95Â°C; do not dispatch until bearing repack complete.</field>
+            <field name="actual_hours">2</field>
+            <field name="planned_hours">4</field>
+            <field name="failure_risk_percent">88</field>
+            <field name="bearing_temp_state">high</field>
+            <field name="vibration_level">critical_high</field>
+            <field name="impact_level">high</field>
+            <field name="final_root_cause">Bearing grease degradation on axle 2</field>
+            <field name="kanban_state">blocked</field>
+        </record>
+
+        <!-- ========== PREDICTIVE (condition monitoring - manual entry) ========== -->
+        <record id="request_example_flatbed_predictive" model="maintenance.request">
+            <field name="name">Predictive - driveline vibration trend (Flatbed)</field>
+            <field name="equipment_id" ref="equipment_vehicle_03_flatbed"/>
+            <field name="maintenance_team_id" ref="maintenance_team_workflow_examples"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="maintenance_type">predictive</field>
+            <field name="planning_maintenance_type">predictive</field>
+            <field name="work_order_sequence">WO-DEMO-FLT-PD</field>
+            <field name="request_date" eval="(DateTime.today() - relativedelta(days=6)).strftime('%Y-%m-%d')"/>
+            <field name="planned_date" eval="(DateTime.today() - relativedelta(days=5)).strftime('%Y-%m-%d')"/>
+            <field name="stage_id" ref="stage_1"/>
+            <field name="execution_status">in_progress</field>
+            <field name="go_no_go_decision">no_go</field>
+            <field name="vibration_level">critical_high</field>
+            <field name="bearing_temp_state">normal</field>
+            <field name="failure_risk_percent">68</field>
+            <field name="execution_notes">Manual vibration survey shows increasing 2Ã— line frequency at U-joint.</field>
+            <field name="fishbone_summary">Machine: U-joint wear. Measurement: manual accelerometer reading at 8 mm/s.</field>
+        </record>
+
+        <!-- ========== PREVENTIVE - COMPLETED ========== -->
+        <record id="request_example_van_pm_quarterly" model="maintenance.request">
+            <field name="name">Quarterly PM - Van (fluids, brakes, lights)</field>
+            <field name="equipment_id" ref="equipment_vehicle_02_van"/>
+            <field name="maintenance_team_id" ref="maintenance_team_workflow_examples"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="maintenance_type">preventive</field>
+            <field name="planning_maintenance_type">preventive</field>
+            <field name="work_order_sequence">WO-DEMO-PM-VAN-Q</field>
+            <field name="work_area">Bay B</field>
+            <field name="request_date" eval="(DateTime.today() - relativedelta(days=22)).strftime('%Y-%m-%d')"/>
+            <field name="close_date" eval="(DateTime.today() - relativedelta(days=21)).strftime('%Y-%m-%d')"/>
+            <field name="planned_date" eval="(DateTime.today() - relativedelta(days=22)).strftime('%Y-%m-%d')"/>
+            <field name="schedule_date" eval="DateTime.now() - relativedelta(days=22)"/>
+            <field name="planned_hours">4</field>
+            <field name="actual_hours">4.5</field>
+            <field name="stage_id" ref="stage_3"/>
+            <field name="kanban_state">done</field>
+            <field name="execution_status">completed</field>
+            <field name="go_no_go_decision">go</field>
+            <field name="decision_resolution_notes">PM complete; released to delivery routes.</field>
+            <field name="execution_notes">Oil change, brake inspection, tire rotation, lighting check.</field>
+            <field name="recurring_maintenance" eval="True"/>
+            <field name="repeat_interval">3</field>
+            <field name="repeat_unit">month</field>
+            <field name="repeat_type">forever</field>
+            <field name="vibration_level">normal</field>
+            <field name="bearing_temp_state">normal</field>
+            <field name="failure_risk_percent">12</field>
+            <field name="mechanic_required" eval="True"/>
+            <field name="final_root_cause">Scheduled wear items replaced per PM checklist</field>
+        </record>
+        <record id="request_example_van_pm_spare_oil" model="maintenance.request.spare.line">
+            <field name="request_id" ref="request_example_van_pm_quarterly"/>
+            <field name="spare_name">Engine oil 5W-30 (6 qt)</field>
+            <field name="quantity">1</field>
+            <field name="cost">52</field>
+            <field name="stock_status">available</field>
+            <field name="procurement_status">issued_from_store</field>
+        </record>
+        <record id="request_example_van_pm_manpower" model="maintenance.request.manpower.line">
+            <field name="request_id" ref="request_example_van_pm_quarterly"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="skill_type">mechanical</field>
+            <field name="assigned_task">Quarterly PM checklist</field>
+        </record>
+
+        <!-- ========== PREVENTIVE - SCHEDULED (open) ========== -->
+        <record id="request_example_truck_pm_monthly" model="maintenance.request">
+            <field name="name">Monthly PM - Truck (lubrication &amp; safety)</field>
+            <field name="equipment_id" ref="equipment_vehicle_01_truck"/>
+            <field name="maintenance_team_id" ref="maintenance_team_workflow_examples"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="maintenance_type">preventive</field>
+            <field name="planning_maintenance_type">preventive</field>
+            <field name="work_order_sequence">WO-DEMO-PM-TRK-M</field>
+            <field name="work_area">Bay A</field>
+            <field name="request_date" eval="DateTime.today().strftime('%Y-%m-%d')"/>
+            <field name="planned_date" eval="(DateTime.today() + relativedelta(days=2)).strftime('%Y-%m-%d')"/>
+            <field name="schedule_date" eval="DateTime.now() + relativedelta(days=2)"/>
+            <field name="planned_hours">3</field>
+            <field name="planned_duration">3</field>
+            <field name="stage_id" ref="stage_0"/>
+            <field name="kanban_state">normal</field>
+            <field name="execution_status">in_progress</field>
+            <field name="recurring_maintenance" eval="True"/>
+            <field name="repeat_interval">1</field>
+            <field name="repeat_unit">month</field>
+            <field name="repeat_type">forever</field>
+            <field name="mechanic_required" eval="True"/>
+            <field name="vibration_level">normal</field>
+            <field name="bearing_temp_state">normal</field>
+            <field name="failure_risk_percent">8</field>
+            <field name="instruction_type">text</field>
+            <field name="instruction_text"><![CDATA[<p>Grease all chassis fittings. Check battery terminals per CAPA WO-DEMO-TRK-01.</p>]]></field>
+        </record>
+        <record id="request_example_truck_pm_spare_oil" model="maintenance.request.spare.line">
+            <field name="request_id" ref="request_example_truck_pm_monthly"/>
+            <field name="spare_name">Engine oil 15W-40 (5 gal)</field>
+            <field name="quantity">1</field>
+            <field name="cost">95</field>
+            <field name="stock_status">available</field>
+            <field name="procurement_status">none</field>
+        </record>
+        <record id="request_example_truck_pm_spare_filter" model="maintenance.request.spare.line">
+            <field name="request_id" ref="request_example_truck_pm_monthly"/>
+            <field name="spare_name">Oil filter - primary</field>
+            <field name="quantity">1</field>
+            <field name="cost">32</field>
+            <field name="stock_status">available</field>
+            <field name="procurement_status">none</field>
+        </record>
+        <record id="request_example_truck_pm_manpower" model="maintenance.request.manpower.line">
+            <field name="request_id" ref="request_example_truck_pm_monthly"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="skill_type">mechanical</field>
+            <field name="assigned_task">Monthly PM - truck</field>
+        </record>
+
+        <!-- ========== PREVENTIVE - TRAILER (scheduled) ========== -->
+        <record id="request_example_trailer_pm_annual" model="maintenance.request">
+            <field name="name">Annual PM - Trailer (hubs, brakes, lights)</field>
+            <field name="equipment_id" ref="equipment_vehicle_05_trailer"/>
+            <field name="maintenance_team_id" ref="maintenance_team_workflow_examples"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="maintenance_type">preventive</field>
+            <field name="planning_maintenance_type">preventive</field>
+            <field name="work_order_sequence">WO-DEMO-PM-TRL-A</field>
+            <field name="request_date" eval="(DateTime.today() - relativedelta(days=10)).strftime('%Y-%m-%d')"/>
+            <field name="planned_date" eval="(DateTime.today() + relativedelta(days=5)).strftime('%Y-%m-%d')"/>
+            <field name="schedule_date" eval="DateTime.now() + relativedelta(days=5)"/>
+            <field name="planned_hours">6</field>
+            <field name="stage_id" ref="stage_0"/>
+            <field name="recurring_maintenance" eval="True"/>
+            <field name="repeat_interval">1</field>
+            <field name="repeat_unit">year</field>
+            <field name="failure_risk_percent">15</field>
+        </record>
+
+    </data>
+</odoo>

@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="maintenance.EquipmentOverviewApp">
+        <div class="o_pm_app o_pm_app--content-only">
+            <main class="o_pm_app__main">
+                <MaintenanceEquipmentOverviewScreen/>
+            </main>
+        </div>
+    </t>
+
+    <t t-name="maintenance.EquipmentOverviewScreen">
+        <div class="o_pm_eq" t-on-click="() => this.closeDropdowns()">
+            <div class="o_pm_eq__header">
+                <div>
+                    <div class="o_pm_eq__breadcrumb">
+                        <span>Maintenance</span>
+                        <span class="o_pm_eq__sep">/</span>
+                        <span>Equipment</span>
+                    </div>
+                    <h1 class="o_pm_eq__title" t-esc="pageTitle"/>
+                    <p class="o_pm_eq__subtitle" t-esc="pageSubtitle"/>
+                </div>
+                <div class="o_pm_eq__header-actions" t-on-click.stop="() => {}">
+                    <button type="button" class="o_pm_eq__btn o_pm_eq__btn--primary" t-on-click="() => this.onAction('new')">
+                        <i class="fa fa-plus"/> New
+                    </button>
+                    <button type="button" class="o_pm_eq__btn" t-on-click="() => this.onAction('import')">
+                        <i class="fa fa-file-excel-o"/> Import Excel
+                    </button>
+                    <button type="button" class="o_pm_eq__btn" t-on-click="() => this.onAction('uploads')">
+                        <i class="fa fa-cloud-upload"/> Upload Excel
+                    </button>
+                    <button type="button" class="o_pm_eq__btn o_pm_eq__btn--icon" title="Refresh" t-on-click="() => this.onAction('refresh')">
+                        <i class="fa fa-refresh"/>
+                    </button>
+                </div>
+            </div>
+
+            <t t-if="state.loading">
+                <div class="o_pm_eq__loading">Loading equipment…</div>
+            </t>
+            <t t-elif="state.error">
+                <div class="o_pm_eq__error">
+                    <t t-esc="state.error"/>
+                    <button type="button" class="o_pm_eq__btn" t-on-click="() => this.loadData()">Retry</button>
+                </div>
+            </t>
+            <t t-else="">
+                <div class="o_pm_eq__kpi-row">
+                    <t t-foreach="state.data.kpis" t-as="kpi" t-key="kpi.key">
+                        <div class="o_pm_eq__kpi">
+                            <div>
+                                <div class="o_pm_eq__kpi-label" t-esc="kpi.label"/>
+                                <div class="o_pm_eq__kpi-value" t-esc="kpi.value"/>
+                                <div t-attf-class="o_pm_eq__kpi-sub o_pm_eq__kpi-sub--{{ kpi.subVariant }}" t-esc="kpi.subtext"/>
+                            </div>
+                            <div t-attf-class="o_pm_eq__kpi-icon o_pm_eq__kpi-icon--{{ kpi.iconVariant }}">
+                                <i t-attf-class="fa {{ kpi.icon }}"/>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+
+                <div class="o_pm_eq__toolbar" t-on-click.stop="() => {}">
+                    <div class="o_pm_eq__search">
+                        <i class="fa fa-search"/>
+                        <input type="search"
+                               placeholder="Search by name, code, type, model…"
+                               t-att-value="state.searchDraft"
+                               t-on-input="onSearchInput"/>
+                    </div>
+
+                    <div class="o_pm_eq__dd-wrap">
+                        <button type="button"
+                                t-attf-class="o_pm_eq__btn {{ state.maintenanceDomain !== 'all' ? 'is-active' : '' }}"
+                                t-on-click.stop="(ev) => this.toggleDropdown('domain', ev)">
+                            <i class="fa fa-sitemap"/> <t t-esc="domainLabel"/> <i class="fa fa-caret-down"/>
+                        </button>
+                        <div t-if="state.openDropdown === 'domain'" class="o_pm_eq__menu">
+                            <t t-foreach="state.data.domainOptions" t-as="opt" t-key="opt.value">
+                                <button type="button"
+                                        t-attf-class="o_pm_eq__menu-item {{ isFilterActive('maintenanceDomain', opt.value) ? 'is-active' : '' }}"
+                                        t-on-click.stop="() => this.setFilter('maintenanceDomain', opt.value)"
+                                        t-esc="opt.label"/>
+                            </t>
+                        </div>
+                    </div>
+
+                    <div class="o_pm_eq__dd-wrap">
+                        <button type="button" class="o_pm_eq__btn" t-on-click.stop="(ev) => this.toggleDropdown('category', ev)">
+                            <t t-esc="categoryLabel"/> <i class="fa fa-caret-down"/>
+                        </button>
+                        <div t-if="state.openDropdown === 'category'" class="o_pm_eq__menu">
+                            <t t-foreach="state.data.categoryOptions" t-as="opt" t-key="opt.value">
+                                <button type="button"
+                                        t-attf-class="o_pm_eq__menu-item {{ isFilterActive('category', opt.value) ? 'is-active' : '' }}"
+                                        t-on-click.stop="() => this.setFilter('category', opt.value)"
+                                        t-esc="opt.label"/>
+                            </t>
+                        </div>
+                    </div>
+
+                    <div class="o_pm_eq__dd-wrap">
+                        <button type="button" class="o_pm_eq__btn" t-on-click.stop="(ev) => this.toggleDropdown('status', ev)">
+                            <t t-esc="statusLabel"/> <i class="fa fa-caret-down"/>
+                        </button>
+                        <div t-if="state.openDropdown === 'status'" class="o_pm_eq__menu">
+                            <t t-foreach="state.data.statusOptions" t-as="opt" t-key="opt.value">
+                                <button type="button"
+                                        t-attf-class="o_pm_eq__menu-item {{ state.status === opt.value ? 'is-active' : '' }}"
+                                        t-on-click.stop="() => this.setFilter('status', opt.value)"
+                                        t-esc="opt.label"/>
+                            </t>
+                        </div>
+                    </div>
+
+                    <div class="o_pm_eq__dd-wrap">
+                        <button type="button" class="o_pm_eq__btn" t-on-click.stop="(ev) => this.toggleDropdown('team', ev)">
+                            <t t-esc="teamLabel"/> <i class="fa fa-caret-down"/>
+                        </button>
+                        <div t-if="state.openDropdown === 'team'" class="o_pm_eq__menu">
+                            <t t-foreach="state.data.teamOptions" t-as="opt" t-key="opt.value">
+                                <button type="button"
+                                        t-attf-class="o_pm_eq__menu-item {{ isFilterActive('team', opt.value) ? 'is-active' : '' }}"
+                                        t-on-click.stop="() => this.setFilter('team', opt.value)"
+                                        t-esc="opt.label"/>
+                            </t>
+                        </div>
+                    </div>
+
+                    <div class="o_pm_eq__view-toggle">
+                        <button type="button"
+                                t-attf-class="o_pm_eq__toggle {{ state.viewMode === 'card' ? 'is-active' : '' }}"
+                                t-on-click="() => this.setViewMode('card')">
+                            <i class="fa fa-th-large"/> Card View
+                        </button>
+                        <button type="button"
+                                t-attf-class="o_pm_eq__toggle {{ state.viewMode === 'list' ? 'is-active' : '' }}"
+                                t-on-click="() => this.setViewMode('list')">
+                            <i class="fa fa-list"/> List View
+                        </button>
+                    </div>
+
+                    <div class="o_pm_eq__dd-wrap">
+                        <button type="button" class="o_pm_eq__btn" t-on-click.stop="(ev) => this.toggleDropdown('sort', ev)">
+                            <t t-esc="sortLabel"/> <i class="fa fa-caret-down"/>
+                        </button>
+                        <div t-if="state.openDropdown === 'sort'" class="o_pm_eq__menu o_pm_eq__menu--right">
+                            <t t-foreach="state.data.sortOptions" t-as="opt" t-key="opt.value">
+                                <button type="button"
+                                        t-attf-class="o_pm_eq__menu-item {{ state.sort === opt.value ? 'is-active' : '' }}"
+                                        t-on-click.stop="() => this.setFilter('sort', opt.value)"
+                                        t-esc="opt.label"/>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+
+                <t t-if="state.viewMode === 'card'">
+                    <div class="o_pm_eq__grid">
+                        <t t-if="!state.data.cards.length">
+                            <div class="o_pm_eq__empty">No equipment matches the selected filters.</div>
+                        </t>
+                        <t t-foreach="state.data.cards" t-as="card" t-key="card.id">
+                            <div class="o_pm_eq__card">
+                                <div class="o_pm_eq__card-media">
+                                    <div t-attf-class="o_pm_eq__card-art o_pm_eq__card-art--{{ card.statusVariant }}">
+                                        <i t-attf-class="fa {{ card.icon }}"/>
+                                    </div>
+                                    <span t-attf-class="o_pm_eq__badge o_pm_eq__badge--{{ card.statusVariant }}" t-esc="card.status"/>
+                                </div>
+                                <div class="o_pm_eq__card-body">
+                                    <div class="o_pm_eq__card-name" t-esc="card.name"/>
+                                    <div class="o_pm_eq__card-model" t-esc="card.model || card.code || '—'"/>
+                                    <div class="o_pm_eq__card-meta">
+                                        <div><span>Domain</span> <t t-esc="card.domainLabel || '—'"/></div>
+                                        <div><span>SN</span> <t t-esc="card.serial || '—'"/></div>
+                                        <div><span>Type</span> <t t-esc="card.category"/></div>
+                                        <div><span>Location</span> <t t-esc="card.location || '—'"/></div>
+                                        <div><span>Team</span> <t t-esc="card.team || '—'"/></div>
+                                    </div>
+                                </div>
+                                <div class="o_pm_eq__card-foot">
+                                    <button type="button" class="o_pm_eq__link" t-on-click="() => this.openEquipment(card.id)">
+                                        View Details
+                                    </button>
+                                    <button type="button" class="o_pm_eq__btn o_pm_eq__btn--primary o_pm_eq__btn--sm"
+                                            t-on-click="() => this.newRequest(card.id)">
+                                        New Request
+                                    </button>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                </t>
+                <t t-else="">
+                    <div class="o_pm_eq__table-wrap">
+                        <table class="o_pm_eq__table">
+                            <thead>
+                                <tr>
+                                    <th>EQUIPMENT</th>
+                                    <th>CODE</th>
+                                    <th>DOMAIN</th>
+                                    <th>TYPE</th>
+                                    <th>LOCATION</th>
+                                    <th>TEAM</th>
+                                    <th>OPEN WO</th>
+                                    <th>STATUS</th>
+                                    <th/>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-if="!state.data.cards.length">
+                                    <tr><td colspan="9" class="o_pm_eq__empty">No equipment matches the selected filters.</td></tr>
+                                </t>
+                                <t t-foreach="state.data.cards" t-as="card" t-key="card.id">
+                                    <tr>
+                                        <td class="o_pm_eq__strong" t-esc="card.name"/>
+                                        <td t-esc="card.code || '—'"/>
+                                        <td t-esc="card.domainLabel || '—'"/>
+                                        <td t-esc="card.category"/>
+                                        <td t-esc="card.location || '—'"/>
+                                        <td t-esc="card.team || '—'"/>
+                                        <td t-esc="card.openOrders"/>
+                                        <td>
+                                            <span t-attf-class="o_pm_eq__badge o_pm_eq__badge--{{ card.statusVariant }}" t-esc="card.status"/>
+                                        </td>
+                                        <td class="o_pm_eq__row-actions">
+                                            <button type="button" class="o_pm_eq__link" t-on-click="() => this.openEquipment(card.id)">Details</button>
+                                            <button type="button" class="o_pm_eq__btn o_pm_eq__btn--primary o_pm_eq__btn--sm"
+                                                    t-on-click="() => this.newRequest(card.id)">Request</button>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </div>
+    </t>
+</templates>

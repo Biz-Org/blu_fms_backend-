@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="maintenance.RulTobmEmbedAction">
+        <div class="o_maint_rul_embed_host o_maint_rul_field_host">
+            <iframe
+                t-att-src="iframeSrc"
+                class="o_maint_rul_iframe"
+                title="RUL &amp; TOBM Report"
+            />
+        </div>
+    </t>
+
+</templates>

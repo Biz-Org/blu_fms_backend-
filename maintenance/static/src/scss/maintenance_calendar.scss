@@ -1,0 +1,34 @@
+/* Maintenance Calendar — Plant suite chrome */
+
+body.o_pm_has_sidebar .o_calendar_view {
+  .o_calendar_header,
+  .o_calendar_scale_buttons .btn {
+    border-radius: 8px !important;
+  }
+
+  .o_calendar_scale_buttons .btn.active {
+    background: #7c3aed !important;
+    border-color: #7c3aed !important;
+    color: #fff !important;
+  }
+
+  .fc-toolbar-title,
+  .o_calendar_title {
+    font-weight: 800;
+    color: #111827;
+  }
+
+  .fc-daygrid-event,
+  .o_event_title {
+    font-weight: 600;
+  }
+
+  .fc-col-header-cell-cushion,
+  .o_cw_day_name {
+    color: #6b7280;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+}

@@ -1,0 +1,999 @@
+/* AI Why-Why Root Cause Analysis — full dashboard */
+
+.o_pm_why_rca_form,
+.o_form_view.o_pm_why_rca_form {
+    max-width: 100%;
+    background: #eef2f7;
+
+    .o_form_view_title,
+    .oe_title,
+    .o_form_statusbar,
+    .o_Chatter,
+    .o-mail-Chatter {
+        display: none !important;
+    }
+
+    .o_form_sheet_bg {
+        padding: 4px 6px 6px !important;
+        background: #eef2f7;
+    }
+
+    .o_pm_rca_sheet {
+        padding: 0 !important;
+        border: 0;
+        box-shadow: none;
+        background: transparent;
+    }
+
+    .o_content {
+        overflow: hidden;
+        max-height: calc(100vh - 46px);
+    }
+}
+
+.o_pm_why_rca_dash {
+    font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 11px;
+    color: #334155;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    height: calc(100vh - 56px);
+    max-height: calc(100vh - 56px);
+    padding: 4px 6px 6px;
+    box-sizing: border-box;
+    background: #e8eef4;
+    width: 100%;
+    min-width: 0;
+}
+
+.o_pm_why_top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    background: #fff;
+    border: 1px solid #dbe3ee;
+    border-radius: 8px;
+    padding: 8px 12px;
+    flex-shrink: 0;
+}
+
+.o_pm_why_top h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.o_pm_why_build_tag {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #0369a1;
+    background: #e0f2fe;
+    border: 1px solid #7dd3fc;
+    border-radius: 6px;
+}
+
+.o_pm_why_method_line {
+    margin: 2px 0 0;
+    font-size: 10px;
+    color: #64748b;
+    max-width: 560px;
+    line-height: 1.4;
+}
+
+.o_pm_why_method_badge {
+    display: inline-block;
+    margin-right: 6px;
+    padding: 2px 8px;
+    font-size: 9px;
+    font-weight: 800;
+    color: #1d4ed8;
+    background: #eff6ff;
+    border: 1px solid #93c5fd;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.o_pm_why_top_right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.o_pm_why_pill {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+
+    .live_dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #22c55e;
+
+        &.teal {
+            background: #14b8a6;
+        }
+    }
+}
+
+.o_pm_why_pill.pill-sync {
+    background: #ecfdf5;
+    color: #15803d;
+    border-color: #86efac;
+}
+
+.o_pm_why_pill.pill-ai {
+    background: #f0fdfa;
+    color: #0f766e;
+    border-color: #5eead4;
+}
+
+.o_pm_why_head_kpi {
+    min-width: 90px;
+    padding: 4px 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+
+    small {
+        display: block;
+        font-size: 8px;
+        color: #64748b;
+        text-transform: uppercase;
+        font-weight: 700;
+    }
+
+    strong {
+        font-size: 12px;
+        color: #0f172a;
+    }
+}
+
+.o_pm_why_health_bar {
+    height: 4px;
+    background: #e2e8f0;
+    border-radius: 2px;
+    margin-top: 3px;
+    overflow: hidden;
+
+    span {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, #22c55e, #4ade80);
+    }
+}
+
+.o_pm_why_bell {
+    position: relative;
+    width: 28px;
+    height: 28px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+
+    em {
+        position: absolute;
+        top: -3px;
+        right: -3px;
+        min-width: 14px;
+        height: 14px;
+        border-radius: 999px;
+        background: #ef4444;
+        color: #fff;
+        font-size: 8px;
+        font-style: normal;
+        font-weight: 800;
+        line-height: 14px;
+        text-align: center;
+    }
+}
+
+.o_pm_why_user {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+
+    .avatar {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #1d4ed8;
+        color: #fff;
+        font-size: 9px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    small {
+        font-weight: 500;
+        color: #64748b;
+    }
+}
+
+.o_pm_why_kpis {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.o_pm_why_kpi {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 6px 8px;
+
+    b {
+        display: block;
+        font-size: 8px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+    }
+
+    .kpi_val_row {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        margin-top: 2px;
+    }
+
+    strong {
+        font-size: 16px;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .trend {
+        font-size: 9px;
+        font-weight: 700;
+        font-style: normal;
+
+        &.up { color: #16a34a; }
+        &.warn { color: #ea580c; }
+        &.neutral { color: #94a3b8; }
+    }
+}
+
+.o_pm_why_grid {
+    display: grid;
+    grid-template-columns: minmax(180px, 1.6fr) minmax(0, 4.2fr) minmax(220px, 2fr);
+    gap: 6px;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.o_pm_why_col_left,
+.o_pm_why_col_center,
+.o_pm_why_col_right {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.o_pm_why_sec_title {
+    font-size: 10px;
+    font-weight: 800;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    .pulse {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+    }
+}
+
+.o_pm_why_issue_list {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.o_pm_why_issue_row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    margin-bottom: 4px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 9px;
+    font-weight: 700;
+    color: #475569;
+
+    &.is-active {
+        border-color: #3b82f6;
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
+
+    .issue_count {
+        min-width: 18px;
+        text-align: center;
+        padding: 2px 5px;
+        border-radius: 999px;
+        background: #f1f5f9;
+        font-size: 9px;
+    }
+}
+
+.o_pm_why_heatmap {
+    display: flex;
+    gap: 3px;
+    margin-top: 6px;
+
+    .hm_cell {
+        flex: 1;
+        height: 14px;
+        border-radius: 3px;
+        background: #e2e8f0;
+
+        &.low { background: #bfdbfe; }
+        &.med { background: #fdba74; }
+        &.high { background: #f87171; }
+    }
+}
+
+.o_pm_why_col_center {
+    border: 2px solid #f97316;
+    background: linear-gradient(180deg, #fffaf5 0%, #fff 100%);
+}
+
+.o_pm_why_tree_scroll {
+    flex: 1 1 auto;
+    overflow: auto;
+    min-height: 0;
+}
+
+.o_pm_why_tree {
+    padding: 8px 4px;
+}
+
+.o_pm_why_node {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    background: #fff;
+
+    .lbl {
+        display: block;
+        font-size: 8px;
+        color: #94a3b8;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+    }
+
+    &.l1.incident {
+        border: 2px solid #f87171;
+        background: #fef2f2;
+        color: #b91c1c;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        max-width: 420px;
+        margin: 0 auto;
+
+        .ico {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            background: #ef4444;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+        }
+    }
+
+    &.l2 {
+        border-color: #93c5fd;
+        background: #f8fafc;
+    }
+
+    &.l3 {
+        border-color: #cbd5e1;
+    }
+
+    &.l3.ai_root {
+        border: 2px solid #f97316;
+        background: #fff7ed;
+        box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.15);
+
+        .ai_pred {
+            display: block;
+            margin-top: 4px;
+            font-size: 8px;
+            font-weight: 800;
+            color: #ea580c;
+            text-transform: uppercase;
+        }
+    }
+}
+
+.o_pm_why_connector {
+    width: 2px;
+    background: #cbd5e1;
+    margin: 0 auto;
+
+    &.hub {
+        height: 20px;
+    }
+
+    &.v {
+        height: 14px;
+
+        &.short {
+            height: 8px;
+        }
+    }
+}
+
+.o_pm_why_level.l2_row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.o_pm_why_branch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 200px;
+}
+
+.o_pm_why_tree_empty {
+    text-align: center;
+    padding: 20px;
+    font-size: 10px;
+    color: #64748b;
+}
+
+.o_pm_why_intel_top {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.o_pm_why_ring {
+    position: relative;
+    width: 88px;
+    height: 88px;
+    flex-shrink: 0;
+
+    svg {
+        width: 88px;
+        height: 88px;
+    }
+
+    .ring_txt {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 900;
+        color: #1d4ed8;
+
+        small {
+            font-size: 8px;
+            font-weight: 700;
+            color: #64748b;
+        }
+    }
+}
+
+.o_pm_why_predict {
+    flex: 1;
+    min-width: 0;
+
+    b {
+        font-size: 9px;
+        color: #ea580c;
+        text-transform: uppercase;
+    }
+
+    p {
+        margin: 4px 0 0;
+        font-size: 10px;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.35;
+    }
+}
+
+.o_pm_why_risk_pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 8px;
+
+    .risk_box {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 6px 8px;
+        background: #f8fafc;
+
+        small {
+            font-size: 8px;
+            color: #64748b;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        strong {
+            display: block;
+            font-size: 14px;
+            margin-top: 2px;
+        }
+
+        &:first-child strong {
+            color: #dc2626;
+        }
+
+        &:last-child strong {
+            color: #ea580c;
+        }
+    }
+}
+
+.o_pm_why_capa {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+
+    b {
+        font-size: 9px;
+        color: #166534;
+        text-transform: uppercase;
+    }
+}
+
+.o_pm_why_capa_list {
+    list-style: none;
+    margin: 6px 0 0;
+    padding: 0;
+
+    li {
+        display: flex;
+        gap: 6px;
+        align-items: flex-start;
+        font-size: 10px;
+        padding: 4px 0;
+        border-bottom: 1px solid #f1f5f9;
+
+        .chk {
+            flex-shrink: 0;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            color: #64748b;
+            font-size: 9px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        &.is-done .chk {
+            background: #22c55e;
+            color: #fff;
+        }
+    }
+}
+
+.o_pm_why_mid_footer {
+    flex-shrink: 0;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 10px 6px;
+}
+
+.o_pm_why_wf_head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    font-size: 10px;
+    font-weight: 800;
+    color: #475569;
+    text-transform: uppercase;
+
+    em {
+        font-style: normal;
+        color: #f97316;
+        text-transform: none;
+    }
+
+    .wf_ico {
+        width: 14px;
+        height: 14px;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2'%3E%3Cpath d='M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4'/%3E%3C/svg%3E") center/contain no-repeat;
+    }
+}
+
+.o_pm_why_wf_stepper {
+    list-style: none;
+    margin: 0;
+    padding: 0 2px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.o_pm_why_wf_step {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.o_pm_why_wf_rail {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 28px;
+}
+
+.o_pm_why_wf_seg {
+    flex: 1 1 auto;
+    height: 2px;
+    min-width: 3px;
+    background: #d1d5db;
+
+    &.is-blue { background: #3b82f6; }
+    &.is-orange { background: #f97316; }
+    &.is-grey { background: #d1d5db; }
+}
+
+.o_pm_why_wf_icon_check {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #3b82f6;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    &::after {
+        content: "";
+        width: 7px;
+        height: 4px;
+        border-left: 2px solid #fff;
+        border-bottom: 2px solid #fff;
+        transform: rotate(-45deg) translate(1px, -1px);
+        display: block;
+    }
+}
+
+.o_pm_why_wf_icon_pulse {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #f97316;
+    box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.22);
+    z-index: 2;
+
+    &::after {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #fff;
+        display: block;
+    }
+}
+
+.o_pm_why_wf_icon_pending {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid #d1d5db;
+    z-index: 2;
+
+    &::after {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #cbd5e1;
+        display: block;
+    }
+}
+
+.o_pm_why_wf_lbl {
+    margin-top: 3px;
+    font-size: 7px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    line-height: 1.1;
+    padding: 0 1px;
+}
+
+.o_pm_why_wf_step.is-done .o_pm_why_wf_lbl {
+    color: #3b82f6;
+}
+
+.o_pm_why_wf_step.is-current .o_pm_why_wf_lbl {
+    color: #f97316;
+    font-weight: 800;
+}
+
+.o_pm_why_footer {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.o_pm_why_footer_card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px;
+    min-height: 100px;
+}
+
+.o_pm_why_trend_bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 72px;
+    margin-top: 6px;
+
+    .trend_col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100%;
+        justify-content: flex-end;
+
+        label {
+            font-size: 8px;
+            color: #94a3b8;
+            margin-top: 3px;
+        }
+
+        em {
+            font-size: 7px;
+            color: #dc2626;
+            font-style: normal;
+            font-weight: 800;
+        }
+    }
+
+    .bar {
+        width: 100%;
+        max-width: 16px;
+        min-height: 6px;
+        border-radius: 2px 2px 0 0;
+
+        &.c-blue { background: #3b82f6; }
+        &.c-orange { background: #f97316; }
+        &.c-red { background: #ef4444; }
+        &.anomaly { background: #ef4444; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.3); }
+    }
+}
+
+.defect_row {
+    display: grid;
+    grid-template-columns: 80px 1fr 36px;
+    gap: 6px;
+    align-items: center;
+    font-size: 9px;
+    margin-bottom: 5px;
+
+    .defect_track {
+        height: 8px;
+        background: #f1f5f9;
+        border-radius: 4px;
+        overflow: hidden;
+
+        span {
+            display: block;
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            border-radius: 4px;
+        }
+    }
+
+    strong {
+        text-align: right;
+        font-size: 10px;
+    }
+}
+
+.o_pm_why_alert {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 10px;
+
+    .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    &.critical .dot { background: #ef4444; }
+    &.warn .dot { background: #f97316; }
+
+    em {
+        margin-left: auto;
+        font-size: 8px;
+        color: #94a3b8;
+        font-style: normal;
+    }
+}
+
+.o_pm_why_empty {
+    font-size: 9px;
+    color: #94a3b8;
+}
+
+/* Sequential 5-Why chain (center panel) */
+.o_pm_why_chain {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 4px 8px 12px;
+}
+
+.o_pm_why_chain_start,
+.o_pm_why_chain_step,
+.o_pm_why_chain_end {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.o_pm_why_chain_step {
+    width: 100%;
+    margin-top: 4px;
+}
+
+.o_pm_why_step_num {
+    font-size: 9px;
+    font-weight: 800;
+    color: #3b82f6;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+}
+
+.o_pm_why_chain_connector {
+    width: 2px;
+    height: 12px;
+    background: #94a3b8;
+    margin: 2px 0;
+}
+
+.o_pm_why_chain_arrow {
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1;
+    margin: 4px 0;
+}
+
+.o_pm_why_auto_badge {
+    margin: 8px auto 4px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    font-size: 9px;
+    font-weight: 600;
+    color: #c2410c;
+    text-align: center;
+    max-width: 420px;
+}
+
+.o_pm_why_node.why_q {
+    width: 100%;
+    border-color: #93c5fd;
+    background: #f8fafc;
+}
+
+.o_pm_why_node.why_a {
+    width: 100%;
+    border-color: #cbd5e1;
+    background: #fff;
+}
+
+.o_pm_why_node.why_a.is-root {
+    border: 2px solid #f97316;
+    background: #fff7ed;
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.12);
+}
+
+.o_pm_why_node.why_confirmed {
+    width: 100%;
+    border: 2px solid #22c55e;
+    background: #f0fdf4;
+    color: #14532d;
+    text-align: center;
+}
+
+.o_pm_why_node.l1.incident small {
+    display: block;
+    font-size: 8px;
+    color: #dc2626;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+
+@media (max-width: 1200px) {
+    .o_pm_why_kpis {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .o_pm_why_grid,
+    .o_pm_why_footer {
+        grid-template-columns: 1fr;
+    }
+}

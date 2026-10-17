@@ -1,0 +1,211 @@
+// Equipment form — New/Edit card layout (Plant Maintenance theme)
+
+.o_form_view.o_pm_eq_form,
+.o_form_view:has(.o_pm_eq_form__sheet) {
+    background: #f9fafb;
+}
+
+.o_pm_eq_form__sheet,
+.o_form_view .o_form_sheet.o_pm_eq_form__sheet {
+    max-width: 1100px !important;
+    margin: 0 auto !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0.75rem 1rem 1.5rem !important;
+}
+
+.o_pm_eq_form__hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.o_pm_eq_form__hero-title-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.o_pm_eq_form__hero-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #f3e8ff;
+    color: #7c3aed;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    margin-top: 0.1rem;
+}
+
+.o_pm_eq_form__hero-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    letter-spacing: -0.02em;
+}
+
+.o_pm_eq_form__hero-sub {
+    margin: 0.2rem 0 0;
+    font-size: 0.8125rem;
+    color: #6b7280;
+}
+
+.o_pm_eq_form__hero-actions.oe_button_box {
+    float: none !important;
+    width: auto !important;
+    text-align: right;
+    box-shadow: none !important;
+}
+
+.o_pm_eq_form__card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04);
+    margin-bottom: 0.9rem;
+    overflow: hidden;
+}
+
+.o_pm_eq_form__card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.9rem 1.1rem;
+    border-bottom: 1px solid #f3f4f6;
+    background: #fafbfc;
+}
+
+.o_pm_eq_form__card-head-left {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+.o_pm_eq_form__card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.o_pm_eq_form__card-icon--blue { background: #3b82f6; }
+.o_pm_eq_form__card-icon--cyan { background: #0ea5e9; }
+.o_pm_eq_form__card-icon--green { background: #10b981; }
+.o_pm_eq_form__card-icon--purple { background: #7c3aed; }
+
+.o_pm_eq_form__card-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.o_pm_eq_form__card-sub {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 0.1rem;
+}
+
+.o_pm_eq_form__badge {
+    border-radius: 999px;
+    padding: 0.2rem 0.65rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.o_pm_eq_form__badge--draft {
+    background: #fff7ed;
+    color: #c2410c;
+    border: 1px solid #fed7aa;
+}
+
+.o_pm_eq_form__badge--saved {
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+}
+
+.o_pm_eq_form__card-body {
+    padding: 1rem 1.1rem 1.15rem;
+}
+
+.o_pm_eq_form__card-body--basic {
+    display: grid;
+    grid-template-columns: 1fr 200px;
+    gap: 1rem;
+    align-items: start;
+}
+
+.o_pm_eq_form__fields {
+    min-width: 0;
+}
+
+.o_pm_eq_form__image-box {
+    border: 1px dashed #d1d5db;
+    border-radius: 12px;
+    background: #f9fafb;
+    padding: 0.75rem;
+    text-align: center;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.o_pm_eq_form__image {
+    max-width: 160px;
+}
+
+.o_pm_eq_form__image-hint {
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.o_pm_eq_form__unit {
+    color: #6b7280;
+    font-size: 0.8125rem;
+    margin-left: 0.35rem;
+}
+
+.o_pm_eq_form__hint {
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+}
+
+body.o_pm_has_sidebar .o_form_view.o_pm_eq_form .o_form_label,
+.o_pm_eq_form .o_form_label {
+    color: #6b7280 !important;
+    font-weight: 600 !important;
+    font-size: 0.78rem !important;
+}
+
+body.o_pm_has_sidebar .o_form_view.o_pm_eq_form .o_input,
+.o_pm_eq_form .o_input {
+    border-radius: 8px !important;
+    border-color: #e5e7eb !important;
+    min-height: 38px;
+}
+
+body.o_pm_has_sidebar .o_form_view.o_pm_eq_form .o_form_sheet_bg {
+    background: #f9fafb !important;
+}
+
+@media (max-width: 900px) {
+    .o_pm_eq_form__card-body--basic {
+        grid-template-columns: 1fr;
+    }
+}

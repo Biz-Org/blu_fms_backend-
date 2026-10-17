@@ -1,0 +1,364 @@
+/* Inventory / Spares redesign — Plant Planning Suite */
+
+.o_form_view.o_pm_spares_form {
+  .o_form_renderer,
+  .o_form_sheet_bg,
+  .o_form_sheet {
+    background: #f8fafc !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}
+
+.o_form_view .o_pm_inv_spares_screen {
+  --pm-brand: #7c3aed;
+  --pm-brand-strong: #6d28d9;
+  --pm-soft: #f3e8ff;
+  --pm-border: #e5e7eb;
+  --pm-text: #111827;
+  --pm-muted: #6b7280;
+
+  background: #f8fafc;
+  padding: 16px 20px 28px;
+  min-height: calc(100vh - 140px);
+
+  .o_pm_plan_stepper {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+    background: #fff;
+    border: 1px solid var(--pm-border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04);
+  }
+
+  .o_pm_plan_step {
+    flex: 1 1 auto;
+    min-width: 118px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 10px;
+    border: 0;
+    border-right: 1px solid var(--pm-border);
+    background: #fff;
+    color: var(--pm-muted);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+
+    &:last-child {
+      border-right: 0;
+    }
+
+    &:hover {
+      background: #faf5ff;
+      color: var(--pm-brand);
+    }
+  }
+
+  .o_pm_plan_step_done {
+    color: #059669;
+    background: #ecfdf5;
+  }
+
+  .o_pm_plan_step_active {
+    background: var(--pm-soft);
+    color: var(--pm-brand-strong);
+    box-shadow: inset 0 -3px 0 var(--pm-brand);
+    font-weight: 700;
+  }
+
+  .o_pm_inv_context_card,
+  .o_pm_inv_spares_card,
+  .o_pm_inv_summary_card,
+  .o_pm_inv_docs_card {
+    background: #fff;
+    border: 1px solid var(--pm-border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    box-shadow: 0 1px 3px rgba(17, 24, 39, 0.04);
+    margin-bottom: 14px;
+  }
+
+  .o_pm_inv_context_card {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 18px;
+    align-items: start;
+  }
+
+  .o_pm_inv_context_media {
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    min-height: 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .o_pm_inv_equip_img img,
+  .o_pm_inv_equip_img .img-fluid {
+    width: 100%;
+    max-height: 120px;
+    object-fit: cover;
+  }
+
+  .o_pm_inv_context_cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 28px;
+  }
+
+  .o_pm_inv_field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 10px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .o_pm_inv_lbl {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+  }
+
+  .o_pm_inv_alert {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid #f8c9c9;
+    background: #fff5f5;
+  }
+
+  .o_pm_inv_alert_text {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #b42318;
+    font-size: 0.875rem;
+    font-weight: 700;
+  }
+
+  .o_pm_inv_mid_row {
+    display: grid;
+    grid-template-columns: 1.75fr 0.85fr;
+    gap: 14px;
+    margin-bottom: 14px;
+    align-items: start;
+  }
+
+  .o_pm_inv_spares_card,
+  .o_pm_inv_summary_card {
+    margin-bottom: 0;
+  }
+
+  .o_pm_inv_card_head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .o_pm_inv_card_title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.6875rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6b7280;
+    margin-bottom: 12px;
+  }
+
+  .o_pm_inv_card_head .o_pm_inv_card_title {
+    margin-bottom: 0;
+  }
+
+  .o_pm_inv_card_icon {
+    color: var(--pm-brand);
+    font-size: 0.875rem;
+  }
+
+  .o_pm_inv_spares_list .o_list_renderer,
+  .o_pm_inv_docs_list .o_list_renderer {
+    border: 1px solid #f3f4f6;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .o_pm_inv_spares_list .o_list_table thead,
+  .o_pm_inv_docs_list .o_list_table thead {
+    background: #faf5ff;
+  }
+
+  .o_pm_inv_spares_list .o_list_table thead th,
+  .o_pm_inv_docs_list .o_list_table thead th {
+    font-size: 0.6875rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #6b7280;
+  }
+
+  .o_pm_inv_spares_list .badge,
+  .o_pm_inv_docs_list .badge {
+    border-radius: 999px;
+    padding: 5px 10px;
+    font-weight: 700;
+  }
+
+  .o_pm_inv_spares_foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+
+  .o_pm_inv_spares_actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .o_pm_inv_total_box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid #a7f3d0;
+    background: #ecfdf5;
+    color: #047857;
+    font-weight: 800;
+    font-size: 0.875rem;
+
+    .o_field_widget,
+    .o_input {
+      color: #047857 !important;
+      font-weight: 800;
+      margin-bottom: 0;
+    }
+  }
+
+  .o_pm_inv_metric_row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+
+    &:last-child {
+      border-bottom: 0;
+    }
+
+    .o_field_widget {
+      margin-bottom: 0;
+      font-weight: 800;
+      color: var(--pm-text);
+    }
+  }
+
+  .o_pm_inv_metric_shortage .o_field_widget {
+    background: #fee2e2;
+    color: #b91c1c !important;
+    border-radius: 8px;
+    padding: 4px 10px;
+    min-width: 36px;
+    text-align: center;
+  }
+
+  .o_pm_inv_metric_cost {
+    margin-top: 4px;
+    padding-top: 14px;
+    border-top: 1px dashed #e5e7eb;
+    border-bottom: 0;
+    color: var(--pm-brand-strong);
+
+    .o_field_widget {
+      color: var(--pm-brand-strong) !important;
+    }
+  }
+
+  .o_pm_inv_footer {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding-top: 4px;
+  }
+
+  .o_pm_inv_btn {
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    padding: 10px 18px !important;
+  }
+
+  .o_pm_inv_btn_primary,
+  .btn-primary.o_pm_inv_btn {
+    background: var(--pm-brand) !important;
+    border-color: var(--pm-brand) !important;
+
+    &:hover {
+      background: var(--pm-brand-strong) !important;
+      border-color: var(--pm-brand-strong) !important;
+    }
+  }
+
+  .o_input,
+  input,
+  textarea,
+  select {
+    border-radius: 10px !important;
+  }
+
+  @media (max-width: 1100px) {
+    .o_pm_inv_context_card,
+    .o_pm_inv_context_cols,
+    .o_pm_inv_mid_row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .o_pm_plan_stepper {
+      flex-direction: column;
+    }
+
+    .o_pm_plan_step {
+      border-right: 0;
+      border-bottom: 1px solid var(--pm-border);
+      justify-content: flex-start;
+      padding-left: 14px;
+    }
+
+    .o_pm_inv_spares_foot,
+    .o_pm_inv_alert {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+}

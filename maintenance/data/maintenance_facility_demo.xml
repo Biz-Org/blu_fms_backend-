@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Tag existing plant workflow demo as Plant domain -->
+        <record id="maintenance_team_workflow_examples" model="maintenance.team">
+            <field name="maintenance_domain">plant</field>
+        </record>
+        <record id="equipment_category_fleet_vehicles" model="maintenance.equipment.category">
+            <field name="maintenance_domain">plant</field>
+        </record>
+
+        <!-- Facility Management categories -->
+        <record id="equipment_category_hvac_ac" model="maintenance.equipment.category">
+            <field name="name">HVAC / Air Conditioning</field>
+            <field name="maintenance_domain">facility</field>
+            <field name="color">5</field>
+            <field name="technician_user_id" ref="base.user_admin"/>
+            <field name="corrective_responsible_user_id" ref="base.user_admin"/>
+            <field name="preventive_responsible_user_id" ref="base.user_admin"/>
+        </record>
+        <record id="equipment_category_elevators" model="maintenance.equipment.category">
+            <field name="name">Elevators &amp; Lifts</field>
+            <field name="maintenance_domain">facility</field>
+            <field name="color">6</field>
+            <field name="technician_user_id" ref="base.user_admin"/>
+            <field name="corrective_responsible_user_id" ref="base.user_admin"/>
+            <field name="preventive_responsible_user_id" ref="base.user_admin"/>
+        </record>
+        <record id="equipment_category_lighting" model="maintenance.equipment.category">
+            <field name="name">Lighting Systems</field>
+            <field name="maintenance_domain">facility</field>
+            <field name="color">7</field>
+            <field name="technician_user_id" ref="base.user_admin"/>
+            <field name="corrective_responsible_user_id" ref="base.user_admin"/>
+            <field name="preventive_responsible_user_id" ref="base.user_admin"/>
+        </record>
+        <record id="equipment_category_plumbing" model="maintenance.equipment.category">
+            <field name="name">Plumbing &amp; Water</field>
+            <field name="maintenance_domain">facility</field>
+            <field name="color">8</field>
+            <field name="technician_user_id" ref="base.user_admin"/>
+            <field name="corrective_responsible_user_id" ref="base.user_admin"/>
+            <field name="preventive_responsible_user_id" ref="base.user_admin"/>
+        </record>
+        <record id="equipment_category_fire_safety" model="maintenance.equipment.category">
+            <field name="name">Fire Safety</field>
+            <field name="maintenance_domain">facility</field>
+            <field name="color">1</field>
+            <field name="technician_user_id" ref="base.user_admin"/>
+            <field name="corrective_responsible_user_id" ref="base.user_admin"/>
+            <field name="preventive_responsible_user_id" ref="base.user_admin"/>
+        </record>
+
+        <!-- Plant industrial categories (explicit domain) -->
+        <record id="equipment_category_machines" model="maintenance.equipment.category">
+            <field name="name">Production Machines</field>
+            <field name="maintenance_domain">plant</field>
+            <field name="color">2</field>
+            <field name="technician_user_id" ref="base.user_admin"/>
+            <field name="corrective_responsible_user_id" ref="base.user_admin"/>
+            <field name="preventive_responsible_user_id" ref="base.user_admin"/>
+        </record>
+        <record id="equipment_category_cranes" model="maintenance.equipment.category">
+            <field name="name">Cranes &amp; Hoists</field>
+            <field name="maintenance_domain">plant</field>
+            <field name="color">3</field>
+            <field name="technician_user_id" ref="base.user_admin"/>
+            <field name="corrective_responsible_user_id" ref="base.user_admin"/>
+            <field name="preventive_responsible_user_id" ref="base.user_admin"/>
+        </record>
+        <record id="equipment_category_compressors" model="maintenance.equipment.category">
+            <field name="name">Compressors</field>
+            <field name="maintenance_domain">plant</field>
+            <field name="color">4</field>
+            <field name="technician_user_id" ref="base.user_admin"/>
+            <field name="corrective_responsible_user_id" ref="base.user_admin"/>
+            <field name="preventive_responsible_user_id" ref="base.user_admin"/>
+        </record>
+
+        <!-- Facility team -->
+        <record id="maintenance_team_facility_fms" model="maintenance.team">
+            <field name="name">Facility Management Team</field>
+            <field name="maintenance_domain">facility</field>
+            <field name="color">5</field>
+            <field name="member_ids" eval="[(4, ref('base.user_admin'))]"/>
+        </record>
+    </data>
+</odoo>

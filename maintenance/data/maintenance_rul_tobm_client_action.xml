@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <function model="maintenance.rul.tobm.dashboard" name="_migrate_rul_action_to_act_window"/>
+
+        <record id="maintenance_rul_tobm_dashboard_form_view" model="ir.ui.view">
+            <field name="name">maintenance.rul.tobm.dashboard.form</field>
+            <field name="model">maintenance.rul.tobm.dashboard</field>
+            <field name="priority">90</field>
+            <field name="arch" type="xml">
+                <form string="RUL &amp; TOBM Report" create="false" delete="false"
+                      class="o_pm_rca_fullscreen_form o_maint_rul_pm_form" js_class="maintenance_rul_tobm_dashboard">
+                    <field name="company_id" invisible="1"/>
+                    <field name="analysis_period_days" invisible="1"/>
+                    <field name="fleet_vehicle_scope" invisible="1"/>
+                    <field name="category_id" invisible="1"/>
+                    <field name="equipment_id" invisible="1"/>
+                    <sheet class="o_pm_rca_sheet">
+                        <div class="o_maint_rul_dashboard_wrap o_pm_rca_dashboard_wrap">
+                            <field name="name" invisible="1"/>
+                            <field name="name" nolabel="1" readonly="1" widget="rul_tobm_owl_dashboard"/>
+                        </div>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="maintenance_rul_tobm_dashboard_action" model="ir.actions.act_window">
+            <field name="name">RUL &amp; TOBM Report</field>
+            <field name="res_model">maintenance.rul.tobm.dashboard</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="maintenance_rul_tobm_dashboard_form_view"/>
+            <field name="res_id" ref="maintenance.maintenance_rul_tobm_dashboard_main"/>
+            <field name="target">current</field>
+            <field name="context" eval="{'create': False, 'delete': False}"/>
+        </record>
+    </data>
+</odoo>

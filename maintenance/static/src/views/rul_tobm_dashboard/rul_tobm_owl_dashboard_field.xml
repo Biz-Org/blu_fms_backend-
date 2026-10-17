@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="maintenance.RulTobmOwlDashboardField">
+        <div class="o_maint_rul_dashboard_wrap o_pm_rca_dashboard_wrap" t-ref="root">
+            <MaintenanceRulTobmDashboardClient
+                embedded="true"
+                resId="props.record.resId"
+                dashboardKey="dashboardKey"
+                record="props.record"/>
+        </div>
+    </t>
+</templates>

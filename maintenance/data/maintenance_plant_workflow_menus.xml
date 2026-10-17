@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- Top-level workflow order (Plant + Facility) -->
+        <record id="menu_m_dashboard" model="ir.ui.menu">
+            <field name="sequence">10</field>
+        </record>
+        <record id="menu_equipment_form" model="ir.ui.menu">
+            <field name="sequence">20</field>
+        </record>
+        <record id="menu_m_operations" model="ir.ui.menu">
+            <field name="sequence">30</field>
+        </record>
+        <record id="menu_m_planning_root" model="ir.ui.menu">
+            <field name="sequence">40</field>
+        </record>
+        <record id="menu_m_analysis_root" model="ir.ui.menu">
+            <field name="sequence">50</field>
+        </record>
+        <record id="menu_m_reports" model="ir.ui.menu">
+            <field name="sequence">60</field>
+        </record>
+        <record id="menu_maintenance_configuration" model="ir.ui.menu">
+            <field name="sequence">70</field>
+        </record>
+
+        <!-- Operations children: Requests → Work Orders → Workflow → Calendar -->
+        <record id="menu_m_request_form" model="ir.ui.menu">
+            <field name="sequence">1</field>
+        </record>
+        <record id="menu_m_work_orders" model="ir.ui.menu">
+            <field name="sequence">2</field>
+        </record>
+        <record id="menu_m_workflow_timeline" model="ir.ui.menu">
+            <field name="sequence">3</field>
+        </record>
+        <record id="menu_m_request_calendar" model="ir.ui.menu">
+            <field name="sequence">4</field>
+        </record>
+
+        <!-- Planning children: Planning → Manpower → Spares -->
+        <record id="menu_m_planning" model="ir.ui.menu">
+            <field name="sequence">1</field>
+        </record>
+        <record id="menu_m_manpower_assignment" model="ir.ui.menu">
+            <field name="sequence">2</field>
+        </record>
+        <record id="menu_m_inventory_spares" model="ir.ui.menu">
+            <field name="sequence">3</field>
+        </record>
+
+        <!-- Analysis children -->
+        <record id="menu_m_rca_mom" model="ir.ui.menu">
+            <field name="sequence">1</field>
+        </record>
+        <record id="menu_m_plant_rca" model="ir.ui.menu">
+            <field name="sequence">2</field>
+        </record>
+        <record id="menu_m_why_rca" model="ir.ui.menu">
+            <field name="sequence">3</field>
+        </record>
+        <record id="menu_m_agile_rca" model="ir.ui.menu">
+            <field name="sequence">4</field>
+        </record>
+        <record id="menu_m_capa_rca" model="ir.ui.menu">
+            <field name="sequence">5</field>
+        </record>
+        <record id="maintenance_no_go_reporting" model="ir.ui.menu">
+            <field name="sequence">6</field>
+        </record>
+
+        <!-- Reporting children -->
+        <record id="menu_m_reports_analytics" model="ir.ui.menu">
+            <field name="sequence">1</field>
+        </record>
+        <record id="menu_m_reports_rul_tobm" model="ir.ui.menu">
+            <field name="sequence">2</field>
+        </record>
+        <record id="maintenance_request_reporting" model="ir.ui.menu">
+            <field name="sequence">3</field>
+        </record>
+
+        <!-- Configuration children: Settings → Teams → Categories → Stages → Activity Types -->
+        <record id="menu_maintenance_config" model="ir.ui.menu">
+            <field name="sequence">0</field>
+        </record>
+        <record id="menu_maintenance_teams" model="ir.ui.menu">
+            <field name="sequence">10</field>
+        </record>
+        <record id="menu_maintenance_cat" model="ir.ui.menu">
+            <field name="sequence">20</field>
+        </record>
+        <record id="menu_maintenance_stage_configuration" model="ir.ui.menu">
+            <field name="sequence">30</field>
+        </record>
+        <record id="maintenance_menu_config_activity_type" model="ir.ui.menu">
+            <field name="sequence">40</field>
+        </record>
+
+        <!-- Always sync DB sequences (XML alone may not apply on upgraded DBs). -->
+        <function model="maintenance.rul.tobm.dashboard" name="apply_plant_navbar_menu_order"/>
+    </data>
+</odoo>

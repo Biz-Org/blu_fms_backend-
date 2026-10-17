@@ -1,0 +1,25 @@
+/* Configuration screens under Plant sidebar */
+
+body.o_pm_has_sidebar {
+  .o_base_settings .o_setting_container {
+    background: #f8fafc;
+  }
+
+  .o_base_settings .settings {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    box-shadow: 0 1px 3px rgba(17, 24, 39, 0.04);
+    padding: 8px 4px;
+  }
+
+  .o_base_settings .o_settings_tab .selected {
+    border-left-color: #7c3aed !important;
+    color: #6d28d9 !important;
+    font-weight: 700;
+  }
+
+  .o_list_view .o_list_table thead th {
+    background: #faf5ff !important;
+  }
+}

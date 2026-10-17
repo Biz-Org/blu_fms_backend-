@@ -1,0 +1,137 @@
+/* RUL & TOBM — reference mockup (v1.0.102) */
+
+.o_maint_rul_client.o_maint_rul_action,
+.o_action.o_maint_rul_action .o_maint_rul_client {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100% !important;
+    background: #f4f7fb !important;
+}
+
+.o_maint_rul_fullpage {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    background: #f4f7fb;
+}
+
+.o_maint_rul_viewport {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    display: grid !important;
+    grid-template-rows: auto auto minmax(0, 1fr) !important;
+    gap: 16px !important;
+    padding: 16px 20px 14px !important;
+    overflow: hidden !important;
+    box-sizing: border-box;
+}
+
+.o_maint_rul_header {
+    position: relative;
+    padding: 20px 22px !important;
+    padding-right: 90px !important;
+    background: #fff !important;
+    border: 1px solid #e8edf4 !important;
+    border-radius: 16px !important;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06) !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: start !important;
+}
+
+.o_maint_rul_header_text h1 {
+    font-size: 24px !important;
+    font-weight: 800 !important;
+    margin: 0 0 6px !important;
+    color: #0f172a !important;
+}
+
+.o_maint_rul_kpi_label,
+.o_maint_rul_kpi_desc,
+.o_maint_rul_detail_titles h2,
+.o_maint_rul_detail_titles p {
+    text-transform: none !important;
+}
+
+.o_maint_rul_kpis {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+}
+
+.o_maint_rul_card--detail {
+    min-height: 0 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 20px 22px 14px !important;
+    background: #fff !important;
+    border: 1px solid #e8edf4 !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.07) !important;
+}
+
+.o_maint_rul_detail_head {
+    flex: 0 0 auto;
+}
+
+.o_maint_rul_phase_stack {
+    flex: 0 0 auto;
+    height: 32px !important;
+    margin-bottom: 12px !important;
+}
+
+.o_maint_rul_chart_wrap {
+    flex: 1 1 auto !important;
+    min-height: 280px !important;
+    width: 100% !important;
+    overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-sizing: border-box;
+}
+
+.o_maint_rul_chart_canvas {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 300px !important;
+    display: block !important;
+}
+
+.o_maint_rul_chart_svg {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 300px !important;
+    aspect-ratio: 920 / 380 !important;
+    display: block !important;
+    overflow: visible !important;
+}
+
+.o_maint_rul_legend {
+    flex: 0 0 auto !important;
+    margin-top: 10px !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 12px 20px !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+}
+
+/* Use Odoo purple app menu only — no duplicate title strip */
+.o_maint_rul_odoo_strip {
+    display: none !important;
+}

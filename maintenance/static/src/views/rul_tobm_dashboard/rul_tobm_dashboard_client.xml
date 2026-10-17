@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<templates xml:space="preserve">
+
+
+
+    <t t-name="maintenance.RulTobmDashboardClient">
+
+        <div t-attf-class="{{ props.embedded ? 'o_maint_rul_client o_maint_rul_embedded o_maint_rul_mockup' : 'o_action o_maint_rul_action o_maint_rul_client o_maint_rul_mockup' }}" t-att-data-rul-build="state.data and state.data.build or '1.0.136'">
+
+            <t t-if="state.loading and !state.data">
+
+                <div class="o_maint_rul_loading">
+
+                    <i class="fa fa-spinner fa-spin"/> Loading report…
+
+                </div>
+
+            </t>
+
+            <t t-elif="state.error">
+
+                <div class="o_maint_rul_error">
+
+                    <i class="fa fa-exclamation-triangle"/>
+
+                    <p t-esc="state.error"/>
+
+                </div>
+
+            </t>
+
+            <t t-elif="state.data">
+
+                <div t-attf-class="o_maint_rul_dashboard o_maint_rul_fullpage o_maint_rul_mockup {{ state.loading ? 'o_maint_rul_dashboard--busy' : '' }}">
+
+                    <div class="o_maint_rul_viewport">
+
+                    <div class="o_maint_rul_header">
+
+                        <span class="o_maint_rul_pill o_maint_rul_pill--badge o_maint_rul_live_corner">
+
+                            <span class="o_maint_rul_live_dot"/> LIVE
+
+                        </span>
+
+                        <div class="o_maint_rul_header_text">
+
+                            <h1>Maintenance RUL &amp; TOBM Report</h1>
+
+                            <p>Remaining useful life and opportunity-based maintenance by equipment</p>
+
+                            <p class="o_maint_rul_meta" t-esc="state.data.meta"/>
+
+                        </div>
+
+                        <div class="o_maint_rul_pills">
+
+                            <div class="o_maint_rul_filter_drop">
+
+                                <button type="button" class="o_maint_rul_pill o_maint_rul_pill--click"
+
+                                    t-on-click="(ev) => this.toggleDropdown('category', ev)">
+
+                                    <i class="fa fa-filter"/>
+
+                                    <span t-esc="state.data.filters.category_label"/>
+
+                                    <i class="fa fa-caret-down"/>
+
+                                </button>
+
+                                <div t-if="state.openDropdown === 'category'" class="o_maint_rul_drop_menu">
+
+                                    <button type="button" class="o_maint_rul_drop_item"
+
+                                        t-att-class="{ 'is-active': !state.data.filters.category_id }"
+
+                                        t-on-click="(ev) => this.onSelectCategory(false, ev)">
+
+                                        All equipment categories
+
+                                    </button>
+
+                                    <t t-foreach="state.data.categories" t-as="cat" t-key="cat.id">
+
+                                        <button type="button" class="o_maint_rul_drop_item"
+
+                                            t-att-class="{ 'is-active': cat.id === state.data.filters.category_id }"
+
+                                            t-on-click="(ev) => this.onSelectCategory(cat.id, ev)">
+
+                                            <t t-esc="cat.name"/>
+
+                                        </button>
+
+                                    </t>
+
+                                </div>
+
+                            </div>
+
+                            <div class="o_maint_rul_filter_drop">
+
+                                <button type="button" class="o_maint_rul_pill o_maint_rul_pill--click"
+
+                                    t-on-click="(ev) => this.toggleDropdown('period', ev)">
+
+                                    <i class="fa fa-calendar"/>
+
+                                    <span t-esc="state.data.filters.period_label"/>
+
+                                    <i class="fa fa-caret-down"/>
+
+                                </button>
+
+                                <div t-if="state.openDropdown === 'period'" class="o_maint_rul_drop_menu">
+
+                                    <t t-foreach="state.data.period_options" t-as="period" t-key="period.days">
+
+                                        <button type="button" class="o_maint_rul_drop_item"
+
+                                            t-att-class="{ 'is-active': period.days === state.data.filters.period_days }"
+
+                                            t-on-click="(ev) => this.onSelectPeriod(period.days, ev)">
+
+                                            <t t-esc="period.label"/>
+
+                                        </button>
+
+                                    </t>
+
+                                </div>
+
+                            </div>
+
+                            <span class="o_maint_rul_pill o_maint_rul_pill--scope">
+
+                                <span class="o_maint_rul_scope_dot"/>
+
+                                Live: all matching requests
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="o_maint_rul_kpis" t-key="state.revision">
+
+                        <div class="o_maint_rul_kpi o_maint_rul_kpi--rul">
+
+                            <div class="o_maint_rul_kpi_inner">
+
+                                <div class="o_maint_rul_kpi_text">
+
+                                    <div class="o_maint_rul_kpi_label">Average RUL</div>
+
+                                    <div class="o_maint_rul_kpi_value" t-esc="state.data.kpis.avg_rul_display"/>
+
+                                    <div class="o_maint_rul_kpi_desc">Average across equipment in scope</div>
+
+                                </div>
+
+                                <div class="o_maint_rul_kpi_icon"><i class="fa fa-line-chart"/></div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="o_maint_rul_kpi o_maint_rul_kpi--thresh">
+
+                            <div class="o_maint_rul_kpi_inner">
+
+                                <div class="o_maint_rul_kpi_text">
+
+                                    <div class="o_maint_rul_kpi_label">Failure threshold</div>
+
+                                    <div class="o_maint_rul_kpi_value" t-esc="state.data.kpis.failure_threshold_display"/>
+
+                                    <div class="o_maint_rul_kpi_desc">Life consumed before high risk</div>
+
+                                </div>
+
+                                <div class="o_maint_rul_kpi_icon"><i class="fa fa-exclamation-triangle"/></div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="o_maint_rul_kpi o_maint_rul_kpi--tobm">
+
+                            <div class="o_maint_rul_kpi_inner">
+
+                                <div class="o_maint_rul_kpi_text">
+
+                                    <div class="o_maint_rul_kpi_label">TOBM opportunities</div>
+
+                                    <div class="o_maint_rul_kpi_value" t-esc="state.data.kpis.tobm_count"/>
+
+                                    <div class="o_maint_rul_kpi_desc">Machines in opportunity window (65–75% life used)</div>
+
+                                </div>
+
+                                <div class="o_maint_rul_kpi_icon"><i class="fa fa-crosshairs"/></div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="o_maint_rul_kpi o_maint_rul_kpi--critical">
+
+                            <div class="o_maint_rul_kpi_inner">
+
+                                <div class="o_maint_rul_kpi_text">
+
+                                    <div class="o_maint_rul_kpi_label">Next critical</div>
+
+                                    <div class="o_maint_rul_kpi_value" t-esc="state.data.kpis.next_critical_name"/>
+
+                                    <div class="o_maint_rul_kpi_desc" t-esc="state.data.kpis.next_critical_desc"/>
+
+                                </div>
+
+                                <div class="o_maint_rul_kpi_icon"><i class="fa fa-bell"/></div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="o_maint_rul_card o_maint_rul_card--detail">
+
+                        <div class="o_maint_rul_detail_head">
+
+                            <div class="o_maint_rul_detail_titles">
+
+                                <h2>
+
+                                    <t t-esc="state.data.detail.title"/> — RUL, TOBM &amp; Maintenance Timeline
+
+                                </h2>
+
+                                <p t-esc="state.data.detail.subtitle"/>
+
+                            </div>
+
+                            <div class="o_maint_rul_filter_drop o_maint_rul_eq_select" t-if="state.data.equipment_options.length">
+
+                                <button type="button" class="o_maint_rul_eq_select_btn"
+
+                                    t-on-click="(ev) => this.toggleDropdown('equipment', ev)">
+
+                                    <i class="fa fa-truck"/>
+
+                                    <span t-esc="state.data.detail.equipment_label"/>
+
+                                    <i class="fa fa-caret-down"/>
+
+                                </button>
+
+                                <div t-if="state.openDropdown === 'equipment'" class="o_maint_rul_eq_menu">
+
+                                    <t t-foreach="state.data.equipment_options" t-as="eq" t-key="eq.id">
+
+                                        <button type="button" class="o_maint_rul_eq_option"
+
+                                            t-att-class="{ 'is-active': eq.id === state.data.detail.equipment_id }"
+
+                                            t-on-click="(ev) => this.onSelectEquipment(eq.id, ev)">
+
+                                            <i class="fa fa-truck"/>
+
+                                            <t t-esc="eq.name"/>
+
+                                        </button>
+
+                                    </t>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="o_maint_rul_phase_stack">
+
+                            <div class="o_maint_rul_phase_seg o_maint_rul_phase_seg--rul"
+
+                                t-attf-style="width: {{state.data.phases.rul_width}}%;">
+
+                                <t t-esc="state.data.phases.rul_label"/>
+
+                            </div>
+
+                            <div class="o_maint_rul_phase_seg o_maint_rul_phase_seg--tobm"
+
+                                t-attf-style="width: {{state.data.phases.tobm_width}}%;">
+
+                                <t t-esc="state.data.phases.tobm_label"/>
+
+                            </div>
+
+                            <div class="o_maint_rul_phase_seg o_maint_rul_phase_seg--maint"
+
+                                t-attf-style="width: {{state.data.phases.maint_width}}%;">
+
+                                <t t-esc="state.data.phases.maint_label"/>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="o_maint_rul_chart_wrap">
+                            <canvas t-ref="chartCanvas" class="o_maint_rul_chart_canvas" role="img" aria-label="RUL lifecycle chart"/>
+                        </div>
+
+
+
+                        <div class="o_maint_rul_legend">
+
+                            <span><i class="o_maint_rul_legend_line o_maint_rul_legend_line--curve"/> RUL Remaining (%)</span>
+
+                            <span><i class="o_maint_rul_legend_dot o_maint_rul_legend_dot--rul"/> <t t-esc="state.data.phases.rul_label"/></span>
+
+                            <span><i class="o_maint_rul_legend_dot o_maint_rul_legend_dot--tobm"/> <t t-esc="state.data.phases.tobm_label"/></span>
+
+                            <span><i class="o_maint_rul_legend_dot o_maint_rul_legend_dot--maint"/> <t t-esc="state.data.phases.maint_label"/></span>
+
+                            <span><i class="o_maint_rul_legend_line o_maint_rul_legend_line--fail"/> <t t-esc="state.data.phases.failure_rul_label"/></span>
+
+                        </div>
+
+                    </div>
+
+                    </div>
+
+                </div>
+
+            </t>
+
+        </div>
+
+    </t>
+
+
+
+</templates>
+

@@ -1,0 +1,332 @@
+// =============================================================================
+// Plant Maintenance — PrecastMPS Capacity Planning reference theme
+// Violet #7C3AED, light grey page, white cards, soft shadows
+// =============================================================================
+
+body.o_pm_has_sidebar,
+body.o_pm_rca_fullscreen_body,
+body.o_maint_rul_fullscreen_body,
+.o_pm_app,
+.o_pm_global_shell,
+.o_pm_dash {
+    --pm-brand: #7c3aed;
+    --pm-brand-strong: #6d28d9;
+    --pm-brand-soft: #f3e8ff;
+    --pm-brand-muted: #c4b5fd;
+    --pm-purple: #7c3aed;
+    --pm-purple-soft: #f3e8ff;
+
+    --pm-bg: #f9fafb;
+    --pm-surface: #ffffff;
+    --pm-surface-muted: #f9fafb;
+    --pm-border: #e5e7eb;
+    --pm-border-strong: #d1d5db;
+    --pm-text: #111827;
+    --pm-text-secondary: #374151;
+    --pm-muted: #6b7280;
+    --pm-placeholder: #9ca3af;
+
+    --pm-success: #059669;
+    --pm-success-soft: #ecfdf5;
+    --pm-warning: #d97706;
+    --pm-warning-soft: #fffbeb;
+    --pm-danger: #dc2626;
+    --pm-danger-soft: #fef2f2;
+    --pm-info: #2563eb;
+    --pm-info-soft: #eff6ff;
+
+    --pm-radius-sm: 6px;
+    --pm-radius: 8px;
+    --pm-radius-lg: 12px;
+    --pm-shadow-xs: 0 1px 2px rgba(17, 24, 39, 0.04);
+    --pm-shadow-sm: 0 1px 3px rgba(17, 24, 39, 0.06);
+    --pm-shadow-md: 0 4px 12px rgba(17, 24, 39, 0.08);
+
+    --pm-font: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+body.o_pm_has_sidebar {
+    font-family: var(--pm-font);
+    color: var(--pm-text);
+
+    .o_action_manager,
+    .o_content {
+        background: var(--pm-bg) !important;
+    }
+
+    .o_control_panel {
+        background: var(--pm-surface);
+        border-bottom: 1px solid var(--pm-border);
+        box-shadow: none;
+    }
+
+    .o_control_panel .btn-primary,
+    .o_control_panel .o_list_button_add,
+    .o_control_panel .o-kanban-button-new {
+        background: var(--pm-brand) !important;
+        border-color: var(--pm-brand) !important;
+        border-radius: var(--pm-radius) !important;
+        font-weight: 600;
+        box-shadow: none !important;
+
+        &:hover {
+            background: var(--pm-brand-strong) !important;
+            border-color: var(--pm-brand-strong) !important;
+        }
+    }
+
+    .o_control_panel .btn-secondary,
+    .o_control_panel .btn-light {
+        border-radius: var(--pm-radius) !important;
+        border-color: var(--pm-border-strong) !important;
+        background: #fff !important;
+        color: var(--pm-text-secondary) !important;
+        font-weight: 600;
+    }
+
+    .o_searchview {
+        border-radius: var(--pm-radius) !important;
+        border-color: var(--pm-border) !important;
+        background: #fff !important;
+    }
+
+    .o_searchview .o_searchview_facet {
+        border-radius: 999px;
+        background: var(--pm-brand-soft);
+        border-color: transparent;
+        color: var(--pm-brand-strong);
+    }
+
+    .o_list_view .o_list_table,
+    .o_list_renderer .o_list_table {
+        background: #fff;
+        border: 1px solid var(--pm-border);
+        border-radius: var(--pm-radius-lg);
+        overflow: hidden;
+        box-shadow: var(--pm-shadow-xs);
+
+        thead th {
+            background: #fafbfc !important;
+            color: var(--pm-muted) !important;
+            font-size: 0.6875rem !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--pm-border) !important;
+        }
+
+        tbody td {
+            border-bottom: 1px solid #f3f4f6 !important;
+            color: var(--pm-text-secondary);
+            font-size: 0.875rem;
+        }
+
+        tbody tr:hover > td {
+            background: #faf5ff !important;
+        }
+    }
+
+    .o_form_view .o_form_sheet_bg {
+        background: var(--pm-bg);
+    }
+
+    .o_form_view .o_form_sheet {
+        background: #fff;
+        border: 1px solid var(--pm-border);
+        border-radius: var(--pm-radius-lg);
+        box-shadow: var(--pm-shadow-xs);
+        max-width: 1140px;
+        margin: 0 auto;
+    }
+
+    .o_form_view .btn-primary {
+        background: var(--pm-brand) !important;
+        border-color: var(--pm-brand) !important;
+        border-radius: var(--pm-radius) !important;
+        font-weight: 600;
+    }
+
+    .o_kanban_view .o_kanban_renderer {
+        background: var(--pm-bg) !important;
+    }
+
+    .o_kanban_view .o_kanban_record > div:not(.o_dropdown_kanban) {
+        border: 1px solid var(--pm-border) !important;
+        border-radius: var(--pm-radius-lg) !important;
+        box-shadow: var(--pm-shadow-xs) !important;
+        background: #fff !important;
+    }
+
+    .modal-content {
+        border-radius: 12px !important;
+        border-color: var(--pm-border);
+    }
+}
+
+.o_maint_analytics_dashboard,
+.o_maint_rul_dashboard,
+.o_pm_plant_rca_dash,
+.o_pm_ai_rca_root,
+.o_capa_rca_root,
+.o_why_rca_root,
+.o_agile_rca_root,
+.o_manpower_assignment,
+.o_pm_suite_screen,
+.o_pm_request_intake,
+.o_pm_nogo_screen,
+.o_pm_timeline_screen,
+.o_pm_cfg_screen {
+    --pm-brand: #7c3aed;
+    --pm-brand-strong: #6d28d9;
+    --pm-brand-soft: #f3e8ff;
+    --pm-purple: #7c3aed;
+    --pm-border: #e5e7eb;
+    --pm-bg: #f9fafb;
+    font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}
+
+/* Shared suite primitives — used by Planning / Manpower / Spares / WO / Timeline / Requests */
+.o_form_view .o_pm_suite_screen,
+.o_form_view .o_pm_planning_screen,
+.o_form_view .o_pm_inv_spares_screen,
+.o_form_view .o_pm_timeline_screen,
+.o_form_view .o_pm_request_intake,
+.o_form_view .o_pm_nogo_screen,
+.o_form_view .o_pm_execution_screen {
+    .o_pm_plan_stepper {
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+        background: #fff;
+        border: 1px solid var(--pm-border, #e5e7eb);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04);
+    }
+
+    .o_pm_plan_step {
+        flex: 1 1 auto;
+        min-width: 110px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 10px;
+        border: 0;
+        border-right: 1px solid var(--pm-border, #e5e7eb);
+        background: #fff;
+        color: var(--pm-muted, #6b7280);
+        font-size: 0.8125rem;
+        font-weight: 600;
+        line-height: 1.2;
+        cursor: pointer;
+
+        &:last-child { border-right: 0; }
+        &:hover {
+            background: #faf5ff;
+            color: var(--pm-brand, #7c3aed);
+        }
+    }
+
+    .o_pm_plan_step_done {
+        color: #059669;
+        background: #ecfdf5;
+    }
+
+    .o_pm_plan_step_active {
+        background: var(--pm-brand-soft, #f3e8ff);
+        color: var(--pm-brand-strong, #6d28d9);
+        box-shadow: inset 0 -3px 0 var(--pm-brand, #7c3aed);
+        font-weight: 700;
+    }
+
+    .o_pm_suite_card {
+        background: #fff;
+        border: 1px solid var(--pm-border, #e5e7eb);
+        border-radius: 14px;
+        padding: 16px 18px;
+        box-shadow: 0 1px 3px rgba(17, 24, 39, 0.04);
+        margin-bottom: 14px;
+    }
+
+    .o_pm_suite_card_title {
+        font-size: 0.6875rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #6b7280;
+        margin-bottom: 12px;
+    }
+
+    .o_pm_suite_footer {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        padding-top: 4px;
+    }
+
+    .o_pm_suite_btn {
+        border-radius: 10px !important;
+        font-weight: 700 !important;
+        padding: 10px 18px !important;
+    }
+
+    .o_pm_suite_btn_primary,
+    .btn-primary.o_pm_suite_btn {
+        background: var(--pm-brand, #7c3aed) !important;
+        border-color: var(--pm-brand, #7c3aed) !important;
+    }
+}
+
+/* Full-bleed suite forms (hide default sheet chrome) */
+.o_form_view.o_pm_planning_form,
+.o_form_view.o_pm_manpower_form,
+.o_form_view.o_pm_spares_form,
+.o_form_view.o_pm_request_form,
+.o_form_view.o_pm_wo_form,
+.o_form_view.o_pm_timeline_form,
+.o_form_view.o_pm_nogo_form {
+    .o_form_renderer,
+    .o_form_sheet_bg,
+    .o_form_sheet {
+        background: #f8fafc !important;
+        max-width: 100% !important;
+        box-shadow: none !important;
+        border: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+}
+
+/* Configuration / calendar / reports shell under plant sidebar */
+body.o_pm_has_sidebar {
+    .o_calendar_view .o_calendar_widget {
+        background: #fff;
+        border: 1px solid var(--pm-border);
+        border-radius: var(--pm-radius-lg);
+        box-shadow: var(--pm-shadow-xs);
+        padding: 8px;
+    }
+
+    .o_calendar_view .fc-event,
+    .o_calendar_view .o_event {
+        border-radius: 6px !important;
+        border: 0 !important;
+        font-weight: 600;
+    }
+
+    .o_graph_renderer,
+    .o_pivot_renderer {
+        background: #fff;
+        border: 1px solid var(--pm-border);
+        border-radius: var(--pm-radius-lg);
+        box-shadow: var(--pm-shadow-xs);
+        padding: 12px;
+    }
+
+    .o_setting_container .o_settings_container {
+        background: #fff;
+        border: 1px solid var(--pm-border);
+        border-radius: var(--pm-radius-lg);
+        box-shadow: var(--pm-shadow-xs);
+    }
+}

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="maintenance.RcaAiDashboardHtmlField">
+        <div
+            t-ref="root"
+            class="o_pm_ai_rca_dashboard_host o_field_html"
+            t-out="htmlValue"
+        />
+    </t>
+
+</templates>

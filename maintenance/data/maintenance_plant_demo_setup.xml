@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- Fleet-scoped reporting defaults for vehicle demo -->
+        <record id="maintenance_analytics_dashboard_main" model="maintenance.analytics.dashboard">
+            <field name="analysis_period_days">365</field>
+            <field name="fleet_vehicle_scope" eval="False"/>
+            <field name="analytics_mode">live</field>
+        </record>
+        <record id="maintenance_rul_tobm_dashboard_main" model="maintenance.rul.tobm.dashboard">
+            <field name="analysis_period_days">365</field>
+            <field name="fleet_vehicle_scope" eval="False"/>
+            <field name="category_id" eval="False"/>
+        </record>
+
+        <function model="maintenance.request" name="fix_rca_dashboard_setup"/>
+        <function model="maintenance.rul.tobm.dashboard" name="setup_rul_tobm_dashboard_ui"/>
+        <function model="maintenance.rul.tobm.dashboard" name="apply_plant_navbar_menu_order"/>
+    </data>
+</odoo>

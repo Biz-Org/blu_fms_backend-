@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="maintenance.PlantDashboardScreen">
+        <div class="o_pm_dash" t-on-click="() => this.closeDropdowns()">
+            <div class="o_pm_dash__page-header">
+                <div class="o_pm_dash__header-left">
+                    <div class="o_pm_dash__breadcrumb">
+                        <span>Maintenance</span>
+                        <span class="o_pm_dash__breadcrumb-sep">/</span>
+                        <span>Dashboard</span>
+                    </div>
+                    <h1 class="o_pm_dash__title" t-esc="pageTitle"/>
+                    <p class="o_pm_dash__subtitle" t-esc="pageSubtitle"/>
+                </div>
+                <div class="o_pm_dash__header-right" t-on-click.stop="() => {}">
+                    <div class="o_pm_dash__filter-dd-wrap">
+                        <button type="button"
+                                t-attf-class="o_pm_dash__header-dd {{ state.maintenanceDomain !== 'all' ? 'o_pm_dash__header-dd--active' : '' }}"
+                                t-on-click.stop="(ev) => this.toggleDropdown('domain', ev)">
+                            <i class="fa fa-sitemap"/>
+                            <t t-esc="domainLabel"/>
+                            <i class="fa fa-caret-down"/>
+                        </button>
+                        <div t-if="state.openDropdown === 'domain'" class="o_pm_dash__filter-menu o_pm_dash__filter-menu--right">
+                            <t t-foreach="state.data.domainOptions" t-as="opt" t-key="opt.value">
+                                <button type="button"
+                                        t-attf-class="o_pm_dash__filter-item {{ state.maintenanceDomain == opt.value ? 'o_pm_dash__filter-item--active' : '' }}"
+                                        t-on-click.stop="() => this.setDomain(opt.value)"
+                                        t-esc="opt.label"/>
+                            </t>
+                        </div>
+                    </div>
+                    <div class="o_pm_dash__filter-dd-wrap">
+                        <button type="button"
+                                t-attf-class="o_pm_dash__header-dd {{ state.team !== 'all' ? 'o_pm_dash__header-dd--active' : '' }}"
+                                t-on-click.stop="(ev) => this.toggleDropdown('team', ev)">
+                            <i class="fa fa-users"/>
+                            <t t-esc="teamLabel"/>
+                            <i class="fa fa-caret-down"/>
+                        </button>
+                        <div t-if="state.openDropdown === 'team'" class="o_pm_dash__filter-menu o_pm_dash__filter-menu--right">
+                            <t t-foreach="state.data.teamOptions" t-as="opt" t-key="opt.value">
+                                <button type="button"
+                                        t-attf-class="o_pm_dash__filter-item {{ state.team == opt.value ? 'o_pm_dash__filter-item--active' : '' }}"
+                                        t-on-click.stop="() => this.setTeam(opt.value)"
+                                        t-esc="opt.label"/>
+                            </t>
+                        </div>
+                    </div>
+                    <button type="button" class="o_pm_dash__header-dd" t-on-click="() => this.onAction('refresh')">
+                        <i class="fa fa-refresh"/> Refresh
+                    </button>
+                    <button type="button" class="o_pm_dash__header-dd o_pm_dash__header-dd--primary"
+                            t-on-click="() => this.onAction('new_request')">
+                        <i class="fa fa-plus"/> New Request
+                    </button>
+                </div>
+            </div>
+
+            <t t-if="state.loading">
+                <div class="o_pm_dash__loading">Loading dashboard…</div>
+            </t>
+            <t t-elif="state.error">
+                <div class="o_pm_dash__error">
+                    <t t-esc="state.error"/>
+                    <button type="button" class="o_pm_dash__header-dd" t-on-click="() => this.loadData()">Retry</button>
+                </div>
+            </t>
+            <t t-else="">
+                <div class="o_pm_dash__kpi-row o_pm_dash__kpi-row--6">
+                    <t t-foreach="state.data.kpis" t-as="kpi" t-key="kpi.key || kpi.label">
+                        <div class="o_pm_dash__kpi-card">
+                            <div class="o_pm_dash__kpi-content">
+                                <div class="o_pm_dash__kpi-label" t-esc="kpi.label"/>
+                                <div class="o_pm_dash__kpi-value" t-esc="kpi.value"/>
+                                <div class="o_pm_dash__kpi-sub" t-esc="kpi.subtext"/>
+                            </div>
+                            <div t-attf-class="o_pm_dash__kpi-icon o_pm_dash__kpi-icon--{{ kpi.iconVariant }}">
+                                <i t-attf-class="fa {{ kpi.icon }}"/>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+
+                <div class="o_pm_dash__grid o_pm_dash__grid--3">
+                    <div class="o_pm_dash__panel">
+                        <div class="o_pm_dash__panel-head">
+                            <div>
+                                <div class="o_pm_dash__panel-title">Equipment Health</div>
+                                <div class="o_pm_dash__panel-sub">Status distribution across assets</div>
+                            </div>
+                            <button type="button" class="o_pm_dash__link-btn" t-on-click="() => this.onAction('equipment')">View</button>
+                        </div>
+                        <div class="o_pm_dash__health-wrap">
+                            <div class="o_pm_dash__donut" t-att-style="donutStyle">
+                                <div class="o_pm_dash__donut-hole">
+                                    <strong t-esc="state.data.meta.totalEquipment || 0"/>
+                                    <span>Assets</span>
+                                </div>
+                            </div>
+                            <div class="o_pm_dash__legend">
+                                <t t-foreach="state.data.equipmentHealth" t-as="item" t-key="item.key">
+                                    <div class="o_pm_dash__legend-row">
+                                        <span t-attf-class="o_pm_dash__dot o_pm_dash__dot--{{ item.variant }}"/>
+                                        <span class="o_pm_dash__legend-label" t-esc="item.label"/>
+                                        <span class="o_pm_dash__legend-count" t-esc="item.count"/>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="o_pm_dash__panel">
+                        <div class="o_pm_dash__panel-head">
+                            <div>
+                                <div class="o_pm_dash__panel-title">Maintenance Requests</div>
+                                <div class="o_pm_dash__panel-sub">By stage</div>
+                            </div>
+                            <button type="button" class="o_pm_dash__link-btn" t-on-click="() => this.onAction('requests')">View</button>
+                        </div>
+                        <div class="o_pm_dash__bars">
+                            <t t-foreach="state.data.requestStatus" t-as="item" t-key="item.key">
+                                <div class="o_pm_dash__bar-row">
+                                    <div class="o_pm_dash__bar-meta">
+                                        <span t-esc="item.label"/>
+                                        <strong t-esc="item.count"/>
+                                    </div>
+                                    <div class="o_pm_dash__bar-track">
+                                        <div t-attf-class="o_pm_dash__bar-fill o_pm_dash__bar-fill--{{ item.variant }}"
+                                             t-attf-style="width: {{ item.pct }}%"/>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+
+                    <div class="o_pm_dash__panel">
+                        <div class="o_pm_dash__panel-head">
+                            <div>
+                                <div class="o_pm_dash__panel-title">Work Order Status</div>
+                                <div class="o_pm_dash__panel-sub">Execution pipeline</div>
+                            </div>
+                            <button type="button" class="o_pm_dash__link-btn" t-on-click="() => this.onAction('work_orders')">View</button>
+                        </div>
+                        <div class="o_pm_dash__bars">
+                            <t t-foreach="state.data.workOrderStatus" t-as="item" t-key="item.key">
+                                <div class="o_pm_dash__bar-row">
+                                    <div class="o_pm_dash__bar-meta">
+                                        <span t-esc="item.label"/>
+                                        <strong t-esc="item.count"/>
+                                    </div>
+                                    <div class="o_pm_dash__bar-track">
+                                        <div t-attf-class="o_pm_dash__bar-fill o_pm_dash__bar-fill--{{ item.variant }}"
+                                             t-attf-style="width: {{ item.pct }}%"/>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="o_pm_dash__grid o_pm_dash__grid--2">
+                    <div class="o_pm_dash__panel o_pm_dash__panel--table">
+                        <div class="o_pm_dash__panel-head">
+                            <div>
+                                <div class="o_pm_dash__panel-title">Upcoming Maintenance</div>
+                                <div class="o_pm_dash__panel-sub">Preventive jobs due or scheduled</div>
+                            </div>
+                        </div>
+                        <div class="o_pm_dash__table-wrap">
+                            <table class="o_pm_dash__table">
+                                <thead>
+                                    <tr>
+                                        <th>DATE</th>
+                                        <th>EQUIPMENT</th>
+                                        <th>TYPE</th>
+                                        <th>PRIORITY</th>
+                                        <th>STATUS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="!state.data.upcomingMaintenance.length">
+                                        <tr><td colspan="5" class="o_pm_dash__empty-row">No upcoming preventive maintenance.</td></tr>
+                                    </t>
+                                    <t t-foreach="state.data.upcomingMaintenance" t-as="row" t-key="row.id">
+                                        <tr class="o_pm_dash__click-row" t-on-click="() => this.openRequest(row.id)">
+                                            <td t-esc="row.date || '—'"/>
+                                            <td class="o_pm_dash__strong" t-esc="row.equipment"/>
+                                            <td t-esc="row.type"/>
+                                            <td>
+                                                <span t-attf-class="o_pm_dash__badge o_pm_dash__badge--{{ row.priorityVariant }}" t-esc="row.priority"/>
+                                            </td>
+                                            <td>
+                                                <span t-attf-class="o_pm_dash__badge o_pm_dash__badge--{{ row.statusVariant }}" t-esc="row.status"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="o_pm_dash__panel o_pm_dash__panel--table">
+                        <div class="o_pm_dash__panel-head">
+                            <div>
+                                <div class="o_pm_dash__panel-title">Recent Work Orders</div>
+                                <div class="o_pm_dash__panel-sub">Latest maintenance activity</div>
+                            </div>
+                        </div>
+                        <div class="o_pm_dash__table-wrap">
+                            <table class="o_pm_dash__table">
+                                <thead>
+                                    <tr>
+                                        <th>WO #</th>
+                                        <th>EQUIPMENT</th>
+                                        <th>TYPE</th>
+                                        <th>PRIORITY</th>
+                                        <th>STATUS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="!state.data.recentWorkOrders.length">
+                                        <tr><td colspan="5" class="o_pm_dash__empty-row">No work orders found.</td></tr>
+                                    </t>
+                                    <t t-foreach="state.data.recentWorkOrders" t-as="row" t-key="row.id">
+                                        <tr class="o_pm_dash__click-row" t-on-click="() => this.openRequest(row.id)">
+                                            <td class="o_pm_dash__strong" t-esc="row.number"/>
+                                            <td t-esc="row.equipment"/>
+                                            <td t-esc="row.type"/>
+                                            <td>
+                                                <span t-attf-class="o_pm_dash__badge o_pm_dash__badge--{{ row.priorityVariant }}" t-esc="row.priority"/>
+                                            </td>
+                                            <td>
+                                                <span t-attf-class="o_pm_dash__badge o_pm_dash__badge--{{ row.statusVariant }}" t-esc="row.status"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="o_pm_dash__grid o_pm_dash__grid--2">
+                    <div class="o_pm_dash__panel o_pm_dash__panel--table">
+                        <div class="o_pm_dash__panel-head">
+                            <div>
+                                <div class="o_pm_dash__panel-title">Equipment Requiring Attention</div>
+                                <div class="o_pm_dash__panel-sub">Highest open issues / life consumed</div>
+                            </div>
+                        </div>
+                        <div class="o_pm_dash__table-wrap">
+                            <table class="o_pm_dash__table">
+                                <thead>
+                                    <tr>
+                                        <th>EQUIPMENT</th>
+                                        <th>LOCATION</th>
+                                        <th>OPEN WO</th>
+                                        <th>LIFE %</th>
+                                        <th>STATUS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="!state.data.attentionEquipment.length">
+                                        <tr><td colspan="5" class="o_pm_dash__empty-row">No equipment currently requires attention.</td></tr>
+                                    </t>
+                                    <t t-foreach="state.data.attentionEquipment" t-as="row" t-key="row.id">
+                                        <tr class="o_pm_dash__click-row" t-on-click="() => this.openEquipment(row.id)">
+                                            <td class="o_pm_dash__strong" t-esc="row.name"/>
+                                            <td t-esc="row.location || '—'"/>
+                                            <td t-esc="row.openOrders"/>
+                                            <td t-esc="row.lifeConsumed + '%'"/>
+                                            <td>
+                                                <span t-attf-class="o_pm_dash__badge o_pm_dash__badge--{{ row.statusVariant }}" t-esc="row.status"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="o_pm_dash__panel">
+                        <div class="o_pm_dash__panel-head">
+                            <div>
+                                <div class="o_pm_dash__panel-title">Maintenance Analytics</div>
+                                <div class="o_pm_dash__panel-sub">Created vs completed (last 8 weeks)</div>
+                            </div>
+                        </div>
+                        <div class="o_pm_dash__chart-legend">
+                            <span><i class="o_pm_dash__swatch o_pm_dash__swatch--created"/> Created</span>
+                            <span><i class="o_pm_dash__swatch o_pm_dash__swatch--closed"/> Completed</span>
+                        </div>
+                        <div class="o_pm_dash__trend">
+                            <t t-foreach="state.data.weeklyTrend" t-as="week" t-key="week.label">
+                                <div class="o_pm_dash__trend-col">
+                                    <div class="o_pm_dash__trend-bars">
+                                        <div class="o_pm_dash__trend-bar o_pm_dash__trend-bar--created"
+                                             t-attf-style="height: {{ week.createdHeight }}%"
+                                             t-att-title="week.createdTitle"/>
+                                        <div class="o_pm_dash__trend-bar o_pm_dash__trend-bar--closed"
+                                             t-attf-style="height: {{ week.closedHeight }}%"
+                                             t-att-title="week.closedTitle"/>
+                                    </div>
+                                    <div class="o_pm_dash__trend-label" t-esc="week.label"/>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

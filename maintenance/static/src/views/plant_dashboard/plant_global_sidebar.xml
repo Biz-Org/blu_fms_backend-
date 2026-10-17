@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="maintenance.PlantGlobalSidebar">
+        <aside t-if="state.visible"
+               t-attf-class="o_pm_global_shell o_pm_app__sidebar {{ state.sidebarCollapsed ? 'o_pm_app--collapsed-side' : '' }}">
+            <div class="o_pm_app__collapse_row">
+                <Dropdown position="'bottom-start'" menuClass="'o_pm_apps_menu'">
+                    <button type="button" class="o_pm_app__apps_btn" title="Switch app">
+                        <i class="oi oi-apps"/>
+                        <span t-if="!state.sidebarCollapsed" class="o_pm_app__apps_label">Maintenance</span>
+                    </button>
+                    <t t-set-slot="content">
+                        <DropdownItem t-foreach="apps" t-as="app" t-key="app.id"
+                                      class="'o_pm_apps_menu__item'"
+                                      onSelected="() => this.openApp(app)">
+                            <img t-if="app.webIconData" class="o_pm_apps_menu__icon" t-att-src="app.webIconData" alt=""/>
+                            <span t-esc="app.name"/>
+                        </DropdownItem>
+                        <div role="separator" class="dropdown-divider"/>
+                        <DropdownItem class="'o_pm_apps_menu__item'" onSelected="() => this.logout()">
+                            <i class="fa fa-sign-out o_pm_apps_menu__logout"/>
+                            <span>Log out</span>
+                        </DropdownItem>
+                    </t>
+                </Dropdown>
+                <button type="button" class="o_pm_app__collapse" t-on-click="toggleSidebar" title="Toggle sidebar">
+                    <i t-attf-class="fa {{ state.sidebarCollapsed ? 'fa-angle-right' : 'fa-angle-left' }}"/>
+                </button>
+            </div>
+
+            <nav class="o_pm_app__nav">
+                <t t-foreach="sections" t-as="section" t-key="section.id">
+                    <div class="o_pm_app__section">
+                        <div t-if="!state.sidebarCollapsed and section.heading"
+                             class="o_pm_app__section-label"
+                             t-esc="section.heading"/>
+                        <t t-foreach="section.children" t-as="child" t-key="child.id">
+                            <button type="button"
+                                    t-attf-class="o_pm_app__nav-item {{ isChildActive(child.id) ? 'o_pm_app__nav-item--active' : '' }}"
+                                    t-on-click="() => this.onNavigate(child)"
+                                    t-att-title="child.label">
+                                <i t-attf-class="fa {{ child.icon || 'fa-circle-o' }} o_pm_app__nav-icon"/>
+                                <span t-if="!state.sidebarCollapsed" class="o_pm_app__nav-label" t-esc="child.label"/>
+                            </button>
+                        </t>
+                    </div>
+                </t>
+            </nav>
+        </aside>
+    </t>
+</templates>

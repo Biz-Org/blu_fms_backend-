@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="maintenance_rca_excel_import_wizard_form" model="ir.ui.view">
+        <field name="name">maintenance.rca.excel.import.wizard.form</field>
+        <field name="model">maintenance.rca.excel.import.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Import RCA Master Data from Excel">
+                <group>
+                    <group>
+                        <field name="request_id" readonly="context.get('default_request_id')"/>
+                        <field name="import_mode" widget="radio"/>
+                        <field name="import_equipment"/>
+                        <field name="replace_lines"/>
+                    </group>
+                    <group>
+                        <field name="filename" invisible="1"/>
+                        <field name="file" filename="filename"/>
+                    </group>
+                </group>
+                <div class="alert alert-info mb-3" role="status" invisible="import_log">
+                    <strong>Excel master workbook</strong> — download the template, fill
+                    <em>Equipment Master</em>, <em>RCA and MOM</em>, <em>5 Why Analysis</em>,
+                    and <em>Corrective Actions</em> sheets, then upload here.
+                </div>
+                <group invisible="not import_log">
+                    <field name="import_log" nolabel="1" readonly="1" widget="text"/>
+                </group>
+                <footer>
+                    <button string="Download template" name="action_download_template" type="object" class="btn-secondary"/>
+                    <button string="Import" name="action_import_excel" type="object" class="btn-primary"/>
+                    <button string="Close" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_maintenance_rca_excel_import_wizard" model="ir.actions.act_window">
+        <field name="name">Import RCA Master Data</field>
+        <field name="res_model">maintenance.rca.excel.import.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <record id="action_maintenance_rca_excel_template_download" model="ir.actions.server">
+        <field name="name">Download RCA Excel template</field>
+        <field name="model_id" ref="model_maintenance_rca_excel_import_wizard"/>
+        <field name="state">code</field>
+        <field name="code">
+wizard = env['maintenance.rca.excel.import.wizard'].create({})
+action = wizard.action_download_template()
+        </field>
+    </record>
+
+</odoo>

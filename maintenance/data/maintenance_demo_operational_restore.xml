@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- Safe restore: keep existing request IDs, refill missing spare lines + visibility -->
+        <function model="maintenance.request" name="ensure_demo_spare_planning_lines"/>
+        <function model="maintenance.request" name="restore_plant_demo_operational_screens"/>
+        <function model="maintenance.rul.tobm.dashboard" name="restore_maintenance_app"/>
+    </data>
+</odoo>

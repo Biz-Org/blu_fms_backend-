@@ -10,3 +10,4 @@
 # Do not add `odoo` here — use the Odoo image / your Odoo source checkout.
 
 python-dateutil>=2.8.2,<3
+openpyxl>=3.0.9

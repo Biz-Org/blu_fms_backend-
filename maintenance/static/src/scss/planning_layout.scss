@@ -1,0 +1,698 @@
+/* Maintenance Planning — exact mockup (title, chevron stepper, equip card, tabs, spares, footer) */
+
+/* Control panel is a sibling of the form in Odoo 18 — hide via :has() */
+body:has(.o_mpl_form) .o_action .o_control_panel,
+body:has(.o_mpl_form) .o_control_panel {
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+}
+
+.o_form_view.o_mpl_form {
+    .o_form_renderer,
+    .o_form_sheet_bg,
+    .o_form_sheet {
+        background: #f3f4f6 !important;
+        max-width: 100% !important;
+        box-shadow: none !important;
+        border: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Strip all Odoo chrome not in the mockup */
+    .o_control_panel,
+    .o_control_panel_main,
+    .o_control_panel_breadcrumbs,
+    .o_cp_action_menus,
+    .o_cp_buttons,
+    .o_form_statusbar,
+    .o_statusbar_status,
+    .o_statusbar_buttons,
+    .o_form_view_container > .o_control_panel,
+    .o-mail-Form-chatter,
+    .o_FormRenderer_chatterContainer,
+    .oe_chatter,
+    .o_attachment_preview,
+    .o_form_view .o_form_view_container .o_control_panel {
+        display: none !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        overflow: hidden !important;
+    }
+
+    header.o_form_statusbar,
+    .o_form_renderer > .o_form_statusbar,
+    .o_form_view_container header {
+        display: none !important;
+    }
+
+    .o_notebook {
+        margin: 0 !important;
+        border: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .o_notebook > .nav-tabs {
+        border-bottom: 1px solid #e5e7eb !important;
+        padding: 0 8px !important;
+        gap: 2px;
+        background: transparent !important;
+        margin: 0 !important;
+    }
+
+    .o_notebook > .nav-tabs .nav-item .nav-link {
+        border: 0 !important;
+        border-radius: 0 !important;
+        color: #6b7280 !important;
+        font-weight: 700 !important;
+        font-size: 0.875rem !important;
+        padding: 14px 16px !important;
+        background: transparent !important;
+
+        &.active {
+            color: #7c3aed !important;
+            box-shadow: inset 0 -2px 0 #7c3aed !important;
+        }
+    }
+
+    .o_notebook .tab-content,
+    .o_notebook .tab-pane {
+        padding: 4px 0 0 !important;
+        border: 0 !important;
+        background: transparent !important;
+    }
+
+    /* Kill leftover sheet separators / alert lines */
+    .alert,
+    .o_pm_planning_alert,
+    hr,
+    .o_horizontal_separator {
+        display: none !important;
+    }
+}
+
+.o_form_view .o_mpl_screen {
+    --mpl: #7c3aed;
+    --mpl-dark: #6d28d9;
+    --mpl-soft: #f3e8ff;
+    --mpl-border: #e5e7eb;
+    --mpl-text: #111827;
+    --mpl-muted: #6b7280;
+
+    background: #f3f4f6;
+    padding: 16px 20px 28px;
+    min-height: calc(100vh - 120px);
+}
+
+.o_form_view .o_mpl_page_head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.o_form_view .o_mpl_page_head_left {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.o_form_view .o_mpl_page_head_right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.o_form_view .o_mpl_title_icon {
+    color: var(--mpl);
+    font-size: 1.25rem;
+}
+
+.o_form_view .o_mpl_title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--mpl-text);
+    letter-spacing: -0.02em;
+}
+
+.o_form_view .o_mpl_chip,
+.o_form_view .o_field_widget.o_mpl_chip {
+    display: inline-flex !important;
+    align-items: center;
+    padding: 3px 10px !important;
+    border-radius: 6px !important;
+    background: #e5e7eb !important;
+    color: #374151 !important;
+    font-size: 0.8125rem !important;
+    font-weight: 700 !important;
+    border: 0 !important;
+    margin: 0 !important;
+    min-height: auto !important;
+}
+
+.o_form_view .o_mpl_status .badge {
+    border-radius: 999px !important;
+    font-weight: 700 !important;
+    background: #dbeafe !important;
+    color: #1d4ed8 !important;
+    border: 0 !important;
+    padding: 4px 12px !important;
+}
+
+.o_form_view .o_mpl_print_btn {
+    border: 1px solid #d1d5db !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    color: #374151 !important;
+    background: #fff !important;
+}
+
+/* Chevron stepper — mockup */
+.o_form_view .o_mpl_stepper {
+    display: flex;
+    align-items: stretch;
+    margin-bottom: 14px;
+    gap: 0;
+}
+
+.o_form_view .o_mpl_step {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 11px 18px 11px 24px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: #e5e7eb !important;
+    color: #6b7280 !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    line-height: 1.2;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%, 12px 50%);
+    margin-left: -4px;
+    pointer-events: auto !important;
+
+    &:nth-child(1) { z-index: 1; }
+    &:nth-child(2) { z-index: 2; }
+    &:nth-child(3) { z-index: 3; }
+    &:nth-child(4) { z-index: 4; }
+    &:nth-child(5) { z-index: 5; }
+    &:nth-child(6) { z-index: 6; }
+    &:nth-child(7) { z-index: 7; }
+
+    &:first-child {
+        margin-left: 0;
+        padding-left: 14px !important;
+        clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%);
+        border-radius: 8px 0 0 8px !important;
+    }
+
+    &:last-child {
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 12px 50%);
+        border-radius: 0 8px 8px 0 !important;
+        padding-right: 14px !important;
+    }
+
+    &:hover,
+    &:focus,
+    &:focus-visible {
+        z-index: 30 !important;
+        filter: brightness(0.97);
+    }
+}
+
+.o_form_view .o_mpl_step_done {
+    background: #ecfdf5 !important;
+    color: #047857 !important;
+    z-index: 2;
+
+    &::before {
+        content: "\f00c";
+        font-family: FontAwesome;
+        font-size: 0.65rem;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #10b981;
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+}
+
+.o_form_view .o_mpl_step_active {
+    background: var(--mpl) !important;
+    color: #fff !important;
+    font-weight: 700 !important;
+    z-index: 3;
+
+    &::before {
+        content: "2";
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #5b21b6;
+        color: #fff;
+        font-size: 0.6875rem;
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+}
+
+.o_form_view .o_mpl_step_todo::before {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #9ca3af;
+    color: #fff;
+    font-size: 0.6875rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.o_form_view .o_mpl_step_n3::before { content: "3"; }
+.o_form_view .o_mpl_step_n4::before { content: "4"; }
+.o_form_view .o_mpl_step_n5::before { content: "5"; }
+.o_form_view .o_mpl_step_n6::before { content: "6"; }
+.o_form_view .o_mpl_step_n7::before { content: "7"; }
+
+.o_form_view .o_mpl_sec_icon {
+    color: var(--mpl);
+    margin-right: 6px;
+}
+
+/* Equipment summary card */
+.o_form_view .o_mpl_equip_card {
+    display: grid;
+    grid-template-columns: 140px 1.4fr 1fr 1.1fr;
+    gap: 16px 20px;
+    align-items: start;
+    background: #fff;
+    border: 1px solid var(--mpl-border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04);
+}
+
+.o_form_view .o_mpl_equip_media {
+    border-radius: 10px;
+    overflow: hidden;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.o_form_view .o_mpl_equip_img img,
+.o_form_view .o_mpl_equip_img .img-fluid {
+    width: 100%;
+    max-height: 100px;
+    object-fit: cover;
+}
+
+.o_form_view .o_mpl_equip_name {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--mpl-text);
+    line-height: 1.3;
+    margin-bottom: 2px;
+}
+
+.o_form_view .o_mpl_equip_code {
+    font-size: 0.8125rem;
+    color: var(--mpl-muted);
+    margin-bottom: 8px;
+}
+
+.o_form_view .o_mpl_tag_row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+
+    .badge {
+        border-radius: 999px !important;
+        font-weight: 700 !important;
+        font-size: 0.6875rem !important;
+        padding: 3px 10px !important;
+    }
+}
+
+.o_form_view .o_mpl_tag_cat .badge {
+    background: #e5e7eb !important;
+    color: #374151 !important;
+}
+
+.o_form_view .o_mpl_tag_type .badge {
+    background: var(--mpl-soft) !important;
+    color: var(--mpl-dark) !important;
+}
+
+.o_form_view .o_mpl_meta_line,
+.o_form_view .o_mpl_plan_inline {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 0.8125rem;
+    color: #374151;
+    margin-bottom: 8px;
+    font-weight: 600;
+
+    .fa {
+        color: var(--mpl);
+        width: 14px;
+        text-align: center;
+    }
+}
+
+.o_form_view .o_mpl_meta_lbl {
+    color: var(--mpl-muted);
+    font-weight: 600;
+}
+
+.o_form_view .o_mpl_plan_block {
+    margin-bottom: 12px;
+
+    &:last-child { margin-bottom: 0; }
+}
+
+.o_form_view .o_mpl_plan_lbl {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--mpl-muted);
+    margin-bottom: 4px;
+}
+
+/* Body card + plan details */
+.o_form_view .o_mpl_body_card {
+    background: #fff;
+    border: 1px solid var(--mpl-border);
+    border-radius: 12px;
+    padding: 0 16px 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04);
+}
+
+.o_form_view .o_mpl_section_title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--mpl-text);
+    margin: 14px 0 14px;
+}
+
+.o_form_view .o_mpl_plan_grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px 28px;
+    margin-bottom: 8px;
+}
+
+.o_form_view .o_mpl_field {
+    margin-bottom: 14px;
+}
+
+.o_form_view .o_mpl_field_lbl,
+.o_form_view .o_mpl_field_lbl_block {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--mpl-muted);
+    margin-bottom: 6px;
+}
+
+.o_form_view .o_mpl_field .o_input,
+.o_form_view .o_mpl_field select,
+.o_form_view .o_mpl_field .o_field_widget {
+    width: 100%;
+    border-radius: 8px !important;
+}
+
+.o_form_view .o_mpl_field textarea,
+.o_form_view .o_mpl_field .o_field_text textarea {
+    min-height: 80px !important;
+    border-radius: 8px !important;
+    border: 1px solid #e5e7eb !important;
+}
+
+.o_form_view .o_mpl_check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--mpl-text);
+}
+
+.o_form_view .o_mpl_field_toggle {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.o_form_view .o_mpl_toggle_wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.o_form_view .o_mpl_toggle_no,
+.o_form_view .o_mpl_toggle_yes {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--mpl-muted);
+}
+
+/* Spares */
+.o_form_view .o_mpl_spares_block {
+    margin-top: 16px;
+    padding-top: 4px;
+    border-top: 0 !important;
+}
+
+.o_form_view .o_mpl_spares_head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+
+    .o_mpl_section_title {
+        margin: 0;
+    }
+}
+
+.o_form_view .o_mpl_spares_actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.o_form_view .o_mpl_outline_btn,
+.o_form_view .btn-outline-primary.o_mpl_outline_btn {
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    color: var(--mpl) !important;
+    border-color: #c4b5fd !important;
+    background: #fff !important;
+
+    &:hover {
+        background: var(--mpl-soft) !important;
+        border-color: var(--mpl) !important;
+        color: var(--mpl-dark) !important;
+    }
+}
+
+.o_form_view .o_mpl_spares_list .o_list_renderer {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.o_form_view .o_mpl_spares_list .o_list_table thead {
+    background: #f9fafb;
+}
+
+.o_form_view .o_mpl_spares_list .o_list_table thead th {
+    font-size: 0.6875rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #6b7280 !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    padding: 10px 10px !important;
+    white-space: nowrap;
+}
+
+.o_form_view .o_mpl_spares_list .o_list_table tbody td {
+    vertical-align: middle !important;
+    padding: 11px 10px !important;
+}
+
+.o_form_view .o_mpl_spares_list .o_list_table tfoot td {
+    background: #f9fafb !important;
+    border-top: 1px solid #e5e7eb !important;
+    font-weight: 800;
+    padding: 12px 10px !important;
+    color: var(--mpl-text);
+}
+
+.o_form_view .o_mpl_spares_list .badge {
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-weight: 700;
+    font-size: 0.75rem;
+}
+
+.o_form_view .o_mpl_spare_tab_hint {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #6b7280;
+    margin: 8px 0 0;
+}
+
+/* Budget */
+.o_form_view .o_mpl_budget_card {
+    max-width: 420px;
+    padding: 12px 0;
+}
+
+.o_form_view .o_mpl_budget_row,
+.o_form_view .o_mpl_budget_total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.o_form_view .o_mpl_budget_total {
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+    font-weight: 800;
+}
+
+/* Footer */
+.o_form_view .o_mpl_footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-top: 4px;
+}
+
+.o_form_view .o_mpl_footer_right {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.o_form_view .o_mpl_btn {
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    padding: 10px 18px !important;
+}
+
+.o_form_view .o_mpl_btn_cancel {
+    border: 1px solid #d1d5db !important;
+    background: #fff !important;
+    color: #374151 !important;
+}
+
+.o_form_view .o_mpl_btn_save {
+    color: var(--mpl) !important;
+    border-color: #c4b5fd !important;
+    background: #fff !important;
+}
+
+.o_form_view .o_mpl_btn_primary,
+.o_form_view .btn-primary.o_mpl_btn {
+    background: var(--mpl) !important;
+    border-color: var(--mpl) !important;
+    color: #fff !important;
+
+    &:hover {
+        background: var(--mpl-dark) !important;
+        border-color: var(--mpl-dark) !important;
+    }
+}
+
+@media (max-width: 1200px) {
+    .o_form_view .o_mpl_equip_card {
+        grid-template-columns: 120px 1fr 1fr;
+    }
+
+    .o_form_view .o_mpl_equip_request {
+        grid-column: 2 / -1;
+    }
+
+    .o_form_view .o_mpl_plan_grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 900px) {
+    .o_form_view .o_mpl_stepper {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .o_form_view .o_mpl_step,
+    .o_form_view .o_mpl_step:first-child,
+    .o_form_view .o_mpl_step:last-child {
+        clip-path: none;
+        margin-left: 0;
+        border-radius: 8px !important;
+        flex: 1 1 calc(50% - 4px);
+        justify-content: flex-start;
+        padding: 10px 12px !important;
+    }
+
+    .o_form_view .o_mpl_equip_card,
+    .o_form_view .o_mpl_plan_grid {
+        grid-template-columns: 1fr;
+    }
+
+    .o_form_view .o_mpl_footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

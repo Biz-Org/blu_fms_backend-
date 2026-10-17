@@ -1,0 +1,162 @@
+/* Maintenance Requests — intake dossier layout */
+
+body:has(.o_pm_request_form) .o_action .o_control_panel,
+body:has(.o_pm_request_form) .o_control_panel {
+  display: none !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  overflow: hidden !important;
+}
+
+.o_form_view .o_pm_request_intake {
+  --pm-brand: #7c3aed;
+  --pm-border: #e5e7eb;
+  background: #f8fafc;
+  padding: 16px 20px 8px;
+  min-height: auto;
+
+  .o_pm_req_hero {
+    display: grid;
+    grid-template-columns: 1fr 180px;
+    gap: 18px;
+    align-items: start;
+  }
+
+  .o_pm_req_hero_top {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .o_pm_req_title h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #111827;
+  }
+
+  .o_pm_req_cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .o_pm_req_hero_media {
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .o_pm_req_equip_img img {
+    width: 100%;
+    max-height: 140px;
+    object-fit: cover;
+  }
+
+  .o_pm_req_grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  @media (max-width: 1100px) {
+    .o_pm_req_hero,
+    .o_pm_req_grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+.o_kanban_view.o_pm_request_kanban,
+.o_kanban_view .o_pm_ticket_card {
+  .o_pm_ticket_card_top {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  .o_pm_ticket_title {
+    line-height: 1.25;
+    margin-bottom: 4px;
+  }
+
+  .o_pm_ticket_eq {
+    display: block;
+    font-size: 0.8125rem;
+    color: #374151;
+    margin-bottom: 2px;
+  }
+}
+
+.o_form_view .o_pm_nogo_screen {
+  padding: 16px 20px 28px;
+  background: #f8fafc;
+  min-height: calc(100vh - 140px);
+
+  .o_pm_nogo_banner {
+    border-left: 5px solid #dc2626;
+    background: linear-gradient(90deg, #fef2f2, #fff);
+  }
+
+  .o_pm_nogo_banner_go {
+    border-left-color: #059669;
+    background: linear-gradient(90deg, #ecfdf5, #fff);
+  }
+
+  .o_pm_nogo_banner_title {
+    font-size: 1.75rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    color: #b91c1c;
+    margin-bottom: 4px;
+  }
+
+  .o_pm_nogo_banner_title_go {
+    color: #047857;
+  }
+
+  .o_pm_nogo_grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  @media (max-width: 900px) {
+    .o_pm_nogo_grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+.o_form_view .o_pm_timeline_screen {
+  padding: 16px 20px 28px;
+  background: #f8fafc;
+  min-height: calc(100vh - 140px);
+
+  .o_pm_timeline_context_grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .o_pm_timeline_html_card .o_field_html {
+    min-height: 280px;
+  }
+
+  @media (max-width: 900px) {
+    .o_pm_timeline_context_grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+}

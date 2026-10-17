@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- Master data only: no equipment or requests, so a fresh database starts empty. -->
+        <record forcecreate="0" id="maintenance_team_workflow_examples" model="maintenance.team">
+            <field name="name">Plant Maintenance Workflow Team</field>
+            <field name="color">4</field>
+            <field name="member_ids" eval="[(4, ref('base.user_admin'))]"/>
+        </record>
+
+        <record forcecreate="0" id="equipment_category_fleet_vehicles" model="maintenance.equipment.category">
+            <field name="name">Fleet - Vehicles</field>
+            <field name="color">2</field>
+            <field name="note"><![CDATA[
+                <p>Plant fleet category for trucks, vans, flatbeds, forklifts, and trailers.</p>
+            ]]></field>
+            <field name="corrective_responsible_user_id" ref="base.user_admin"/>
+            <field name="preventive_responsible_user_id" ref="base.user_admin"/>
+            <field name="predictive_responsible_user_id" ref="base.user_admin"/>
+            <field name="technician_user_id" ref="base.user_admin"/>
+        </record>
+    </data>
+</odoo>

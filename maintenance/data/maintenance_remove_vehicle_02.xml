@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <function model="maintenance.demo.cleanup" name="remove_vehicle_02_van_permanently"/>
+    </data>
+</odoo>
