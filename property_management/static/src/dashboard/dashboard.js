@@ -7,8 +7,6 @@ import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_d
 
 const PAGE_SIZE = 10;
 
-const OCC_TREND_OFFSETS = [-2.8, -1.9, -1.4, -0.8, -1.2, 0];
-
 function emptyOccupancyFilters() {
     return {
         property: "all",
@@ -27,6 +25,21 @@ function emptyDocumentUpload() {
         filename: "",
         data: "",
         size: 0,
+    };
+}
+
+function emptyOwnershipEdit() {
+    return {
+        record_id: false,
+        unit_id: false,
+        unit_name: "",
+        owner_name: "",
+        owner_type: "primary",
+        share: 100,
+        effective_date: "",
+        status: "active",
+        cost: 0,
+        deed: "",
     };
 }
 
@@ -57,6 +70,7 @@ function emptyPropertyForm() {
         planned_floors: 0,
         planned_units: 0,
         category: "class_a",
+        id: null,
         documents: {
             property_reg: null,
             ownership: null,
@@ -214,12 +228,14 @@ function emptyBuildingDetail() {
 
 function emptyUnitForm() {
     return {
+        id: null,
         name: "",
         property_id: "",
         building_id: "",
         floor_id: "",
         unit_type: "2 BHK",
         status: "available",
+        area_sqft: 0,
     };
 }
 
@@ -236,6 +252,7 @@ function emptyFloorForm() {
 
 function emptyBuildingForm() {
     return {
+        id: null,
         name: "",
         code: "",
         property_id: "",
@@ -292,9 +309,9 @@ export class PropertyDashboard extends Component {
 
     setup() {
         this.orm = useService("orm");
-        this.action = useService("action");
         this.notification = useService("notification");
         this.dialog = useService("dialog");
+        this.user = useService("user");
         this.navItems = NAV;
         this.reportItems = REPORTS;
         this.detailTabs = DETAIL_TABS;
@@ -373,6 +390,12 @@ export class PropertyDashboard extends Component {
             showUnitAction: false,
             unitAction: emptyUnitAction(),
             occupancyUnits: [],
+            reportProperties: [],
+            reportStatus: {},
+            reportOccupancyUnits: [],
+            reportOwnership: [],
+            reportOwnershipKpis: {},
+            loadingReport: false,
             occupancyProperties: [],
             occupancyBuildings: [],
             occupancyFloors: [],
@@ -403,6 +426,8 @@ export class PropertyDashboard extends Component {
             showOwnershipFilters: false,
             showOwnershipTransfer: false,
             ownershipTransfer: emptyOwnershipTransfer(),
+            showOwnershipEdit: false,
+            ownershipEdit: emptyOwnershipEdit(),
             loadingOwnership: false,
             tenancyRecords: [],
             tenancyProperties: [],
@@ -422,6 +447,9 @@ export class PropertyDashboard extends Component {
             tenPropertyFilter: "all",
             tenPage: 1,
             selectedTenancyId: null,
+            showTenancyNote: false,
+            tenancyNote: "",
+            showHelp: false,
             showTenancyFilters: false,
             loadingTenancy: false,
             documentRecords: [],
@@ -436,6 +464,13 @@ export class PropertyDashboard extends Component {
             loadingDocuments: false,
             showDocumentUpload: false,
             documentUpload: emptyDocumentUpload(),
+            showDocumentVersions: false,
+            documentVersions: [],
+            documentVersionName: "",
+            showDocumentDelete: false,
+            documentPendingDelete: null,
+            showDocumentViewer: false,
+            documentViewer: { name: "", url: "", kind: "" },
             statusRecords: [],
             statusProperties: [],
             statusKpis: { available: 0, occupied: 0, unoccupied: 0 },
@@ -832,6 +867,51 @@ export class PropertyDashboard extends Component {
         });
     }
 
+    occupancyMonthWindow() {
+        const now = new Date();
+        const months = [];
+        for (let offset = 5; offset >= 0; offset--) {
+            const date = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+            months.push({
+                label: date.toLocaleString("en-US", { month: "short" }),
+                year: date.getFullYear(),
+                month: date.getMonth(),
+                current: offset === 0,
+            });
+        }
+        return months;
+    }
+
+    unitOccupiedInMonth(unit, year, month, isCurrent) {
+        if (isCurrent) {
+            return unit.directory_status === "occupied";
+        }
+        const ranges = unit.tenancies || [];
+        if (!ranges.length) {
+            return unit.directory_status === "occupied";
+        }
+        const start = new Date(year, month, 1);
+        const end = new Date(year, month + 1, 0, 23, 59, 59);
+        return ranges.some((range) => {
+            if (!range.start) {
+                return false;
+            }
+            const rangeStart = new Date(`${range.start}T00:00:00`);
+            const rangeEnd = range.end ? new Date(`${range.end}T23:59:59`) : new Date(8640000000000000);
+            return rangeStart <= end && rangeEnd >= start;
+        });
+    }
+
+    occupancySeries() {
+        const units = this.occupancyScopedUnits;
+        const total = units.length;
+        return this.occupancyMonthWindow().map((entry) => {
+            const occupied = units.filter((unit) => this.unitOccupiedInMonth(unit, entry.year, entry.month, entry.current)).length;
+            const pct = total ? Math.round((occupied / total) * 1000) / 10 : 0;
+            return { ...entry, pct };
+        });
+    }
+
     get occupancyKpis() {
         const units = this.occupancyScopedUnits;
         const total = units.length;
@@ -839,10 +919,10 @@ export class PropertyDashboard extends Component {
         const vacant = units.filter((row) => row.directory_status === "vacant").length;
         const reserved = units.filter((row) => row.directory_status === "reserved").length;
         const maintenance = units.filter((row) => row.directory_status === "maintenance").length;
+        const series = this.occupancySeries();
         const pct = total ? Math.round((occupied / total) * 1000) / 10 : 0;
-        const last = OCC_TREND_OFFSETS[OCC_TREND_OFFSETS.length - 1] || 0;
-        const prev = OCC_TREND_OFFSETS[OCC_TREND_OFFSETS.length - 2] || 0;
-        const delta = Math.round((last - prev) * 10) / 10;
+        const previous = series.length > 1 ? series[series.length - 2].pct : pct;
+        const delta = Math.round((pct - previous) * 10) / 10;
         const sign = delta > 0 ? "+" : "";
         return {
             total,
@@ -909,15 +989,10 @@ export class PropertyDashboard extends Component {
     }
 
     get occupancyChart() {
-        const months = this.state.occupancyMonths.length
-            ? this.state.occupancyMonths
-            : ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar"];
+        const series = this.occupancySeries();
+        const months = series.map((entry) => entry.label);
         const target = Number(this.state.occupancyTarget || 95);
-        const pct = this.occupancyKpis.occupancy_pct;
-        const actuals = months.map((_, index) => {
-            const raw = pct + (OCC_TREND_OFFSETS[index] ?? 0);
-            return Math.max(0, Math.min(100, Math.round(raw * 10) / 10));
-        });
+        const actuals = series.map((entry) => entry.pct);
         const width = 640;
         const height = 220;
         const padL = 42;
@@ -1282,6 +1357,15 @@ export class PropertyDashboard extends Component {
         return rows.filter((row) => String(row.building_id) === String(buildingId));
     }
 
+    get unitTypeOptions() {
+        const values = ["Studio", "2 BHK", "3 BHK", "Office", ...(this.state.unitTypes || [])];
+        const current = this.state.unitForm.unit_type;
+        if (current && current !== "—" && !values.includes(current)) {
+            values.push(current);
+        }
+        return [...new Set(values.filter(Boolean))];
+    }
+
     get donutStyle() {
         const status = this.state.data.status || {};
         const total =
@@ -1385,9 +1469,44 @@ export class PropertyDashboard extends Component {
             this.openStatusBoard();
             return;
         }
-        if (item.xmlId) {
-            this.action.doAction(item.xmlId);
+        if (item.id === "property_reports" || item.id === "occupancy_reports" || item.id === "ownership_reports") {
+            this.openReport(item.id);
+            return;
         }
+        this.openSettings();
+    }
+
+    get userName() {
+        return this.user?.name || "User";
+    }
+
+    get userInitials() {
+        const parts = this.userName.split(/\s+/).filter(Boolean);
+        return (parts.slice(0, 2).map((part) => part[0]).join("") || "U").toUpperCase();
+    }
+
+    openSettings() {
+        this.state.menuId = null;
+        this.state.page = "properties";
+        this.state.showHierarchyFilter = false;
+        this.state.detailMenu = false;
+        this.state.showBuildingForm = false;
+        this.state.showFloorForm = false;
+        this.state.showUnitForm = false;
+    }
+
+    saveDownload(payload) {
+        const binary = atob(payload.content || "");
+        const bytes = new Uint8Array(binary.length);
+        for (let index = 0; index < binary.length; index++) {
+            bytes[index] = binary.charCodeAt(index);
+        }
+        const blob = new Blob([bytes], { type: payload.mimetype || "application/pdf" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = payload.filename || "download.pdf";
+        link.click();
+        URL.revokeObjectURL(link.href);
     }
 
     onSearchInput(event) {
@@ -1547,15 +1666,26 @@ export class PropertyDashboard extends Component {
         this.openBuildingDetail(id);
     }
 
-    openBuildingForm(id) {
+    async openBuildingForm(id) {
         this.state.menuId = null;
-        this.action.doAction({
-            type: "ir.actions.act_window",
-            res_model: "property.building",
-            res_id: id,
-            views: [[false, "form"]],
-            target: "current",
-        });
+        try {
+            if (!this.state.buildingProperties.length) {
+                const list = await this.orm.call("property.building", "get_buildings_data", []);
+                this.state.buildingProperties = list.properties || [];
+            }
+            const data = await this.orm.call("property.building", "get_form_values", [id]);
+            this.state.buildingForm = {
+                ...emptyBuildingForm(),
+                ...data,
+                property_id: String(data.property_id || ""),
+            };
+            this.state.showBuildingForm = true;
+        } catch (error) {
+            this.notification.add(error?.data?.message || error?.message || "Could not open the building.", {
+                title: "Edit Building",
+                type: "danger",
+            });
+        }
     }
 
     async openBuildingDetail(id) {
@@ -1656,22 +1786,33 @@ export class PropertyDashboard extends Component {
             this.notification.add("Please select a property.", { title: "Add Building", type: "warning" });
             return;
         }
+        const editing = Boolean(form.id);
         this.state.saving = true;
         try {
-            await this.orm.call("property.building", "create_from_dashboard", [{
+            const payload = {
                 name: form.name,
                 code: form.code,
                 property_id: form.property_id,
                 usage: form.usage,
                 floors: form.floors,
-            }]);
-            this.notification.add("Building created.", { type: "success" });
+            };
+            if (editing) {
+                await this.orm.call("property.building", "update_from_dashboard", [{ ...payload, id: form.id }]);
+                this.notification.add("Building updated.", { type: "success" });
+            } else {
+                await this.orm.call("property.building", "create_from_dashboard", [payload]);
+                this.notification.add("Building created.", { type: "success" });
+            }
             this.state.showBuildingForm = false;
             this.state.buildingForm = emptyBuildingForm();
-            await this.openBuildings();
+            if (this.state.page === "building-detail" && editing) {
+                await this.openBuildingDetail(form.id);
+            } else {
+                await this.openBuildings();
+            }
         } catch (error) {
-            this.notification.add(error?.data?.message || error?.message || "Could not create the building.", {
-                title: "Add Building",
+            this.notification.add(error?.data?.message || error?.message || (editing ? "Could not update the building." : "Could not create the building."), {
+                title: editing ? "Edit Building" : "Add Building",
                 type: "danger",
             });
         } finally {
@@ -1698,7 +1839,7 @@ export class PropertyDashboard extends Component {
         }[this.state.floorForm.mode] || "Floor";
     }
 
-    async openFloors(buildingId) {
+    async openFloors(buildingId, expandFloorId) {
         this.state.page = "floors";
         this.state.showBuildingForm = false;
         this.state.showFloorForm = false;
@@ -1717,6 +1858,9 @@ export class PropertyDashboard extends Component {
                 if (previous[floor.id]) {
                     expanded[floor.id] = true;
                 }
+            }
+            if (expandFloorId) {
+                expanded[expandFloorId] = true;
             }
             if (!Object.keys(expanded).length && floors[0]) {
                 expanded[floors[0].id] = true;
@@ -2105,17 +2249,64 @@ export class PropertyDashboard extends Component {
 
     openOwnershipEdit() {
         const selected = this.selectedOwnership;
-        if (selected?.record_id) {
-            this.action.doAction({
-                type: "ir.actions.act_window",
-                res_model: "property.owner",
-                res_id: selected.record_id,
-                views: [[false, "form"]],
-                target: "current",
-            });
+        if (!selected) {
+            this.notification.add("Select an ownership record first.", { title: "Edit Ownership", type: "warning" });
             return;
         }
-        this.openOwnershipTransfer(selected);
+        this.state.ownershipEdit = {
+            record_id: selected.record_id || false,
+            unit_id: selected.unit_id,
+            unit_name: selected.unit_name || "",
+            owner_name: selected.owner_name && selected.owner_name !== "Unassigned" ? selected.owner_name : "",
+            owner_type: selected.owner_type || "primary",
+            share: selected.share || 0,
+            effective_date: selected.effective || "",
+            status: selected.status || "active",
+            cost: selected.cost || 0,
+            deed: selected.deed && selected.deed !== "—" ? selected.deed : "",
+        };
+        this.state.showOwnershipEdit = true;
+    }
+
+    cancelOwnershipEdit() {
+        this.state.showOwnershipEdit = false;
+        this.state.ownershipEdit = emptyOwnershipEdit();
+    }
+
+    async submitOwnershipEdit() {
+        const form = this.state.ownershipEdit;
+        if (!(form.owner_name || "").trim()) {
+            this.notification.add("Owner name is required.", { title: "Edit Ownership", type: "warning" });
+            return;
+        }
+        this.state.saving = true;
+        try {
+            const result = await this.orm.call("property.owner", "update_from_dashboard", [{
+                record_id: form.record_id,
+                unit_id: form.unit_id,
+                owner_name: form.owner_name,
+                owner_type: form.owner_type,
+                share: form.share,
+                effective_date: form.effective_date || false,
+                status: form.status,
+                cost: form.cost,
+                deed: form.deed,
+            }]);
+            this.notification.add("Ownership updated.", { type: "success" });
+            this.state.showOwnershipEdit = false;
+            this.state.ownershipEdit = emptyOwnershipEdit();
+            await this.openOwnership();
+            if (result && result.selected_id) {
+                this.state.selectedOwnershipId = result.selected_id;
+            }
+        } catch (error) {
+            this.notification.add(error?.data?.message || error?.message || "Could not update ownership.", {
+                title: "Edit Ownership",
+                type: "danger",
+            });
+        } finally {
+            this.state.saving = false;
+        }
     }
 
     async openTenancy() {
@@ -2201,31 +2392,68 @@ export class PropertyDashboard extends Component {
         }[status] || "is-op-active";
     }
 
-    openTenancyLease() {
+    async openTenancyLease() {
         const selected = this.selectedTenancy;
-        if (selected?.record_id) {
-            this.action.doAction({
-                type: "ir.actions.act_window",
-                res_model: "property.tenancy",
-                res_id: selected.record_id,
-                views: [[false, "form"]],
-                target: "current",
-            });
+        if (!selected) {
             return;
         }
-        if (selected?.unit_id) {
-            this.openUnitDetail(selected.unit_id);
+        try {
+            const payload = await this.orm.call("property.tenancy", "lease_file", [
+                selected.record_id || false,
+                selected.unit_id || false,
+                selected.tenant_name || false,
+                selected.move_in || false,
+                selected.move_out || false,
+            ]);
+            this.saveDownload(payload);
+        } catch (error) {
+            this.notification.add(error?.data?.message || error?.message || "Could not open the lease.", {
+                title: "View Lease",
+                type: "danger",
+            });
         }
     }
 
     openTenancyMessage() {
+        if (!this.selectedTenancy) {
+            return;
+        }
+        this.state.tenancyNote = "";
+        this.state.showTenancyNote = true;
+    }
+
+    cancelTenancyNote() {
+        this.state.showTenancyNote = false;
+        this.state.tenancyNote = "";
+    }
+
+    async sendTenancyNote() {
         const selected = this.selectedTenancy;
-        this.notification.add(`Message ${selected?.tenant_name || "tenant"} from the unit profile.`, {
-            title: "Tenant History",
-            type: "info",
-        });
-        if (selected?.unit_id) {
-            this.openUnitDetail(selected.unit_id);
+        const note = (this.state.tenancyNote || "").trim();
+        if (!selected || !note) {
+            this.notification.add("Enter a message.", { title: "Tenant History", type: "warning" });
+            return;
+        }
+        this.state.saving = true;
+        try {
+            await this.orm.call("property.tenancy", "log_message", [
+                selected.record_id || false,
+                selected.unit_id || false,
+                note,
+            ]);
+            const selectedId = selected.id;
+            this.state.showTenancyNote = false;
+            this.state.tenancyNote = "";
+            this.notification.add("Message saved on the tenancy.", { type: "success" });
+            await this.openTenancy();
+            this.state.selectedTenancyId = selectedId;
+        } catch (error) {
+            this.notification.add(error?.data?.message || error?.message || "Could not save the message.", {
+                title: "Tenant History",
+                type: "danger",
+            });
+        } finally {
+            this.state.saving = false;
         }
     }
 
@@ -2374,67 +2602,248 @@ export class PropertyDashboard extends Component {
         }
     }
 
-    downloadDocument(row) {
-        if (row?.record_id && row.has_file) {
-            const filename = encodeURIComponent(row.filename || row.name || "document");
-            window.open(`/web/content?model=property.document&field=attachment&id=${row.record_id}&filename=${filename}&download=true`, "_blank");
-            return;
+    fileBytes(data) {
+        const binary = atob(data || "");
+        const bytes = new Uint8Array(binary.length);
+        for (let index = 0; index < binary.length; index++) {
+            bytes[index] = binary.charCodeAt(index);
         }
-        this.notification.add("This sample file is not stored as an attachment yet.", {
-            title: "Documents",
-            type: "info",
-        });
+        return bytes;
     }
 
-    openDocumentViewer(row) {
+    previewType(filename) {
+        const name = (filename || "").toLowerCase();
+        if (name.endsWith(".pdf")) {
+            return { kind: "pdf", type: "application/pdf" };
+        }
+        if (name.endsWith(".png")) {
+            return { kind: "image", type: "image/png" };
+        }
+        if (name.endsWith(".jpg") || name.endsWith(".jpeg")) {
+            return { kind: "image", type: "image/jpeg" };
+        }
+        if (name.endsWith(".gif")) {
+            return { kind: "image", type: "image/gif" };
+        }
+        if (name.endsWith(".webp")) {
+            return { kind: "image", type: "image/webp" };
+        }
+        return { kind: "other", type: "application/octet-stream" };
+    }
+
+    closeDocumentViewer() {
+        if (this.state.documentViewer?.url) {
+            URL.revokeObjectURL(this.state.documentViewer.url);
+        }
+        this.state.showDocumentViewer = false;
+        this.state.documentViewer = { name: "", url: "", kind: "" };
+    }
+
+    async openDocumentViewer(row) {
         const target = row || this.selectedDocument;
-        if (target?.record_id && target.has_file) {
-            this.downloadDocument(target);
-            return;
-        }
-        this.notification.add("Preview generation is limited for sample documents.", {
-            title: "Documents",
-            type: "info",
-        });
-    }
-
-    showDocumentVersions(row) {
-        const versions = (row?.versions || [row?.version]).filter(Boolean).join(", ");
-        this.notification.add(`${row?.name || "Document"} versions: ${versions || "v1.0"}`, {
-            title: "Version History",
-            type: "info",
-        });
-        this.state.menuId = null;
-    }
-
-    deleteDocument(row) {
-        this.state.menuId = null;
-        if (!row?.record_id) {
-            this.notification.add("Sample documents cannot be deleted.", {
+        if (!target?.record_id) {
+            this.notification.add("This document has no stored file to open.", {
                 title: "Documents",
-                type: "info",
+                type: "warning",
             });
             return;
         }
-        this.dialog.add(ConfirmationDialog, {
-            title: "Delete Document",
-            body: `Delete ${row.name}? This cannot be undone.`,
-            confirm: async () => {
-                try {
-                    await this.orm.call("property.document", "unlink_document", [row.record_id]);
-                    if (this.state.selectedDocumentId === row.id) {
-                        this.state.selectedDocumentId = null;
-                    }
-                    await this.openDocuments();
-                    this.notification.add("Document deleted.", { title: "Documents", type: "success" });
-                } catch (error) {
-                    this.notification.add(error?.data?.message || error?.message || "Could not delete the document.", {
-                        title: "Documents",
-                        type: "danger",
-                    });
-                }
-            },
-        });
+        try {
+            const file = await this.orm.call("property.document", "get_file", [target.record_id]);
+            const filename = file.filename || target.filename || target.name || "document";
+            const info = this.previewType(filename);
+            this.closeDocumentViewer();
+            const url = info.kind === "other"
+                ? ""
+                : URL.createObjectURL(new Blob([this.fileBytes(file.data)], { type: info.type }));
+            this.state.documentViewer = { name: filename, url, kind: info.kind };
+            this.state.showDocumentViewer = true;
+        } catch (error) {
+            this.notification.add(error?.data?.message || error?.message || "Could not open the file.", {
+                title: "Documents",
+                type: "danger",
+            });
+        }
+    }
+
+    async downloadDocument(row) {
+        const target = row || this.selectedDocument;
+        if (!target?.record_id) {
+            this.notification.add("This document has no stored file to download.", {
+                title: "Documents",
+                type: "warning",
+            });
+            return;
+        }
+        try {
+            const file = await this.orm.call("property.document", "get_file", [target.record_id]);
+            const blob = new Blob([this.fileBytes(file.data)]);
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = file.filename || target.filename || target.name || "document";
+            link.click();
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            this.notification.add(error?.data?.message || error?.message || "Could not download the file.", {
+                title: "Documents",
+                type: "danger",
+            });
+        }
+    }
+
+    async showDocumentVersions(row) {
+        const target = row || this.selectedDocument;
+        if (!target) {
+            return;
+        }
+        this.state.menuId = null;
+        this.state.documentVersionName = target.name || "Document";
+        if (target.record_id) {
+            try {
+                this.state.documentVersions = await this.orm.call("property.document", "get_versions", [target.record_id]);
+            } catch (error) {
+                this.notification.add(error?.data?.message || error?.message || "Could not load version history.", {
+                    title: "Version History",
+                    type: "danger",
+                });
+                return;
+            }
+        } else {
+            const labels = (target.versions || [target.version || "v1.0"]).filter(Boolean);
+            this.state.documentVersions = labels.map((version) => ({
+                version,
+                filename: target.filename || target.name,
+                size_label: target.size_label,
+                uploader: target.uploader,
+                date_label: target.date_label,
+                current: version === (target.version || labels[0]),
+            }));
+        }
+        this.state.showDocumentVersions = true;
+    }
+
+    closeDocumentVersions() {
+        this.state.showDocumentVersions = false;
+        this.state.documentVersions = [];
+    }
+
+    deleteDocument(row) {
+        const target = row || this.selectedDocument;
+        if (!target) {
+            return;
+        }
+        this.state.menuId = null;
+        this.state.documentPendingDelete = target;
+        this.state.showDocumentDelete = true;
+    }
+
+    cancelDocumentDelete() {
+        this.state.showDocumentDelete = false;
+        this.state.documentPendingDelete = null;
+    }
+
+    async confirmDocumentDelete() {
+        const row = this.state.documentPendingDelete;
+        if (!row) {
+            this.cancelDocumentDelete();
+            return;
+        }
+        this.state.saving = true;
+        try {
+            if (row.record_id) {
+                await this.orm.call("property.document", "unlink_document", [row.record_id]);
+                await this.openDocuments();
+            } else {
+                this.state.documentRecords = (this.state.documentRecords || []).filter((item) => item.id !== row.id);
+            }
+            if (this.state.selectedDocumentId === row.id) {
+                this.state.selectedDocumentId = null;
+            }
+            this.notification.add("Document deleted.", { title: "Documents", type: "success" });
+            this.cancelDocumentDelete();
+        } catch (error) {
+            this.notification.add(error?.data?.message || error?.message || "Could not delete the document.", {
+                title: "Documents",
+                type: "danger",
+            });
+        } finally {
+            this.state.saving = false;
+        }
+    }
+
+    async openReport(reportId) {
+        this.state.page = reportId;
+        this.state.menuId = null;
+        this.state.showBuildingForm = false;
+        this.state.showFloorForm = false;
+        this.state.showUnitForm = false;
+        this.state.showOwnershipTransfer = false;
+        this.state.showOwnershipEdit = false;
+        this.state.detailMenu = false;
+        this.state.loadingReport = true;
+        try {
+            if (reportId === "property_reports") {
+                const data = await this.orm.call("property.property", "get_dashboard_data", []);
+                this.state.reportProperties = data.properties || [];
+                this.state.reportStatus = data.status || {};
+            } else if (reportId === "occupancy_reports") {
+                const data = await this.orm.call("property.unit", "get_occupancy_data", []);
+                this.state.reportOccupancyUnits = data.units || [];
+            } else {
+                const data = await this.orm.call("property.owner", "get_ownership_data", []);
+                this.state.reportOwnership = data.records || [];
+                this.state.reportOwnershipKpis = data.kpis || {};
+            }
+        } catch (error) {
+            this.notification.add(error?.data?.message || error?.message || "Could not load the report.", {
+                title: "Reports",
+                type: "danger",
+            });
+        } finally {
+            this.state.loadingReport = false;
+        }
+    }
+
+    get reportTitle() {
+        return {
+            property_reports: "Property Reports",
+            occupancy_reports: "Occupancy Reports",
+            ownership_reports: "Ownership Reports",
+        }[this.state.page] || "Reports";
+    }
+
+    get reportSubtitle() {
+        return {
+            property_reports: "Properties, buildings, units, and occupancy stored in the database.",
+            occupancy_reports: "Live unit status and tenant occupancy.",
+            ownership_reports: "Owners, shares, and effective dates stored on each unit.",
+        }[this.state.page] || "";
+    }
+
+    get reportPropertyTotals() {
+        const rows = this.state.reportProperties || [];
+        return {
+            buildings: rows.reduce((sum, row) => sum + (row.building_count || 0), 0),
+            units: rows.reduce((sum, row) => sum + (row.unit_count || 0), 0),
+        };
+    }
+
+    get reportOccupancyTotals() {
+        const rows = this.state.reportOccupancyUnits || [];
+        const occupied = rows.filter((row) => row.directory_status === "occupied").length;
+        const vacant = rows.filter((row) => row.directory_status === "vacant").length;
+        const reserved = rows.filter((row) => row.directory_status === "reserved").length;
+        const maintenance = rows.filter((row) => row.directory_status === "maintenance").length;
+        const total = rows.length;
+        return {
+            total,
+            occupied,
+            vacant,
+            reserved,
+            maintenance,
+            pct: total ? Math.round((occupied / total) * 1000) / 10 : 0,
+        };
     }
 
     async openStatusBoard() {
@@ -2719,15 +3128,45 @@ export class PropertyDashboard extends Component {
         }[status] || "is-op-active";
     }
 
-    openUnitForm(id) {
+    async ensureUnitCatalog() {
+        if ((this.state.unitProperties || []).length && (this.state.unitsList || []).length) {
+            return;
+        }
+        const data = await this.orm.call("property.unit", "get_units_data", []);
+        this.state.unitsList = data.units || [];
+        this.state.unitProperties = data.properties || [];
+        this.state.unitBuildings = data.buildings || [];
+        this.state.unitFloors = data.floors || [];
+        this.state.unitTypes = data.types || [];
+    }
+
+    async openUnitForm(id) {
         this.state.menuId = null;
-        this.action.doAction({
-            type: "ir.actions.act_window",
-            res_model: "property.unit",
-            res_id: id,
-            views: [[false, "form"]],
-            target: "current",
-        });
+        try {
+            await this.ensureUnitCatalog();
+            const row = (this.state.unitsList || []).find((unit) => unit.id === id);
+            if (!row) {
+                this.notification.add("Unit not found.", { title: "Edit Unit", type: "warning" });
+                return;
+            }
+            const config = row.config && row.config !== "—" ? row.config : "2 BHK";
+            this.state.unitForm = {
+                id: row.id,
+                name: row.name || "",
+                property_id: row.property_id ? String(row.property_id) : "",
+                building_id: row.building_id ? String(row.building_id) : "",
+                floor_id: row.floor_id ? String(row.floor_id) : "",
+                unit_type: config,
+                status: row.status || "available",
+                area_sqft: row.area_sqft || 0,
+            };
+            this.state.showUnitForm = true;
+        } catch (error) {
+            this.notification.add(error?.data?.message || error?.message || "Could not open the unit.", {
+                title: "Edit Unit",
+                type: "danger",
+            });
+        }
     }
 
     async openUnitDetail(id) {
@@ -2857,23 +3296,46 @@ export class PropertyDashboard extends Component {
             this.notification.add("Please select a property.", { title: "Add Unit", type: "warning" });
             return;
         }
+        const payload = {
+            name: form.name,
+            property_id: form.property_id,
+            building_id: form.building_id,
+            floor_id: form.floor_id,
+            unit_type: form.unit_type,
+            status: form.status,
+            area_sqft: form.area_sqft || 0,
+        };
+        const editing = Boolean(form.id);
         this.state.saving = true;
         try {
-            await this.orm.call("property.unit", "create_from_dashboard", [{
-                name: form.name,
-                property_id: form.property_id,
-                building_id: form.building_id,
-                floor_id: form.floor_id,
-                unit_type: form.unit_type,
-                status: form.status,
-            }]);
-            this.notification.add("Unit created.", { type: "success" });
+            if (editing) {
+                await this.orm.call("property.unit", "update_from_dashboard", [{
+                    ...payload,
+                    id: form.id,
+                }]);
+                this.notification.add("Unit updated.", { type: "success" });
+            } else {
+                await this.orm.call("property.unit", "create_from_dashboard", [payload]);
+                this.notification.add("Unit created.", { type: "success" });
+            }
+            const page = this.state.page;
+            const unitId = form.id;
             this.state.showUnitForm = false;
             this.state.unitForm = emptyUnitForm();
-            await this.openUnits();
+            const data = await this.orm.call("property.unit", "get_units_data", []);
+            this.state.unitsList = data.units || [];
+            this.state.unitProperties = data.properties || [];
+            this.state.unitBuildings = data.buildings || [];
+            this.state.unitFloors = data.floors || [];
+            this.state.unitTypes = data.types || [];
+            if (page === "unit-detail" && unitId) {
+                await this.openUnitDetail(unitId);
+            } else if (page === "occupancy") {
+                await this.openOccupancy();
+            }
         } catch (error) {
-            this.notification.add(error?.data?.message || error?.message || "Could not create the unit.", {
-                title: "Add Unit",
+            this.notification.add(error?.data?.message || error?.message || (editing ? "Could not update the unit." : "Could not create the unit."), {
+                title: editing ? "Edit Unit" : "Add Unit",
                 type: "danger",
             });
         } finally {
@@ -2881,16 +3343,22 @@ export class PropertyDashboard extends Component {
         }
     }
 
-    openPropertyForm(id) {
+    async openPropertyForm(id) {
         this.state.menuId = null;
         this.state.detailMenu = false;
-        this.action.doAction({
-            type: "ir.actions.act_window",
-            res_model: "property.property",
-            res_id: id,
-            views: [[false, "form"]],
-            target: "current",
-        });
+        try {
+            const data = await this.orm.call("property.property", "get_form_values", [id]);
+            this.state.form = {
+                ...emptyPropertyForm(),
+                ...data,
+            };
+            this.state.page = "add-property";
+        } catch (error) {
+            this.notification.add(error?.data?.message || error?.message || "Could not open the property.", {
+                title: "Edit Property",
+                type: "danger",
+            });
+        }
     }
 
     openProperty(id) {
@@ -3049,7 +3517,7 @@ export class PropertyDashboard extends Component {
             const documents = Object.entries(form.documents)
                 .filter(([, file]) => file && file.data)
                 .map(([type, file]) => ({ type, name: file.name, data: file.data }));
-            await this.orm.call("property.property", "create_from_dashboard", [{
+            const payload = {
                 name: form.name,
                 code: form.code,
                 property_type: form.property_type,
@@ -3066,8 +3534,14 @@ export class PropertyDashboard extends Component {
                 category: form.category,
                 is_draft: isDraft,
                 documents,
-            }]);
-            this.notification.add(isDraft ? "Property saved as draft." : "Property created.", {
+            };
+            const editing = Boolean(form.id);
+            if (editing) {
+                await this.orm.call("property.property", "update_from_dashboard", [{ ...payload, id: form.id }]);
+            } else {
+                await this.orm.call("property.property", "create_from_dashboard", [payload]);
+            }
+            this.notification.add(isDraft ? "Property saved as draft." : (editing ? "Property updated." : "Property created."), {
                 type: "success",
             });
             this.state.form = emptyPropertyForm();
@@ -3129,6 +3603,24 @@ export class PropertyDashboard extends Component {
                 rows.push([row.name, row.property_name, row.status_label, row.updated_by, row.updated_label]);
             }
             filename = "unit_status.csv";
+        } else if (this.state.page === "property_reports") {
+            rows = [["Property", "Type", "Location", "Buildings", "Units", "Occupancy", "Status"]];
+            for (const row of this.state.reportProperties || []) {
+                rows.push([row.name, row.type_label, row.location, row.building_count, row.unit_count, `${row.occupancy}%`, row.status_label]);
+            }
+            filename = "property_reports.csv";
+        } else if (this.state.page === "occupancy_reports") {
+            rows = [["Unit", "Property", "Tenant", "Status"]];
+            for (const row of this.state.reportOccupancyUnits || []) {
+                rows.push([row.name, row.property_name, row.tenant, row.directory_label]);
+            }
+            filename = "occupancy_reports.csv";
+        } else if (this.state.page === "ownership_reports") {
+            rows = [["Unit", "Property", "Owner", "Type", "Share", "Effective", "Status"]];
+            for (const row of this.state.reportOwnership || []) {
+                rows.push([row.unit_name, row.property_name, row.owner_name, row.owner_type_label, `${row.share}%`, row.effective_label, row.status_label]);
+            }
+            filename = "ownership_reports.csv";
         } else if (this.state.page === "properties") {
             rows = [["Name", "ID", "Type", "Location", "Buildings", "Units", "Occupancy", "Status"]];
             for (const row of this.filteredProperties) {
@@ -3162,10 +3654,11 @@ export class PropertyDashboard extends Component {
     }
 
     openHelp() {
-        this.notification.add("Open a property from the list to see details, hierarchy, activity and occupancy.", {
-            title: "Help & Support",
-            type: "info",
-        });
+        this.state.showHelp = true;
+    }
+
+    closeHelp() {
+        this.state.showHelp = false;
     }
 
     hierarchyIcon(type) {
@@ -3303,14 +3796,7 @@ export class PropertyDashboard extends Component {
     }
 
     openHierarchyNode(row) {
-        const models = {
-            property: "property.property",
-            building: "property.building",
-            floor: "property.floor",
-            unit: "property.unit",
-        };
-        const model = models[row.type];
-        if (!model || !row.resId) {
+        if (!row?.resId) {
             return;
         }
         if (row.type === "property") {
@@ -3325,13 +3811,9 @@ export class PropertyDashboard extends Component {
             this.openUnitDetail(row.resId);
             return;
         }
-        this.action.doAction({
-            type: "ir.actions.act_window",
-            res_model: model,
-            res_id: row.resId,
-            views: [[false, "form"]],
-            target: "current",
-        });
+        if (row.type === "floor") {
+            this.openFloors(row.parentId, row.resId);
+        }
     }
 }
 

@@ -141,6 +141,60 @@ class PropertyBuilding(models.Model):
             building.tower_code = building._display_code(index)
         return {"id": building.id}
 
+    @api.model
+    def get_form_values(self, building_id):
+        building = self.browse(int(building_id or 0)).exists()
+        if not building:
+            raise UserError("Building not found.")
+        return {
+            "id": building.id,
+            "name": building.name or "",
+            "code": building.tower_code or "",
+            "property_id": building.property_id.id,
+            "usage": building.usage or "commercial",
+            "floors": len(building.floor_ids),
+        }
+
+    @api.model
+    def update_from_dashboard(self, vals):
+        vals = dict(vals or {})
+        building = self.browse(int(vals.get("id") or 0)).exists()
+        if not building:
+            raise UserError("Building not found.")
+        name = (vals.get("name") or "").strip()
+        if not name:
+            raise UserError("Building name is required.")
+        prop = self.env["property.property"].browse(int(vals.get("property_id") or 0)).exists()
+        if not prop:
+            raise UserError("Please select a property.")
+        usage = vals.get("usage") or False
+        if usage not in ("commercial", "residential", "parking", "mixed"):
+            usage = building.usage
+        building.write({
+            "name": name,
+            "property_id": prop.id,
+            "tower_code": (vals.get("code") or "").strip() or building.tower_code,
+            "usage": usage,
+            "region": prop.region,
+        })
+        target = max(0, int(vals.get("floors") or 0))
+        existing = len(building.floor_ids)
+        Floor = self.env["property.floor"]
+        for floor_no in range(existing + 1, target + 1):
+            Floor.create({
+                "name": f"Floor {floor_no}",
+                "building_id": building.id,
+                "floor_number": floor_no,
+                "wing": "A" if floor_no % 2 else "B",
+            })
+        self.env["property.activity.log"].create({
+            "name": f"Building updated: {building.name}",
+            "description": f"{building.name} was saved from FMS Dashboard",
+            "activity_type": "document",
+            "property_id": prop.id,
+        })
+        return {"id": building.id}
+
     def _short_name(self):
         self.ensure_one()
         if "—" in (self.name or ""):
@@ -526,6 +580,7 @@ class PropertyUnit(models.Model):
             "wing": wing or "",
             "floor_wing": f"Fl {number} / {self._wing_label(wing)}" if number else "—",
             "config": unit.unit_type or "—",
+            "area_sqft": unit.area_sqft or 0,
             "owner_name": owner.name if owner else "Unassigned",
             "owner_initials": self._initials(owner.name) if owner else "—",
             "occupancy": occupancy,
@@ -579,6 +634,12 @@ class PropertyUnit(models.Model):
             "number": floor.floor_number,
             "building_id": floor.building_id.id,
         } for floor in self.env["property.floor"].search([])]
+        tenancy_by_unit = defaultdict(list)
+        for tenancy in self.env["property.tenancy"].search([("unit_id", "in", units.ids)]):
+            tenancy_by_unit[tenancy.unit_id.id].append({
+                "start": tenancy.date_start.isoformat() if tenancy.date_start else False,
+                "end": tenancy.date_end.isoformat() if tenancy.date_end else False,
+            })
         rows = []
         for unit in units:
             tenant = unit.tenant_id
@@ -599,6 +660,7 @@ class PropertyUnit(models.Model):
                 "tenant_empty": not bool(tenant_name),
                 "directory_status": directory_status,
                 "directory_label": directory_label,
+                "tenancies": tenancy_by_unit.get(unit.id, []),
             })
         today = fields.Date.context_today(self)
         months = []
@@ -643,6 +705,51 @@ class PropertyUnit(models.Model):
             "unit_type": (vals.get("unit_type") or "").strip() or False,
             "status": status,
             "area_sqft": float(vals.get("area_sqft") or 0),
+        })
+        return {"id": unit.id}
+
+    def _unit_write_vals(self, vals):
+        vals = dict(vals or {})
+        name = (vals.get("name") or "").strip()
+        if not name:
+            raise UserError("Unit name is required.")
+        prop = self.env["property.property"].browse(int(vals.get("property_id") or 0)).exists()
+        if not prop:
+            raise UserError("Please select a property.")
+        building = self.env["property.building"].browse(int(vals.get("building_id") or 0)).exists()
+        floor = self.env["property.floor"].browse(int(vals.get("floor_id") or 0)).exists()
+        if floor and not building:
+            building = floor.building_id
+        if building and building.property_id and building.property_id.id != prop.id:
+            raise UserError("The building does not belong to the selected property.")
+        if floor and building and floor.building_id and floor.building_id.id != building.id:
+            raise UserError("The floor does not belong to the selected building.")
+        status = vals.get("status") or "available"
+        if status not in dict(self._fields["status"].selection):
+            status = "available"
+        return {
+            "name": name,
+            "property_id": prop.id,
+            "building_id": building.id if building else False,
+            "floor_id": floor.id if floor else False,
+            "unit_type": (vals.get("unit_type") or "").strip() or False,
+            "status": status,
+            "area_sqft": float(vals.get("area_sqft") or 0),
+        }
+
+    @api.model
+    def update_from_dashboard(self, vals):
+        unit = self.browse(int((vals or {}).get("id") or 0)).exists()
+        if not unit:
+            raise UserError("Unit not found.")
+        payload = self._unit_write_vals(vals)
+        unit.write(payload)
+        self.env["property.activity.log"].create({
+            "name": f"Unit updated: {unit.name}",
+            "description": f"{unit.name} details were saved.",
+            "activity_type": "document",
+            "property_id": unit.property_id.id,
+            "unit_id": unit.id,
         })
         return {"id": unit.id}
 

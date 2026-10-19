@@ -22,21 +22,21 @@
                     </t>
                     <div class="pm-nav-label">REPORTS</div>
                     <t t-foreach="reportItems" t-as="item" t-key="item.id">
-                        <button type="button" class="pm-nav-item" t-on-click="() => this.onNav(item)">
+                        <button type="button" class="pm-nav-item" t-att-class="{ 'is-active': state.page === item.id }" t-on-click="() => this.onNav(item)">
                             <i t-attf-class="fa #{item.icon}"/>
                             <span t-esc="item.label"/>
                         </button>
                     </t>
                 </nav>
                 <div class="pm-user">
-                    <span class="pm-avatar">JD</span>
+                    <span class="pm-avatar" t-esc="userInitials"/>
                     <div>
-                        <div class="pm-user-name">Jane Doe</div>
-                        <div class="pm-user-role">System Admin</div>
+                        <div class="pm-user-name" t-esc="userName"/>
+                        <div class="pm-user-role">Signed in</div>
                     </div>
                 </div>
                 <div class="pm-sidebar-footer">
-                    <button type="button" class="pm-nav-item" t-on-click="() => this.onNav({ xmlId: 'property_management.action_property_property' })">
+                    <button type="button" class="pm-nav-item" t-on-click="openSettings">
                         <i class="fa fa-cog"/>
                         <span>Settings</span>
                     </button>
@@ -69,12 +69,12 @@
                             <input type="text" t-att-placeholder="topSearchPlaceholder" t-att-value="topSearchValue" t-on-input="onGlobalSearch"/>
                         </div>
                         <span class="pm-top-link" t-if="!isCompactTop" t-on-click="() => this.state.page = 'overview'">Portfolio</span>
-                        <span class="pm-top-link" t-if="!isCompactTop" t-on-click="() => this.onNav({ xmlId: 'property_management.action_occupancy_reports' })">Analytics</span>
-                        <span class="pm-top-link" t-if="!isCompactTop" t-on-click="() => this.onNav({ xmlId: 'property_management.action_property_reports' })">Reports</span>
+                        <span class="pm-top-link" t-if="!isCompactTop" t-on-click="() => this.openReport('occupancy_reports')">Analytics</span>
+                        <span class="pm-top-link" t-if="!isCompactTop" t-on-click="() => this.openReport('property_reports')">Reports</span>
                         <i class="fa fa-bell-o"/>
                         <i t-if="isCompactTop" class="fa fa-cog"/>
                         <i t-if="!isCompactTop" class="fa fa-question-circle-o" t-on-click="openHelp"/>
-                        <span class="pm-avatar">EX</span>
+                        <span class="pm-avatar" t-esc="userInitials"/>
                     </div>
                 </div>
 
@@ -85,7 +85,7 @@
                 <t t-elif="state.page === 'add-property'">
                     <div class="pm-page-head">
                         <div>
-                            <h1>Add Property</h1>
+                            <h1 t-esc="state.form.id ? 'Edit Property' : 'Add Property'"/>
                         </div>
                     </div>
 
@@ -170,26 +170,26 @@
                                     <span>Buildings</span>
                                     <span class="pm-config-input">
                                         <i class="fa fa-building"/>
-                                        <input type="number" min="0" t-att-value="state.form.planned_buildings" t-on-input="(ev) => this.state.form.planned_buildings = Number(ev.target.value || 0)"/>
+                                        <input type="number" min="0" step="1" t-model.number="state.form.planned_buildings"/>
                                     </span>
                                 </label>
                                 <label>
                                     <span>Total Floors</span>
                                     <span class="pm-config-input">
                                         <i class="fa fa-align-justify"/>
-                                        <input type="number" min="0" t-att-value="state.form.planned_floors" t-on-input="(ev) => this.state.form.planned_floors = Number(ev.target.value || 0)"/>
+                                        <input type="number" min="0" step="1" t-model.number="state.form.planned_floors"/>
                                     </span>
                                 </label>
                                 <label>
                                     <span>Total Units</span>
                                     <span class="pm-config-input">
                                         <i class="fa fa-th"/>
-                                        <input type="number" min="0" t-att-value="state.form.planned_units" t-on-input="(ev) => this.state.form.planned_units = Number(ev.target.value || 0)"/>
+                                        <input type="number" min="0" step="1" t-model.number="state.form.planned_units"/>
                                     </span>
                                 </label>
                                 <label>
                                     <span>Category</span>
-                                    <select t-att-value="state.form.category" t-on-change="(ev) => this.state.form.category = ev.target.value">
+                                    <select t-model="state.form.category">
                                         <option value="class_a">Class A</option>
                                         <option value="class_b">Class B</option>
                                         <option value="class_c">Class C</option>
@@ -236,7 +236,7 @@
                         <button type="button" class="pm-btn pm-btn-link" t-on-click="cancelAdd">Cancel</button>
                         <button type="button" class="pm-btn pm-btn-outline" t-att-disabled="state.saving" t-on-click="() => this.submitProperty(true)">Save as Draft</button>
                         <button type="button" class="pm-btn pm-btn-primary" t-att-disabled="state.saving" t-on-click="() => this.submitProperty(false)">
-                            <i class="fa fa-check"/> <t t-esc="state.saving ? 'Saving...' : 'Create Property'"/>
+                            <i class="fa fa-check"/> <t t-esc="state.saving ? 'Saving...' : (state.form.id ? 'Save Property' : 'Create Property')"/>
                         </button>
                     </div>
                 </t>
@@ -1499,6 +1499,12 @@
                                     </div>
                                     <button type="button" class="pm-own-close" t-on-click="closeTenancyDrawer">×</button>
                                 </div>
+                                <div class="pm-ten-lease">
+                                    <div><span>Monthly rent</span><strong t-esc="selectedTenancy.rent_label"/></div>
+                                    <div><span>Deposit</span><strong t-esc="selectedTenancy.deposit_label"/></div>
+                                    <div><span>Move in</span><strong t-esc="selectedTenancy.move_in_label"/></div>
+                                    <div><span>Move out</span><strong t-esc="selectedTenancy.move_out_label"/></div>
+                                </div>
                                 <div class="pm-ten-drawer-actions">
                                     <button type="button" class="pm-btn pm-btn-primary" t-on-click="openTenancyLease">View Lease</button>
                                     <button type="button" class="pm-btn pm-btn-outline pm-ten-mail" t-on-click="openTenancyMessage">
@@ -1689,15 +1695,15 @@
                                 <div class="pm-doc-preview">
                                     <i t-attf-class="fa #{selectedDocument.icon}"/>
                                     <p>Preview generation limited</p>
-                                    <button type="button" class="pm-link" t-on-click="() => this.openDocumentViewer(selectedDocument)">Open in Viewer</button>
+                                    <button type="button" class="pm-link" t-on-click.stop="() => this.openDocumentViewer(selectedDocument)">Open in Viewer</button>
                                 </div>
-                                <button type="button" class="pm-btn pm-btn-outline pm-doc-full" t-on-click="() => this.downloadDocument(selectedDocument)">
+                                <button type="button" class="pm-btn pm-btn-outline pm-doc-full" t-on-click.stop="() => this.downloadDocument(selectedDocument)">
                                     <i class="fa fa-download"/> Download File
                                 </button>
-                                <button type="button" class="pm-btn pm-btn-outline pm-doc-full" t-on-click="() => this.showDocumentVersions(selectedDocument)">
+                                <button type="button" class="pm-btn pm-btn-outline pm-doc-full" t-on-click.stop="() => this.showDocumentVersions(selectedDocument)">
                                     <i class="fa fa-history"/> Version History
                                 </button>
-                                <button type="button" class="pm-doc-delete" t-on-click="() => this.deleteDocument(selectedDocument)">
+                                <button type="button" class="pm-doc-delete" t-on-click.stop="() => this.deleteDocument(selectedDocument)">
                                     <i class="fa fa-trash-o"/> Delete Document
                                 </button>
                             </aside>
@@ -1832,6 +1838,136 @@
                             </div>
                         </section>
                     </div>
+                </t>
+
+                <t t-elif="state.page === 'property_reports' || state.page === 'occupancy_reports' || state.page === 'ownership_reports'">
+                    <div class="pm-page-head">
+                        <div>
+                            <h1 t-esc="reportTitle"/>
+                            <p t-esc="reportSubtitle"/>
+                        </div>
+                        <div class="pm-page-actions">
+                            <button type="button" class="pm-btn pm-btn-outline" t-on-click="exportCsv">
+                                <i class="fa fa-download"/> Export Report
+                            </button>
+                        </div>
+                    </div>
+                    <div t-if="state.loadingReport" class="pm-empty">Loading report...</div>
+                    <t t-if="state.page === 'property_reports'">
+                        <section class="pm-occ-kpis">
+                            <article class="pm-card pm-occ-kpi"><div class="pm-kpi-label">Properties</div><div class="pm-kpi-value" t-esc="formatNumber(state.reportProperties.length)"/></article>
+                            <article class="pm-card pm-occ-kpi"><div class="pm-kpi-label">Buildings</div><div class="pm-kpi-value" t-esc="formatNumber(reportPropertyTotals.buildings)"/></article>
+                            <article class="pm-card pm-occ-kpi"><div class="pm-kpi-label">Units</div><div class="pm-kpi-value" t-esc="formatNumber(reportPropertyTotals.units)"/></article>
+                            <article class="pm-card pm-occ-kpi"><div class="pm-kpi-label">Occupied</div><div class="pm-kpi-value" t-esc="formatNumber(state.reportStatus.occupied || 0)"/></article>
+                            <article class="pm-card pm-occ-kpi"><div class="pm-kpi-label">Vacant</div><div class="pm-kpi-value" t-esc="formatNumber(state.reportStatus.vacant || 0)"/></article>
+                            <article class="pm-card pm-occ-kpi"><div class="pm-kpi-label">Available</div><div class="pm-kpi-value" t-esc="formatNumber(state.reportStatus.available || 0)"/></article>
+                        </section>
+                        <section class="pm-card pm-table-card">
+                            <table class="pm-table">
+                                <thead>
+                                    <tr>
+                                        <th>Property</th>
+                                        <th>Type</th>
+                                        <th>Location</th>
+                                        <th>Buildings</th>
+                                        <th>Units</th>
+                                        <th>Occupancy</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="state.reportProperties" t-as="row" t-key="row.id">
+                                        <tr>
+                                            <td><strong t-esc="row.name"/></td>
+                                            <td t-esc="row.type_label"/>
+                                            <td t-esc="row.location || '—'"/>
+                                            <td t-esc="formatNumber(row.building_count)"/>
+                                            <td t-esc="formatNumber(row.unit_count)"/>
+                                            <td><t t-esc="row.occupancy"/>%</td>
+                                            <td t-esc="row.status_label"/>
+                                        </tr>
+                                    </t>
+                                    <tr t-if="!state.reportProperties.length">
+                                        <td colspan="7" class="pm-empty">No properties are stored yet.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </section>
+                    </t>
+                    <t t-if="state.page === 'occupancy_reports'">
+                        <section class="pm-occ-kpis">
+                            <article class="pm-card pm-occ-kpi"><div class="pm-kpi-label">Total Units</div><div class="pm-kpi-value" t-esc="formatNumber(reportOccupancyTotals.total)"/></article>
+                            <article class="pm-card pm-occ-kpi"><div class="pm-kpi-label">Occupied</div><div class="pm-kpi-value" t-esc="formatNumber(reportOccupancyTotals.occupied)"/></article>
+                            <article class="pm-card pm-occ-kpi"><div class="pm-kpi-label">Vacant</div><div class="pm-kpi-value" t-esc="formatNumber(reportOccupancyTotals.vacant)"/></article>
+                            <article class="pm-card pm-occ-kpi"><div class="pm-kpi-label">Reserved</div><div class="pm-kpi-value" t-esc="formatNumber(reportOccupancyTotals.reserved)"/></article>
+                            <article class="pm-card pm-occ-kpi"><div class="pm-kpi-label">Maintenance</div><div class="pm-kpi-value" t-esc="formatNumber(reportOccupancyTotals.maintenance)"/></article>
+                            <article class="pm-card pm-occ-kpi"><div class="pm-kpi-label">Occupancy</div><div class="pm-kpi-value"><t t-esc="reportOccupancyTotals.pct"/>%</div></article>
+                        </section>
+                        <section class="pm-card pm-table-card">
+                            <table class="pm-table">
+                                <thead>
+                                    <tr>
+                                        <th>Unit</th>
+                                        <th>Property</th>
+                                        <th>Tenant</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="state.reportOccupancyUnits" t-as="row" t-key="row.id">
+                                        <tr>
+                                            <td><strong t-esc="row.name"/></td>
+                                            <td t-esc="row.property_name"/>
+                                            <td t-esc="row.tenant"/>
+                                            <td t-esc="row.directory_label"/>
+                                        </tr>
+                                    </t>
+                                    <tr t-if="!state.reportOccupancyUnits.length">
+                                        <td colspan="4" class="pm-empty">No units are stored yet.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </section>
+                    </t>
+                    <t t-if="state.page === 'ownership_reports'">
+                        <section class="pm-occ-kpis">
+                            <article class="pm-card pm-occ-kpi"><div class="pm-kpi-label">Owners</div><div class="pm-kpi-value" t-esc="formatNumber(state.reportOwnershipKpis.owners || 0)"/></article>
+                            <article class="pm-card pm-occ-kpi"><div class="pm-kpi-label">Units Owned</div><div class="pm-kpi-value" t-esc="formatNumber(state.reportOwnershipKpis.units_owned || 0)"/></article>
+                            <article class="pm-card pm-occ-kpi"><div class="pm-kpi-label">Properties</div><div class="pm-kpi-value" t-esc="formatNumber(state.reportOwnershipKpis.properties || 0)"/></article>
+                            <article class="pm-card pm-occ-kpi"><div class="pm-kpi-label">Joint</div><div class="pm-kpi-value" t-esc="formatNumber(state.reportOwnershipKpis.joint || 0)"/></article>
+                        </section>
+                        <section class="pm-card pm-table-card">
+                            <table class="pm-table">
+                                <thead>
+                                    <tr>
+                                        <th>Unit</th>
+                                        <th>Property</th>
+                                        <th>Owner</th>
+                                        <th>Type</th>
+                                        <th>Share</th>
+                                        <th>Effective</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="state.reportOwnership" t-as="row" t-key="row.id">
+                                        <tr>
+                                            <td><strong t-esc="row.unit_name"/></td>
+                                            <td t-esc="row.property_name"/>
+                                            <td t-esc="row.owner_name"/>
+                                            <td t-esc="row.owner_type_label"/>
+                                            <td><t t-esc="row.share"/>%</td>
+                                            <td t-esc="row.effective_label"/>
+                                            <td t-esc="row.status_label"/>
+                                        </tr>
+                                    </t>
+                                    <tr t-if="!state.reportOwnership.length">
+                                        <td colspan="7" class="pm-empty">No ownership records are stored yet.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </section>
+                    </t>
                 </t>
 
                 <t t-elif="state.page === 'units'">
@@ -2360,7 +2496,7 @@
                             <div class="pm-kpi-icon"><i class="fa fa-pie-chart"/></div>
                             <div class="pm-kpi-label">Overall Occupancy</div>
                             <div class="pm-kpi-value"><t t-esc="state.data.kpis.occupancy"/>%</div>
-                            <div class="pm-kpi-hint is-down" t-esc="state.data.kpis.occupancy_delta"/>
+                            <div t-attf-class="pm-kpi-hint #{state.data.kpis.occupancy_down ? 'is-down' : ''}" t-esc="state.data.kpis.occupancy_delta"/>
                         </article>
                     </section>
 
@@ -2466,7 +2602,7 @@
             </main>
             <div class="pm-modal" t-if="state.showBuildingForm" t-on-click="cancelBuildingForm">
                 <div class="pm-modal-card" t-on-click="(ev) => ev.stopPropagation()">
-                    <h2>Add Building</h2>
+                    <h2 t-esc="state.buildingForm.id ? 'Edit Building' : 'Add Building'"/>
                     <label>
                         <span>Building Name <em>*</em></span>
                         <input type="text" placeholder="e.g. North Tower" t-att-value="state.buildingForm.name" t-on-input="(ev) => this.state.buildingForm.name = ev.target.value"/>
@@ -2499,7 +2635,9 @@
                     </label>
                     <div class="pm-modal-actions">
                         <button type="button" class="pm-btn pm-btn-link" t-on-click="cancelBuildingForm">Cancel</button>
-                        <button type="button" class="pm-btn pm-btn-primary" t-att-disabled="state.saving" t-on-click="submitBuilding">Create Building</button>
+                        <button type="button" class="pm-btn pm-btn-primary" t-att-disabled="state.saving" t-on-click="submitBuilding">
+                            <t t-esc="state.buildingForm.id ? 'Save Building' : 'Create Building'"/>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -2536,14 +2674,14 @@
             </div>
             <div class="pm-modal" t-if="state.showUnitForm" t-on-click="cancelUnitForm">
                 <div class="pm-modal-card" t-on-click="(ev) => ev.stopPropagation()">
-                    <h2>Add Unit</h2>
+                    <h2 t-esc="state.unitForm.id ? 'Edit Unit' : 'Add Unit'"/>
                     <label>
                         <span>Unit Name <em>*</em></span>
-                        <input type="text" placeholder="e.g. A-101" t-att-value="state.unitForm.name" t-on-input="(ev) => this.state.unitForm.name = ev.target.value"/>
+                        <input type="text" placeholder="e.g. A-101" t-model="state.unitForm.name"/>
                     </label>
                     <label>
                         <span>Property <em>*</em></span>
-                        <select t-att-value="state.unitForm.property_id" t-on-change="onUnitFormProperty">
+                        <select t-model="state.unitForm.property_id" t-on-change="onUnitFormProperty">
                             <option value="">Select property</option>
                             <t t-foreach="state.unitProperties" t-as="prop" t-key="prop.id">
                                 <option t-att-value="prop.id" t-esc="prop.name"/>
@@ -2552,7 +2690,7 @@
                     </label>
                     <label>
                         <span>Building</span>
-                        <select t-att-value="state.unitForm.building_id" t-on-change="onUnitFormBuilding">
+                        <select t-model="state.unitForm.building_id" t-on-change="onUnitFormBuilding">
                             <option value="">Select building</option>
                             <t t-foreach="unitFormBuildings" t-as="row" t-key="row.id">
                                 <option t-att-value="row.id" t-esc="row.name"/>
@@ -2561,7 +2699,7 @@
                     </label>
                     <label>
                         <span>Floor</span>
-                        <select t-att-value="state.unitForm.floor_id" t-on-change="(ev) => this.state.unitForm.floor_id = ev.target.value">
+                        <select t-model="state.unitForm.floor_id">
                             <option value="">Select floor</option>
                             <t t-foreach="unitFormFloors" t-as="row" t-key="row.id">
                                 <option t-att-value="row.id" t-esc="row.name"/>
@@ -2570,15 +2708,19 @@
                     </label>
                     <label>
                         <span>Configuration</span>
-                        <select t-att-value="state.unitForm.unit_type" t-on-change="(ev) => this.state.unitForm.unit_type = ev.target.value">
-                            <option value="Studio">Studio</option>
-                            <option value="2 BHK">2 BHK</option>
-                            <option value="3 BHK">3 BHK</option>
+                        <select t-model="state.unitForm.unit_type">
+                            <t t-foreach="unitTypeOptions" t-as="option" t-key="option">
+                                <option t-att-value="option" t-esc="option"/>
+                            </t>
                         </select>
                     </label>
                     <label>
+                        <span>Area (sq.ft)</span>
+                        <input type="number" min="0" step="1" t-model.number="state.unitForm.area_sqft"/>
+                    </label>
+                    <label>
                         <span>Occupancy</span>
-                        <select t-att-value="state.unitForm.status" t-on-change="(ev) => this.state.unitForm.status = ev.target.value">
+                        <select t-model="state.unitForm.status">
                             <option value="available">Available</option>
                             <option value="occupied">Occupied</option>
                             <option value="vacant">Vacant</option>
@@ -2588,7 +2730,9 @@
                     </label>
                     <div class="pm-modal-actions">
                         <button type="button" class="pm-btn pm-btn-link" t-on-click="cancelUnitForm">Cancel</button>
-                        <button type="button" class="pm-btn pm-btn-primary" t-att-disabled="state.saving" t-on-click="submitUnit">Create Unit</button>
+                        <button type="button" class="pm-btn pm-btn-primary" t-att-disabled="state.saving" t-on-click="submitUnit">
+                            <t t-esc="state.unitForm.id ? 'Save' : 'Create Unit'"/>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -2665,6 +2809,109 @@
                     <div class="pm-modal-actions">
                         <button type="button" class="pm-btn pm-btn-link" t-on-click="cancelOwnershipTransfer">Cancel</button>
                         <button type="button" class="pm-btn pm-btn-primary" t-att-disabled="state.saving" t-on-click="submitOwnershipTransfer">Save Transfer</button>
+                    </div>
+                </div>
+            </div>
+            <div class="pm-modal" t-if="state.showOwnershipEdit" t-on-click="cancelOwnershipEdit">
+                <div class="pm-modal-card" t-on-click="(ev) => ev.stopPropagation()">
+                    <h2>Edit Ownership</h2>
+                    <p class="pm-muted" t-esc="state.ownershipEdit.unit_name"/>
+                    <label>
+                        <span>Owner Name <em>*</em></span>
+                        <input type="text" t-model="state.ownershipEdit.owner_name"/>
+                    </label>
+                    <label>
+                        <span>Type</span>
+                        <select t-model="state.ownershipEdit.owner_type">
+                            <option value="primary">Primary</option>
+                            <option value="co_owner">Co-owner</option>
+                            <option value="corporate">Corporate</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Share %</span>
+                        <input type="number" min="0" max="100" step="1" t-model.number="state.ownershipEdit.share"/>
+                    </label>
+                    <label>
+                        <span>Effective Date</span>
+                        <input type="date" t-model="state.ownershipEdit.effective_date"/>
+                    </label>
+                    <label>
+                        <span>Cost</span>
+                        <input type="number" min="0" step="1" t-model.number="state.ownershipEdit.cost"/>
+                    </label>
+                    <label>
+                        <span>Deed</span>
+                        <input type="text" t-model="state.ownershipEdit.deed"/>
+                    </label>
+                    <label>
+                        <span>Status</span>
+                        <select t-model="state.ownershipEdit.status">
+                            <option value="active">Active</option>
+                            <option value="pending">Pending</option>
+                        </select>
+                    </label>
+                    <div class="pm-modal-actions">
+                        <button type="button" class="pm-btn pm-btn-link" t-on-click="cancelOwnershipEdit">Cancel</button>
+                        <button type="button" class="pm-btn pm-btn-primary" t-att-disabled="state.saving" t-on-click="submitOwnershipEdit">Save</button>
+                    </div>
+                </div>
+            </div>
+            <div class="pm-modal" t-if="state.showDocumentViewer" t-on-click="closeDocumentViewer">
+                <div class="pm-modal-card is-viewer" t-on-click="(ev) => ev.stopPropagation()">
+                    <div class="pm-viewer-head">
+                        <h2 t-esc="state.documentViewer.name"/>
+                        <button type="button" class="pm-own-close" t-on-click="closeDocumentViewer">×</button>
+                    </div>
+                    <iframe t-if="state.documentViewer.kind === 'pdf'" class="pm-viewer-frame" t-att-src="state.documentViewer.url" title="Document preview"/>
+                    <img t-elif="state.documentViewer.kind === 'image'" class="pm-viewer-image" t-att-src="state.documentViewer.url" t-att-alt="state.documentViewer.name"/>
+                    <p t-else="" class="pm-empty">This file type cannot be previewed here. Use Download File to save it.</p>
+                    <div class="pm-modal-actions">
+                        <button type="button" class="pm-btn pm-btn-primary" t-on-click="closeDocumentViewer">Close</button>
+                    </div>
+                </div>
+            </div>
+            <div class="pm-modal" t-if="state.showDocumentVersions" t-on-click="closeDocumentVersions">
+                <div class="pm-modal-card" t-on-click="(ev) => ev.stopPropagation()">
+                    <h2>Version History</h2>
+                    <p class="pm-muted" t-esc="state.documentVersionName"/>
+                    <table class="pm-table">
+                        <thead>
+                            <tr>
+                                <th>Version</th>
+                                <th>File</th>
+                                <th>Uploaded</th>
+                                <th>By</th>
+                                <th>Size</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="state.documentVersions" t-as="version" t-key="version_index">
+                                <tr>
+                                    <td><strong t-esc="version.version"/><span t-if="version.current"> current</span></td>
+                                    <td t-esc="version.filename"/>
+                                    <td t-esc="version.date_label"/>
+                                    <td t-esc="version.uploader"/>
+                                    <td t-esc="version.size_label"/>
+                                </tr>
+                            </t>
+                            <tr t-if="!state.documentVersions.length">
+                                <td colspan="5" class="pm-empty">No versions are stored for this document.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="pm-modal-actions">
+                        <button type="button" class="pm-btn pm-btn-primary" t-on-click="closeDocumentVersions">Close</button>
+                    </div>
+                </div>
+            </div>
+            <div class="pm-modal" t-if="state.showDocumentDelete" t-on-click="cancelDocumentDelete">
+                <div class="pm-modal-card" t-on-click="(ev) => ev.stopPropagation()">
+                    <h2>Delete Document</h2>
+                    <p>Delete <strong t-esc="state.documentPendingDelete and state.documentPendingDelete.name"/>? This cannot be undone.</p>
+                    <div class="pm-modal-actions">
+                        <button type="button" class="pm-btn pm-btn-link" t-on-click="cancelDocumentDelete">Cancel</button>
+                        <button type="button" class="pm-btn pm-btn-primary" t-att-disabled="state.saving" t-on-click="confirmDocumentDelete">Delete</button>
                     </div>
                 </div>
             </div>
@@ -2767,6 +3014,30 @@
                         <button type="button" class="pm-btn pm-btn-outline" t-on-click="cancelStatusChange">Cancel</button>
                         <button t-if="statusChangeConflict" type="button" class="pm-btn pm-st-force" t-att-disabled="state.saving" t-on-click="submitStatusChange">Force Override Status</button>
                         <button t-else="" type="button" class="pm-btn pm-btn-primary" t-att-disabled="state.saving" t-on-click="submitStatusChange">Update Status</button>
+                    </div>
+                </div>
+            </div>
+            <div class="pm-modal" t-if="state.showTenancyNote" t-on-click="cancelTenancyNote">
+                <div class="pm-modal-card" t-on-click="(ev) => ev.stopPropagation()">
+                    <h2>Message tenant</h2>
+                    <label>
+                        <span>Note</span>
+                        <textarea rows="4" placeholder="Write a note for this tenancy" t-att-value="state.tenancyNote" t-on-input="(ev) => this.state.tenancyNote = ev.target.value"/>
+                    </label>
+                    <div class="pm-modal-actions">
+                        <button type="button" class="pm-btn pm-btn-link" t-on-click="cancelTenancyNote">Cancel</button>
+                        <button type="button" class="pm-btn pm-btn-primary" t-att-disabled="state.saving" t-on-click="sendTenancyNote">Save Message</button>
+                    </div>
+                </div>
+            </div>
+            <div class="pm-modal" t-if="state.showHelp" t-on-click="closeHelp">
+                <div class="pm-modal-card" t-on-click="(ev) => ev.stopPropagation()">
+                    <h2>Help &amp; Support</h2>
+                    <p>Use the sidebar to open each register. Records you create here are stored in the database.</p>
+                    <p>Properties, buildings, floors, and units can be added or edited from their pages. Tenant History downloads the lease and saves messages on the tenancy.</p>
+                    <p>Occupancy, ownership, documents, and unit status use the filters on each page. Reports export the current list as CSV.</p>
+                    <div class="pm-modal-actions">
+                        <button type="button" class="pm-btn pm-btn-primary" t-on-click="closeHelp">Close</button>
                     </div>
                 </div>
             </div>

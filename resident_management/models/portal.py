@@ -229,6 +229,7 @@ class ResidentPortal(models.AbstractModel):
             "id_type": rec.id_type or "",
             "id_number": rec.id_number or "",
             "onboarding_stage": rec.onboarding_stage,
+            "onboarding_label": dict(rec._fields["onboarding_stage"].selection).get(rec.onboarding_stage) or rec.onboarding_stage,
             "progress": rec.onboarding_progress or 0,
             "street": rec.street or "",
             "city": rec.city or "",
@@ -388,9 +389,43 @@ class ResidentPortal(models.AbstractModel):
             "hist_code": rec.code or f"RH-{rec.id:04d}",
         }
 
+    def _sync_onboarding_board(self, residents):
+        """Keep each pipeline column aligned with the stored onboarding stage."""
+        for rec in residents:
+            stage = rec.onboarding_stage or "submitted"
+            progress = rec.onboarding_progress or 0
+            if stage in ("approved", "rejected"):
+                continue
+            if rec.kyc_state == "review" and stage in ("submitted", "docs"):
+                stage = "review"
+                progress = max(progress, 70)
+            elif stage not in ("submitted", "docs", "kyc", "review"):
+                stage = "submitted"
+                progress = max(progress, 15)
+            if rec.onboarding_stage != stage or rec.onboarding_progress != progress:
+                rec.write({"onboarding_stage": stage, "onboarding_progress": progress})
+
+    def _onboarding_columns(self, residents):
+        columns = [
+            ("submitted", "Submitted"),
+            ("docs", "Docs Uploaded"),
+            ("kyc", "KYC"),
+            ("review", "Review"),
+            ("approved", "Approved"),
+        ]
+        rows = [self._resident_row(rec) for rec in residents]
+        return [{
+            "id": stage,
+            "label": label,
+            "count": len([row for row in rows if row["onboarding_stage"] == stage]),
+            "rows": [row for row in rows if row["onboarding_stage"] == stage],
+        } for stage, label in columns]
+
     @api.model
     def get_dashboard_data(self):
         self._seed_demo()
+        residents = self.env["resident.resident"].search([])
+        self._sync_onboarding_board(residents)
         residents = self.env["resident.resident"].search([])
         kycs = self.env["resident.kyc.document"].search([])
         members = self.env["resident.household.member"].search([])
@@ -504,6 +539,7 @@ class ResidentPortal(models.AbstractModel):
                 "moved_out": len(residents.filtered(lambda r: r.status == "moved_out")),
                 "suspended": len(residents.filtered(lambda r: r.status == "suspended")),
             },
+            "onboarding_columns": self._onboarding_columns(residents),
         }
 
     def _comm_stats(self, comms):
@@ -607,21 +643,31 @@ class ResidentPortal(models.AbstractModel):
 
     @api.model
     def update_resident_status(self, resident_id, status, reason=False, notes=False):
-        rec = self.env["resident.resident"].browse(int(resident_id or 0))
-        if rec.exists() and status:
-            old = rec.status
-            rec.write({"status": status, "status_reason": reason or rec.status_reason, "status_since": fields.Date.context_today(self)})
-            self.env["resident.status.history"].create({
-                "resident_id": rec.id,
-                "activity_type": "status",
-                "title": "Status Changed",
-                "body": notes or f"Status updated from {old} to {status}.",
-                "old_status": old,
-                "new_status": status,
-                "performed_by": self.env.user.name,
-                "reason": reason or False,
-                "notes": notes or False,
-            })
+        rec = self.env["resident.resident"].browse(int(resident_id or 0)).exists()
+        if not rec:
+            raise UserError("Resident was not found.")
+        allowed = dict(rec._fields["status"].selection)
+        if status not in allowed:
+            raise UserError("Choose a new status.")
+        old = rec.status
+        rec.write({
+            "status": status,
+            "status_reason": (reason or "").strip() or rec.status_reason,
+            "status_since": fields.Date.context_today(self),
+        })
+        old_label = allowed.get(old) or old
+        new_label = allowed.get(status) or status
+        self.env["resident.status.history"].create({
+            "resident_id": rec.id,
+            "activity_type": "status",
+            "title": "Status Changed",
+            "body": (notes or "").strip() or f"Status updated from {old_label} to {new_label}.",
+            "old_status": old,
+            "new_status": status,
+            "performed_by": self.env.user.name,
+            "reason": (reason or "").strip() or False,
+            "notes": (notes or "").strip() or False,
+        })
         return self.get_dashboard_data()
 
     @api.model
@@ -641,21 +687,54 @@ class ResidentPortal(models.AbstractModel):
             vals.update({"status": "pending"})
         else:
             vals.update({"status": "review", "reviewer": self.env.user.name})
+            rec.resident_id.write({
+                "kyc_state": "review",
+                "onboarding_stage": "review",
+                "onboarding_progress": max(rec.resident_id.onboarding_progress or 0, 70),
+            })
         rec.write(vals)
         return self.get_dashboard_data()
 
     @api.model
     def onboard_action(self, resident_id, action):
         rec = self.env["resident.resident"].browse(int(resident_id or 0))
-        if rec.exists():
-            if action == "approve":
-                rec.write({"onboarding_stage": "approved", "status": "active", "onboarding_progress": 100, "kyc_state": "verified"})
-            elif action == "reject":
-                rec.write({"onboarding_stage": "rejected", "status": "pending"})
-            elif action == "changes":
-                rec.write({"onboarding_stage": "docs", "onboarding_progress": 40})
-            elif action == "start":
-                rec.write({"onboarding_stage": "submitted", "status": "pending", "onboarding_progress": 15})
+        if not rec.exists():
+            raise UserError("Resident was not found.")
+        today = fields.Date.context_today(self)
+        old_status = rec.status
+        old_stage = rec.onboarding_stage
+        if action == "approve":
+            vals = {
+                "onboarding_stage": "approved",
+                "status": "active",
+                "onboarding_progress": 100,
+                "kyc_state": "verified",
+                "status_since": today,
+            }
+            title = "Application approved"
+        elif action == "reject":
+            vals = {"onboarding_stage": "rejected", "status": "pending", "status_since": today}
+            title = "Application rejected"
+        elif action == "changes":
+            vals = {"onboarding_stage": "docs", "onboarding_progress": 40, "status_since": today}
+            title = "Changes requested"
+        elif action == "start":
+            vals = {"onboarding_stage": "submitted", "status": "pending", "onboarding_progress": 15, "status_since": today}
+            title = "Onboarding started"
+        else:
+            raise UserError("Choose an onboarding action.")
+        rec.write(vals)
+        if old_stage != rec.onboarding_stage or old_status != rec.status:
+            self.env["resident.status.history"].create({
+                "resident_id": rec.id,
+                "activity_type": "Onboarding",
+                "title": title,
+                "body": f"Stage changed from {old_stage or 'none'} to {rec.onboarding_stage}.",
+                "old_status": old_status,
+                "new_status": rec.status,
+                "performed_by": self.env.user.name,
+                "category": "Digital Onboarding",
+            })
         return self.get_dashboard_data()
 
     @api.model

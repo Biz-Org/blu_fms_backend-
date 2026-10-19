@@ -1,9 +1,45 @@
 import base64
+import json
 from collections import defaultdict, Counter
 from datetime import timedelta
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError
+
+
+def _pdf_base64(lines):
+    cleaned = []
+    for line in lines or [" "]:
+        text = (line or " ").replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+        text = text.encode("latin-1", "replace").decode("latin-1")
+        cleaned.append(text[:100] or " ")
+    commands = ["BT /F1 11 Tf 50 760 Td 16 TL"]
+    for index, line in enumerate(cleaned[:40]):
+        commands.append(f"({line}) Tj" if index == 0 else f"T* ({line}) Tj")
+    commands.append("ET")
+    stream = "\n".join(commands).encode("latin-1", "replace")
+    content = b"<< /Length %d >>\nstream\n" % len(stream) + stream + b"\nendstream"
+    objects = [
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        content,
+        b"<< /Type /Page /Parent 4 0 R /MediaBox [0 0 612 792] /Contents 2 0 R /Resources << /Font << /F1 1 0 R >> >> >>",
+        b"<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
+        b"<< /Type /Catalog /Pages 4 0 R >>",
+    ]
+    out = bytearray(b"%PDF-1.4\n")
+    offsets = []
+    for index, body in enumerate(objects, start=1):
+        offsets.append(len(out))
+        out.extend(b"%d 0 obj\n" % index)
+        out.extend(body)
+        out.extend(b"\nendobj\n")
+    xref = len(out)
+    out.extend(b"xref\n0 %d\n" % (len(objects) + 1))
+    out.extend(b"0000000000 65535 f \n")
+    for offset in offsets:
+        out.extend(b"%010d 00000 n \n" % offset)
+    out.extend(b"trailer << /Size %d /Root 5 0 R >>\nstartxref\n%d\n%%%%EOF" % (len(objects) + 1, xref))
+    return base64.b64encode(bytes(out)).decode()
 
 
 class PropertyOwner(models.Model):
@@ -244,6 +280,49 @@ class PropertyOwner(models.Model):
         })
         return {"id": rec.id}
 
+    @api.model
+    def update_from_dashboard(self, vals):
+        vals = dict(vals or {})
+        unit = self.env["property.unit"].browse(int(vals.get("unit_id") or 0)).exists()
+        if not unit:
+            raise UserError("Please select a unit.")
+        partner = self.env["property.unit"]._partner_by_name(vals.get("owner_name"))
+        owner_type = vals.get("owner_type") or "primary"
+        if owner_type not in dict(self._fields["owner_type"].selection):
+            owner_type = "primary"
+        status = vals.get("status") or "active"
+        if status not in dict(self._fields["status"].selection):
+            status = "active"
+        share = float(vals.get("share") or 0)
+        if share < 0 or share > 100:
+            raise UserError("Share must be between 0 and 100.")
+        payload = {
+            "property_id": unit.property_id.id,
+            "unit_id": unit.id,
+            "partner_id": partner.id,
+            "share_percent": share,
+            "owner_type": owner_type,
+            "status": status,
+            "effective_date": vals.get("effective_date") or fields.Date.today(),
+            "cost": float(vals.get("cost") or 0),
+            "deed_ref": (vals.get("deed") or "").strip() or False,
+        }
+        rec = self.browse(int(vals.get("record_id") or 0)).exists()
+        if rec and rec.unit_id == unit:
+            rec.write(payload)
+        else:
+            rec = self.create(payload)
+        if owner_type == "primary":
+            unit.owner_id = partner.id
+        self.env["property.activity.log"].create({
+            "name": f"Ownership updated: {partner.name}",
+            "description": f"{partner.name} now holds {share:g}% of unit {unit.name}.",
+            "activity_type": "document",
+            "property_id": unit.property_id.id,
+            "unit_id": unit.id,
+        })
+        return {"selected_id": f"r-{rec.id}"}
+
 
 class PropertyTenancy(models.Model):
     _name = "property.tenancy"
@@ -383,8 +462,62 @@ class PropertyTenancy(models.Model):
             "status": status,
             "status_label": {"present": "Present", "ended": "Ended", "upcoming": "Upcoming"}.get(status) or status,
             "badge": badge,
+            "rent": 0,
+            "deposit": 0,
+            "rent_label": "—",
+            "deposit_label": "—",
             "timeline": self._timeline(unit, start, end, status, logs or []),
         }
+
+    def _lease_lines(self, unit, tenant_name, start, end, rent, deposit):
+        prop = unit.property_id
+        address = ", ".join(part for part in [prop.street or prop.location, prop.city, prop.state_name, prop.zip] if part)
+        return [
+            "RESIDENTIAL LEASE AGREEMENT",
+            f"Property: {prop.name or 'Property'}",
+            f"Unit: {unit.name}",
+            f"Address: {address or '—'}",
+            f"Tenant: {tenant_name or 'Tenant'}",
+            f"Term: {self._format_date(start)} to {self._format_date(end)}",
+            f"Monthly rent: {rent:,.2f}" if rent else "Monthly rent: on file",
+            f"Security deposit: {deposit:,.2f}" if deposit else "Security deposit: on file",
+            "The tenant shall use the unit as a private residence and report maintenance promptly.",
+            f"Generated {self._format_date(fields.Date.context_today(self))} from the tenancy record.",
+        ]
+
+    @api.model
+    def lease_file(self, record_id=False, unit_id=False, tenant_name=False, move_in=False, move_out=False):
+        rec = self.browse(int(record_id or 0)).exists()
+        unit = rec.unit_id if rec else self.env["property.unit"].browse(int(unit_id or 0)).exists()
+        if not unit:
+            raise UserError("This tenancy has no unit.")
+        tenant = rec.tenant_id.name if rec and rec.tenant_id else (tenant_name or unit.tenant_id.name or "Tenant")
+        start = rec.date_start if rec else (fields.Date.to_date(move_in) if move_in else False)
+        end = rec.date_end if rec else (fields.Date.to_date(move_out) if move_out else False)
+        rent = getattr(rec, "monthly_rent", 0) if rec else 0
+        deposit = getattr(rec, "security_deposit", 0) if rec else 0
+        lines = self._lease_lines(unit, tenant, start, end, rent or 0, deposit or 0)
+        filename = f"Lease_{unit.name}_{(start.isoformat() if start else 'current')}.pdf"
+        return {"filename": filename, "mimetype": "application/pdf", "content": _pdf_base64(lines)}
+
+    @api.model
+    def log_message(self, record_id=False, unit_id=False, note=False):
+        text = (note or "").strip()
+        if not text:
+            raise UserError("Enter a message.")
+        rec = self.browse(int(record_id or 0)).exists()
+        unit = rec.unit_id if rec else self.env["property.unit"].browse(int(unit_id or 0)).exists()
+        if not unit:
+            raise UserError("Select a tenancy first.")
+        tenant = rec.tenant_id.name if rec and rec.tenant_id else (unit.tenant_id.name or "tenant")
+        self.env["property.activity.log"].create({
+            "name": f"Message for {tenant}",
+            "description": text,
+            "activity_type": "lease",
+            "property_id": unit.property_id.id,
+            "unit_id": unit.id,
+        })
+        return True
 
     @api.model
     def get_tenancy_data(self):
@@ -407,7 +540,7 @@ class PropertyTenancy(models.Model):
                 status = "upcoming"
             else:
                 status = "present"
-            rows.append(self._tenancy_row(
+            row = self._tenancy_row(
                 unit,
                 rec.tenant_id.name,
                 rec.date_start,
@@ -415,7 +548,14 @@ class PropertyTenancy(models.Model):
                 status,
                 record_id=rec.id,
                 logs=logs_by_unit.get(unit.id, []),
-            ))
+            )
+            rent = getattr(rec, "monthly_rent", 0) or 0
+            deposit = getattr(rec, "security_deposit", 0) or 0
+            row["rent"] = rent
+            row["deposit"] = deposit
+            row["rent_label"] = f"{rent:,.2f}" if rent else "—"
+            row["deposit_label"] = f"{deposit:,.2f}" if deposit else "—"
+            rows.append(row)
             seen.add(unit.id)
         names = self.TENANT_NAMES
         for unit in units.filtered(lambda rec: rec.status == "occupied" and rec.id not in seen):
@@ -526,6 +666,7 @@ class PropertyDocument(models.Model):
         default="active",
     )
     version = fields.Char(default="v1.0")
+    version_history = fields.Text()
     expiry_date = fields.Date()
     file_size = fields.Integer()
     file_kind = fields.Char()
@@ -826,6 +967,15 @@ class PropertyDocument(models.Model):
             size = len(base64.b64decode(raw))
         except Exception:
             size = 0
+        uploaded = fields.Date.context_today(self)
+        history = [{
+            "version": vals.get("version") or "v1.0",
+            "filename": filename,
+            "size_label": self._size_label(size),
+            "uploader": self.env.user.name,
+            "date_label": self._date_label(uploaded),
+            "current": True,
+        }]
         rec = self.create({
             "name": vals.get("name") or filename,
             "filename": filename,
@@ -839,6 +989,7 @@ class PropertyDocument(models.Model):
             "file_size": size,
             "file_kind": self._kind_from_name(filename),
             "notes": vals.get("notes") or "",
+            "version_history": json.dumps(history),
         })
         self.env["property.activity.log"].create({
             "name": f"Document uploaded: {rec.name}",
@@ -847,6 +998,48 @@ class PropertyDocument(models.Model):
             "property_id": prop.id,
         })
         return {"id": rec.id}
+
+    def _version_entries(self, rec):
+        today = fields.Date.context_today(self)
+        if rec.version_history:
+            try:
+                entries = json.loads(rec.version_history)
+            except (TypeError, ValueError):
+                entries = []
+            if isinstance(entries, list) and entries:
+                return entries
+        uploaded = rec.create_date.date() if rec.create_date else today
+        uploader = rec.create_uid.name if rec.create_uid else "System"
+        return [{
+            "version": rec.version or "v1.0",
+            "filename": rec.filename or rec.name,
+            "size_label": self._size_label(rec.file_size),
+            "uploader": uploader,
+            "date_label": self._date_label(uploaded),
+            "current": True,
+        }]
+
+    @api.model
+    def get_versions(self, record_id):
+        rec = self.browse(int(record_id or 0)).exists()
+        if not rec:
+            return []
+        return self._version_entries(rec)
+
+    @api.model
+    def get_file(self, record_id):
+        rec = self.browse(int(record_id or 0)).exists()
+        if not rec:
+            raise UserError("Document was not found.")
+        data = rec.with_context(bin_size=False).attachment
+        if isinstance(data, bytes):
+            data = data.decode()
+        if not data:
+            raise UserError("This file is not stored yet.")
+        return {
+            "filename": rec.filename or rec.name or "document",
+            "data": data,
+        }
 
     @api.model
     def unlink_document(self, record_id):

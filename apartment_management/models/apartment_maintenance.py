@@ -29,3 +29,4 @@ class ApartmentMaintenance(models.Model):
     scheduled_date = fields.Date()
     notes = fields.Text()
     attachment_name = fields.Char()
+    attachment = fields.Binary(attachment=True)

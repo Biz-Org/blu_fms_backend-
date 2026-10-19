@@ -19,4 +19,6 @@ class ApartmentMessage(models.Model):
     mine = fields.Boolean()
     unread = fields.Boolean()
     attachment = fields.Char()
+    attachment_file = fields.Binary(attachment=True)
+    voice = fields.Boolean()
     user_id = fields.Many2one("res.users", default=lambda self: self.env.user, ondelete="set null")

@@ -369,14 +369,14 @@
                             <article class="am-card">
                                 <h2>Documents</h2>
                                 <t t-foreach="state.data.lease_docs" t-as="doc" t-key="doc.id">
-                                    <div class="am-file-row">
+                                    <button type="button" class="am-file-row" t-on-click="() => this.downloadStoredDoc(doc)">
                                         <i class="fa fa-file-pdf-o"/>
                                         <div>
                                             <strong t-esc="doc.name"/>
                                             <span t-esc="doc.meta"/>
                                         </div>
                                         <i t-if="doc.ok" class="fa fa-check-circle is-ok"/>
-                                    </div>
+                                    </button>
                                 </t>
                             </article>
                             <article class="am-card">
@@ -398,10 +398,49 @@
                         <div class="am-page-head am-head-split">
                             <button type="button" class="am-back" t-on-click="() => this.setPropertyView('full')"><i class="fa fa-arrow-left"/> Tenant Details</button>
                             <div class="am-hero-actions">
-                                <button type="button" class="am-btn-ghost" t-on-click="() => this.ping('Messages', 'Messaging opens from the Messages page.')">Message</button>
-                                <button type="button" class="am-btn-primary" t-on-click="() => this.ping('Tenant', 'Tenant contact details are updated from the partner record.')">Edit Details</button>
+                                <button type="button" class="am-btn-ghost" t-on-click="messageTenant">Message</button>
+                                <button type="button" class="am-btn-primary" t-on-click="startEditTenant">Edit Details</button>
                             </div>
                         </div>
+                        <form t-if="state.editingTenant" class="am-card am-unit-edit" t-on-submit.prevent="saveTenant">
+                            <h2>Edit details</h2>
+                            <div class="am-unit-edit-grid">
+                                <label>TENANT NAME
+                                    <input class="am-input" t-model="state.tenantForm.name" required="required"/>
+                                </label>
+                                <label>EMAIL
+                                    <input class="am-input" type="email" t-model="state.tenantForm.email"/>
+                                </label>
+                                <label>PHONE
+                                    <input class="am-input" t-model="state.tenantForm.phone"/>
+                                </label>
+                                <label>MONTHLY RENT
+                                    <input class="am-input" type="number" min="0" step="0.01" t-model.number="state.tenantForm.rent"/>
+                                </label>
+                                <label>SECURITY DEPOSIT
+                                    <input class="am-input" type="number" min="0" step="0.01" t-model.number="state.tenantForm.deposit"/>
+                                </label>
+                                <label>AREA (SQFT)
+                                    <input class="am-input" type="number" min="0" step="1" t-model.number="state.tenantForm.area"/>
+                                </label>
+                                <label>LEASE START
+                                    <input class="am-input" type="date" t-model="state.tenantForm.lease_start"/>
+                                </label>
+                                <label>LEASE END
+                                    <input class="am-input" type="date" t-model="state.tenantForm.lease_end"/>
+                                </label>
+                                <label>AUTO-RENEW
+                                    <select class="am-input" t-model="state.tenantForm.auto_renew">
+                                        <option value="on">On</option>
+                                        <option value="off">Off</option>
+                                    </select>
+                                </label>
+                            </div>
+                            <div class="am-hero-actions">
+                                <button type="button" class="am-btn-ghost" t-on-click="cancelEditTenant">Cancel</button>
+                                <button type="submit" class="am-btn-primary" t-att-disabled="state.savingTenant">Save</button>
+                            </div>
+                        </form>
                         <article class="am-card am-tenant-hero">
                             <div class="am-avatar xl" t-esc="state.data.tenant_initials"/>
                             <div>
@@ -485,22 +524,15 @@
                             <article class="am-card">
                                 <h2>Documents</h2>
                                 <t t-foreach="state.data.lease_docs" t-as="doc" t-key="doc.id">
-                                    <div class="am-file-row">
+                                    <button type="button" class="am-file-row" t-on-click="() => this.downloadStoredDoc(doc)">
                                         <i class="fa fa-file-text-o"/>
                                         <div>
                                             <strong t-esc="doc.name"/>
                                             <span t-esc="doc.meta"/>
                                         </div>
                                         <i t-if="doc.ok" class="fa fa-check-circle is-ok"/>
-                                    </div>
+                                    </button>
                                 </t>
-                                <div class="am-file-row">
-                                    <i class="fa fa-shield"/>
-                                    <div>
-                                        <strong>Insurance Policy</strong>
-                                        <span t-esc="state.data.insurance_expires"/>
-                                    </div>
-                                </div>
                             </article>
                         </section>
                     </t>
@@ -511,7 +543,7 @@
                             <h1>Lease <span t-att-class="{ 'am-pill': true, 'is-ok': state.data.lease_status === 'Active' }" t-esc="state.data.lease_status"/></h1>
                             <div class="am-hero-actions">
                                 <button type="button" class="am-btn-ghost" t-on-click="() => this.setLeaseView('history')"><i class="fa fa-clock-o"/> View History</button>
-                                <button type="button" class="am-btn-ghost" t-on-click="() => this.ping('Lease', 'The signed agreement is available in the document viewer.')"><i class="fa fa-download"/> Download Lease</button>
+                                <button type="button" class="am-btn-ghost" t-on-click="() => this.downloadLease()"><i class="fa fa-download"/> Download Lease</button>
                                 <button type="button" class="am-btn-primary" t-on-click="() => this.setLeaseView('viewer')"><i class="fa fa-file-text-o"/> View File / Lease</button>
                             </div>
                         </div>
@@ -638,7 +670,7 @@
                     <t t-elif="state.leaseView === 'history'">
                         <div class="am-page-head am-head-split">
                             <h1>Lease History</h1>
-                            <button type="button" class="am-btn-primary" t-on-click="() => this.ping('Lease', 'New leases are created from Property Management.')">+ New Lease</button>
+                            <button type="button" class="am-btn-primary" t-on-click="openNewLease">+ New Lease</button>
                         </div>
                         <div class="am-toolbar">
                             <div class="am-search">
@@ -677,7 +709,7 @@
                                         'is-stop': row.status === 'Terminated',
                                     }" t-esc="row.status"/>
                                     <button type="button" class="am-link" t-on-click="() => this.setLeaseView('viewer')" t-esc="row.file"/>
-                                    <button type="button" class="am-icon-btn" t-on-click="() => this.setLeaseView('viewer')" title="Download">
+                                    <button type="button" class="am-icon-btn" t-on-click="() => this.downloadLease(row.id)" title="Download">
                                         <i class="fa fa-download"/>
                                     </button>
                                 </div>
@@ -740,7 +772,7 @@
                                     </div>
                                 </div>
                                 <div class="am-side-actions">
-                                    <button type="button" class="am-btn-primary" t-on-click="() => this.ping('Lease', 'Use Print to save a copy of this agreement.')">Download</button>
+                                    <button type="button" class="am-btn-primary" t-on-click="() => this.downloadLease()">Download</button>
                                     <button type="button" class="am-btn-ghost" t-on-click="printLease">Print</button>
                                     <button type="button" class="am-btn-ghost" t-on-click="() => this.setLeaseView('overview')">Close</button>
                                 </div>
@@ -790,7 +822,7 @@
                             <div class="am-hero-actions">
                                 <button type="button" class="am-btn-primary" t-att-disabled="state.renewing" t-on-click="() => this.decideRenewal('accepted')">Accept Renewal</button>
                                 <button type="button" class="am-btn-ghost" t-on-click="() => this.setLeaseView('viewer')">Review Document</button>
-                                <button type="button" class="am-btn-ghost" t-on-click="() => this.ping('Lease', 'A clarification request was sent to property management.')">Clarify</button>
+                                <button type="button" class="am-btn-ghost" t-on-click="() => this.state.showClarify = true">Clarify</button>
                                 <button type="button" class="am-btn-danger" t-att-disabled="state.renewing" t-on-click="() => this.decideRenewal('declined')">Decline</button>
                             </div>
                         </article>
@@ -1257,7 +1289,12 @@
                                                         </t>
                                                     </div>
                                                     <div class="am-chat-bubble" t-esc="note.body"/>
-                                                    <div t-if="note.attachment" class="am-file-chip">
+                                                    <audio t-if="note.voice" controls="controls" t-att-src="'/web/content/apartment.message/' + note.id + '/attachment_file'"/>
+                                                    <button t-elif="note.has_file" type="button" class="am-file-chip" t-on-click="() => this.downloadMessageFile(note)">
+                                                        <i class="fa fa-file-o"/>
+                                                        <span t-esc="note.attachment"/>
+                                                    </button>
+                                                    <div t-elif="note.attachment" class="am-file-chip">
                                                         <i class="fa fa-file-o"/>
                                                         <span t-esc="note.attachment"/>
                                                     </div>
@@ -1277,7 +1314,7 @@
                                     </div>
                                     <div class="am-composer-bar">
                                         <div class="am-composer-tools">
-                                            <button type="button" class="am-icon-btn" title="Voice" t-on-click="voiceUnavailable"><i class="fa fa-microphone"/></button>
+                                            <button type="button" class="am-icon-btn" title="Voice" t-att-class="{ 'is-recording': state.recordingVoice }" t-on-click="toggleVoice"><i class="fa fa-microphone"/></button>
                                             <button type="button" class="am-icon-btn" title="Bold" t-on-click="wrapBold"><b>B</b></button>
                                             <label class="am-icon-btn" title="Attach">
                                                 <i class="fa fa-paperclip"/>
@@ -1487,9 +1524,12 @@
                                     <button t-else="" type="button" class="am-link" t-on-click="startEditProfile"><i class="fa fa-pencil"/> Edit</button>
                                 </div>
                                 <div class="am-set-photo">
-                                    <div class="am-avatar xl" t-esc="profile().initials"/>
+                                    <img t-if="profile().image_url" class="am-avatar xl am-photo" t-att-src="profile().image_url" alt="Profile photo"/>
+                                    <div t-else="" class="am-avatar xl" t-esc="profile().initials"/>
                                     <div>
-                                        <button type="button" class="am-btn-ghost" t-on-click="changePhoto">Change Photo</button>
+                                        <label class="am-btn-ghost">Change Photo
+                                            <input type="file" class="am-hidden-file" accept="image/png,image/jpeg,image/gif,image/webp" t-on-change="changePhoto"/>
+                                        </label>
                                         <p>JPG, GIF or PNG. Max size of 800K</p>
                                     </div>
                                 </div>
@@ -1549,7 +1589,7 @@
                                         <strong>Password</strong>
                                         <p t-esc="prefs().password_changed"/>
                                     </div>
-                                    <button type="button" class="am-link" t-on-click="changePassword">Change Password</button>
+                                    <button type="button" class="am-link" t-on-click="() => this.state.showPassword = true">Change Password</button>
                                 </div>
                                 <div class="am-set-row">
                                     <div>
@@ -1579,6 +1619,107 @@
                     </article>
                 </t>
             </main>
+            <div class="am-modal-back" t-if="state.showNewLease" t-on-click="() => this.state.showNewLease = false">
+                <form class="am-card am-modal" t-on-click="(ev) => ev.stopPropagation()" t-on-submit.prevent="saveNewLease">
+                    <h2>New lease</h2>
+                    <label>TENANT NAME
+                        <input class="am-input" t-model="state.leaseForm.tenant" required="required"/>
+                    </label>
+                    <label>START
+                        <input class="am-input" type="date" t-model="state.leaseForm.start" required="required"/>
+                    </label>
+                    <label>END
+                        <input class="am-input" type="date" t-model="state.leaseForm.end" required="required"/>
+                    </label>
+                    <label>MONTHLY RENT
+                        <input class="am-input" type="number" min="0" step="0.01" t-model.number="state.leaseForm.rent"/>
+                    </label>
+                    <label>SECURITY DEPOSIT
+                        <input class="am-input" type="number" min="0" step="0.01" t-model.number="state.leaseForm.deposit"/>
+                    </label>
+                    <div class="am-hero-actions">
+                        <button type="button" class="am-btn-ghost" t-on-click="() => this.state.showNewLease = false">Cancel</button>
+                        <button type="submit" class="am-btn-primary" t-att-disabled="state.savingLease">Create</button>
+                    </div>
+                </form>
+            </div>
+            <div class="am-modal-back" t-if="state.showClarify" t-on-click="() => this.state.showClarify = false">
+                <form class="am-card am-modal" t-on-click="(ev) => ev.stopPropagation()" t-on-submit.prevent="saveClarify">
+                    <h2>Request clarification</h2>
+                    <label>QUESTION
+                        <textarea class="am-input am-textarea" t-model="state.clarifyNote" placeholder="What should property management clarify?"/>
+                    </label>
+                    <div class="am-hero-actions">
+                        <button type="button" class="am-btn-ghost" t-on-click="() => this.state.showClarify = false">Cancel</button>
+                        <button type="submit" class="am-btn-primary" t-att-disabled="state.savingClarify">Send</button>
+                    </div>
+                </form>
+            </div>
+            <div class="am-modal-back" t-if="state.showMaintDetail" t-on-click="() => this.state.showMaintDetail = false">
+                <form class="am-card am-modal" t-on-click="(ev) => ev.stopPropagation()" t-on-submit.prevent="saveMaintDetail">
+                    <h2 t-esc="state.maintDetail.code"/>
+                    <p t-esc="state.maintDetail.issue"/>
+                    <p t-if="state.maintDetail.description" t-esc="state.maintDetail.description"/>
+                    <label>STATUS
+                        <select class="am-input" t-model="state.maintDetail.state">
+                            <option value="open">Open</option>
+                            <option value="progress">In Progress</option>
+                            <option value="scheduled">Scheduled</option>
+                            <option value="done">Completed</option>
+                        </select>
+                    </label>
+                    <label>SCHEDULED DATE
+                        <input class="am-input" type="date" t-model="state.maintDetail.scheduled"/>
+                    </label>
+                    <label>NOTES
+                        <textarea class="am-input am-textarea" t-model="state.maintDetail.notes"/>
+                    </label>
+                    <button t-if="state.maintDetail.has_file" type="button" class="am-link" t-on-click="downloadMaintFile">
+                        Download <t t-esc="state.maintDetail.attachment_name || 'attachment'"/>
+                    </button>
+                    <div class="am-hero-actions">
+                        <button type="button" class="am-btn-ghost" t-on-click="() => this.state.showMaintDetail = false">Close</button>
+                        <button type="submit" class="am-btn-primary" t-att-disabled="state.savingMaint">Save</button>
+                    </div>
+                </form>
+            </div>
+            <div class="am-modal-back" t-if="state.showPassword" t-on-click="() => this.state.showPassword = false">
+                <form class="am-card am-modal" t-on-click="(ev) => ev.stopPropagation()" t-on-submit.prevent="savePassword">
+                    <h2>Change password</h2>
+                    <label>CURRENT PASSWORD
+                        <input class="am-input" type="password" t-model="state.passwordForm.current"/>
+                    </label>
+                    <label>NEW PASSWORD
+                        <input class="am-input" type="password" t-model="state.passwordForm.next"/>
+                    </label>
+                    <label>CONFIRM PASSWORD
+                        <input class="am-input" type="password" t-model="state.passwordForm.confirm"/>
+                    </label>
+                    <div class="am-hero-actions">
+                        <button type="button" class="am-btn-ghost" t-on-click="() => this.state.showPassword = false">Cancel</button>
+                        <button type="submit" class="am-btn-primary" t-att-disabled="state.savingPassword">Save</button>
+                    </div>
+                </form>
+            </div>
+            <div class="am-modal-back" t-if="state.showLogins" t-on-click="() => this.state.showLogins = false">
+                <div class="am-card am-modal" t-on-click="(ev) => ev.stopPropagation()">
+                    <h2>Login history</h2>
+                    <p t-if="state.loadingLogins">Loading sign-ins...</p>
+                    <t t-else="">
+                        <div t-foreach="state.loginRows" t-as="row" t-key="row.id" class="am-fin-list">
+                            <div>
+                                <span t-esc="row.when"/>
+                                <strong><t t-esc="row.platform"/> <t t-esc="row.browser"/></strong>
+                                <span t-esc="row.ip"/>
+                            </div>
+                        </div>
+                        <p t-if="!state.loginRows.length">No sign-ins are recorded for this account yet.</p>
+                    </t>
+                    <div class="am-hero-actions">
+                        <button type="button" class="am-btn-ghost" t-on-click="() => this.state.showLogins = false">Close</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </t>
 </templates>

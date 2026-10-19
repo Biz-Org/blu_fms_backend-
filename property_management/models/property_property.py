@@ -257,6 +257,7 @@ class PropertyProperty(models.Model):
 
         Building = self.env["property.building"]
         Floor = self.env["property.floor"]
+        Unit = self.env["property.unit"]
         for index in range(planned_buildings or 0):
             building = Building.create({
                 "name": f"{name} — Tower {index + 1}",
@@ -271,6 +272,21 @@ class PropertyProperty(models.Model):
                     "floor_number": floor_no,
                     "wing": "A" if floor_no % 2 else "B",
                 })
+
+        buildings = Building.search([("property_id", "=", prop.id)])
+        floors = Floor.search([("building_id", "in", buildings.ids)]) if buildings else Floor.browse()
+        unit_type = "2 BHK" if property_type == "residential" else "Office"
+        for seq in range(1, (planned_units or 0) + 1):
+            floor = floors[(seq - 1) % len(floors)] if floors else False
+            building = floor.building_id if floor else (buildings[(seq - 1) % len(buildings)] if buildings else False)
+            Unit.create({
+                "name": f"{seq:03d}",
+                "property_id": prop.id,
+                "building_id": building.id if building else False,
+                "floor_id": floor.id if floor else False,
+                "status": "available",
+                "unit_type": unit_type,
+            })
 
         Document = self.env["property.document"]
         type_names = {
@@ -294,6 +310,110 @@ class PropertyProperty(models.Model):
         self.env["property.activity.log"].create({
             "name": "Draft saved" if is_draft else "Property created",
             "description": f"{name} was added from FMS Dashboard",
+            "activity_type": "document",
+            "property_id": prop.id,
+        })
+        return {"id": prop.id}
+
+    @api.model
+    def get_form_values(self, property_id):
+        prop = self.browse(int(property_id or 0)).exists()
+        if not prop:
+            raise UserError("Property not found.")
+        return {
+            "id": prop.id,
+            "name": prop.name or "",
+            "code": prop.code or "",
+            "property_type": prop.property_type or "residential",
+            "operational_status": prop.operational_status or "active",
+            "description": prop.description or "",
+            "street": prop.street or "",
+            "city": prop.city or "",
+            "state_name": prop.state_name or "",
+            "zip": prop.zip or "",
+            "country": prop.country or "",
+            "planned_buildings": prop.planned_buildings or 0,
+            "planned_floors": prop.planned_floors or 0,
+            "planned_units": prop.planned_units or 0,
+            "category": prop.category or "class_a",
+        }
+
+    @api.model
+    def update_from_dashboard(self, vals):
+        vals = dict(vals or {})
+        documents = vals.pop("documents", []) or []
+        is_draft = bool(vals.pop("is_draft", False))
+        prop = self.browse(int(vals.get("id") or 0)).exists()
+        if not prop:
+            raise UserError("Property not found.")
+        name = (vals.get("name") or "").strip()
+        if not name:
+            raise UserError("Property Name is required.")
+        if not is_draft:
+            missing = []
+            for field, label in [
+                ("code", "Property Code"),
+                ("property_type", "Property Type"),
+                ("street", "Address Line 1"),
+                ("city", "City"),
+                ("state_name", "State / Province"),
+                ("zip", "Postal Code"),
+                ("country", "Country"),
+            ]:
+                if not (vals.get(field) or "").strip():
+                    missing.append(label)
+            if missing:
+                raise UserError("Please fill required fields: %s" % ", ".join(missing))
+        property_type = vals.get("property_type") or prop.property_type or "residential"
+        if property_type not in ("residential", "commercial"):
+            property_type = "residential"
+        operational_status = vals.get("operational_status") or prop.operational_status or "active"
+        if operational_status not in ("active", "maintenance"):
+            operational_status = "active"
+        category = vals.get("category") or prop.category or "class_a"
+        if category not in ("class_a", "class_b", "class_c"):
+            category = "class_a"
+        city = (vals.get("city") or "").strip()
+        prop.write({
+            "name": name,
+            "code": (vals.get("code") or "").strip() or False,
+            "property_type": property_type,
+            "operational_status": operational_status,
+            "description": vals.get("description") or False,
+            "street": (vals.get("street") or "").strip() or False,
+            "city": city or False,
+            "state_name": (vals.get("state_name") or "").strip() or False,
+            "zip": (vals.get("zip") or "").strip() or False,
+            "country": (vals.get("country") or "").strip() or prop.country or "India",
+            "location": city or prop.location,
+            "region": (vals.get("state_name") or "").strip() or prop.region,
+            "planned_buildings": max(0, int(vals.get("planned_buildings") or 0)),
+            "planned_floors": max(0, int(vals.get("planned_floors") or 0)),
+            "planned_units": max(0, int(vals.get("planned_units") or 0)),
+            "category": category,
+            "lifecycle_state": "draft" if is_draft else "active",
+        })
+        type_names = {
+            "property_reg": "Property Registration",
+            "ownership": "Ownership",
+            "building": "Building Docs",
+            "other": "Other Docs",
+        }
+        Document = self.env["property.document"]
+        for doc in documents:
+            if not doc or not doc.get("data"):
+                continue
+            doc_type = doc.get("type") if doc.get("type") in type_names else "other"
+            Document.create({
+                "name": doc.get("name") or type_names[doc_type],
+                "property_id": prop.id,
+                "document_type": doc_type,
+                "attachment": doc.get("data"),
+                "filename": doc.get("name") or type_names[doc_type],
+            })
+        self.env["property.activity.log"].create({
+            "name": "Property updated",
+            "description": f"{prop.name} was saved from FMS Dashboard",
             "activity_type": "document",
             "property_id": prop.id,
         })
@@ -332,16 +452,37 @@ class PropertyProperty(models.Model):
         occupancy = round(occupied / total_units * 100) if total_units else 0
         regions = len(set(filter(None, buildings.mapped("region") + properties.mapped("region"))))
 
-        offsets = [-8, -6, -4, -1, 2, 0]
-        months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
         colors = ["#7c3aed", "#14b8a6", "#22c55e", "#f59e0b", "#f43f5e", "#6366f1"]
-        trends = [
-            {"month": month, "value": max(0, min(100, occupancy + offset)), "color": color}
-            for month, offset, color in zip(months, offsets, colors)
-        ]
+        today = fields.Date.context_today(self)
+        tenancies = self.env["property.tenancy"].search([])
+        trends = []
+        for index, offset in enumerate(range(5, -1, -1)):
+            month_index = today.month - offset
+            year = today.year
+            while month_index <= 0:
+                month_index += 12
+                year -= 1
+            start = date(year, month_index, 1)
+            end = date(year + (1 if month_index == 12 else 0), 1 if month_index == 12 else month_index + 1, 1) - timedelta(days=1)
+            if offset == 0:
+                occupied_month = occupied
+            else:
+                occupied_month = len({
+                    tenancy.unit_id.id
+                    for tenancy in tenancies
+                    if tenancy.unit_id and tenancy.date_start and tenancy.date_start <= end and (tenancy.date_end or date(9999, 12, 31)) >= start
+                })
+            value = round(occupied_month / total_units * 100) if total_units else 0
+            trends.append({
+                "month": start.strftime("%b"),
+                "value": value,
+                "color": colors[index % len(colors)],
+            })
         max_trend = max((row["value"] for row in trends), default=1) or 1
         for row in trends:
             row["height"] = round(row["value"] / max_trend * 100)
+        prior = trends[-2]["value"] if len(trends) > 1 else occupancy
+        occupancy_delta = occupancy - prior
 
         featured_names = ["The Azure Tower", "Oakwood Estates", "Meridian Lofts"]
         ordered = sorted(
@@ -386,13 +527,14 @@ class PropertyProperty(models.Model):
         return {
             "kpis": {
                 "properties": len(properties),
-                "properties_delta": "+2 this year",
+                "properties_delta": f"{len(properties)} on record",
                 "buildings": len(buildings),
                 "buildings_hint": f"Across {regions or 1} region{'s' if (regions or 1) != 1 else ''}",
                 "units": total_units,
-                "units_delta": "+45 this month",
+                "units_delta": f"{occupied} occupied",
                 "occupancy": occupancy,
-                "occupancy_delta": "-1.2% vs last quarter",
+                "occupancy_delta": f"{occupancy_delta:+.0f}% vs prior month",
+                "occupancy_down": occupancy_delta < 0,
             },
             "status": {
                 "occupied": occupied,
@@ -426,7 +568,7 @@ class PropertyProperty(models.Model):
             return "maintenance", "Maintenance"
         return "active", "Active"
 
-    def _hierarchy_node(self, rec, kind, units, children):
+    def _hierarchy_node(self, rec, kind, units, children, parent_id=False):
         unit_labels = dict(self.env["property.unit"]._fields["status"].selection)
         if kind == "unit":
             occupied = 1 if rec.status == "occupied" else 0
@@ -459,6 +601,7 @@ class PropertyProperty(models.Model):
             "occupancy": occupied,
             "status": status,
             "status_label": status_label,
+            "parentId": parent_id or False,
             "children": children,
         }
 
@@ -497,7 +640,7 @@ class PropertyProperty(models.Model):
                         self._hierarchy_node(unit, "unit", [unit], [])
                         for unit in units_by_floor.get(floor.id, [])
                     ]
-                    floor_nodes.append(self._hierarchy_node(floor, "floor", units_by_floor.get(floor.id, []), unit_nodes))
+                    floor_nodes.append(self._hierarchy_node(floor, "floor", units_by_floor.get(floor.id, []), unit_nodes, parent_id=building.id))
                 loose_units = [
                     self._hierarchy_node(unit, "unit", [unit], [])
                     for unit in units_by_building.get(building.id, [])

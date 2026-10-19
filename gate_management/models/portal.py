@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from odoo import api, fields, models
+from odoo.exceptions import UserError
 
 
 class GatePortal(models.AbstractModel):
@@ -501,18 +502,75 @@ class GatePortal(models.AbstractModel):
     @api.model
     def run_ai_validation(self, values=None):
         values = values or {}
+        visitor = self.env["gate.visitor"].browse(int(values.get("visitor_id") or 0)).exists()
+        vehicle = self.env["fleet.vehicle"].browse(int(values.get("vehicle_id") or 0)).exists()
+        if visitor and visitor.vehicle_id and not vehicle:
+            vehicle = visitor.vehicle_id
+        if not visitor and not vehicle:
+            raise UserError("Select a visitor before running validation.")
+        reasons = []
+        blocked = False
+        review = False
+        if visitor and visitor.security_status == "blocked":
+            blocked = True
+            reasons.append("Visitor record is blocked.")
+        elif visitor and visitor.security_status == "review":
+            review = True
+            reasons.append("Visitor record is under review.")
+        if visitor and visitor.state == "draft":
+            review = True
+            reasons.append("Visitor request is still a draft.")
+        blacklist = bool(vehicle and vehicle.blacklisted)
+        permit = "Not required"
+        if vehicle:
+            if blacklist:
+                blocked = True
+                reasons.append("Vehicle is on the blacklist.")
+            if not vehicle.gate_authorized:
+                blocked = True
+                reasons.append("Vehicle is not authorized for the gate.")
+            if vehicle.permit_expiry and vehicle.permit_expiry < fields.Date.context_today(self):
+                blocked = True
+                permit = "Expired"
+                reasons.append("Vehicle permit has expired.")
+            elif vehicle.permit_number:
+                permit = "Valid"
+            if vehicle.permit_expiry and permit != "Expired":
+                permit = "Valid"
+        if blocked:
+            decision = "denied"
+        elif review:
+            decision = "review"
+        else:
+            decision = "granted"
+            reasons.append("Stored visitor and vehicle records allow entry.")
+        face = 96 if visitor and visitor.security_status == "clear" else (64 if visitor else 0)
+        vehicle_score = 28 if blacklist else (94 if vehicle else 0)
+        confidence = round((face + (vehicle_score or face)) / (2 if vehicle else 1))
+        note = " ".join(reasons)[:240]
         rec = self.env["gate.ai.validation"].create({
-            "visitor_id": int(values.get("visitor_id") or 0) or False,
-            "vehicle_id": int(values.get("vehicle_id") or 0) or False,
-            "face_confidence": float(values.get("face") or 92),
-            "vehicle_confidence": float(values.get("vehicle") or 89),
-            "qr_verified": True,
-            "blacklist_match": False,
-            "permit_status": "Valid",
-            "decision": "granted",
-            "confidence": 90,
-            "evidence_note": "Rules + stored credentials matched.",
+            "visitor_id": visitor.id if visitor else False,
+            "vehicle_id": vehicle.id if vehicle else False,
+            "face_confidence": face,
+            "vehicle_confidence": vehicle_score,
+            "qr_verified": bool(visitor and visitor.state in ("approved", "checked_in", "checked_out")),
+            "blacklist_match": blacklist,
+            "permit_status": permit,
+            "decision": decision,
+            "confidence": confidence,
+            "evidence_note": note,
         })
+        if decision == "denied":
+            self.env["gate.security.alert"].create({
+                "name": "Validation denied",
+                "alert_type": "blacklist" if blacklist else "unauthorized",
+                "severity": "critical" if blacklist else "high",
+                "gate_id": visitor.gate_id.id if visitor and visitor.gate_id else False,
+                "vehicle_id": vehicle.id if vehicle else False,
+                "visitor_id": visitor.id if visitor else False,
+                "state": "investigating",
+                "description": note,
+            })
         self.env["gate.audit.log"].create({"name": "AI validation run", "category": "ai", "details": rec.decision})
         return self.get_dashboard_data()
 

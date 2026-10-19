@@ -227,14 +227,18 @@
         </section>
         <h3>Pipeline View</h3>
         <div class="rm-kanban">
-            <t t-foreach="[['submitted','Submitted'],['docs','Docs Uploaded'],['kyc','KYC'],['review','Review'],['approved','Approved']]" t-as="col" t-key="col_index">
+            <t t-foreach="onboardingColumns()" t-as="col" t-key="col.id">
                 <div class="rm-col">
-                    <header t-esc="col[1]"/>
-                    <t t-foreach="residents().filter((r) => r.onboarding_stage === col[0])" t-as="row" t-key="row.id">
+                    <header><t t-esc="col.label"/> <span t-esc="col.count"/></header>
+                    <t t-foreach="col.rows" t-as="row" t-key="row.id">
                         <button class="rm-kanban-card" t-on-click="() => this.openResident(row, 'onboarding')">
-                            <b t-esc="row.name"/><span t-esc="row.unit"/><em t-esc="row.kyc_label"/><div class="rm-bar"><i t-attf-style="width: #{row.progress}%"/></div>
+                            <b t-esc="row.name"/>
+                            <span t-esc="row.unit"/>
+                            <em t-esc="row.kyc_label"/>
+                            <div class="rm-bar"><i t-attf-style="width: #{row.progress}%"/></div>
                         </button>
                     </t>
+                    <p t-if="!col.rows.length" class="rm-col-empty">No residents in this stage.</p>
                 </div>
             </t>
         </div>
@@ -244,7 +248,7 @@
                 <thead><tr><th>RESIDENT</th><th>UNIT</th><th>PROGRESS</th><th>KYC STATUS</th><th>STATUS</th></tr></thead>
                 <tbody>
                     <t t-foreach="residents().slice(0,8)" t-as="row" t-key="row.id">
-                        <tr t-on-click="() => this.openResident(row, 'onboarding')"><td t-esc="row.name"/><td t-esc="row.unit"/><td t-esc="row.progress + '%' "/><td t-esc="row.kyc_label"/><td t-esc="row.onboarding_stage"/></tr>
+                        <tr t-on-click="() => this.openResident(row, 'onboarding')"><td t-esc="row.name"/><td t-esc="row.unit"/><td t-esc="row.progress + '%' "/><td t-esc="row.kyc_label"/><td t-esc="row.onboarding_label"/></tr>
                     </t>
                 </tbody>
             </table>
@@ -263,10 +267,12 @@
         </div>
         <div class="rm-hero rm-card">
             <em class="rm-bigava" t-esc="r.initials"/>
-            <div><h2 t-esc="r.name"/> <span t-attf-class="rm-badge is-#{badge(r.status)}" t-esc="r.status_label"/><div class="rm-muted"><t t-esc="r.code"/> · Unit <t t-esc="r.unit"/></div></div>
+            <div><h2 t-esc="r.name"/> <span t-attf-class="rm-badge is-#{badge(r.onboarding_stage)}" t-esc="r.onboarding_label"/><div class="rm-muted"><t t-esc="r.code"/> · Unit <t t-esc="r.unit"/> · <t t-esc="r.status_label"/></div></div>
         </div>
         <div class="rm-steps">
-            <span class="is-done">Personal Information</span><span class="is-done">Residency</span><span class="is-on">Documents</span><span>KYC</span><span>Review</span><span>Approval</span>
+            <t t-foreach="onboardSteps()" t-as="step" t-key="step.label">
+                <span t-att-class="step.state" t-esc="step.label"/>
+            </t>
         </div>
         <div class="rm-split">
             <article class="rm-card"><h3>Personal Information</h3><p>Full Name <b t-esc="r.name"/></p><p>Date of Birth <b t-esc="r.dob_label"/></p><p>Gender <b t-esc="r.gender"/></p><p t-esc="r.email"/><p t-esc="r.mobile"/></article>
@@ -718,7 +724,7 @@
             <p>Current <span t-attf-class="rm-badge is-#{badge(r.status)}" t-esc="r.status_label"/></p>
             <div class="rm-grid-2">
                 <label>New Status *
-                    <select t-on-change="(ev) => this.state.statusForm.status = ev.target.value">
+                    <select t-model="state.statusForm.status">
                         <option value="">Select new status...</option>
                         <option value="active">Active</option>
                         <option value="pending">Pending</option>
@@ -729,9 +735,9 @@
                         <option value="suspended">Suspended</option>
                     </select>
                 </label>
-                <label>Reason Code *<input t-on-input="(ev) => this.state.statusForm.reason = ev.target.value" placeholder="Select reason..."/></label>
+                <label>Reason Code *<input t-model="state.statusForm.reason" placeholder="Reason for this change"/></label>
             </div>
-            <label>Additional Notes<textarea rows="4" t-on-input="(ev) => this.state.statusForm.notes = ev.target.value"/></label>
+            <label>Additional Notes<textarea rows="4" t-model="state.statusForm.notes"/></label>
             <div class="rm-form-actions">
                 <button class="rm-btn" t-on-click="() => this.state.view = 'list'">Cancel</button>
                 <button class="rm-btn is-primary" t-on-click="() => this.saveStatus()">Update Status</button>

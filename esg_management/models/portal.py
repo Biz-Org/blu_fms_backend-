@@ -599,6 +599,8 @@ class EsgPortal(models.AbstractModel):
                 "goal_note": "Latest month versus the peak month in this filter. Target pace is 15%.",
                 "current": self._fmt(water_total),
                 "previous": self._fmt(self._sum(water_prev)),
+                "current_pct": round(water_total / max(water_total, self._sum(water_prev), 1) * 100),
+                "previous_pct": round(self._sum(water_prev) / max(water_total, self._sum(water_prev), 1) * 100),
                 "variance": round(water_delta, 1),
                 "segments": self._segment_share(water),
                 "top": water_rows[:5],

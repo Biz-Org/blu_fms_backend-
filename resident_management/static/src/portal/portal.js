@@ -280,9 +280,45 @@ export class ResidentPortal extends Component {
         this.openAdd();
     }
 
+    onboardSteps() {
+        const stage = this.selected().onboarding_stage || "submitted";
+        const steps = [
+            { label: "Personal Information", key: "submitted" },
+            { label: "Residency", key: "submitted" },
+            { label: "Documents", key: "docs" },
+            { label: "KYC", key: "kyc" },
+            { label: "Review", key: "review" },
+            { label: "Approval", key: "approved" },
+        ];
+        const order = ["submitted", "docs", "kyc", "review", "approved"];
+        const current = stage === "rejected" ? order.indexOf("review") : order.indexOf(stage);
+        return steps.map((step) => {
+            const at = order.indexOf(step.key);
+            let state = "";
+            if (stage === "rejected" && step.key === "approved") {
+                state = "is-bad";
+            } else if (at < current) {
+                state = "is-done";
+            } else if (at === current) {
+                state = "is-on";
+            }
+            return { label: step.label, state };
+        });
+    }
+
     async onboard(action) {
-        await this.call("onboard_action", [this.selected().id, action]);
-        this.notification.add("Onboarding updated.", { type: "success" });
+        const resident = this.selected();
+        if (!resident.id) {
+            this.notification.add("Select an application first.", { type: "warning" });
+            return;
+        }
+        const before = this.state.data;
+        await this.call("onboard_action", [resident.id, action]);
+        if (this.state.data === before) {
+            return;
+        }
+        const labels = { approve: "approved", reject: "rejected", changes: "sent back for documents", start: "started" };
+        this.notification.add(`${resident.name} is ${labels[action] || "updated"}. Status: ${this.selected().onboarding_label}.`, { type: "success" });
     }
 
     async openKyc(row) {
@@ -475,16 +511,46 @@ export class ResidentPortal extends Component {
     }
 
     openStatusChange(row) {
+        if (!row || !row.id) {
+            this.notification.add("Select a resident first.", { title: "Resident Status", type: "warning" });
+            return;
+        }
         this.state.selectedId = row.id;
-        this.state.statusForm = { resident_id: row.id, status: "", reason: "", notes: "", date: "" };
+        this.state.statusForm = {
+            resident_id: row.id,
+            status: row.status || "",
+            reason: row.status_reason || "",
+            notes: "",
+            date: "",
+        };
         this.state.page = "status";
         this.state.view = "change";
     }
 
     async saveStatus() {
         const form = this.state.statusForm;
-        await this.call("update_resident_status", [form.resident_id, form.status, form.reason, form.notes]);
-        this.state.view = "list";
+        if (!form.resident_id || !form.status) {
+            this.notification.add("Choose a new status.", { title: "Resident Status", type: "warning" });
+            return;
+        }
+        this.state.saving = true;
+        try {
+            this.state.data = await this.orm.call("resident.portal", "update_resident_status", [
+                form.resident_id,
+                form.status,
+                form.reason,
+                form.notes,
+            ]);
+            this.state.view = "list";
+            this.notification.add("Status updated.", { title: "Resident Status", type: "success" });
+        } catch (error) {
+            this.notification.add(error?.data?.message || error?.message || "Could not update the status.", {
+                title: "Resident Status",
+                type: "danger",
+            });
+        } finally {
+            this.state.saving = false;
+        }
     }
 
     openHistory(row) {
@@ -501,6 +567,10 @@ export class ResidentPortal extends Component {
 
     kpis() {
         return this.state.data.kpis || {};
+    }
+
+    onboardingColumns() {
+        return this.state.data.onboarding_columns || [];
     }
 
     pipeline() {
@@ -528,6 +598,9 @@ export class ResidentPortal extends Component {
             progress: "info",
             done: "ok",
             approved: "ok",
+            submitted: "info",
+            docs: "warn",
+            kyc: "info",
         }[status] || "muted";
     }
 

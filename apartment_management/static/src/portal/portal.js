@@ -86,6 +86,8 @@ export class ApartmentPortal extends Component {
                 notes: "",
                 priority: "medium",
                 fileNames: [],
+                fileName: "",
+                fileContent: "",
             },
             creatingMaint: false,
             msgSearch: "",
@@ -95,7 +97,25 @@ export class ApartmentPortal extends Component {
             msgCompose: false,
             msgSubject: "",
             msgFile: "",
+            msgFileContent: "",
+            msgVoice: false,
+            recordingVoice: false,
             sendingMsg: false,
+            showNewLease: false,
+            savingLease: false,
+            leaseForm: { tenant: "", start: "", end: "", rent: 0, deposit: 0 },
+            showClarify: false,
+            clarifyNote: "",
+            savingClarify: false,
+            showMaintDetail: false,
+            maintDetail: { id: false, issue: "", description: "", notes: "", state: "open", attachment_name: "", has_file: false, scheduled: "" },
+            savingMaint: false,
+            showPassword: false,
+            savingPassword: false,
+            passwordForm: { current: "", next: "", confirm: "" },
+            showLogins: false,
+            loadingLogins: false,
+            loginRows: [],
             docView: "list",
             docSearch: "",
             docTab: "all",
@@ -110,6 +130,19 @@ export class ApartmentPortal extends Component {
             editingUnit: false,
             savingUnit: false,
             unitForm: { name: "", layout: "", area: "" },
+            editingTenant: false,
+            savingTenant: false,
+            tenantForm: {
+                name: "",
+                email: "",
+                phone: "",
+                rent: 0,
+                deposit: 0,
+                lease_start: "",
+                lease_end: "",
+                area: 0,
+                auto_renew: "off",
+            },
             editingProfile: false,
             savingProfile: false,
             savingPref: false,
@@ -264,7 +297,49 @@ export class ApartmentPortal extends Component {
     setPropertyView(view) {
         this.state.propertyView = view;
         this.state.editingUnit = false;
+        this.state.editingTenant = false;
         window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    startEditTenant() {
+        const data = this.state.data || {};
+        this.state.tenantForm = {
+            name: data.tenant_name || "",
+            email: data.tenant_email || "",
+            phone: data.tenant_phone || "",
+            rent: data.rent_amount || 0,
+            deposit: data.deposit_amount || 0,
+            lease_start: data.lease_start_iso || "",
+            lease_end: data.lease_end_iso || "",
+            area: data.area_sqft || 0,
+            auto_renew: data.auto_renew_on ? "on" : "off",
+        };
+        this.state.editingTenant = true;
+    }
+
+    cancelEditTenant() {
+        this.state.editingTenant = false;
+    }
+
+    async saveTenant() {
+        const form = this.state.tenantForm;
+        if (!String(form.name || "").trim()) {
+            this.notification.add("Tenant name is required.", { title: "Tenant", type: "warning" });
+            return;
+        }
+        this.state.savingTenant = true;
+        try {
+            this.state.data = await this.orm.call("apartment.portal", "update_tenant_details", [form]);
+            this.state.editingTenant = false;
+            this.notification.add("Tenant details saved.", { title: "Tenant", type: "success" });
+        } catch (error) {
+            this.notification.add(error?.data?.message || error?.message || "Could not save tenant details.", {
+                title: "Tenant",
+                type: "danger",
+            });
+        } finally {
+            this.state.savingTenant = false;
+        }
     }
 
     startEditUnit() {
@@ -317,6 +392,121 @@ export class ApartmentPortal extends Component {
         this.notification.add(message, { title, type: "info" });
     }
 
+    readFile(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const text = String(reader.result || "");
+                resolve(text.includes(",") ? text.split(",").slice(1).join(",") : text);
+            };
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(file);
+        });
+    }
+
+    saveDownload(payload) {
+        const binary = atob(payload.content || "");
+        const bytes = new Uint8Array(binary.length);
+        for (let index = 0; index < binary.length; index++) {
+            bytes[index] = binary.charCodeAt(index);
+        }
+        const blob = new Blob([bytes], { type: payload.mimetype || "application/octet-stream" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = payload.filename || "download";
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
+
+    async downloadStoredDoc(doc) {
+        if (!doc?.record_id && !doc?.has_file) {
+            await this.downloadLease();
+            return;
+        }
+        try {
+            const payload = await this.orm.call("apartment.portal", "get_document_file", [doc.record_id || doc.id]);
+            this.saveDownload(payload);
+        } catch (error) {
+            this.notification.add(error?.data?.message || error?.message || "Could not download the file.", {
+                title: "Documents",
+                type: "danger",
+            });
+        }
+    }
+
+    async downloadLease(tenancyId) {
+        try {
+            const payload = await this.orm.call("apartment.portal", "download_lease", [tenancyId || false]);
+            this.saveDownload(payload);
+        } catch (error) {
+            this.notification.add(error?.data?.message || error?.message || "Could not download the lease.", {
+                title: "Lease",
+                type: "danger",
+            });
+        }
+    }
+
+    messageTenant() {
+        this.onNav("messages");
+        this.openCompose();
+        this.state.msgSubject = `Message for ${this.state.data.tenant_name || "tenant"}`;
+    }
+
+    openNewLease() {
+        const data = this.state.data || {};
+        this.state.leaseForm = {
+            tenant: data.tenant_name || "",
+            start: data.lease_end_iso || "",
+            end: "",
+            rent: data.rent_amount || 0,
+            deposit: data.deposit_amount || 0,
+        };
+        this.state.showNewLease = true;
+    }
+
+    async saveNewLease() {
+        const form = this.state.leaseForm;
+        if (!String(form.tenant || "").trim() || !form.start || !form.end) {
+            this.notification.add("Tenant, start date, and end date are required.", { title: "Lease", type: "warning" });
+            return;
+        }
+        this.state.savingLease = true;
+        try {
+            this.state.data = await this.orm.call("apartment.portal", "create_lease", [form]);
+            this.state.showNewLease = false;
+            this.notification.add("Lease created.", { title: "Lease", type: "success" });
+        } catch (error) {
+            this.notification.add(error?.data?.message || error?.message || "Could not create the lease.", {
+                title: "Lease",
+                type: "danger",
+            });
+        } finally {
+            this.state.savingLease = false;
+        }
+    }
+
+    async saveClarify() {
+        this.state.savingClarify = true;
+        try {
+            this.state.data = await this.orm.call("apartment.portal", "request_clarification", [this.state.clarifyNote]);
+            this.state.showClarify = false;
+            this.state.clarifyNote = "";
+            const latest = this.state.data.inbox && this.state.data.inbox.threads[0];
+            if (latest) {
+                this.state.msgThread = latest.id;
+            }
+            this.notification.add("Clarification request sent.", { title: "Lease", type: "success" });
+            this.onNav("messages");
+        } catch (error) {
+            this.notification.add(error?.data?.message || error?.message || "Could not send the request.", {
+                title: "Lease",
+                type: "danger",
+            });
+        } finally {
+            this.state.savingClarify = false;
+        }
+    }
+
     filteredDocs() {
         const docs = this.state.data.docs || [];
         const q = (this.state.search || "").trim().toLowerCase();
@@ -326,13 +516,19 @@ export class ApartmentPortal extends Component {
         return docs.filter((doc) => (doc.name || "").toLowerCase().includes(q));
     }
 
-    downloadDoc(doc) {
-        if (doc?.has_file && doc.record_id) {
-            const name = encodeURIComponent(doc.name || "document");
-            window.open(`/web/content/property.document/${doc.record_id}/attachment/${name}?download=true`, "_blank");
-            return;
+    async downloadDoc(doc) {
+        try {
+            const payload = await this.orm.call("apartment.portal", "download_card_document", [
+                doc?.record_id || false,
+                doc?.name || "Property Rules",
+            ]);
+            this.saveDownload(payload);
+        } catch (error) {
+            this.notification.add(error?.data?.message || error?.message || "Could not download the document.", {
+                title: "Documents",
+                type: "danger",
+            });
         }
-        this.ping("Documents", `${doc?.name || "Document"} is available from property management.`);
     }
 
     libraryRows() {
@@ -477,8 +673,8 @@ export class ApartmentPortal extends Component {
         if (!current) {
             return;
         }
-        if (current.has_file && current.record_id) {
-            this.downloadDoc(current);
+        if (current.has_file && (current.record_id || current.id)) {
+            this.downloadStoredDoc(current);
             return;
         }
         const preview = this.docPreview();
@@ -503,7 +699,12 @@ export class ApartmentPortal extends Component {
         }
         this.state.uploadingDoc = true;
         try {
-            this.state.data = await this.orm.call("apartment.portal", "upload_library_doc", [file.name, this.state.docTab === "all" ? "property" : this.state.docTab]);
+            const content = await this.readFile(file);
+            this.state.data = await this.orm.call("apartment.portal", "upload_library_doc", [
+                file.name,
+                this.state.docTab === "all" ? "property" : this.state.docTab,
+                content,
+            ]);
             this.state.docView = "list";
             this.state.docPage = 1;
             this.notification.add("Document uploaded.", { title: "Documents", type: "success" });
@@ -619,8 +820,16 @@ export class ApartmentPortal extends Component {
         }
     }
 
-    receiptPing(row) {
-        this.ping("Receipt", row.receipt ? `Receipt for ${row.reference} is ready.` : "No receipt for this payment yet.");
+    async receiptPing(row) {
+        try {
+            const payload = await this.orm.call("apartment.portal", "get_payment_receipt", [row.id]);
+            this.saveDownload(payload);
+        } catch (error) {
+            this.notification.add(error?.data?.message || error?.message || "Could not download the receipt.", {
+                title: "Receipt",
+                type: "danger",
+            });
+        }
     }
 
     ledger() {
@@ -771,9 +980,17 @@ export class ApartmentPortal extends Component {
         this.state.maintForm.priority = id;
     }
 
-    onMaintFiles(ev) {
+    async onMaintFiles(ev) {
         const files = [...(ev.target.files || [])];
         this.state.maintForm.fileNames = files.map((file) => file.name);
+        const first = files[0];
+        if (first) {
+            this.state.maintForm.fileName = first.name;
+            this.state.maintForm.fileContent = await this.readFile(first);
+        } else {
+            this.state.maintForm.fileName = "";
+            this.state.maintForm.fileContent = "";
+        }
     }
 
     async submitMaint() {
@@ -786,9 +1003,6 @@ export class ApartmentPortal extends Component {
         }
         this.state.creatingMaint = true;
         try {
-            const extra = this.state.maintForm.fileNames.length
-                ? `\nFiles: ${this.state.maintForm.fileNames.join(", ")}`
-                : "";
             this.state.data = await this.orm.call("apartment.portal", "create_maintenance_request", [{
                 title: this.state.maintForm.title,
                 category: this.state.maintForm.category,
@@ -797,8 +1011,13 @@ export class ApartmentPortal extends Component {
                 priority: this.state.maintForm.priority,
                 access_date: this.state.maintForm.accessDate || false,
                 access_slot: this.state.maintForm.accessSlot,
-                notes: (this.state.maintForm.notes || "") + extra,
+                notes: this.state.maintForm.notes || "",
+                file_name: this.state.maintForm.fileName || false,
+                file_content: this.state.maintForm.fileContent || false,
             }]);
+            this.state.maintForm.fileNames = [];
+            this.state.maintForm.fileName = "";
+            this.state.maintForm.fileContent = "";
             this.state.maintView = "list";
             this.notification.add("Maintenance request submitted.", { title: "Maintenance", type: "success" });
         } catch (error) {
@@ -812,7 +1031,51 @@ export class ApartmentPortal extends Component {
     }
 
     viewMaint(row) {
-        this.ping("Maintenance", `${row.code}: ${row.issue} · ${row.status}`);
+        this.state.maintDetail = {
+            id: row.id,
+            code: row.code,
+            issue: row.issue,
+            description: row.description || "",
+            notes: row.notes || "",
+            state: row.state || "open",
+            attachment_name: row.attachment_name || "",
+            has_file: row.has_file,
+            scheduled: "",
+        };
+        this.state.showMaintDetail = true;
+    }
+
+    async saveMaintDetail() {
+        const detail = this.state.maintDetail;
+        this.state.savingMaint = true;
+        try {
+            this.state.data = await this.orm.call("apartment.portal", "update_maintenance", [detail.id, {
+                state: detail.state,
+                notes: detail.notes,
+                scheduled_date: detail.scheduled || false,
+            }]);
+            this.state.showMaintDetail = false;
+            this.notification.add("Maintenance request updated.", { title: "Maintenance", type: "success" });
+        } catch (error) {
+            this.notification.add(error?.data?.message || error?.message || "Could not update the request.", {
+                title: "Maintenance",
+                type: "danger",
+            });
+        } finally {
+            this.state.savingMaint = false;
+        }
+    }
+
+    async downloadMaintFile() {
+        try {
+            const payload = await this.orm.call("apartment.portal", "get_maintenance_file", [this.state.maintDetail.id]);
+            this.saveDownload(payload);
+        } catch (error) {
+            this.notification.add(error?.data?.message || error?.message || "Could not download the file.", {
+                title: "Maintenance",
+                type: "danger",
+            });
+        }
     }
 
     inbox() {
@@ -882,6 +1145,8 @@ export class ApartmentPortal extends Component {
         this.state.msgSubject = "";
         this.state.msgReply = "";
         this.state.msgFile = "";
+        this.state.msgFileContent = "";
+        this.state.msgVoice = false;
     }
 
     focusComposer() {
@@ -898,14 +1163,61 @@ export class ApartmentPortal extends Component {
         this.focusComposer();
     }
 
-    voiceUnavailable() {
-        this.ping("Messages", "Voice notes are not available in this portal.");
+    async toggleVoice() {
+        if (this._recorder && this._recorder.state === "recording") {
+            this._recorder.stop();
+            return;
+        }
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const recorder = new MediaRecorder(stream);
+            const chunks = [];
+            recorder.ondataavailable = (event) => {
+                if (event.data && event.data.size) {
+                    chunks.push(event.data);
+                }
+            };
+            recorder.onstop = async () => {
+                stream.getTracks().forEach((track) => track.stop());
+                const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
+                this.state.msgFile = "Voice note.webm";
+                this.state.msgVoice = true;
+                this.state.msgFileContent = await this.readFile(blob);
+                this.state.recordingVoice = false;
+                this._recorder = null;
+            };
+            this._recorder = recorder;
+            this.state.recordingVoice = true;
+            recorder.start();
+        } catch (error) {
+            this.state.recordingVoice = false;
+            this.notification.add("Allow microphone access to record a voice note.", { title: "Messages", type: "warning" });
+        }
     }
 
-    onMsgFile(ev) {
+    async onMsgFile(ev) {
         const file = ev.target.files && ev.target.files[0];
-        this.state.msgFile = file ? file.name : "";
         ev.target.value = "";
+        this.state.msgVoice = false;
+        if (!file) {
+            this.state.msgFile = "";
+            this.state.msgFileContent = "";
+            return;
+        }
+        this.state.msgFile = file.name;
+        this.state.msgFileContent = await this.readFile(file);
+    }
+
+    async downloadMessageFile(note) {
+        try {
+            const payload = await this.orm.call("apartment.portal", "get_message_file", [note.id]);
+            this.saveDownload(payload);
+        } catch (error) {
+            this.notification.add(error?.data?.message || error?.message || "Could not download the file.", {
+                title: "Messages",
+                type: "danger",
+            });
+        }
     }
 
     printThread() {
@@ -933,6 +1245,9 @@ export class ApartmentPortal extends Component {
                 this.state.data = await this.orm.call("apartment.portal", "start_thread", [
                     this.state.msgSubject,
                     this.state.msgReply,
+                    this.state.msgFile || false,
+                    this.state.msgFileContent || false,
+                    this.state.msgVoice,
                 ]);
                 const latest = (this.state.data.inbox && this.state.data.inbox.threads[0]) || null;
                 this.state.msgThread = latest ? latest.id : this.state.msgThread;
@@ -942,10 +1257,14 @@ export class ApartmentPortal extends Component {
                     thread.id,
                     this.state.msgReply,
                     this.state.msgFile || false,
+                    this.state.msgFileContent || false,
+                    this.state.msgVoice,
                 ]);
             }
             this.state.msgReply = "";
             this.state.msgFile = "";
+            this.state.msgFileContent = "";
+            this.state.msgVoice = false;
         } catch (error) {
             this.notification.add(error?.data?.message || error?.message || "Could not send the message.", {
                 title: "Messages",
@@ -1099,16 +1418,64 @@ export class ApartmentPortal extends Component {
         }
     }
 
-    changePhoto() {
-        this.ping("Profile", "Use the contact record in Odoo to change this photo.");
+    async changePhoto(ev) {
+        const file = ev.target.files && ev.target.files[0];
+        ev.target.value = "";
+        if (!file) {
+            return;
+        }
+        try {
+            const content = await this.readFile(file);
+            this.state.data = await this.orm.call("apartment.portal", "update_photo", [content]);
+            this.notification.add("Photo updated.", { title: "Profile", type: "success" });
+        } catch (error) {
+            this.notification.add(error?.data?.message || error?.message || "Could not update the photo.", {
+                title: "Profile",
+                type: "danger",
+            });
+        }
     }
 
-    changePassword() {
-        this.ping("Security", "Open your Odoo account settings to change the password.");
+    async savePassword() {
+        const form = this.state.passwordForm;
+        if (!form.current || !form.next) {
+            this.notification.add("Enter the current password and a new password.", { title: "Security", type: "warning" });
+            return;
+        }
+        if (form.next !== form.confirm) {
+            this.notification.add("The new password and confirmation do not match.", { title: "Security", type: "warning" });
+            return;
+        }
+        this.state.savingPassword = true;
+        try {
+            this.state.data = await this.orm.call("apartment.portal", "change_own_password", [form.current, form.next]);
+            this.state.showPassword = false;
+            this.state.passwordForm = { current: "", next: "", confirm: "" };
+            this.notification.add("Password updated.", { title: "Security", type: "success" });
+        } catch (error) {
+            this.notification.add(error?.data?.message || error?.message || "Could not change the password.", {
+                title: "Security",
+                type: "danger",
+            });
+        } finally {
+            this.state.savingPassword = false;
+        }
     }
 
-    loginHistory() {
-        this.ping("Security", "Recent sign-ins are available from the Odoo user log.");
+    async loginHistory() {
+        this.state.showLogins = true;
+        this.state.loadingLogins = true;
+        try {
+            this.state.loginRows = await this.orm.call("apartment.portal", "get_login_history", []);
+        } catch (error) {
+            this.state.loginRows = [];
+            this.notification.add(error?.data?.message || error?.message || "Could not load login history.", {
+                title: "Security",
+                type: "danger",
+            });
+        } finally {
+            this.state.loadingLogins = false;
+        }
     }
 }
 

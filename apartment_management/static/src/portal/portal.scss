@@ -771,6 +771,25 @@
     border-bottom: 1px solid var(--am-line);
 }
 
+.o_apartment_portal button.am-file-row {
+    width: 100%;
+    border-left: 0;
+    border-right: 0;
+    border-top: 0;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+}
+
+.o_apartment_portal .am-avatar.am-photo {
+    object-fit: cover;
+    padding: 0;
+}
+
+.o_apartment_portal .am-icon-btn.is-recording {
+    color: #b91c1c;
+}
+
 .o_apartment_portal .am-file-row span {
     display: block;
     color: var(--am-muted);

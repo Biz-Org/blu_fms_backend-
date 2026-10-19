@@ -218,11 +218,19 @@ export class EsgPortal extends Component {
     linePoints(series) {
         const rows = series || [];
         if (!rows.length) return "";
-        const max = Math.max(...rows.map((row) => row.value || 0), 1);
+        const values = rows.map((row) => Number(row.value) || 0);
+        const rawMax = Math.max(...values, 1);
+        const rawMin = Math.min(...values);
+        const pad = Math.max((rawMax - rawMin) * 0.25, rawMax * 0.04);
+        const min = Math.max(0, rawMin - pad);
+        const max = rawMax + pad;
+        const span = Math.max(max - min, 1);
+        const top = 10;
+        const inner = 76;
         return rows.map((row, index) => {
             const x = rows.length === 1 ? 140 : (index / (rows.length - 1)) * 280;
-            const y = 86 - ((row.value || 0) / max) * 74;
-            return `${x},${y}`;
+            const y = top + (1 - ((Number(row.value) || 0) - min) / span) * inner;
+            return `${Math.round(x)},${Math.round(y)}`;
         }).join(" ");
     }
 
@@ -242,17 +250,23 @@ export class EsgPortal extends Component {
     energyChart(series) {
         const rows = series || [];
         const width = 640;
-        const height = 210;
-        const left = 44;
-        const right = 12;
-        const top = 22;
-        const bottom = 36;
-        const max = Math.max(...rows.map((row) => Number(row.value) || 0), 1);
+        const height = 132;
+        const left = 24;
+        const right = 24;
+        const top = 18;
+        const bottom = 22;
+        const values = rows.map((row) => Number(row.value) || 0);
+        const rawMax = Math.max(...values, 1);
+        const rawMin = values.length ? Math.min(...values) : 0;
+        const pad = Math.max((rawMax - rawMin) * 0.2, rawMax * 0.04);
+        const min = Math.max(0, rawMin - pad);
+        const max = rawMax + pad;
+        const span = Math.max(max - min, 1);
         const innerW = width - left - right;
         const innerH = height - top - bottom;
         const dots = rows.map((row, index) => {
             const x = rows.length === 1 ? left + innerW / 2 : left + (index / (rows.length - 1)) * innerW;
-            const y = top + (1 - (Number(row.value) || 0) / max) * innerH;
+            const y = top + (1 - ((Number(row.value) || 0) - min) / span) * innerH;
             return {
                 x: Math.round(x * 10) / 10,
                 y: Math.round(y * 10) / 10,
@@ -264,7 +278,7 @@ export class EsgPortal extends Component {
         const area = dots.length
             ? `M ${dots[0].x} ${top + innerH} L ${dots.map((dot) => `${dot.x} ${dot.y}`).join(" L ")} L ${dots[dots.length - 1].x} ${top + innerH} Z`
             : "";
-        return { dots, line, area, baseline: top + innerH };
+        return { dots, line, area, baseline: top + innerH, labelY: height - 4 };
     }
 
     async applyFilters() {

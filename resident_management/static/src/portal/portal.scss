@@ -124,14 +124,30 @@
 .o_resident_portal .rm-col { background: #fff; border: 1px solid var(--rm-line); border-radius: 12px; padding: 10px; min-height: 160px; }
 .o_resident_portal .rm-col header { font-weight: 700; margin-bottom: 8px; }
 .o_resident_portal .rm-kanban-card {
-    width: 100%; text-align: left; border: 1px solid var(--rm-line); border-radius: 10px; padding: 8px; margin-bottom: 8px; background: #fff; cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    width: 100%;
+    text-align: left;
+    border: 1px solid var(--rm-line);
+    border-radius: 10px;
+    padding: 8px;
+    margin-bottom: 8px;
+    background: #fff;
+    cursor: pointer;
 }
+.o_resident_portal .rm-kanban-card span,
+.o_resident_portal .rm-kanban-card em { display: block; color: var(--rm-muted); font-size: 12px; font-style: normal; }
+.o_resident_portal .rm-col header span { margin-left: 6px; color: var(--rm-muted); font-weight: 600; }
+.o_resident_portal .rm-col-empty { color: var(--rm-muted); font-size: 12px; margin: 8px 0 0; }
 .o_resident_portal .rm-bar { height: 6px; background: #e5e7eb; border-radius: 99px; overflow: hidden; margin-top: 6px; }
 .o_resident_portal .rm-bar i { display: block; height: 100%; background: var(--rm-accent); }
 .o_resident_portal .rm-hero { display: flex; gap: 14px; align-items: center; }
 .o_resident_portal .rm-steps { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
 .o_resident_portal .rm-steps span { padding: 6px 10px; border-radius: 999px; background: #fff; border: 1px solid var(--rm-line); font-size: 12px; }
 .o_resident_portal .rm-steps span.is-done, .o_resident_portal .rm-steps span.is-on { background: var(--rm-accent); color: #fff; border-color: var(--rm-accent); }
+.o_resident_portal .rm-steps span.is-bad { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
 .o_resident_portal .rm-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
 .o_resident_portal .rm-tabs button { border: 0; background: none; padding: 8px 4px; cursor: pointer; color: var(--rm-muted); }
 .o_resident_portal .rm-tabs button.is-on { color: var(--rm-accent); border-bottom: 2px solid var(--rm-accent); }

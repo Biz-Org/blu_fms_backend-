@@ -1,8 +1,61 @@
+import base64
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
 from odoo import api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessDenied, UserError
+from odoo.http import request
+
+
+def _pdf_base64(lines):
+    """Build a simple text PDF without an external renderer."""
+    cleaned = []
+    for line in lines or [" "]:
+        text = (line or " ").replace("“", '"').replace("”", '"').replace("’", "'")
+        text = text.encode("latin-1", "replace").decode("latin-1")
+        text = text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+        cleaned.append(text[:100] or " ")
+    pages = [cleaned[index:index + 40] for index in range(0, len(cleaned), 40)] or [[" "]]
+    objects = []
+
+    def add(body):
+        objects.append(body)
+        return len(objects)
+
+    font_id = add(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>")
+    page_ids = []
+    content_ids = []
+    for page_lines in pages:
+        commands = ["BT /F1 11 Tf 50 760 Td 16 TL"]
+        for index, line in enumerate(page_lines):
+            commands.append(f"({line}) Tj" if index == 0 else f"T* ({line}) Tj")
+        commands.append("ET")
+        stream = "\n".join(commands).encode("latin-1", "replace")
+        content_ids.append(add(b"<< /Length %d >>\nstream\n" % len(stream) + stream + b"\nendstream"))
+    for content_id in content_ids:
+        page_ids.append(add(
+            b"<< /Type /Page /Parent 0 0 R /MediaBox [0 0 612 792] /Contents %d 0 R /Resources << /Font << /F1 %d 0 R >> >> >>" % (content_id, font_id)
+        ))
+    kids = " ".join(f"{page_id} 0 R" for page_id in page_ids).encode()
+    pages_id = add(b"<< /Type /Pages /Count %d /Kids [%s] >>" % (len(page_ids), kids))
+    catalog_id = add(b"<< /Type /Catalog /Pages %d 0 R >>" % pages_id)
+    fixed = []
+    for body in objects:
+        fixed.append(body.replace(b"/Parent 0 0 R", b"/Parent %d 0 R" % pages_id))
+    out = bytearray(b"%PDF-1.4\n")
+    offsets = [0]
+    for index, body in enumerate(fixed, start=1):
+        offsets.append(len(out))
+        out.extend(b"%d 0 obj\n" % index)
+        out.extend(body)
+        out.extend(b"\nendobj\n")
+    xref = len(out)
+    out.extend(b"xref\n0 %d\n" % (len(fixed) + 1))
+    out.extend(b"0000000000 65535 f \n")
+    for offset in offsets[1:]:
+        out.extend(b"%010d 00000 n \n" % offset)
+    out.extend(b"trailer << /Size %d /Root %d 0 R >>\nstartxref\n%d\n%%%%EOF" % (len(fixed) + 1, catalog_id, xref))
+    return base64.b64encode(bytes(out)).decode()
 
 
 class ApartmentPortal(models.AbstractModel):
@@ -328,6 +381,7 @@ class ApartmentPortal(models.AbstractModel):
         manager = prop.manager_id.name if prop.manager_id else "Property Manager"
         paid_total = sum(payments.filtered(lambda rec: rec.state == "paid").mapped("amount"))
         deposit = tenancy.security_deposit if tenancy and tenancy.security_deposit else rent * 3
+        self._ensure_standard_docs(unit, tenant_name, start, end, rent, deposit, address)
         real_docs = [{
             "id": f"d-{doc.id}",
             "record_id": doc.id,
@@ -339,11 +393,19 @@ class ApartmentPortal(models.AbstractModel):
             real_docs = [
                 {"id": "rules", "record_id": False, "name": "Property Rules", "size_label": "", "has_file": False},
             ]
-        lease_docs = [
-            {"id": "lease-pdf", "name": "Signed Lease Agreement", "meta": "PDF", "ok": True},
-            {"id": "insure", "name": "Property Insurance", "meta": "PDF", "ok": True},
-            {"id": "tenant-id", "name": "Tenant ID", "meta": "Verified", "ok": True},
-        ]
+        lease_docs = []
+        for doc in self.env["apartment.document"].search([
+            ("unit_id", "=", unit.id),
+            ("name", "in", ["Signed Lease Agreement", "Property Insurance", "Tenant ID"]),
+        ]):
+            lease_docs.append({
+                "id": doc.id,
+                "record_id": doc.id,
+                "name": doc.name,
+                "meta": "PDF" if doc.file else "On file",
+                "ok": doc.status == "verified",
+                "has_file": bool(doc.file),
+            })
         open_issues = [{
             "id": ticket.id,
             "name": ticket.name,
@@ -418,6 +480,11 @@ class ApartmentPortal(models.AbstractModel):
             "tenant_role": "Primary Tenant",
             "tenant_phone": phone,
             "tenant_email": email,
+            "rent_amount": rent,
+            "deposit_amount": deposit,
+            "lease_start_iso": start.isoformat() if start else "",
+            "lease_end_iso": end.isoformat() if end else "",
+            "auto_renew_on": bool(tenancy and tenancy.auto_renew),
             "open_issues": open_issues,
             "lease": self._lease_page(unit, prop, tenancy, tenant, tenant_name, initials, phone, email, start, end, months, rent, deposit, manager, address, layout, today, days_to_end),
             "payments": self._payment_page(unit, prop, payments, rent, today, last_date, last_amount, next_date, next_amount, balance, days_to_due),
@@ -498,6 +565,8 @@ class ApartmentPortal(models.AbstractModel):
                 "body": rec.body,
                 "when": self._msg_when(rec.date),
                 "attachment": rec.attachment or "",
+            "voice": bool(rec.voice),
+            "has_file": bool(rec.attachment_file),
             })
         threads = list(grouped.values())
         threads.sort(key=lambda item: item.get("sort") or "", reverse=True)
@@ -505,10 +574,11 @@ class ApartmentPortal(models.AbstractModel):
         return {"threads": threads, "unread": unread}
 
     @api.model
-    def send_message(self, thread, body, attachment=False):
+    def send_message(self, thread, body, attachment=False, content=False, voice=False):
         text = (body or "").strip()
-        file_name = (attachment or "").strip() if attachment else ""
-        if (not text and not file_name) or not thread:
+        file_name = (attachment or "").strip() if isinstance(attachment, str) else ""
+        file_data = self._clean_b64(content)
+        if (not text and not file_name and not file_data) or not thread:
             return self.get_dashboard_data()
         unit = self._resolve_unit()
         last = self.env["apartment.message"].search([("thread", "=", thread)], limit=1, order="id desc")
@@ -521,10 +591,12 @@ class ApartmentPortal(models.AbstractModel):
             "email": self.env.user.login,
             "subject": last.subject if last else "New message",
             "tag": last.tag if last else "GENERAL",
-            "body": text or f"Attached {file_name}",
+            "body": text or ("Voice note" if voice else f"Attached {file_name or 'file'}"),
             "mine": True,
             "unread": False,
             "attachment": file_name or False,
+            "attachment_file": file_data or False,
+            "voice": bool(voice and file_data),
         })
         return self.get_dashboard_data()
 
@@ -539,9 +611,11 @@ class ApartmentPortal(models.AbstractModel):
         return self.get_dashboard_data()
 
     @api.model
-    def start_thread(self, subject, body):
-        text = (body or "").strip() or "Hello, I have a question."
+    def start_thread(self, subject, body, attachment=False, content=False, voice=False):
+        text = (body or "").strip() or ("Voice note" if voice else "Hello, I have a question.")
         subject = (subject or "").strip() or "New message"
+        file_name = (attachment or "").strip() if isinstance(attachment, str) else ""
+        file_data = self._clean_b64(content)
         unit = self._resolve_unit()
         key = f"new-{int(datetime.now().timestamp())}"
         self.env["apartment.message"].create({
@@ -554,6 +628,9 @@ class ApartmentPortal(models.AbstractModel):
             "tag": "GENERAL",
             "body": text,
             "mine": True,
+            "attachment": file_name or False,
+            "attachment_file": file_data or False,
+            "voice": bool(voice and file_data),
         })
         return self.get_dashboard_data()
 
@@ -595,22 +672,27 @@ class ApartmentPortal(models.AbstractModel):
                 "icon": kind_icon.get(kind, "fa-file-o"),
                 "version": rec.version or "v1.0",
                 "tags": [tag.strip() for tag in (rec.tags or "").split(",") if tag.strip()],
-                "pages": rec.pages or 12,
+                "pages": rec.pages or 1,
                 "type_label": "Lease Agreement" if rec.category == "lease" else (category_label.get(rec.category) or "Document"),
+                "record_id": rec.id,
+                "has_file": bool(rec.file),
             })
         return rows
 
     @api.model
-    def upload_library_doc(self, name, category=False):
+    def upload_library_doc(self, name, category=False, content=False):
         file_name = (name or "Uploaded_Document.pdf").strip()
         unit = self._resolve_unit()
+        file_data = self._clean_b64(content)
         self.env["apartment.document"].create({
             "name": file_name,
             "unit_id": unit.id if unit else False,
             "property_name": unit.property_id.name if unit and unit.property_id else "Portfolio",
-            "category": category or "property",
+            "category": category if category in dict(self.env["apartment.document"]._fields["category"].selection) else "property",
             "status": "pending",
-            "size_label": "—",
+            "file": file_data or False,
+            "file_name": file_name,
+            "size_label": self._size_label(file_data) if file_data else "—",
             "uploaded_by": self.env.user.name,
             "kind": self._library_kind(file_name),
             "version": "v1.0",
@@ -685,6 +767,7 @@ class ApartmentPortal(models.AbstractModel):
             "address": address,
             "initials": initials,
             "member_since": created,
+            "image_url": f"/web/image/res.partner/{partner.id}/avatar_128?unique={int(partner.write_date.timestamp())}" if partner.image_1920 else False,
         }
 
     @api.model
@@ -747,6 +830,51 @@ class ApartmentPortal(models.AbstractModel):
             payload["street"] = values.get("address") or False
         if payload:
             partner.write(payload)
+        return self.get_dashboard_data()
+
+    @api.model
+    def update_tenant_details(self, values):
+        values = values or {}
+        unit = self._resolve_unit()
+        if not unit:
+            raise UserError("No unit is selected.")
+        tenancy = self._active_tenancy(unit)
+        tenant = unit.tenant_id or (tenancy.tenant_id if tenancy else False) or self.env.user.partner_id
+        name = (values.get("name") or "").strip()
+        if not name:
+            raise UserError("Tenant name is required.")
+        tenant.write({
+            "name": name,
+            "email": (values.get("email") or "").strip() or False,
+            "phone": (values.get("phone") or "").strip() or False,
+        })
+        if unit.tenant_id != tenant:
+            unit.tenant_id = tenant.id
+        area = values.get("area")
+        if area not in (None, ""):
+            unit.area_sqft = float(area)
+        start = fields.Date.to_date(values.get("lease_start")) if values.get("lease_start") else False
+        end = fields.Date.to_date(values.get("lease_end")) if values.get("lease_end") else False
+        if start and end and end < start:
+            raise UserError("Lease end must be on or after the start date.")
+        payload = {
+            "monthly_rent": float(values.get("rent") or 0),
+            "security_deposit": float(values.get("deposit") or 0),
+            "auto_renew": str(values.get("auto_renew") or "").lower() in ("1", "true", "on", "yes"),
+        }
+        if start:
+            payload["date_start"] = start
+        if end:
+            payload["date_end"] = end
+        if tenancy:
+            tenancy.write(payload)
+        elif start:
+            self.env["property.tenancy"].create({
+                "unit_id": unit.id,
+                "tenant_id": tenant.id,
+                "state": "active",
+                **payload,
+            })
         return self.get_dashboard_data()
 
     @api.model
@@ -998,6 +1126,11 @@ class ApartmentPortal(models.AbstractModel):
                 "status": status,
                 "stone": stone,
                 "scheduled": scheduled.strftime("%b %d, %Y") if scheduled else "—",
+                "state": rec.state,
+                "description": rec.description or "",
+                "notes": rec.notes or "",
+                "attachment_name": rec.attachment_name or "",
+                "has_file": bool(rec.attachment),
             })
         open_n = len(tickets.filtered(lambda rec: rec.state == "open"))
         progress_n = len(tickets.filtered(lambda rec: rec.state == "progress"))
@@ -1038,6 +1171,10 @@ class ApartmentPortal(models.AbstractModel):
         access_date = vals.get("access_date")
         if access_date:
             create_vals["access_date"] = access_date
+        file_data = self._clean_b64(vals.get("file_content"))
+        if file_data:
+            create_vals["attachment"] = file_data
+            create_vals["attachment_name"] = (vals.get("file_name") or "attachment").strip()
         ticket = self.env["apartment.maintenance"].create(create_vals)
         self.env["apartment.notice"].create({
             "title": f"Maintenance request #{ticket.id} submitted.",
@@ -1117,3 +1254,327 @@ class ApartmentPortal(models.AbstractModel):
                 "unread": False,
             })
         return self.get_dashboard_data()
+
+    def _clean_b64(self, content):
+        if not content or not isinstance(content, str):
+            return False
+        text = content.strip()
+        if "," in text[:80] and text.lower().startswith("data:"):
+            text = text.split(",", 1)[1]
+        return text or False
+
+    def _size_label(self, content):
+        if not content:
+            return "—"
+        size = len(content) * 3 // 4
+        if size < 1024:
+            return f"{size} B"
+        if size < 1024 * 1024:
+            return f"{max(size / 1024, 1):.0f} KB"
+        return f"{size / (1024 * 1024):.1f} MB"
+
+    def _file_result(self, filename, content, mimetype="application/pdf"):
+        return {"filename": filename, "mimetype": mimetype, "content": content}
+
+    def _binary_content(self, value):
+        if not value:
+            return False
+        if isinstance(value, bytes):
+            return base64.b64encode(value).decode()
+        return value
+
+    def _lease_lines(self, unit, tenant_name, start, end, rent, deposit, address):
+        prop = unit.property_id
+        return [
+            "RESIDENTIAL LEASE AGREEMENT",
+            f"Property: {prop.name or 'Property'}",
+            f"Unit: {unit.name}",
+            f"Address: {address}",
+            f"Tenant: {tenant_name}",
+            f"Term: {self._fmt(start)} to {self._fmt(end)}",
+            f"Monthly rent: {self._money(rent)}",
+            f"Security deposit: {self._money(deposit)}",
+            "The tenant shall use the unit as a private residence and report maintenance promptly.",
+            "Either party may propose renewal before the term ends. A written record is required to extend the lease.",
+            f"Generated {self._fmt(fields.Date.context_today(self))} from the lease record.",
+        ]
+
+    def _store_pdf(self, unit, name, category, lines):
+        content = _pdf_base64(lines)
+        Document = self.env["apartment.document"]
+        existing = Document.search([("unit_id", "=", unit.id), ("name", "=", name)], limit=1)
+        vals = {
+            "name": name,
+            "file_name": f"{name}.pdf",
+            "file": content,
+            "size_label": self._size_label(content),
+            "category": category,
+            "status": "verified",
+            "kind": "pdf",
+            "pages": max(1, (len(lines) + 39) // 40),
+            "uploaded_by": self.env.user.name,
+            "date": fields.Date.context_today(self),
+            "property_name": unit.property_id.name if unit.property_id else False,
+        }
+        if existing:
+            existing.write(vals)
+            return existing
+        vals["unit_id"] = unit.id
+        return Document.create(vals)
+
+    def _ensure_standard_docs(self, unit, tenant_name, start, end, rent, deposit, address):
+        if not unit:
+            return
+        Document = self.env["apartment.document"]
+        lease = Document.search([("unit_id", "=", unit.id), ("name", "=", "Signed Lease Agreement")], limit=1)
+        if not lease or not lease.file:
+            self._store_pdf(unit, "Signed Lease Agreement", "lease", self._lease_lines(unit, tenant_name, start, end, rent, deposit, address))
+        insurance = Document.search([("unit_id", "=", unit.id), ("name", "=", "Property Insurance")], limit=1)
+        if not insurance or not insurance.file:
+            self._store_pdf(unit, "Property Insurance", "property", [
+                "PROPERTY INSURANCE SUMMARY",
+                f"Property: {unit.property_id.name or 'Property'}",
+                f"Unit: {unit.name}",
+                f"Address: {address}",
+                "This summary is stored with the unit. Ask the property manager for the carrier certificate.",
+                f"Recorded {self._fmt(fields.Date.context_today(self))}.",
+            ])
+
+    def _rules_lines(self, unit, title):
+        prop = unit.property_id if unit else self.env["property.property"]
+        lines = [
+            (title or "Property Rules").upper(),
+            f"Property: {prop.name if prop else 'Property'}",
+            f"Unit: {unit.name if unit else '—'}",
+        ]
+        notes = (prop.amenity_notes or prop.description or "") if prop else ""
+        if notes:
+            lines.extend(part.strip() for part in notes.splitlines() if part.strip())
+        else:
+            lines.extend([
+                "Quiet hours are 10:00 PM to 7:00 AM.",
+                "Report maintenance through the tenant portal.",
+                "Visitors must be registered at the gate.",
+                "Pets require written approval from the property manager.",
+            ])
+        return lines
+
+    @api.model
+    def download_card_document(self, record_id=False, name=False):
+        doc = self.env["apartment.document"].browse(int(record_id or 0)).exists()
+        if doc and doc.file:
+            return self.get_document_file(doc.id)
+        unit = doc.unit_id if doc else self._resolve_unit()
+        title = (doc.name if doc else False) or name or "Property Rules"
+        lines = self._rules_lines(unit, title)
+        if unit:
+            stored = self._store_pdf(unit, title, doc.category if doc and doc.category else "property", lines)
+            return self.get_document_file(stored.id)
+        return self._file_result(f"{title}.pdf", _pdf_base64(lines))
+
+    @api.model
+    def get_document_file(self, document_id):
+        doc = self.env["apartment.document"].browse(int(document_id or 0)).exists()
+        if not doc:
+            raise UserError("This document has no file stored.")
+        if not doc.file:
+            unit = doc.unit_id or self._resolve_unit()
+            if not unit:
+                raise UserError("This document has no file stored.")
+            stored = self._store_pdf(unit, doc.name or "Document", doc.category or "property", self._rules_lines(unit, doc.name))
+            doc = stored
+        name = doc.file_name or doc.name or "document"
+        kind = self._library_kind(name, doc.kind)
+        mime = {
+            "pdf": "application/pdf",
+            "jpg": "image/jpeg",
+            "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        }.get(kind, "application/octet-stream")
+        return self._file_result(name, self._binary_content(doc.with_context(bin_size=False).file), mime)
+
+    @api.model
+    def download_lease(self, tenancy_id=False):
+        unit = self._resolve_unit()
+        if not unit:
+            raise UserError("No unit is selected.")
+        tenancy = self.env["property.tenancy"].browse(int(tenancy_id or 0)).exists()
+        if tenancy and tenancy.unit_id != unit and not self._is_manager():
+            tenancy = self.env["property.tenancy"]
+        if not tenancy:
+            tenancy = self._active_tenancy(unit)
+        start = tenancy.date_start if tenancy else fields.Date.context_today(self)
+        end = tenancy.date_end if tenancy and tenancy.date_end else (start + relativedelta(months=12) - timedelta(days=1) if start else False)
+        rent = tenancy.monthly_rent if tenancy and tenancy.monthly_rent else self._rent_for(unit)
+        deposit = tenancy.security_deposit if tenancy and tenancy.security_deposit else rent * 3
+        tenant_name = tenancy.tenant_id.name if tenancy and tenancy.tenant_id else (unit.tenant_id.name or self.env.user.name)
+        prop = unit.property_id
+        address = ", ".join(part for part in [prop.street or prop.location, prop.city, prop.state_name, prop.zip] if part)
+        lines = self._lease_lines(unit, tenant_name, start, end, rent, deposit, address)
+        active = self._active_tenancy(unit)
+        if not tenancy or tenancy == active:
+            self._store_pdf(unit, "Signed Lease Agreement", "lease", lines)
+        filename = f"Lease_{unit.name}_{(start.isoformat() if start else 'current')}.pdf"
+        return self._file_result(filename, _pdf_base64(lines))
+
+    @api.model
+    def create_lease(self, values):
+        values = values or {}
+        unit = self._resolve_unit()
+        if not unit:
+            raise UserError("No unit is selected.")
+        tenant_name = (values.get("tenant") or "").strip()
+        if not tenant_name:
+            raise UserError("Tenant name is required.")
+        start = fields.Date.to_date(values.get("start")) if values.get("start") else False
+        end = fields.Date.to_date(values.get("end")) if values.get("end") else False
+        if not start or not end:
+            raise UserError("Lease start and end dates are required.")
+        if end < start:
+            raise UserError("Lease end must be on or after the start date.")
+        partner = self.env["property.unit"]._partner_by_name(tenant_name)
+        rent = float(values.get("rent") or 0)
+        deposit = float(values.get("deposit") or 0)
+        active = self.env["property.tenancy"].search([("unit_id", "=", unit.id), ("state", "=", "active")])
+        for rec in active:
+            rec.write({
+                "state": "ended",
+                "date_end": rec.date_end if rec.date_end and rec.date_end < start else start - timedelta(days=1),
+            })
+        self.env["property.tenancy"].create({
+            "unit_id": unit.id,
+            "tenant_id": partner.id,
+            "date_start": start,
+            "date_end": end,
+            "state": "active",
+            "monthly_rent": rent,
+            "security_deposit": deposit,
+        })
+        unit.write({"tenant_id": partner.id, "status": "occupied"})
+        prop = unit.property_id
+        address = ", ".join(part for part in [prop.street or prop.location, prop.city, prop.state_name, prop.zip] if part)
+        self._store_pdf(unit, "Signed Lease Agreement", "lease", self._lease_lines(unit, partner.name, start, end, rent, deposit, address))
+        self.env["apartment.notice"].create({
+            "title": f"New lease for unit {unit.name}.",
+            "body": f"{partner.name} from {self._fmt(start)} to {self._fmt(end)}.",
+            "category": "lease",
+            "unit_id": unit.id,
+            "tenant_id": partner.id,
+        })
+        return self.get_dashboard_data()
+
+    @api.model
+    def request_clarification(self, note):
+        text = (note or "").strip() or "Please clarify the renewal terms."
+        unit = self._resolve_unit()
+        self.start_thread("Lease clarification", text)
+        if unit:
+            self.env["apartment.notice"].create({
+                "title": "Clarification requested.",
+                "body": text,
+                "category": "lease",
+                "unit_id": unit.id,
+                "tenant_id": unit.tenant_id.id if unit.tenant_id else False,
+            })
+        return self.get_dashboard_data()
+
+    @api.model
+    def get_payment_receipt(self, payment_id):
+        payment = self.env["apartment.payment"].browse(int(payment_id or 0)).exists()
+        if not payment:
+            raise UserError("Payment not found.")
+        if payment.state != "paid":
+            raise UserError("A receipt is available after the payment is marked paid.")
+        unit = payment.unit_id
+        lines = [
+            "RENT RECEIPT",
+            f"Reference: {payment.reference or payment.id}",
+            f"Unit: {unit.name if unit else '—'}",
+            f"Property: {unit.property_id.name if unit and unit.property_id else '—'}",
+            f"Description: {payment.name}",
+            f"Amount: {self._money(payment.amount)}",
+            f"Date: {self._fmt(payment.date)}",
+            f"Method: {payment.method or 'Bank ACH'}",
+            "Status: Paid",
+            f"Tenant: {unit.tenant_id.name if unit and unit.tenant_id else self.env.user.name}",
+        ]
+        return self._file_result(f"Receipt_{payment.reference or payment.id}.pdf", _pdf_base64(lines))
+
+    @api.model
+    def update_maintenance(self, ticket_id, values):
+        values = values or {}
+        ticket = self.env["apartment.maintenance"].browse(int(ticket_id or 0)).exists()
+        if not ticket:
+            raise UserError("Maintenance request not found.")
+        state = values.get("state") or ticket.state
+        if state not in dict(ticket._fields["state"].selection):
+            state = ticket.state
+        ticket.write({
+            "state": state,
+            "notes": values.get("notes") if "notes" in values else ticket.notes,
+            "scheduled_date": fields.Date.to_date(values.get("scheduled_date")) if values.get("scheduled_date") else ticket.scheduled_date,
+        })
+        return self.get_dashboard_data()
+
+    @api.model
+    def get_maintenance_file(self, ticket_id):
+        ticket = self.env["apartment.maintenance"].browse(int(ticket_id or 0)).exists()
+        if not ticket or not ticket.attachment:
+            raise UserError("This request has no file stored.")
+        name = ticket.attachment_name or "attachment"
+        return self._file_result(name, self._binary_content(ticket.with_context(bin_size=False).attachment), "application/octet-stream")
+
+    @api.model
+    def get_message_file(self, message_id):
+        message = self.env["apartment.message"].browse(int(message_id or 0)).exists()
+        if not message or not message.attachment_file:
+            raise UserError("This message has no file stored.")
+        name = message.attachment or "attachment"
+        mime = "audio/webm" if message.voice else "application/octet-stream"
+        return self._file_result(name, self._binary_content(message.with_context(bin_size=False).attachment_file), mime)
+
+    @api.model
+    def update_photo(self, content):
+        file_data = self._clean_b64(content)
+        if not file_data:
+            raise UserError("Choose a photo to upload.")
+        if len(file_data) * 3 // 4 > 800 * 1024:
+            raise UserError("Photo must be 800 KB or smaller.")
+        unit = self._resolve_unit()
+        tenancy = self._active_tenancy(unit) if unit else self.env["property.tenancy"]
+        partner = (unit.tenant_id if unit else False) or (tenancy.tenant_id if tenancy else False) or self.env.user.partner_id
+        partner.image_1920 = file_data
+        return self.get_dashboard_data()
+
+    @api.model
+    def change_own_password(self, current_password, new_password):
+        new_password = (new_password or "").strip()
+        if len(new_password) < 8:
+            raise UserError("Use at least 8 characters.")
+        try:
+            self.env.user.change_password(current_password or "", new_password)
+        except AccessDenied:
+            raise UserError("The current password is not correct.")
+        if request:
+            self.env.flush_all()
+            self.env.registry.clear_cache()
+            request.session.session_token = self.env.user._compute_session_token(request.session.sid)
+        pref = self.env["apartment.preference"].search([("user_id", "=", self.env.uid)], limit=1)
+        if not pref:
+            pref = self.env["apartment.preference"].create({"user_id": self.env.uid})
+        pref.password_changed = "Last changed " + fields.Date.context_today(self).strftime("%b %d, %Y")
+        return self.get_dashboard_data()
+
+    @api.model
+    def get_login_history(self):
+        rows = []
+        devices = self.env["res.device"].sudo().search([("user_id", "=", self.env.uid)], limit=12)
+        for device in devices:
+            when = device.last_activity
+            rows.append({
+                "id": device.id,
+                "browser": device.browser or "Unknown",
+                "platform": device.platform or "",
+                "ip": device.ip_address or "",
+                "when": when.strftime("%b %d, %Y %I:%M %p") if when else "",
+            })
+        return rows

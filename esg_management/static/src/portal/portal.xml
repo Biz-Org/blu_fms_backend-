@@ -174,35 +174,27 @@
             <article class="esg-card"><span>KPI Score</span><strong><t t-esc="dash().score"/>/100</strong><div class="esg-track"><i t-attf-style="width: #{dash().score || 0}%"/></div></article>
             <article class="esg-card"><span>Target Ach.</span><strong t-esc="(dash().target_ach || 0) + '%'"/><em>Progress</em><div class="esg-track"><i t-attf-style="width: #{dash().target_ach || 0}%"/></div></article>
         </div>
-        <div class="esg-grid">
-            <section class="esg-card esg-span2">
+        <div class="esg-dash">
+            <div class="esg-dash-main">
+            <section class="esg-card">
                 <div class="esg-card-head">
                     <h3>Energy Consumption Trend</h3>
                     <small t-esc="dash().energy_scope"/>
                 </div>
                 <p class="esg-lead" t-if="!(dash().energy_trend || []).length">No energy readings for this filter.</p>
-                <svg t-else="" viewBox="0 0 640 210" class="esg-energy-chart" t-att-aria-label="dash().energy_scope">
+                <svg t-else="" viewBox="0 0 640 132" class="esg-energy-chart" t-att-aria-label="dash().energy_scope">
                     <t t-set="chart" t-value="energyChart(dash().energy_trend)"/>
-                    <line class="esg-axis" x1="44" t-att-y1="chart.baseline" x2="628" t-att-y2="chart.baseline"/>
+                    <line class="esg-axis" x1="24" t-att-y1="chart.baseline" x2="616" t-att-y2="chart.baseline"/>
                     <path class="esg-area" t-att-d="chart.area"/>
                     <polyline class="esg-stroke" t-att-points="chart.line"/>
                     <t t-foreach="chart.dots" t-as="dot" t-key="dot_index">
                         <circle t-att-cx="dot.x" t-att-cy="dot.y" r="4"><title t-esc="dot.label + ' ' + dot.value"/></circle>
                         <text class="esg-point" t-att-x="dot.x" t-att-y="dot.y - 8" t-esc="dot.value"/>
-                        <text class="esg-month" t-att-x="dot.x" t-att-y="202" t-esc="dot.label"/>
+                        <text class="esg-month" t-att-x="dot.x" t-att-y="chart.labelY" t-esc="dot.label"/>
                     </t>
                 </svg>
             </section>
-            <section class="esg-card">
-                <h3>Performance Summary</h3>
-                <div class="esg-perf"><span><i class="fa fa-bolt"/> Energy</span><b t-att-class="deltaClass(dash().energy_delta)" t-esc="(dash().energy_delta || 0) + '% YOY'"/></div>
-                <div class="esg-perf"><span><i class="fa fa-tint"/> Water</span><b t-att-class="deltaClass(dash().water_delta)" t-esc="(dash().water_delta || 0) + '% YOY'"/></div>
-                <div class="esg-perf"><span><i class="fa fa-cloud"/> Carbon</span><b t-att-class="deltaClass(dash().footprint_delta)" t-esc="(dash().footprint_delta || 0) + '% YOY'"/></div>
-                <h3 class="esg-gap">Recent Activities</h3>
-                <t t-foreach="activities()" t-as="act" t-key="act.id">
-                    <p class="esg-activity"><b t-esc="act.name"/><small t-esc="act.detail"/></p>
-                </t>
-            </section>
+            <div class="esg-dash-lower">
             <section class="esg-card">
                 <h3>Water Usage Trend</h3>
                 <div class="esg-bars">
@@ -222,6 +214,18 @@
             <section class="esg-card esg-center">
                 <h3>Sustainability Target Progress</h3>
                 <div class="esg-donut" t-att-style="donutStyle([{pct: dash().target_ach || 0, color: '#7c3aed'}, {pct: 100 - (dash().target_ach || 0), color: '#f3e8ff'}])"><span t-esc="(dash().target_ach || 0) + '%'"/></div>
+            </section>
+            </div>
+            </div>
+            <section class="esg-card">
+                <h3>Performance Summary</h3>
+                <div class="esg-perf"><span><i class="fa fa-bolt"/> Energy</span><b t-att-class="deltaClass(dash().energy_delta)" t-esc="(dash().energy_delta || 0) + '% YOY'"/></div>
+                <div class="esg-perf"><span><i class="fa fa-tint"/> Water</span><b t-att-class="deltaClass(dash().water_delta)" t-esc="(dash().water_delta || 0) + '% YOY'"/></div>
+                <div class="esg-perf"><span><i class="fa fa-cloud"/> Carbon</span><b t-att-class="deltaClass(dash().footprint_delta)" t-esc="(dash().footprint_delta || 0) + '% YOY'"/></div>
+                <h3 class="esg-gap">Recent Activities</h3>
+                <t t-foreach="activities()" t-as="act" t-key="act.id">
+                    <p class="esg-activity"><b t-esc="act.name"/><small t-esc="act.detail"/></p>
+                </t>
             </section>
         </div>
         <section class="esg-card">
@@ -293,14 +297,27 @@
             <article class="esg-card"><span>Conservation Rate</span><strong t-esc="(water().rate || 0) + '%'"/></article>
         </div>
         <div class="esg-split">
-            <section class="esg-card esg-grow">
+            <div class="esg-stack">
+            <section class="esg-card">
                 <h3>Water Usage Trend</h3>
-                <div class="esg-bars esg-bars-tall">
+                <div class="esg-bars">
                     <t t-foreach="water().trend || []" t-as="bar" t-key="bar_index">
                         <div class="esg-bar-col"><div class="esg-bar" t-attf-style="height: #{bar.pct}%"/><span t-esc="bar.label"/></div>
                     </t>
                 </div>
             </section>
+            <section class="esg-card">
+                <h3>Facility Detail Report</h3>
+                <table class="esg-table">
+                    <thead><tr><th>Property</th><th>Building</th><th>Water Usage</th><th>Previous</th><th>Variance</th></tr></thead>
+                    <tbody>
+                        <tr t-foreach="visible(water().rows)" t-as="row" t-key="row_index">
+                            <td t-esc="row.property"/><td t-esc="row.building"/><td t-esc="row.current_label"/><td t-esc="row.previous_label"/><td t-esc="row.variance_label"/>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+            </div>
             <div class="esg-stack">
                 <section class="esg-card">
                     <h3>Consumption by Building</h3>
@@ -315,17 +332,6 @@
                 </section>
             </div>
         </div>
-        <section class="esg-card">
-            <h3>Facility Detail Report</h3>
-            <table class="esg-table">
-                <thead><tr><th>Property</th><th>Building</th><th>Water Usage</th><th>Previous</th><th>Variance</th></tr></thead>
-                <tbody>
-                    <tr t-foreach="visible(water().rows)" t-as="row" t-key="row_index">
-                        <td t-esc="row.property"/><td t-esc="row.building"/><td t-esc="row.current_label"/><td t-esc="row.previous_label"/><td t-esc="row.variance_label"/>
-                    </tr>
-                </tbody>
-            </table>
-        </section>
     </t>
 
     <t t-name="esg_management.Carbon">
@@ -397,14 +403,27 @@
     <t t-name="esg_management.EnergyAnalysis">
         <t t-call="esg_management.Filters"/>
         <div class="esg-split">
-            <section class="esg-card esg-grow">
+            <div class="esg-stack">
+            <section class="esg-card">
                 <h3>Energy Consumption Trends</h3>
-                <div class="esg-bars esg-bars-tall">
+                <div class="esg-bars">
                     <t t-foreach="analysis().trend || []" t-as="bar" t-key="bar_index">
                         <div class="esg-bar-col"><div class="esg-bar" t-attf-style="height: #{bar.pct}%"/><span t-esc="bar.label"/></div>
                     </t>
                 </div>
             </section>
+            <section class="esg-card">
+                <h3>Top Energy Consumers</h3>
+                <table class="esg-table">
+                    <thead><tr><th>Property</th><th>Building</th><th>Consumption (kWh)</th><th>Variance</th></tr></thead>
+                    <tbody>
+                        <tr t-foreach="visible(analysis().rows)" t-as="row" t-key="row_index">
+                            <td t-esc="row.property"/><td t-esc="row.building"/><td t-esc="row.current_label"/><td t-esc="row.variance_label"/>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+            </div>
             <div class="esg-stack">
                 <section class="esg-card esg-center">
                     <h3>Variance Overview</h3>
@@ -420,58 +439,51 @@
                 </section>
             </div>
         </div>
-        <section class="esg-card">
-            <h3>Top Energy Consumers</h3>
-            <table class="esg-table">
-                <thead><tr><th>Property</th><th>Building</th><th>Consumption (kWh)</th><th>Variance</th></tr></thead>
-                <tbody>
-                    <tr t-foreach="visible(analysis().rows)" t-as="row" t-key="row_index">
-                        <td t-esc="row.property"/><td t-esc="row.building"/><td t-esc="row.current_label"/><td t-esc="row.variance_label"/>
-                    </tr>
-                </tbody>
-            </table>
-        </section>
     </t>
 
     <t t-name="esg_management.WaterAnalysis">
         <t t-call="esg_management.Filters"/>
-        <div class="esg-split">
-            <section class="esg-card esg-grow">
+        <div class="esg-wa">
+            <section class="esg-card esg-fill">
                 <h3>Usage Trends</h3>
-                <div class="esg-bars esg-bars-tall">
+                <div class="esg-bars esg-bars-usage">
                     <t t-foreach="waterAnalysis().trend || []" t-as="bar" t-key="bar_index">
                         <div class="esg-bar-col"><div class="esg-bar is-soft" t-attf-style="height: #{bar.pct}%"/><span t-esc="bar.label"/></div>
                     </t>
                 </div>
             </section>
-            <section class="esg-card esg-center">
-                <h3>Conservation Goal</h3>
-                <div class="esg-donut" t-att-style="donutStyle(waterGoal(waterAnalysis()))"><span t-esc="(waterAnalysis().reduction || 0) + '%'"/></div>
-                <p t-esc="waterAnalysis().goal_note"/>
-            </section>
+            <div class="esg-stack">
+                <section class="esg-card esg-center">
+                    <h3>Conservation Goal</h3>
+                    <div class="esg-donut" t-att-style="donutStyle(waterGoal(waterAnalysis()))"><span t-esc="(waterAnalysis().reduction || 0) + '%'"/></div>
+                    <p t-esc="waterAnalysis().goal_note"/>
+                </section>
+                <section class="esg-card">
+                    <h3>Top Consumers</h3>
+                    <t t-foreach="waterAnalysis().top || []" t-as="row" t-key="row_index">
+                        <div class="esg-line-row"><span t-esc="row.property"/><b t-esc="row.current_label"/></div>
+                        <div class="esg-track"><i t-attf-style="width: #{share(row.current, waterAnalysis().top[0].current)}%"/></div>
+                    </t>
+                </section>
+            </div>
         </div>
-        <div class="esg-grid esg-grid-3">
+        <div class="esg-wa-pair">
+            <section class="esg-card">
+                <h3>Usage by Category</h3>
+                <div class="esg-cat">
+                    <div class="esg-donut esg-donut-sm" t-att-style="donutStyle(waterAnalysis().segments)"/>
+                    <ul class="esg-legend">
+                        <li t-foreach="waterAnalysis().segments || []" t-as="seg" t-key="seg.key"><span t-esc="seg.label"/> <b t-esc="seg.pct + '%'"/></li>
+                    </ul>
+                </div>
+            </section>
             <section class="esg-card">
                 <h3>YoY Comparison</h3>
                 <div class="esg-line-row"><span>Current</span><b t-esc="waterAnalysis().current"/></div>
-                <div class="esg-track"><i style="width: 86%"/></div>
+                <div class="esg-track"><i t-attf-style="width: #{waterAnalysis().current_pct || 0}%"/></div>
                 <div class="esg-line-row"><span>Previous</span><b t-esc="waterAnalysis().previous"/></div>
-                <div class="esg-track"><i class="is-muted" style="width: 100%"/></div>
+                <div class="esg-track"><i class="is-muted" t-attf-style="width: #{waterAnalysis().previous_pct || 0}%"/></div>
                 <p>Overall variance <b t-esc="(waterAnalysis().variance || 0) + '%'"/></p>
-            </section>
-            <section class="esg-card">
-                <h3>Usage by Category</h3>
-                <div class="esg-donut esg-donut-sm" t-att-style="donutStyle(waterAnalysis().segments)"/>
-                <ul class="esg-legend">
-                    <li t-foreach="waterAnalysis().segments || []" t-as="seg" t-key="seg.key"><span t-esc="seg.label"/> <b t-esc="seg.pct + '%'"/></li>
-                </ul>
-            </section>
-            <section class="esg-card">
-                <h3>Top Consumers</h3>
-                <t t-foreach="waterAnalysis().top || []" t-as="row" t-key="row_index">
-                    <div class="esg-line-row"><span t-esc="row.property"/><b t-esc="row.current_label"/></div>
-                    <div class="esg-track"><i t-attf-style="width: #{share(row.current, waterAnalysis().top[0].current)}%"/></div>
-                </t>
             </section>
         </div>
         <section class="esg-card">
@@ -496,7 +508,7 @@
             <article class="esg-card"><span>Reduction Target</span><strong t-esc="(emissions().reduction_target || 0) + '%'"/><div class="esg-track"><i t-attf-style="width: #{emissions().reduction_target || 0}%"/></div></article>
             <article class="esg-card"><span>Carbon Intensity</span><strong t-esc="emissions().intensity"/><em>kgCO2e/sqft</em></article>
         </div>
-        <div class="esg-grid esg-grid-3">
+        <div class="esg-grid esg-grid-3 esg-emissions">
             <section class="esg-card">
                 <h3>Monthly Emissions</h3>
                 <div class="esg-bars">
@@ -512,7 +524,7 @@
             </section>
             <section class="esg-card">
                 <h3>YoY Comparison</h3>
-                <svg viewBox="0 0 280 96" class="esg-line">
+                <svg viewBox="0 0 280 96" class="esg-line" preserveAspectRatio="none">
                     <polyline t-att-points="linePoints(emissions().yoy)" class="is-current"/>
                     <polyline t-att-points="linePoints(emissions().yoy_prev)" class="is-prev"/>
                 </svg>
