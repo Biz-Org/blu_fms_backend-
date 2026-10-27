@@ -52,11 +52,13 @@ class IntegrationIotDevice(models.Model):
     sensor_ids = fields.One2many("integration.iot.sensor", "device_id")
     log_ids = fields.One2many("integration.iot.log", "device_id")
 
-    _code_company_uniq = models.Constraint(
-        "unique(code, company_id)",
-        "Device code must be unique per company.",
-    )
-
+    _sql_constraints = [
+        (
+            "code_company_uniq",
+            "unique(code, company_id)",
+            "Device code must be unique per company.",
+        ),
+    ]
     @api.constrains("brightness")
     def _iot_check_brightness(self):
         for record in self:

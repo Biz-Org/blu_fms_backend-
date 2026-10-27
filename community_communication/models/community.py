@@ -35,11 +35,13 @@ class CommunityCommunicationCommunity(models.Model):
         string="Venues",
     )
 
-    _code_company_uniq = models.Constraint(
-        "unique(code, company_id)",
-        "Community code must be unique per company.",
-    )
-
+    _sql_constraints = [
+        (
+            "code_company_uniq",
+            "unique(code, company_id)",
+            "Community code must be unique per company.",
+        ),
+    ]
 
 class CommunityCommunicationBuilding(models.Model):
     """INTEGRATION PLACEHOLDER: future Property FMS building/tower model."""
@@ -95,11 +97,13 @@ class CommunityCommunicationUnit(models.Model):
     )
     active = fields.Boolean(default=True)
 
-    _unit_building_uniq = models.Constraint(
-        "unique(name, building_id)",
-        "Unit name must be unique in a building.",
-    )
-
+    _sql_constraints = [
+        (
+            "unit_building_uniq",
+            "unique(name, building_id)",
+            "Unit name must be unique in a building.",
+        ),
+    ]
 
 class CommunityCommunicationVenue(models.Model):
     """INTEGRATION PLACEHOLDER: future Facility/asset venue catalog."""

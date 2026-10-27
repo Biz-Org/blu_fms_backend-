@@ -1,6 +1,6 @@
 # Compliance & Audit Management
 
-Standalone Odoo 19 addon (FMS module #24).
+Standalone Odoo 18 addon (FMS module #24).
 
 ## Install
 

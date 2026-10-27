@@ -95,14 +95,21 @@ class ComplianceAudit(models.Model):
             )
 
     def _search_is_overdue(self, operator, value):
-        # Odoo 19 rewrites Boolean '=' to 'in' [True] (False → 'not in').
-        if operator != "in":
-            return NotImplemented
+        # Odoo 18 evaluates boolean searches with '=' / '!='.
+        positive = (
+            operator in ("=", "==") and bool(value)
+            or operator in ("!=", "<>") and not value
+            or operator == "in" and True in set(value or []) and False not in set(value or [])
+            or operator == "not in" and False in set(value or []) and True not in set(value or [])
+        )
         today = fields.Date.context_today(self)
-        return [
+        overdue_domain = [
             ("state", "in", ["scheduled", "in_progress", "pending_review"]),
             ("date_planned", "<", today),
         ]
+        if positive:
+            return overdue_domain
+        return ["!"] + overdue_domain
 
     @api.constrains("kind", "audit_type", "inspection_type")
     def _check_type_fields(self):

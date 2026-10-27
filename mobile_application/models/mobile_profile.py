@@ -27,8 +27,13 @@ class MobileApplicationProfile(models.Model):
     push_provider = fields.Char(help="Configured push provider identifier, if any.")
     push_enabled = fields.Boolean(default=False)
 
-    _user_uniq = models.Constraint("unique(user_id)", "Each user can have only one mobile profile.")
-
+    _sql_constraints = [
+        (
+            "user_uniq",
+            "unique(user_id)",
+            "Each user can have only one mobile profile.",
+        ),
+    ]
     @api.model
     def _role_for_user(self, user):
         user = user or self.env.user

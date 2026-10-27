@@ -40,11 +40,13 @@ class MobileVisitor(models.Model):
     external_model = fields.Char(index=True)
     external_id = fields.Integer(index=True)
 
-    _idempotency_uniq = models.Constraint(
-        "unique(idempotency_key)",
-        "This visitor request was already submitted.",
-    )
-
+    _sql_constraints = [
+        (
+            "idempotency_uniq",
+            "unique(idempotency_key)",
+            "This visitor request was already submitted.",
+        ),
+    ]
     @api.model_create_multi
     def create(self, vals_list):
         records = super().create(vals_list)

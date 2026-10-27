@@ -18,7 +18,7 @@ class TestFireSafetyInstall(TransactionCase):
         self.assertEqual(manifest.get("depends"), ["mail"])
         self.assertNotIn("community_communication", manifest.get("depends"))
         self.assertTrue(manifest.get("application"))
-        self.assertTrue(manifest["version"].startswith("19.0"))
+        self.assertTrue(manifest["version"].startswith("18.0"))
 
     def test_security_groups_exist(self):
         self.env.ref("fire_safety_management.group_fire_safety_manager")

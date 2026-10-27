@@ -73,7 +73,7 @@ class TestAiCopilotFlow(AiCopilotCase):
         reader = self.env["res.users"].create({
             "name": "Copilot Facility Reader",
             "login": "ai_copilot_facility",
-            "group_ids": [(6, 0, [
+            "groups_id": [(6, 0, [
                 self.env.ref("ai_copilot.group_copilot_user").id,
                 self.env.ref("fire_safety_management.group_fire_safety_facility").id,
             ])],

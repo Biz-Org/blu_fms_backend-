@@ -7,32 +7,17 @@
         <field name="parent_id" ref="base.module_category_services"/>
     </record>
 
-    <record id="privilege_copilot_user" model="res.groups.privilege">
-        <field name="name">AI Copilot User</field>
-        <field name="sequence">10</field>
-        <field name="category_id" ref="module_category_ai_copilot"/>
-        <field name="placeholder">No access</field>
-    </record>
-    <record id="privilege_copilot_admin" model="res.groups.privilege">
-        <field name="name">AI Copilot Admin</field>
-        <field name="sequence">20</field>
-        <field name="category_id" ref="module_category_ai_copilot"/>
-        <field name="placeholder">No access</field>
-    </record>
-
     <record id="group_copilot_user" model="res.groups">
         <field name="name">Authorized User</field>
-        <field name="sequence">10</field>
         <field name="comment">Ask AI Copilot questions about FMS records and knowledge documents this user is already allowed to read.</field>
         <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
-        <field name="privilege_id" ref="privilege_copilot_user"/>
+        <field name="category_id" ref="module_category_ai_copilot"/>
     </record>
     <record id="group_copilot_admin" model="res.groups">
         <field name="name">Administrator</field>
-        <field name="sequence">20</field>
         <field name="comment">Configure the AI provider, knowledge documents, and who can use AI Copilot. Does not grant access to other FMS modules.</field>
         <field name="implied_ids" eval="[(4, ref('ai_copilot.group_copilot_user'))]"/>
-        <field name="privilege_id" ref="privilege_copilot_admin"/>
-        <field name="user_ids" eval="[(4, ref('base.user_admin'))]"/>
+        <field name="category_id" ref="module_category_ai_copilot"/>
+        <field name="users" eval="[(4, ref('base.user_admin'))]"/>
     </record>
 </odoo>

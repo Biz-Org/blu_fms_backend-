@@ -25,11 +25,13 @@ class ComplianceProperty(models.Model):
         default="INTEGRATION PLACEHOLDER — retarget to FMS Property Management (#2).",
     )
 
-    _code_company_uniq = models.Constraint(
-        "unique(code, company_id)",
-        "Property code must be unique per company.",
-    )
-
+    _sql_constraints = [
+        (
+            "code_company_uniq",
+            "unique(code, company_id)",
+            "Property code must be unique per company.",
+        ),
+    ]
 
 class ComplianceBuilding(models.Model):
     """INTEGRATION PLACEHOLDER for property → building/tower."""

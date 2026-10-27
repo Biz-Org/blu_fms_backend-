@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     "name": "AI Copilot",
-    "version": "19.0.1.0.0",
+    "version": "18.0.1.0.0",
     "category": "FMS",
     "summary": "Permission-aware AI assistant for facility management",
     "description": """

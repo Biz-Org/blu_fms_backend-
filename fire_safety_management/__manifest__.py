@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 {
     "name": "Fire & Safety Management",
-    "version": "19.0.1.7.0",
+    "version": "18.0.1.7.0",
     "category": "Services/Fire Safety",
     "summary": "Fire & safety inspections, incidents, equipment, drills, and emergency response",
     "description": """
 Fire & Safety Management for facility management.
 
-Standalone Odoo 19 addon (FMS module #23) for digital safety audits,
+Standalone Odoo 18 addon (FMS module #23) for digital safety audits,
 incident logging, mock drills, fire equipment, emergency response,
 and safety compliance reporting.
     """,

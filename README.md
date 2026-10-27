@@ -1,8 +1,8 @@
 # blu_fms_backend
 
-Odoo 19 custom addons for the Blu Facility Management System, with Docker deployment helpers.
+Odoo 18 custom addons for the Blu Facility Management System, with Docker deployment helpers.
 
-Run the official Odoo 19 server with `addons_path` including this repository root (see [config/odoo.conf.example](config/odoo.conf.example)). Each subdirectory below is one installable Odoo module.
+Run the official Odoo 18 server with `addons_path` including this repository root (see [config/odoo.conf.example](config/odoo.conf.example)). Each subdirectory below is one installable Odoo module.
 
 ## Repository layout (15 modules at root)
 
@@ -73,7 +73,7 @@ See [requirements.txt](requirements.txt). Custom code uses Odoo, **python-dateut
 ## Local development (without Docker)
 
 1. PostgreSQL running.
-2. Odoo 19 source + venv.
+2. Odoo 18 source + venv.
 3. Point addons path at **this repo root**:
 
 ```bash
@@ -98,11 +98,15 @@ docker compose build
 docker compose up -d
 ```
 
-- **Image:** `odoo:19.0` with repo copied to `/mnt/extra-addons` and [config/odoo.conf.example](config/odoo.conf.example) as `/etc/odoo/odoo.conf`.
+- **Image:** `odoo:18.0` with repo copied to `/mnt/extra-addons` and [config/odoo.conf.example](config/odoo.conf.example) as `/etc/odoo/odoo.conf`.
 - **addons_path:** standard Odoo addons + `/mnt/extra-addons` (all 15 root modules).
 - **Compose:** PostgreSQL 16 + Odoo on port `8069`. Optional bind mount `.:/mnt/extra-addons:ro` for live code during development; remove that volume for production image-only runs.
 
 Open http://localhost:8069, create a database, and install apps from **Apps** (developer mode).
+
+## Databases
+
+An Odoo 19 database cannot be opened by Odoo 18. Create a new PostgreSQL database and install the modules. Do not point this Odoo 18 runtime at the only copy of an existing database.
 
 ## Security
 

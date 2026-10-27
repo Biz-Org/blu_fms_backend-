@@ -26,7 +26,10 @@ class ComplianceRequirement(models.Model):
     regulatory_authority = fields.Char()
     note = fields.Text()
 
-    _code_company_uniq = models.Constraint(
-        "unique(code, company_id)",
-        "Requirement code must be unique per company.",
-    )
+    _sql_constraints = [
+        (
+            "code_company_uniq",
+            "unique(code, company_id)",
+            "Requirement code must be unique per company.",
+        ),
+    ]

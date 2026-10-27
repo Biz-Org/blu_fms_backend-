@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 {
     "name": "Integration & IoT Management",
-    "version": "19.0.1.0.0",
+    "version": "18.0.1.0.0",
     "category": "Services/IoT",
     "summary": "IoT devices, BMS monitoring, building automation, and energy visibility",
     "description": """
 Integration & IoT Management for facility management.
 
-Standalone Odoo 19 addon for connected devices and BMS integrations,
+Standalone Odoo 18 addon for connected devices and BMS integrations,
 sensor data, lighting/HVAC/fire-alarm/environmental monitoring,
 automation rules, embedded alerts, and energy consumption visibility.
 

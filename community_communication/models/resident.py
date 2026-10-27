@@ -48,11 +48,13 @@ class CommunityCommunicationResident(models.Model):
     )
     active = fields.Boolean(default=True)
 
-    _user_community_uniq = models.Constraint(
-        "unique(user_id, community_id)",
-        "A user can have only one resident profile per community.",
-    )
-
+    _sql_constraints = [
+        (
+            "user_community_uniq",
+            "unique(user_id, community_id)",
+            "A user can have only one resident profile per community.",
+        ),
+    ]
     @api.model_create_multi
     def create(self, vals_list):
         records = super().create(vals_list)

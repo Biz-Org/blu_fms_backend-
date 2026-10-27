@@ -8,7 +8,6 @@ APP_LINKS = [
     ("compliance_audit_management.menu_compliance_root", "Compliance", "fa-check-square-o"),
     ("integration_iot_management.menu_iot_root", "IoT Sensors", "fa-rss"),
     ("reports_analytics.menu_analytics_root", "Reports", "fa-bar-chart"),
-    ("mobile_application.menu_mobile_root", "Mobile", "fa-mobile"),
 ]
 
 SUGGESTIONS = {
@@ -39,11 +38,6 @@ SUGGESTIONS = {
         "Which IoT alerts are open?",
         "Compare energy consumption between this month and last month",
         "Which devices are offline?",
-    ],
-    "mobile_application": [
-        "Show today's visitor activity",
-        "What are my upcoming amenity bookings?",
-        "Show open service requests",
     ],
 }
 
@@ -283,50 +277,6 @@ SOURCES = [
         "measure": "kwh",
     },
     {
-        "key": "mobile_visitor",
-        "model": "mobile.visitor",
-        "module": "mobile_application",
-        "label": "Visitors",
-        "kind": "fms_data",
-        "keywords": ("visitor", "visitors"),
-        "search_fields": ("name", "purpose", "building_label", "unit_label"),
-        "list_fields": ("name", "state", "expected_start", "purpose", "building_label"),
-        "date_field": "expected_start",
-        "domain": lambda model, today, flags: [],
-        "order": "expected_start desc, id desc",
-        "note": "Visitor timing uses the expected visit start. This source has no separate gate-entry timestamp.",
-    },
-    {
-        "key": "mobile_booking",
-        "model": "mobile.booking",
-        "module": "mobile_application",
-        "label": "Amenity Bookings",
-        "kind": "fms_data",
-        "keywords": ("booking", "bookings", "amenity", "amenities"),
-        "search_fields": ("amenity_name", "slot_label"),
-        "list_fields": ("amenity_name", "state", "booking_date", "slot_label"),
-        "date_field": "booking_date",
-        "domain": lambda model, today, flags: [],
-        "order": "booking_date, id desc",
-    },
-    {
-        "key": "mobile_request",
-        "model": "mobile.service.request",
-        "module": "mobile_application",
-        "label": "Service Requests",
-        "kind": "fms_data",
-        "keywords": ("service request", "maintenance", "work order", "requests"),
-        "search_fields": ("name", "category", "description"),
-        "list_fields": ("name", "category", "state", "assigned_user_id"),
-        "date_field": "create_date",
-        "domain": lambda model, today, flags: (
-            [("state", "not in", ["completed", "closed"])]
-            if (flags.get("open") or flags.get("overdue")) and "state" in model._fields
-            else []
-        ),
-        "order": "create_date desc, id desc",
-    },
-    {
         "key": "maint_request",
         "model": "maintenance.request",
         "module": "maintenance",
@@ -345,9 +295,5 @@ PROPOSAL_MODELS = {
     "maintenance.request": {
         "title": "Create Maintenance Request",
         "module": "maintenance",
-    },
-    "mobile.service.request": {
-        "title": "Create Service Request",
-        "module": "mobile_application",
     },
 }

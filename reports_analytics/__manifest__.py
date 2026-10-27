@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 {
     "name": "Reports & Analytics",
-    "version": "19.0.2.0.1",
+    "version": "18.0.2.0.1",
     "category": "FMS",
     "summary": "Reports, analytics, KPIs and dashboards for FMS",
     "description": """
 Reports & Analytics for facility management.
 
-Standalone Odoo 19 addon that reads authorized data from FMS operational
+Standalone Odoo 18 addon that reads authorized data from FMS operational
 modules and exposes report definitions, KPIs, dashboards, execution history,
 scheduled delivery, alerts, and audit trails without duplicating operational records.
     """,

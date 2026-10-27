@@ -1,5 +1,5 @@
-# Odoo 19 + FMS custom addons (official image supplies Odoo and core Python deps).
-FROM odoo:19.0
+# Odoo 18 + FMS custom addons (official image supplies Odoo and core Python deps).
+FROM odoo:18.0
 
 USER root
 

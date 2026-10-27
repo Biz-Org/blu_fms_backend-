@@ -1,5 +1,7 @@
 # Compliance Document Foundation — Investigation & Recommendation
 
+**Runtime:** this FMS addon targets **Odoo 18**. The third-party notes below describe the external `compliance_document_management` 19.0 app that was reviewed. Those 19.0 pins belong to that product, not to this module's runtime.
+
 **Status:** Investigation complete. No OPL module install, no database change, and no
 Option A code migration in this deliverable. Architecture is **license-gated**.
 
