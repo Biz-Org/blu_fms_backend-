@@ -268,11 +268,13 @@ class CommunityCommunicationPollVote(models.Model):
         readonly=True,
     )
 
-    _vote_voter_uniq = models.Constraint(
-        "unique(poll_id, voter_id)",
-        "Each resident can vote only once in a poll.",
-    )
-
+    _sql_constraints = [
+        (
+            "vote_voter_uniq",
+            "unique(poll_id, voter_id)",
+            "Each resident can vote only once in a poll.",
+        ),
+    ]
     @api.model_create_multi
     def create(self, vals_list):
         if not self.env.su and not self.env.user._cc_is_community_officer():

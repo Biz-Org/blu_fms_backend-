@@ -7,33 +7,19 @@
         <field name="parent_id" ref="base.module_category_services"/>
     </record>
 
-    <record id="privilege_compliance_manager" model="res.groups.privilege">
-        <field name="name">Compliance Manager</field>
-        <field name="sequence">10</field>
-        <field name="category_id" ref="module_category_compliance_audit"/>
-        <field name="placeholder">No access</field>
-    </record>
     <!-- Exactly two primary FMS roles for module #24 (independently assignable). -->
-    <record id="privilege_compliance_auditor" model="res.groups.privilege">
-        <field name="name">Compliance Auditor</field>
-        <field name="sequence">20</field>
-        <field name="category_id" ref="module_category_compliance_audit"/>
-        <field name="placeholder">No access</field>
-    </record>
 
     <record id="group_compliance_manager" model="res.groups">
         <field name="name">Compliance Manager</field>
-        <field name="sequence">10</field>
         <field name="comment">Primary role: plan, evidence, audit, correct, verify, and close compliance records. Configure requirements and checklist templates.</field>
         <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
-        <field name="privilege_id" ref="privilege_compliance_manager"/>
-        <field name="user_ids" eval="[(4, ref('base.user_admin')), (4, ref('base.user_root'))]"/>
+        <field name="category_id" ref="module_category_compliance_audit"/>
+        <field name="users" eval="[(4, ref('base.user_admin')), (4, ref('base.user_root'))]"/>
     </record>
     <record id="group_compliance_auditor" model="res.groups">
         <field name="name">Compliance Auditor</field>
-        <field name="sequence">20</field>
         <field name="comment">Primary role: read-only access to compliance records, audit evidence, logs, and reports. No create/write/unlink and no workflow actions.</field>
         <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
-        <field name="privilege_id" ref="privilege_compliance_auditor"/>
+        <field name="category_id" ref="module_category_compliance_audit"/>
     </record>
 </odoo>

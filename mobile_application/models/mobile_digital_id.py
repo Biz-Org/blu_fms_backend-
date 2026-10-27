@@ -26,9 +26,18 @@ class MobileDigitalId(models.Model):
     last_verified_at = fields.Datetime(readonly=True)
     verification_count = fields.Integer(default=0, readonly=True)
 
-    _user_uniq = models.Constraint("unique(user_id)", "Each user has one digital ID.")
-    _token_uniq = models.Constraint("unique(token)", "Digital ID token must be unique.")
-
+    _sql_constraints = [
+        (
+            "user_uniq",
+            "unique(user_id)",
+            "Each user has one digital ID.",
+        ),
+        (
+            "token_uniq",
+            "unique(token)",
+            "Digital ID token must be unique.",
+        ),
+    ]
     @api.model
     def _generate_token(self):
         return secrets.token_urlsafe(32)

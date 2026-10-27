@@ -1,6 +1,6 @@
 # Compliance & Audit Management — Architecture
 
-Standalone Odoo 19 addon (`compliance_audit_management`) for FMS module #24.
+Standalone Odoo 18 addon (`compliance_audit_management`) for FMS module #24.
 
 ## Purpose
 

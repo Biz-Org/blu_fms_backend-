@@ -495,7 +495,7 @@ class AiCopilotRetrieval(models.AbstractModel):
                 "status": "unavailable",
                 "title": title,
                 "reason": _(
-                    "No maintenance or service-request model is installed that you are allowed to create."
+                    "No maintenance request model is installed that you are allowed to create."
                 ),
                 "lines": [],
                 "can_confirm": False,
@@ -506,22 +506,12 @@ class AiCopilotRetrieval(models.AbstractModel):
             if pack.get("records"):
                 subject = pack["records"][0]["label"]
                 break
-        if model_name == "mobile.service.request":
-            vals = {
-                "category": subject or _("Facility"),
-                "description": issue,
-            }
-            lines = [
-                {"label": _("Category"), "value": vals["category"]},
-                {"label": _("Description"), "value": issue[:240]},
-            ]
-        else:
-            vals = {"name": (subject or issue)[:120]}
-            if "description" in self.env[model_name]._fields:
-                vals["description"] = issue
-            lines = [{"label": _("Subject"), "value": vals["name"]}]
-            if "description" in vals:
-                lines.append({"label": _("Description"), "value": issue[:240]})
+        vals = {"name": (subject or issue)[:120]}
+        if "description" in self.env[model_name]._fields:
+            vals["description"] = issue
+        lines = [{"label": _("Subject"), "value": vals["name"]}]
+        if "description" in vals:
+            lines.append({"label": _("Description"), "value": issue[:240]})
         return {
             "status": "pending",
             "title": meta["title"],

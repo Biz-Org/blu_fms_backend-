@@ -22,7 +22,7 @@ class TestAiCopilotSecurity(AiCopilotCase):
             self.env["res.users"].create({
                 "name": "Second Copilot User",
                 "login": "ai_copilot_user_two",
-                "group_ids": [(6, 0, [self.env.ref("ai_copilot.group_copilot_user").id])],
+                "groups_id": [(6, 0, [self.env.ref("ai_copilot.group_copilot_user").id])],
             })
         ).search([("id", "=", conversation.id)])
         self.assertFalse(hidden)

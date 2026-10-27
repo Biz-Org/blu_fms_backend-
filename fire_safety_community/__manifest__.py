@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     "name": "Fire Safety ↔ Community Bridge",
-    "version": "19.0.1.0.1",
+    "version": "18.0.1.0.1",
     "category": "Services",
     "summary": "Publish Community announcements when Fire & Safety mock drills are scheduled",
     "description": """

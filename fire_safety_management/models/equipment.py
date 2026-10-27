@@ -80,11 +80,13 @@ class FireSafetyEquipment(models.Model):
         domain=lambda self: [("res_model", "=", self._name)],
     )
 
-    _code_company_uniq = models.Constraint(
-        "unique(code, company_id)",
-        "Equipment code must be unique per company.",
-    )
-
+    _sql_constraints = [
+        (
+            "code_company_uniq",
+            "unique(code, company_id)",
+            "Equipment code must be unique per company.",
+        ),
+    ]
     @api.depends(
         "condition",
         "inspection_due_date",

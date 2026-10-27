@@ -350,11 +350,13 @@ class CommunityCommunicationReaction(models.Model):
         index=True,
     )
 
-    _reaction_user_uniq = models.Constraint(
-        "unique(res_model, res_id, user_id)",
-        "A user can react only once to a given record.",
-    )
-
+    _sql_constraints = [
+        (
+            "reaction_user_uniq",
+            "unique(res_model, res_id, user_id)",
+            "A user can react only once to a given record.",
+        ),
+    ]
     @api.model_create_multi
     def create(self, vals_list):
         if not self.env.su and not self.env.user._cc_is_community_officer():
@@ -393,11 +395,13 @@ class CommunityCommunicationFollow(models.Model):
         readonly=True,
     )
 
-    _follow_uniq = models.Constraint(
-        "unique(discussion_id, user_id)",
-        "Already following this discussion.",
-    )
-
+    _sql_constraints = [
+        (
+            "follow_uniq",
+            "unique(discussion_id, user_id)",
+            "Already following this discussion.",
+        ),
+    ]
     @api.model_create_multi
     def create(self, vals_list):
         if not self.env.su and not self.env.user._cc_is_community_officer():

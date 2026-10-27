@@ -1,6 +1,6 @@
 # Fire & Safety Management — Phase 1 Architecture
 
-Standalone Odoo 19 addon (`fire_safety_management`) for FMS module #23.
+Standalone Odoo 18 addon (`fire_safety_management`) for FMS module #23.
 
 ## Purpose
 
@@ -44,7 +44,7 @@ Stable XML IDs (FUTURE central RBAC #27 will map users → these groups):
 
 FMS Admin uses `base.group_system` plus configuration ACLs. There is no Fire & Safety business role named Officer, Manager, or Administrator.
 
-Groups are independently assignable (separate Odoo 19 privileges, not a mutually exclusive ladder).
+Groups are independently assignable. They share one application category and do not imply each other, so Odoo 18 shows them as checkboxes rather than a mutually exclusive ladder.
 
 Python methods enforce verification, closure, emergency activation, and other restricted transitions. OWL/XML buttons are not the security boundary.
 

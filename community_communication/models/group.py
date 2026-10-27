@@ -189,11 +189,13 @@ class CommunityCommunicationGroupMember(models.Model):
         readonly=True,
     )
 
-    _group_resident_uniq = models.Constraint(
-        "unique(group_id, resident_id)",
-        "A resident can appear only once in a group.",
-    )
-
+    _sql_constraints = [
+        (
+            "group_resident_uniq",
+            "unique(group_id, resident_id)",
+            "A resident can appear only once in a group.",
+        ),
+    ]
     @api.constrains("resident_id", "group_id")
     def _check_same_community(self):
         for record in self:

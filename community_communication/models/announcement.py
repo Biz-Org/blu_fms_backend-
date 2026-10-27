@@ -250,11 +250,13 @@ class CommunityCommunicationAnnouncementView(models.Model):
     company_id = fields.Many2one(related="announcement_id.company_id", store=True, index=True)
     viewed_on = fields.Datetime(default=fields.Datetime.now, required=True)
 
-    _announcement_resident_view_uniq = models.Constraint(
-        "unique(announcement_id, resident_id)",
-        "A resident can view an announcement only once for counting.",
-    )
-
+    _sql_constraints = [
+        (
+            "announcement_resident_view_uniq",
+            "unique(announcement_id, resident_id)",
+            "A resident can view an announcement only once for counting.",
+        ),
+    ]
 
 class CommunityCommunicationAnnouncementAck(models.Model):
     _name = "community.communication.announcement.ack"
@@ -277,7 +279,10 @@ class CommunityCommunicationAnnouncementAck(models.Model):
     company_id = fields.Many2one(related="announcement_id.company_id", store=True, index=True)
     acked_on = fields.Datetime(default=fields.Datetime.now, required=True)
 
-    _announcement_resident_ack_uniq = models.Constraint(
-        "unique(announcement_id, resident_id)",
-        "A resident can acknowledge an announcement only once.",
-    )
+    _sql_constraints = [
+        (
+            "announcement_resident_ack_uniq",
+            "unique(announcement_id, resident_id)",
+            "A resident can acknowledge an announcement only once.",
+        ),
+    ]

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     "name": "Mobile Application",
-    "version": "19.0.1.0.0",
+    "version": "18.0.1.0.0",
     "category": "Services/Mobile",
     "summary": "Unified mobile-first FMS application for residents, staff, and security",
     "description": """

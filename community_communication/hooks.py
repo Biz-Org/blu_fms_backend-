@@ -57,19 +57,19 @@ def _sync_resident_portal_access(env):
     Users = env["res.users"].with_context(active_test=False)
 
     officers_with_resident = Users.search([
-        ("group_ids", "in", resident_group.ids),
-        ("all_group_ids", "in", officer.ids),
+        ("groups_id", "in", resident_group.ids),
+        ("groups_id", "in", officer.ids),
     ])
     if officers_with_resident:
-        officers_with_resident.write({"group_ids": [Command.unlink(resident_group.id)]})
+        officers_with_resident.write({"groups_id": [Command.unlink(resident_group.id)]})
 
-    users = Users.search([("group_ids", "in", resident_group.ids)])
+    users = Users.search([("groups_id", "in", resident_group.ids)])
     for user in users:
         if user.has_group("community_communication.group_community_officer"):
             continue
-        groups = (user.group_ids - internal) | portal | resident_group
+        groups = (user.groups_id - internal) | portal | resident_group
         user.write({
-            "group_ids": [Command.set(groups.ids)],
+            "groups_id": [Command.set(groups.ids)],
             "action_id": home.id,
         })
 

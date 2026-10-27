@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 {
     "name": "Community & Communication",
-    "version": "19.0.1.9.3",
+    "version": "18.0.1.9.3",
     "category": "Services/Community",
     "summary": "Community engagement and communication for facility management",
     "description": """
 Community engagement and communication for facility management.
 
-Standalone Odoo 19 addon for announcements, forums, polls, events,
+Standalone Odoo 18 addon for announcements, forums, polls, events,
 notices, resident feedback, groups, and engagement analytics.
     """,
     "author": "FMS Community",

@@ -13,11 +13,13 @@ class MobileSyncLog(models.Model):
     last_value = fields.Char()
     idempotency_key = fields.Char(index=True)
 
-    _user_key_uniq = models.Constraint(
-        "unique(user_id, sync_key)",
-        "Sync key must be unique per user.",
-    )
-
+    _sql_constraints = [
+        (
+            "user_key_uniq",
+            "unique(user_id, sync_key)",
+            "Sync key must be unique per user.",
+        ),
+    ]
     @api.model
     def touch(self, sync_key, value=None):
         log = self.search([("user_id", "=", self.env.user.id), ("sync_key", "=", sync_key)], limit=1)

@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 {
     "name": "Compliance & Audit Management",
-    "version": "19.0.2.8.0",
+    "version": "18.0.2.8.0",
     "category": "Services/Compliance",
     "summary": "Statutory compliance checks, documents, audits, non-compliance, and regulatory reporting",
     "description": """
 Compliance & Audit Management for facility management.
 
-Standalone Odoo 19 addon (FMS module #24) for statutory compliance
+Standalone Odoo 18 addon (FMS module #24) for statutory compliance
 requirements and checklists, compliance documents and expiry tracking,
 audits and inspections, non-compliance and corrective actions,
 regulatory reporting, and compliance KPIs.

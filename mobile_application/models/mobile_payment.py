@@ -30,7 +30,10 @@ class MobilePaymentRecord(models.Model):
     external_id = fields.Integer(index=True)
     idempotency_key = fields.Char(index=True)
 
-    _idempotency_uniq = models.Constraint(
-        "unique(idempotency_key)",
-        "This payment was already recorded.",
-    )
+    _sql_constraints = [
+        (
+            "idempotency_uniq",
+            "unique(idempotency_key)",
+            "This payment was already recorded.",
+        ),
+    ]
