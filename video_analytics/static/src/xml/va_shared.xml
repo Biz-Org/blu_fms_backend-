@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="video_analytics.Banner">
+        <div t-if="state.error" class="va-error" role="alert">
+            <span t-esc="state.error"/>
+            <button type="button" class="va-btn va-btn-sm" t-on-click="load">Retry</button>
+        </div>
+        <div t-if="state.loading" class="va-loading" role="status" aria-live="polite">
+            <span class="va-spinner" aria-hidden="true"/>
+            <span>Loading…</span>
+        </div>
+    </t>
+    <t t-name="video_analytics.Meter">
+        <div class="va-meter" role="meter" t-att-aria-valuenow="value" aria-valuemin="0" aria-valuemax="100">
+            <span class="va-meter-fill"
+                  t-att-class="{ 'is-over': over }"
+                  t-attf-style="width: {{meterWidth(value)}}"/>
+        </div>
+    </t>
+    <t t-name="video_analytics.WorkflowStrip">
+        <nav class="va-flow" aria-label="Video analytics workflow">
+            <div class="va-flow-track">
+                <t t-foreach="flow.steps" t-as="step" t-key="step.id">
+                    <span t-att-class="{
+                        'va-flow-step': true,
+                        'is-done': step.done,
+                        'is-current': step.current,
+                        'is-rejected': step.rejected,
+                    }">
+                        <span class="va-flow-chip" t-esc="step.label"/>
+                    </span>
+                </t>
+            </div>
+            <span class="va-flow-resolve">Resolve → Close</span>
+        </nav>
+    </t>
+</templates>

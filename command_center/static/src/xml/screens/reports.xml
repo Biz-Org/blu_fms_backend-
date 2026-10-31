@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="command_center.Reports">
+        <div class="cc-screen" data-screen="reports">
+            <button type="button" class="cc-sr-only" title="Refresh reports" t-on-click="refresh">Refresh</button>
+            <div class="cc-rpt-head">
+                <div>
+                    <h1 class="cc-page-title">Command Center Reports</h1>
+                    <p class="cc-page-sub">Manage, generate, and analyze command center documentation.</p>
+                </div>
+                <div class="cc-rpt-head-actions">
+                    <button type="button" class="cc-btn" title="Open report builder" t-on-click="openBuilder">
+                        <i class="fa fa-external-link" aria-hidden="true"/> Open Report Builder
+                    </button>
+                    <button type="button" class="cc-btn cc-btn-primary" title="Generate report in builder" t-on-click="openBuilder">
+                        <i class="fa fa-plus" aria-hidden="true"/> Generate Report
+                    </button>
+                </div>
+            </div>
+            <div t-if="state.error" class="cc-error" role="alert">
+                <span t-esc="state.error"/>
+                <button type="button" class="cc-btn cc-btn-inline" t-on-click="refresh">Retry</button>
+            </div>
+            <div t-if="state.loading" class="cc-loading" aria-busy="true" aria-label="Loading reports">
+                <div class="cc-skel-row">
+                    <div class="cc-skel-bar" t-foreach="[1,2,3,4]" t-as="n" t-key="n"/>
+                </div>
+                <div class="cc-skel-line"/>
+            </div>
+            <t t-if="!state.loading and !state.error">
+                <div class="cc-stat-grid cc-rpt-stats">
+                    <div t-foreach="reportKpis" t-as="kpi" t-key="kpi.key" class="cc-stat">
+                        <div class="cc-stat-top">
+                            <span class="cc-stat-ico"><i t-attf-class="fa {{kpi.icon}}"/></span>
+                            <span class="cc-stat-label" t-esc="kpi.label"/>
+                        </div>
+                        <div class="cc-stat-value" t-esc="kpi.value"/>
+                    </div>
+                </div>
+                <div class="cc-rpt-board">
+                    <div class="cc-rpt-side">
+                        <div class="cc-panel cc-rpt-cats">
+                            <h2>Categories</h2>
+                            <div class="cc-category-list">
+                                <button type="button" t-foreach="categories" t-as="item" t-key="item.id"
+                                        class="cc-cat-btn"
+                                        t-att-class="{ 'is-on': state.category === item.id }"
+                                        t-on-click="() => this.selectCategory(item)">
+                                    <span t-esc="item.label"/>
+                                    <span t-esc="item.count"/>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="cc-panel cc-rpt-quick">
+                            <h2>Quick Filters</h2>
+                            <label>Date Range
+                                <select t-model="state.range" aria-label="Date Range">
+                                    <option value="7">Last 7 Days</option>
+                                    <option value="30">Last 30 Days</option>
+                                    <option value="1">Last 24 Hours</option>
+                                </select>
+                            </label>
+                            <label>Status
+                                <select t-model="state.status" aria-label="Status">
+                                    <option value="">All Statuses</option>
+                                    <option value="generated">Generated</option>
+                                    <option value="scheduled">Scheduled</option>
+                                </select>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="cc-panel cc-rpt-table">
+                        <div class="cc-panel-head-row">
+                            <h2>Recent Reports</h2>
+                            <div class="cc-panel-tools">
+                                <button type="button" class="cc-icon-btn" title="Filter" aria-label="Filter">
+                                    <i class="fa fa-filter"/>
+                                </button>
+                                <button type="button" class="cc-icon-btn" title="More" aria-label="More">
+                                    <i class="fa fa-ellipsis-h"/>
+                                </button>
+                            </div>
+                        </div>
+                        <div t-if="!displayRows.length" class="cc-empty">
+                            <h3>No report rows</h3>
+                            <p>No operational records are currently available.</p>
+                        </div>
+                        <div t-else="" class="cc-table-wrap">
+                            <table class="cc-table">
+                                <thead>
+                                    <tr>
+                                        <th>Report Name</th>
+                                        <th>Category</th>
+                                        <th>Last Generated</th>
+                                        <th>Owner</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="pagedRows" t-as="row" t-key="row.id">
+                                        <td>
+                                            <i t-attf-class="fa {{row.icon}} cc-rpt-ico" aria-hidden="true"/>
+                                            <t t-esc="row.name"/>
+                                        </td>
+                                        <td t-esc="row.category"/>
+                                        <td t-esc="row.generated"/>
+                                        <td t-esc="row.owner"/>
+                                        <td>
+                                            <span class="cc-badge" t-attf-class="cc-rpt-{{row.status}}" t-esc="statusLabel(row.status)"/>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="cc-icon-btn" title="Open report builder" t-on-click="openBuilder">
+                                                <i class="fa fa-ellipsis-h"/>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="cc-pager">
+                            <span>Showing <t t-esc="pageStart"/> to <t t-esc="pageEnd"/> of <t t-esc="displayRows.length"/> reports</span>
+                            <div>
+                                <button type="button" class="cc-icon-btn" t-att-disabled="state.page &lt;= 1" t-on-click="pagePrev" aria-label="Previous">
+                                    <i class="fa fa-chevron-left"/>
+                                </button>
+                                <button type="button" class="cc-icon-btn" t-att-disabled="state.page &gt;= pageCount" t-on-click="pageNext" aria-label="Next">
+                                    <i class="fa fa-chevron-right"/>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

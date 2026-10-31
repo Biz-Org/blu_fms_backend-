@@ -1,0 +1,1327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="enterprise_integration.App">
+        <div class="ei-shell o_action" t-ref="root">
+            <aside class="ei-sidebar">
+                <div class="ei-sidebar-brand">
+                    <div class="ei-brand-mark">P</div>
+                    <div class="ei-brand-text">
+                        <div class="ei-brand-name">PrecastMPS</div>
+                        <div class="ei-brand-sub">Enterprise Integration</div>
+                    </div>
+                </div>
+
+                <nav class="ei-sidebar-nav">
+                    <t t-foreach="screens" t-as="item" t-key="item.id">
+                        <button type="button"
+                                class="ei-nav-item"
+                                t-att-class="{ active: state.screen === item.id }"
+                                t-att-data-screen="item.id"
+                                t-on-click="onNavClick">
+                            <i t-attf-class="fa {{item.icon}}"/>
+                            <span t-esc="item.label"/>
+                        </button>
+                    </t>
+                </nav>
+
+                <div class="ei-sidebar-footer">
+                    <div class="ei-nav-item ei-nav-fms" title="Module settings via Odoo">
+                        <i class="fa fa-cog"/>
+                        <span>Settings</span>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="ei-workspace">
+                <header class="ei-topbar">
+                    <div class="ei-breadcrumbs">
+                        Utility Management
+                        <span class="ei-crumb-sep">›</span>
+                        Enterprise Integration
+                        <span class="ei-crumb-sep">›</span>
+                        <strong t-esc="current.crumb"/>
+                    </div>
+                    <div class="ei-top-search">
+                        <i class="fa fa-search"/>
+                        <input type="text"
+                               t-att-placeholder="current.searchPlaceholder"
+                               t-att-value="state.search"
+                               t-on-input="onSearchInput"/>
+                    </div>
+                    <div class="ei-top-utils">
+                        <button type="button" class="ei-icon-btn" title="Notifications">
+                            <i class="fa fa-bell-o"/>
+                        </button>
+                        <div class="ei-user-avatar" title="User">U</div>
+                    </div>
+                </header>
+
+                <main class="ei-main" t-att-class="{ 'ei-main--fill': state.screen === 'connectors' or state.screen === 'api' }">
+                    <div class="ei-page-header">
+                        <div>
+                            <h1 t-esc="current.title"/>
+                            <p class="ei-page-subtitle" t-esc="current.subtitle"/>
+                        </div>
+                        <div class="ei-header-actions">
+                            <t t-if="state.screen === 'dashboard'">
+                                <button class="ei-btn ei-btn-ghost" data-screen="monitoring" t-on-click="onNavClick">
+                                    <i class="fa fa-eye"/> View Logs
+                                </button>
+                                <button class="ei-btn ei-btn-ghost" data-screen="sync" t-on-click="onNavClick">
+                                    <i class="fa fa-refresh"/> Run Sync
+                                </button>
+                                <button class="ei-btn ei-btn-primary" t-on-click="openCreate">
+                                    <i class="fa fa-plus"/> Add Integration
+                                </button>
+                            </t>
+                            <t t-elif="state.screen === 'connectors'">
+                                <button class="ei-btn ei-btn-ghost" t-on-click="refresh">
+                                    <i class="fa fa-refresh"/> Sync All
+                                </button>
+                                <button class="ei-btn ei-btn-primary" t-on-click="openCreate">
+                                    <i class="fa fa-plus"/> New Connector
+                                </button>
+                            </t>
+                            <t t-elif="state.screen === 'sync'">
+                                <button class="ei-btn ei-btn-ghost" t-on-click="refresh">
+                                    <i class="fa fa-refresh"/> Refresh Status
+                                </button>
+                                <button class="ei-btn ei-btn-primary" t-on-click="openCreate">
+                                    <i class="fa fa-plus"/> New Sync Job
+                                </button>
+                            </t>
+                            <t t-elif="state.screen === 'master'">
+                                <button class="ei-btn ei-btn-ghost" t-on-click="refresh">
+                                    <i class="fa fa-refresh"/> Force Sync All
+                                </button>
+                                <button class="ei-btn ei-btn-primary" t-on-click="openCreate">
+                                    <i class="fa fa-plus"/> New Entity
+                                </button>
+                            </t>
+                            <t t-elif="state.screen === 'api'">
+                                <button class="ei-btn ei-btn-ghost" t-on-click="refresh">
+                                    <i class="fa fa-refresh"/> Refresh
+                                </button>
+                                <button class="ei-btn ei-btn-primary" t-on-click="openCreate">
+                                    <i class="fa fa-plus"/> New API
+                                </button>
+                            </t>
+                            <t t-else="">
+                                <button class="ei-btn ei-btn-ghost" t-on-click="refresh">
+                                    <i class="fa fa-refresh"/> Refresh
+                                </button>
+                            </t>
+                        </div>
+                    </div>
+
+                    <div t-if="state.error" class="ei-error" t-esc="state.error"/>
+                    <div t-if="state.loading" class="ei-empty">Loading…</div>
+
+                    <!-- ================= DASHBOARD ================= -->
+                    <t t-if="!state.loading and state.screen === 'dashboard'">
+                        <div class="ei-dash-screen">
+                        <div class="ei-kpi-row ei-kpi-8 ei-dash-kpis">
+                            <div class="ei-kpi-card">
+                                <div class="ei-kpi-label">Active Int.</div>
+                                <div class="ei-kpi-value" t-esc="formatCount(state.kpis.activeIntegrations)"/>
+                                <span class="ei-kpi-icon"><i class="fa fa-plug"/></span>
+                            </div>
+                            <div class="ei-kpi-card tone-success">
+                                <div class="ei-kpi-label">Connected</div>
+                                <div class="ei-kpi-value" t-esc="formatCount(state.kpis.connectedConnectors)"/>
+                                <span class="ei-kpi-icon"><i class="fa fa-check"/></span>
+                            </div>
+                            <div class="ei-kpi-card">
+                                <div class="ei-kpi-label">API Req (Today)</div>
+                                <div class="ei-kpi-value" t-esc="formatCompact(state.api.requests)"/>
+                                <span class="ei-kpi-icon"><i class="fa fa-exchange"/></span>
+                            </div>
+                            <div class="ei-kpi-card tone-success">
+                                <div class="ei-kpi-label">Success Syncs</div>
+                                <div class="ei-kpi-value" t-esc="formatCount(state.kpis.syncSuccess)"/>
+                                <span class="ei-kpi-icon"><i class="fa fa-check-circle"/></span>
+                            </div>
+                            <div class="ei-kpi-card tone-danger">
+                                <div class="ei-kpi-label">Failed Syncs</div>
+                                <div class="ei-kpi-value" t-esc="formatCount(state.sync.failed)"/>
+                                <span class="ei-kpi-icon"><i class="fa fa-exclamation"/></span>
+                            </div>
+                            <div class="ei-kpi-card tone-warning">
+                                <div class="ei-kpi-label">Pending Syncs</div>
+                                <div class="ei-kpi-value" t-esc="formatCount(state.kpis.syncPending)"/>
+                                <span class="ei-kpi-icon"><i class="fa fa-clock-o"/></span>
+                            </div>
+                            <div class="ei-kpi-card">
+                                <div class="ei-kpi-label">Webhook Evts</div>
+                                <div class="ei-kpi-value" t-esc="formatCompact(state.api.webhookDeliveries)"/>
+                                <span class="ei-kpi-icon"><i class="fa fa-share-alt"/></span>
+                            </div>
+                            <div class="ei-kpi-card tone-danger">
+                                <div class="ei-kpi-label">Int. Errors</div>
+                                <div class="ei-kpi-value" t-esc="formatCount(state.kpis.failedOps)"/>
+                                <span class="ei-kpi-icon"><i class="fa fa-ban"/></span>
+                            </div>
+                        </div>
+
+                        <div class="ei-dash-mid">
+                            <div class="ei-panel ei-dash-connectors">
+                                <div class="ei-panel-head">
+                                    <h2 class="ei-panel-title">Connector Health</h2>
+                                    <button type="button" class="ei-link-btn" data-screen="connectors" t-on-click="onNavClick">View All</button>
+                                </div>
+                                <div class="ei-table-wrap">
+                                    <table class="ei-table ei-dash-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Connector</th>
+                                                <th>Type</th>
+                                                <th>Status</th>
+                                                <th>Last Sync</th>
+                                                <th>Health</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="state.connectors" t-as="c" t-key="c.id">
+                                                <tr data-screen="connectors" t-on-click="onNavClick" class="is-clickable">
+                                                    <td>
+                                                        <div class="ei-conn-cell">
+                                                            <span t-attf-class="ei-avatar {{c.category}}">
+                                                                <i t-attf-class="fa {{connectorIcon(c.category)}}"/>
+                                                            </span>
+                                                            <div class="ei-conn-name" t-esc="c.name"/>
+                                                        </div>
+                                                    </td>
+                                                    <td t-esc="categoryLabel(c.category)"/>
+                                                    <td>
+                                                        <span t-attf-class="ei-status-pill {{connectorStatusClass(c)}}"
+                                                              t-esc="connectorStatusLabel(c)"/>
+                                                    </td>
+                                                    <td t-esc="connectorLastSync(c)"/>
+                                                    <td>
+                                                        <div t-attf-class="ei-health-bar {{healthTone(c.health_state, c.state)}}">
+                                                            <span t-att-style="healthBarStyle(c)"/>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                            <t t-if="!state.connectors.length">
+                                                <tr>
+                                                    <td colspan="5" class="ei-empty">No connectors yet.</td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="ei-dash-side">
+                                <div class="ei-panel">
+                                    <h2 class="ei-panel-title">Integration Health</h2>
+                                    <div class="ei-bar-list">
+                                        <div class="ei-bar-row">
+                                            <span>Connected</span>
+                                            <div class="ei-bar-track bar-connected"><span t-att-style="barWidth(state.health.healthy)"/></div>
+                                            <strong t-esc="state.health.healthy"/>
+                                        </div>
+                                        <div class="ei-bar-row">
+                                            <span>Warning</span>
+                                            <div class="ei-bar-track bar-warning"><span t-att-style="barWidth(state.health.warning)"/></div>
+                                            <strong t-esc="state.health.warning"/>
+                                        </div>
+                                        <div class="ei-bar-row">
+                                            <span>Disconnected</span>
+                                            <div class="ei-bar-track bar-disconnected"><span t-att-style="barWidth(state.health.disconnected)"/></div>
+                                            <strong t-esc="state.health.disconnected"/>
+                                        </div>
+                                        <div class="ei-bar-row">
+                                            <span>Error State</span>
+                                            <div class="ei-bar-track bar-error"><span t-att-style="barWidth(state.health.error)"/></div>
+                                            <strong t-esc="state.health.error"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ei-panel">
+                                    <h2 class="ei-panel-title">Error Summary</h2>
+                                    <div class="ei-error-grid">
+                                        <div class="ei-error-tile api">
+                                            <span class="ei-error-count" t-esc="formatCount(state.api.failed)"/>
+                                            <span>API Errors</span>
+                                        </div>
+                                        <div class="ei-error-tile webhook">
+                                            <span class="ei-error-count" t-esc="formatCount(state.api.webhookFailed)"/>
+                                            <span>Webhook Drops</span>
+                                        </div>
+                                        <div class="ei-error-tile connector">
+                                            <span class="ei-error-count" t-esc="formatCount(state.health.error)"/>
+                                            <span>Conn. Failures</span>
+                                        </div>
+                                        <div class="ei-error-tile sync">
+                                            <span class="ei-error-count" t-esc="formatCount(state.kpis.syncConflicts)"/>
+                                            <span>Sync Conflicts</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ei-panel ei-dash-activity">
+                            <div class="ei-panel-head">
+                                <h2 class="ei-panel-title">Recent Integration Activity</h2>
+                                <button type="button" class="ei-icon-btn" title="Filter" data-screen="monitoring" t-on-click="onNavClick">
+                                    <i class="fa fa-filter"/>
+                                </button>
+                            </div>
+                            <div class="ei-table-wrap">
+                                <table class="ei-table ei-dash-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Time</th>
+                                            <th>System</th>
+                                            <th>Integration</th>
+                                            <th>Event</th>
+                                            <th>Status</th>
+                                            <th>Records</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="state.recentLogs" t-as="log" t-key="log.id">
+                                            <tr>
+                                                <td class="ei-mono" t-esc="dashboardActivityTime(log)"/>
+                                                <td t-esc="log.source_system or categoryLabel(log.category)"/>
+                                                <td>
+                                                    <div class="ei-log-event" t-esc="log.name"/>
+                                                </td>
+                                                <td t-esc="log.operation or categoryLabel(log.category)"/>
+                                                <td>
+                                                    <span t-attf-class="ei-status-pill {{log.level}}"
+                                                          t-esc="levelLabel(log.level)"/>
+                                                </td>
+                                                <td>
+                                                    <span t-att-class="{ 'ei-records-danger': activityRecordsDanger(log) }"
+                                                          t-esc="activityRecords(log)"/>
+                                                </td>
+                                                <td>
+                                                    <t t-if="log.retryable and log.level != 'success'">
+                                                        <button class="ei-link-btn" t-att-data-id="log.id" t-on-click="onRetryLog">Retry</button>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <button class="ei-link-btn" t-att-data-id="log.id" t-on-click="onOpenLog">Details</button>
+                                                    </t>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                        <t t-if="!state.recentLogs.length">
+                                            <tr>
+                                                <td colspan="7" class="ei-empty">No integration activity logged yet.</td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        </div>
+                    </t>
+
+                    <!-- ================= API ================= -->
+                    <t t-if="!state.loading and state.screen === 'api'">
+                        <div class="ei-api-screen">
+                        <div class="ei-kpi-row ei-kpi-6 ei-api-kpis">
+                            <div class="ei-kpi-card">
+                                <div class="ei-kpi-label">Active API Endpoints</div>
+                                <div class="ei-kpi-value" t-esc="formatCount(state.apiKpis.activeEndpoints)"/>
+                                <span class="ei-kpi-icon"><i class="fa fa-code"/></span>
+                            </div>
+                            <div class="ei-kpi-card">
+                                <div class="ei-kpi-label">API Requests Today</div>
+                                <div class="ei-kpi-value" t-esc="formatCount(state.apiKpis.apiRequests)"/>
+                                <span class="ei-kpi-icon"><i class="fa fa-exchange"/></span>
+                            </div>
+                            <div class="ei-kpi-card">
+                                <div class="ei-kpi-label">Active Webhooks</div>
+                                <div class="ei-kpi-value" t-esc="formatCount(state.apiKpis.activeWebhooks)"/>
+                                <span class="ei-kpi-icon"><i class="fa fa-share-alt"/></span>
+                            </div>
+                            <div class="ei-kpi-card tone-success">
+                                <div class="ei-kpi-label">Delivered Events</div>
+                                <div class="ei-kpi-value" t-esc="formatCount(state.apiKpis.delivered)"/>
+                                <span class="ei-kpi-icon"><i class="fa fa-check"/></span>
+                            </div>
+                            <div class="ei-kpi-card tone-danger">
+                                <div class="ei-kpi-label">Failed Events</div>
+                                <div class="ei-kpi-value" t-esc="formatCount(state.apiKpis.failedEvents)"/>
+                                <span class="ei-kpi-icon"><i class="fa fa-exclamation-triangle"/></span>
+                            </div>
+                            <div class="ei-kpi-card tone-danger">
+                                <div class="ei-kpi-label">API Errors</div>
+                                <div class="ei-kpi-value" t-esc="formatCount(state.apiKpis.apiErrors)"/>
+                                <span class="ei-kpi-icon"><i class="fa fa-times-circle"/></span>
+                            </div>
+                        </div>
+
+                        <div class="ei-tabs ei-api-tabs">
+                            <button type="button" class="ei-tab" t-att-class="{ active: state.apiTab === 'apis' }" data-tab="apis" t-on-click="setApiTab">APIs</button>
+                            <button type="button" class="ei-tab" t-att-class="{ active: state.apiTab === 'webhooks' }" data-tab="webhooks" t-on-click="setApiTab">Webhooks</button>
+                            <button type="button" class="ei-tab" t-att-class="{ active: state.apiTab === 'keys' }" data-tab="keys" t-on-click="setApiTab">API Keys</button>
+                            <button type="button" class="ei-tab" t-att-class="{ active: state.apiTab === 'history' }" data-tab="history" t-on-click="setApiTab">Delivery History</button>
+                        </div>
+
+                        <div class="ei-api-board">
+                            <div class="ei-panel ei-api-main">
+                                <t t-if="state.apiTab === 'apis'">
+                                    <div class="ei-api-toolbar">
+                                        <h2 class="ei-panel-title mb-0">Registered APIs</h2>
+                                        <div class="ei-api-toolbar-right">
+                                            <div class="ei-inline-search">
+                                                <i class="fa fa-search"/>
+                                                <input type="text"
+                                                       placeholder="Search APIs…"
+                                                       t-att-value="state.apiPanelSearch"
+                                                       t-on-input="onApiPanelSearch"/>
+                                            </div>
+                                            <button type="button" class="ei-btn ei-btn-primary" t-on-click="openCreate">
+                                                <i class="fa fa-plus"/> New API
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="ei-table-wrap">
+                                        <table class="ei-table ei-api-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>API Name</th>
+                                                    <th>Endpoint</th>
+                                                    <th>Method</th>
+                                                    <th>Auth</th>
+                                                    <th>Status</th>
+                                                    <th>Req. Today</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <t t-foreach="filteredEndpoints" t-as="ep" t-key="ep.id">
+                                                    <tr t-att-class="{ 'is-selected': state.selectedEndpointId === ep.id }"
+                                                        t-att-data-id="ep.id" t-on-click="selectEndpoint">
+                                                        <td>
+                                                            <div class="ei-conn-name" t-esc="ep.name"/>
+                                                        </td>
+                                                        <td class="ei-mono" t-esc="ep.path"/>
+                                                        <td><span t-attf-class="ei-method {{ep.method}}" t-esc="ep.method"/></td>
+                                                        <td t-esc="authLabel(ep.auth_type)"/>
+                                                        <td>
+                                                            <span t-attf-class="ei-status-dot {{ep.state}}">
+                                                                <span class="ei-dot"/>
+                                                                <t t-esc="statusLabel(ep.state)"/>
+                                                            </span>
+                                                        </td>
+                                                        <td t-esc="formatCount(ep.usage_count)"/>
+                                                        <td class="ei-row-actions">
+                                                            <button class="ei-icon-btn" t-att-data-id="ep.id" t-on-click="onOpenEndpoint" title="Open">
+                                                                <i class="fa fa-ellipsis-v"/>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                </t>
+                                                <t t-if="!filteredEndpoints.length">
+                                                    <tr>
+                                                        <td colspan="7" class="ei-empty">No APIs match this search.</td>
+                                                    </tr>
+                                                </t>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </t>
+                                <t t-elif="state.apiTab === 'webhooks'">
+                                    <div class="ei-api-toolbar">
+                                        <h2 class="ei-panel-title mb-0">Webhooks</h2>
+                                        <button type="button" class="ei-btn ei-btn-primary" t-on-click="openCreate">
+                                            <i class="fa fa-plus"/> New Webhook
+                                        </button>
+                                    </div>
+                                    <div class="ei-table-wrap">
+                                        <table class="ei-table ei-api-table">
+                                            <thead>
+                                                <tr><th>Name</th><th>Code</th><th>Direction</th><th>Auth</th><th>Status</th></tr>
+                                            </thead>
+                                            <tbody>
+                                                <t t-foreach="filteredWebhooks" t-as="wh" t-key="wh.id">
+                                                    <tr>
+                                                        <td t-esc="wh.name"/>
+                                                        <td class="ei-mono" t-esc="wh.code"/>
+                                                        <td t-esc="statusLabel(wh.direction)"/>
+                                                        <td t-esc="authLabel(wh.auth_type)"/>
+                                                        <td>
+                                                            <span t-attf-class="ei-status-dot {{wh.state}}">
+                                                                <span class="ei-dot"/>
+                                                                <t t-esc="statusLabel(wh.state)"/>
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                </t>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </t>
+                                <t t-elif="state.apiTab === 'keys'">
+                                    <div class="ei-api-toolbar">
+                                        <h2 class="ei-panel-title mb-0">API Keys</h2>
+                                        <button type="button" class="ei-btn ei-btn-primary" t-on-click="openCreate">
+                                            <i class="fa fa-plus"/> New Key
+                                        </button>
+                                    </div>
+                                    <div class="ei-table-wrap">
+                                        <table class="ei-table ei-api-table">
+                                            <thead>
+                                                <tr><th>Name</th><th>Prefix</th><th>Status</th><th>Last Used</th><th>Expiry</th></tr>
+                                            </thead>
+                                            <tbody>
+                                                <t t-foreach="filteredApiKeys" t-as="key" t-key="key.id">
+                                                    <tr>
+                                                        <td t-esc="key.name"/>
+                                                        <td class="ei-mono" t-esc="key.key_prefix or '••••'"/>
+                                                        <td>
+                                                            <span t-attf-class="ei-status-dot {{key.state}}">
+                                                                <span class="ei-dot"/>
+                                                                <t t-esc="statusLabel(key.state)"/>
+                                                            </span>
+                                                        </td>
+                                                        <td t-esc="key._last_ago or formatWhen(key.last_used_at)"/>
+                                                        <td t-esc="key.expiry_date or '—'"/>
+                                                    </tr>
+                                                </t>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </t>
+                                <t t-else="">
+                                    <div class="ei-api-toolbar">
+                                        <h2 class="ei-panel-title mb-0">Delivery History</h2>
+                                    </div>
+                                    <div class="ei-table-wrap">
+                                        <table class="ei-table ei-api-table">
+                                            <thead>
+                                                <tr><th>Time</th><th>Delivery</th><th>Status</th><th>HTTP</th><th>Correlation</th></tr>
+                                            </thead>
+                                            <tbody>
+                                                <t t-foreach="filteredDeliveries" t-as="d" t-key="d.id">
+                                                    <tr>
+                                                        <td t-esc="d._when or formatWhen(d.create_date)"/>
+                                                        <td t-esc="d.name"/>
+                                                        <td>
+                                                            <span t-attf-class="ei-status-dot {{d.status}}">
+                                                                <span class="ei-dot"/>
+                                                                <t t-esc="statusLabel(d.status)"/>
+                                                            </span>
+                                                        </td>
+                                                        <td t-esc="d.http_status or '—'"/>
+                                                        <td class="ei-mono" t-esc="d.correlation_id or '—'"/>
+                                                    </tr>
+                                                </t>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </t>
+                            </div>
+
+                            <div class="ei-panel ei-api-detail" t-if="state.apiTab === 'apis' and selectedEndpoint">
+                                <div class="ei-detail-head">
+                                    <div>
+                                        <div class="ei-api-detail-title">
+                                            <h3 t-esc="selectedEndpoint.name"/>
+                                            <button type="button" class="ei-icon-btn" title="Edit" t-att-data-id="selectedEndpoint.id" t-on-click="onOpenEndpoint">
+                                                <i class="fa fa-pencil"/>
+                                            </button>
+                                        </div>
+                                        <div class="ei-detail-sub">
+                                            Version <t t-esc="selectedEndpoint.version or '1.0'"/>
+                                            <span class="ei-dot-sep">•</span>
+                                            <span t-attf-class="ei-status-dot {{selectedEndpoint.state}}">
+                                                <span class="ei-dot"/>
+                                                                <t t-esc="endpointEnvLabel(selectedEndpoint)"/>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="ei-icon-btn" title="Close" t-on-click="closeEndpointDetail">
+                                        <i class="fa fa-times"/>
+                                    </button>
+                                </div>
+
+                                <label class="ei-field-label">Endpoint URL</label>
+                                <div class="ei-url-box">
+                                    <span class="ei-mono" t-esc="endpointFullUrl(selectedEndpoint)"/>
+                                    <button type="button" class="ei-icon-btn" title="Copy URL" t-on-click="onCopyEndpointUrl">
+                                        <i class="fa fa-clone"/>
+                                    </button>
+                                </div>
+
+                                <div class="ei-field-row">
+                                    <div>
+                                        <label class="ei-field-label">Method</label>
+                                        <div class="ei-select-fake">
+                                            <span t-attf-class="ei-method {{selectedEndpoint.method}}" t-esc="selectedEndpoint.method"/>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="ei-field-label">Authentication</label>
+                                        <div class="ei-select-fake" t-esc="authLabel(selectedEndpoint.auth_type)"/>
+                                    </div>
+                                </div>
+
+                                <label class="ei-field-label">Rate Limiting</label>
+                                <div class="ei-field-row">
+                                    <div>
+                                        <div class="ei-muted-note mb-1">Requests per minute</div>
+                                        <div class="ei-readonly" t-esc="selectedEndpoint.rate_limit or 0"/>
+                                    </div>
+                                    <div>
+                                        <div class="ei-muted-note mb-1">Burst limit</div>
+                                        <div class="ei-readonly" t-esc="endpointBurst(selectedEndpoint)"/>
+                                    </div>
+                                </div>
+
+                                <div class="ei-api-scopes-head">
+                                    <label class="ei-field-label mb-0">Permissions</label>
+                                    <button type="button" class="ei-link-btn" t-att-data-id="selectedEndpoint.id" t-on-click="onOpenEndpoint">Manage Scopes</button>
+                                </div>
+                                <div class="ei-scope-list">
+                                    <t t-foreach="endpointScopes(selectedEndpoint)" t-as="scope" t-key="scope">
+                                        <span class="ei-scope-chip">
+                                            <t t-esc="scope"/>
+                                            <i class="fa fa-times"/>
+                                        </span>
+                                    </t>
+                                </div>
+
+                                <div class="ei-detail-actions">
+                                    <button class="ei-btn ei-btn-ghost" t-on-click="closeEndpointDetail">Discard</button>
+                                    <button class="ei-btn ei-btn-primary" t-att-data-id="selectedEndpoint.id" t-on-click="onOpenEndpoint">Save Changes</button>
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+                    </t>
+
+                    <!-- ================= CONNECTORS ================= -->
+                    <t t-if="!state.loading and state.screen === 'connectors'">
+                        <div class="ei-connectors-screen">
+                        <div class="ei-kpi-row ei-kpi-5 ei-connector-kpis">
+                            <div class="ei-kpi-card">
+                                <div class="ei-kpi-label">Total Connectors</div>
+                                <div class="ei-kpi-value" t-esc="formatCount(state.connectorKpis.total)"/>
+                            </div>
+                            <div class="ei-kpi-card tone-success">
+                                <div class="ei-kpi-label">Connected</div>
+                                <div class="ei-kpi-value-row">
+                                    <div class="ei-kpi-value" t-esc="formatCount(state.connectorKpis.connected)"/>
+                                    <t t-if="state.connectorKpis.connectedDelta">
+                                        <span class="ei-delta-up">+<t t-esc="state.connectorKpis.connectedDelta"/></span>
+                                    </t>
+                                </div>
+                            </div>
+                            <div class="ei-kpi-card">
+                                <div class="ei-kpi-label">Disconnected</div>
+                                <div class="ei-kpi-value" t-esc="formatCount(state.connectorKpis.disconnected)"/>
+                            </div>
+                            <div class="ei-kpi-card tone-danger ei-kpi-alert">
+                                <div class="ei-kpi-label">Error</div>
+                                <div class="ei-kpi-value" t-esc="formatCount(state.connectorKpis.error)"/>
+                            </div>
+                            <div class="ei-kpi-card tone-warning">
+                                <div class="ei-kpi-label">Pending Config</div>
+                                <div class="ei-kpi-value" t-esc="formatCount(state.connectorKpis.pending)"/>
+                            </div>
+                        </div>
+
+                        <div class="ei-tabs ei-connector-tabs">
+                            <button type="button" class="ei-tab" t-att-class="{ active: state.connectorTab === 'all' }" data-tab="all" t-on-click="setConnectorTab">All</button>
+                            <button type="button" class="ei-tab" t-att-class="{ active: state.connectorTab === 'erp' }" data-tab="erp" t-on-click="setConnectorTab">ERP</button>
+                            <button type="button" class="ei-tab" t-att-class="{ active: state.connectorTab === 'crm' }" data-tab="crm" t-on-click="setConnectorTab">CRM</button>
+                            <button type="button" class="ei-tab" t-att-class="{ active: state.connectorTab === 'bank' }" data-tab="bank" t-on-click="setConnectorTab">Banking</button>
+                            <button type="button" class="ei-tab" t-att-class="{ active: state.connectorTab === 'whatsapp' }" data-tab="whatsapp" t-on-click="setConnectorTab">WhatsApp</button>
+                            <button type="button" class="ei-tab" t-att-class="{ active: state.connectorTab === 'legacy' }" data-tab="legacy" t-on-click="setConnectorTab">Legacy</button>
+                        </div>
+
+                        <div class="ei-connector-board">
+                            <div class="ei-panel ei-connector-main">
+                                <div class="ei-table-wrap">
+                                    <table class="ei-table ei-connector-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Connector</th>
+                                                <th>Category</th>
+                                                <th>Status</th>
+                                                <th>Last Sync</th>
+                                                <th>Health</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="filteredConnectors" t-as="c" t-key="c.id">
+                                                <tr t-att-class="{ 'is-selected': state.selectedConnectorId === c.id }"
+                                                    t-att-data-id="c.id" t-on-click="selectConnector">
+                                                    <td>
+                                                        <div class="ei-conn-cell">
+                                                            <span t-attf-class="ei-avatar {{c.category}}">
+                                                                <i t-attf-class="fa {{connectorIcon(c.category)}}"/>
+                                                            </span>
+                                                            <div>
+                                                                <div class="ei-conn-name" t-esc="c.name"/>
+                                                                <div t-if="c.is_mock" class="ei-badge-mock">MOCK / DEMO</div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td t-esc="connectorCategoryLabel(c)"/>
+                                                    <td>
+                                                        <span t-attf-class="ei-status-dot {{c.state}}">
+                                                            <span class="ei-dot"/>
+                                                            <t t-esc="statusLabel(c.state)"/>
+                                                        </span>
+                                                    </td>
+                                                    <td t-esc="connectorLastSync(c)"/>
+                                                    <td>
+                                                        <div t-attf-class="ei-signal {{healthTone(c.health_state, c.state)}}"
+                                                             t-att-data-level="healthLevel(c)">
+                                                            <span/><span/><span/><span/><span/>
+                                                        </div>
+                                                    </td>
+                                                    <td class="ei-row-actions">
+                                                        <button class="ei-icon-btn" title="Open" t-att-data-id="c.id" t-on-click="onOpenConnector">
+                                                            <i class="fa fa-ellipsis-v"/>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                            <t t-if="!filteredConnectors.length">
+                                                <tr>
+                                                    <td colspan="6" class="ei-empty">No connectors in this category.</td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="ei-panel ei-connector-detail" t-if="selectedConnector">
+                                <div class="ei-detail-head">
+                                    <div class="ei-conn-cell">
+                                        <span t-attf-class="ei-avatar {{selectedConnector.category}}">
+                                            <i t-attf-class="fa {{connectorIcon(selectedConnector.category)}}"/>
+                                        </span>
+                                        <div>
+                                            <h3 t-esc="selectedConnector.name"/>
+                                            <div class="ei-detail-sub">
+                                                <span t-attf-class="ei-status-dot {{selectedConnector.state}}">
+                                                    <span class="ei-dot"/>
+                                                    <t t-esc="statusLabel(selectedConnector.state)"/>
+                                                </span>
+                                                <span class="ei-version">v<t t-esc="selectedConnector.version or '1.0'"/></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="ei-icon-btn" title="Close" t-on-click="closeConnectorDetail">
+                                        <i class="fa fa-times"/>
+                                    </button>
+                                </div>
+
+                                <div class="ei-meta-grid">
+                                    <div>
+                                        <span class="ei-field-label">System Type</span>
+                                        <div t-esc="connectorSystemType(selectedConnector)"/>
+                                    </div>
+                                    <div>
+                                        <span class="ei-field-label">Authentication</span>
+                                        <div t-esc="authLabel(selectedConnector.auth_method)"/>
+                                    </div>
+                                </div>
+
+                                <label class="ei-field-label">Base URL</label>
+                                <div class="ei-readonly ei-mono" t-esc="selectedConnector.base_url or '—'"/>
+
+                                <label class="ei-field-label">
+                                    <i class="fa fa-exchange"/> Active Field Mapping
+                                </label>
+                                <div class="ei-mapping-list">
+                                    <t t-if="!state.connectorMappings.length">
+                                        <div class="ei-muted-note">No mappings yet.</div>
+                                    </t>
+                                    <t t-foreach="state.connectorMappings" t-as="m" t-key="m.id">
+                                        <div class="ei-mapping-row">
+                                            <span class="ei-map-chip" t-esc="m.source_field"/>
+                                            <span class="ei-map-arrow">→</span>
+                                            <span class="ei-map-chip accent" t-esc="m.target_field"/>
+                                        </div>
+                                    </t>
+                                </div>
+
+                                <div class="ei-detail-actions">
+                                    <button class="ei-btn ei-btn-ghost" t-att-data-id="selectedConnector.id" t-on-click="onReconnectConnector">Reconnect</button>
+                                    <button class="ei-btn ei-btn-primary" t-att-data-id="selectedConnector.id" t-on-click="onTestConnector">Test Connection</button>
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+                    </t>
+
+                    <!-- ================= SYNC ================= -->
+                    <t t-if="!state.loading and state.screen === 'sync'">
+                        <div class="ei-kpi-row ei-kpi-6 ei-sync-kpis">
+                            <div class="ei-kpi-card">
+                                <div class="ei-kpi-label">Sync Jobs</div>
+                                <div class="ei-kpi-value" t-esc="formatCount(state.syncKpis.jobsTotal)"/>
+                                <div class="ei-kpi-hint">Total configured</div>
+                            </div>
+                            <div class="ei-kpi-card tone-primary ei-kpi-selected">
+                                <div class="ei-kpi-label">Running</div>
+                                <div class="ei-kpi-value" t-esc="formatCount(state.syncKpis.running)"/>
+                                <div class="ei-kpi-hint">Active now</div>
+                            </div>
+                            <div class="ei-kpi-card tone-success">
+                                <div class="ei-kpi-label">Completed Today</div>
+                                <div class="ei-kpi-value" t-esc="formatCount(state.syncKpis.completed)"/>
+                                <div class="ei-kpi-hint ei-kpi-hint-up">+12% vs ytd</div>
+                            </div>
+                            <div class="ei-kpi-card tone-danger">
+                                <div class="ei-kpi-label">Failed</div>
+                                <div class="ei-kpi-value" t-esc="formatCount(state.syncKpis.failed)"/>
+                                <div class="ei-kpi-hint">Requires attention</div>
+                            </div>
+                            <div class="ei-kpi-card tone-warning">
+                                <div class="ei-kpi-label">Pending</div>
+                                <div class="ei-kpi-value" t-esc="formatCount(state.syncKpis.pending)"/>
+                                <div class="ei-kpi-hint">In queue</div>
+                            </div>
+                            <div class="ei-kpi-card">
+                                <div class="ei-kpi-label">Records Processed</div>
+                                <div class="ei-kpi-value" t-esc="formatCount(state.syncKpis.processed)"/>
+                                <div class="ei-kpi-hint">Last 24 hours</div>
+                            </div>
+                        </div>
+
+                        <div class="ei-tabs ei-sync-tabs">
+                            <button type="button" class="ei-tab" t-att-class="{ active: state.syncTab === 'jobs' }" data-tab="jobs" t-on-click="setSyncTab">Sync Jobs (Active)</button>
+                            <button type="button" class="ei-tab" t-att-class="{ active: state.syncTab === 'running' }" data-tab="running" t-on-click="setSyncTab">Running</button>
+                            <button type="button" class="ei-tab" t-att-class="{ active: state.syncTab === 'history' }" data-tab="history" t-on-click="setSyncTab">History</button>
+                            <button type="button" class="ei-tab" t-att-class="{ active: state.syncTab === 'failed' }" data-tab="failed" t-on-click="setSyncTab">
+                                Failed Records
+                                <span class="ei-tab-badge" t-esc="state.syncFailedRecords"/>
+                            </button>
+                        </div>
+
+                        <div class="ei-sync-board">
+                            <div class="ei-panel ei-sync-main">
+                                <t t-if="state.syncTab === 'history'">
+                                    <div class="ei-table-wrap">
+                                        <table class="ei-table ei-sync-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Run</th>
+                                                    <th>State</th>
+                                                    <th>When</th>
+                                                    <th>Records</th>
+                                                    <th>Failed</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <t t-foreach="state.syncRuns" t-as="run" t-key="run.id">
+                                                    <tr>
+                                                        <td t-esc="run.name"/>
+                                                        <td><span t-attf-class="ei-status-pill {{run.state}}" t-esc="statusLabel(run.state)"/></td>
+                                                        <td t-esc="activityTime(run)"/>
+                                                        <td t-esc="run.records_processed"/>
+                                                        <td t-esc="run.records_failed"/>
+                                                    </tr>
+                                                </t>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </t>
+                                <t t-else="">
+                                    <div class="ei-table-wrap">
+                                        <table class="ei-table ei-sync-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Job Name</th>
+                                                    <th>Source → Destination</th>
+                                                    <th>Schedule</th>
+                                                    <th>Last Run</th>
+                                                    <th>Status</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <t t-foreach="filteredSyncJobs" t-as="job" t-key="job.id">
+                                                    <tr t-att-class="{ 'is-selected': state.selectedSyncId === job.id }"
+                                                        t-att-data-id="job.id" t-on-click="selectSyncJob">
+                                                        <td>
+                                                            <div class="ei-sync-job-name" t-esc="job.name"/>
+                                                            <div class="ei-sync-entity">Entity: <span class="ei-mono" t-esc="job.entity_name"/></div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="ei-flow">
+                                                                <span class="ei-flow-box" t-esc="job.source_system or 'Source'"/>
+                                                                <span class="ei-flow-arrow" t-esc="directionArrow(job)"/>
+                                                                <span class="ei-flow-box dest" t-esc="job.dest_system or 'Dest'"/>
+                                                            </div>
+                                                        </td>
+                                                        <td t-esc="scheduleLabel(job)"/>
+                                                        <td>
+                                                            <t t-if="syncJobStatus(job) === 'running'">
+                                                                <div class="ei-sync-progress-wrap">
+                                                                    <div class="ei-sync-progress-label">
+                                                                        Syncing (<t t-esc="syncProgress(job)"/>%)
+                                                                    </div>
+                                                                    <div class="ei-sync-progress">
+                                                                        <span t-attf-style="width: {{syncProgress(job)}}%"/>
+                                                                    </div>
+                                                                </div>
+                                                            </t>
+                                                            <t t-else="">
+                                                                <div class="ei-sync-last-run" t-esc="syncLastRunLabel(job)"/>
+                                                                <t t-if="syncLastRunMeta(job)">
+                                                                    <div t-attf-class="ei-sync-last-meta {{(job._last_failed or 0) > 0 ? 'is-danger' : ''}}"
+                                                                         t-esc="syncLastRunMeta(job)"/>
+                                                                </t>
+                                                            </t>
+                                                        </td>
+                                                        <td>
+                                                            <span t-attf-class="ei-status-pill {{syncJobStatus(job)}}"
+                                                                  t-esc="statusLabel(syncJobStatus(job))"/>
+                                                        </td>
+                                                        <td class="ei-row-actions">
+                                                            <button class="ei-icon-btn" title="Edit" t-att-data-id="job.id" t-on-click="onOpenSync"><i class="fa fa-pencil"/></button>
+                                                            <t t-if="syncJobStatus(job) === 'running'">
+                                                                <button class="ei-icon-btn" title="Stop" t-att-data-id="job.id" t-on-click="onOpenSync"><i class="fa fa-stop"/></button>
+                                                            </t>
+                                                            <t t-elif="syncJobStatus(job) === 'partial' or syncJobStatus(job) === 'failed'">
+                                                                <button class="ei-icon-btn" title="Retry" t-att-data-id="job.id" t-on-click="onRunSync"><i class="fa fa-refresh"/></button>
+                                                            </t>
+                                                            <t t-else="">
+                                                                <button class="ei-icon-btn" title="Run" t-att-data-id="job.id" t-on-click="onRunSync"><i class="fa fa-play"/></button>
+                                                            </t>
+                                                        </td>
+                                                    </tr>
+                                                </t>
+                                                <t t-if="!filteredSyncJobs.length">
+                                                    <tr>
+                                                        <td colspan="6" class="ei-empty">No sync jobs match this filter.</td>
+                                                    </tr>
+                                                </t>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </t>
+                            </div>
+
+                            <div class="ei-sync-side">
+                                <div class="ei-panel ei-sync-config" t-if="selectedSyncJob">
+                                    <div class="ei-panel-head">
+                                        <h2 class="ei-panel-title">Quick Configuration</h2>
+                                        <button type="button" class="ei-link-btn" t-att-data-id="selectedSyncJob.id" t-on-click="onOpenSync">View Advanced</button>
+                                    </div>
+
+                                    <label class="ei-field-label">Source System</label>
+                                    <div class="ei-select-fake" t-esc="selectedSyncJob.source_system or '—'"/>
+
+                                    <label class="ei-field-label">Destination</label>
+                                    <div class="ei-select-fake" t-esc="selectedSyncJob.dest_system or '—'"/>
+
+                                    <label class="ei-field-label">Sync Direction</label>
+                                    <div class="ei-toggle-group ei-toggle-seg">
+                                        <span t-att-class="{ active: selectedSyncJob.direction === 'one_way' }">Unidirectional</span>
+                                        <span t-att-class="{ active: selectedSyncJob.direction === 'two_way' }">Bidirectional</span>
+                                    </div>
+
+                                    <label class="ei-field-label">Entity / Object</label>
+                                    <div class="ei-select-fake ei-mono" t-esc="selectedSyncJob.entity_name"/>
+
+                                    <label class="ei-field-label">Field Mapping</label>
+                                    <button type="button" class="ei-mapping-btn" t-att-data-id="selectedSyncJob.id" t-on-click="onOpenSync">
+                                        <i class="fa fa-exchange"/>
+                                        <span t-esc="mappingCountLabel(selectedSyncJob)"/>
+                                    </button>
+
+                                    <label class="ei-field-label">Conflict Handling</label>
+                                    <div class="ei-select-fake" t-esc="conflictPolicyLabel(selectedSyncJob.conflict_policy)"/>
+
+                                    <div class="ei-detail-actions">
+                                        <button class="ei-btn ei-btn-ghost" t-att-data-id="selectedSyncJob.id" t-on-click="onOpenSync">Cancel</button>
+                                        <button class="ei-btn ei-btn-primary" t-att-data-id="selectedSyncJob.id" t-on-click="onOpenSync">Save Config</button>
+                                    </div>
+                                </div>
+
+                                <div class="ei-panel ei-sync-activity">
+                                    <h2 class="ei-panel-title">Recent Activity Log</h2>
+                                    <div class="ei-activity-list">
+                                        <t t-if="!state.syncRuns.length">
+                                            <div class="ei-empty">No recent sync runs.</div>
+                                        </t>
+                                        <t t-foreach="recentSyncRuns" t-as="run" t-key="run.id">
+                                            <div class="ei-activity-item" t-att-class="activityTone(run)">
+                                                <div class="ei-activity-dot"/>
+                                                <div class="ei-activity-content">
+                                                    <div class="ei-activity-time" t-esc="activityTime(run)"/>
+                                                    <div class="ei-activity-title" t-esc="run.name"/>
+                                                    <div class="ei-activity-note" t-esc="activityBody(run)"/>
+                                                    <t t-if="activityTone(run) === 'danger'">
+                                                        <button type="button" class="ei-link-btn" t-att-data-id="run.id" t-on-click="onOpenSync">View details</button>
+                                                    </t>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- ================= MASTER ================= -->
+                    <t t-if="!state.loading and state.screen === 'master'">
+                        <div class="ei-kpi-row ei-kpi-6">
+                            <div class="ei-kpi-card">
+                                <div class="ei-kpi-label">Master Entities</div>
+                                <div class="ei-kpi-value" t-esc="state.masterKpis.entities"/>
+                            </div>
+                            <div class="ei-kpi-card">
+                                <div class="ei-kpi-label">Synced Systems</div>
+                                <div class="ei-kpi-value" t-esc="state.masterKpis.synced"/>
+                            </div>
+                            <div class="ei-kpi-card tone-warning">
+                                <div class="ei-kpi-label">Pending Syncs</div>
+                                <div class="ei-kpi-value" t-esc="state.masterKpis.pending"/>
+                            </div>
+                            <div class="ei-kpi-card tone-danger">
+                                <div class="ei-kpi-label">Conflicts</div>
+                                <div class="ei-kpi-value" t-esc="state.masterKpis.conflicts"/>
+                            </div>
+                            <div class="ei-kpi-card tone-danger">
+                                <div class="ei-kpi-label">Failed Syncs</div>
+                                <div class="ei-kpi-value" t-esc="state.masterKpis.failed"/>
+                            </div>
+                            <div class="ei-kpi-card">
+                                <div class="ei-kpi-label">Last Master Sync</div>
+                                <div class="ei-kpi-value ei-kpi-value-sm" t-esc="formatWhen(state.masterKpis.lastSync)"/>
+                                <button class="ei-link" data-screen="monitoring" t-on-click="onNavClick">View Logs →</button>
+                            </div>
+                        </div>
+
+                        <div class="ei-tabs">
+                            <t t-foreach="masterTabs" t-as="tab" t-key="tab.id">
+                                <button type="button" class="ei-tab"
+                                        t-att-class="{ active: state.masterTab === tab.id }"
+                                        t-att-data-tab="tab.id"
+                                        t-on-click="setMasterTab"
+                                        t-esc="tab.label"/>
+                            </t>
+                        </div>
+
+                        <div class="ei-master-board">
+                            <section class="ei-master-left ei-panel">
+                                <div class="ei-filters">
+                                    <select t-on-change="onMasterStatusFilter">
+                                        <option value="all" t-att-selected="state.masterStatusFilter === 'all'">All Statuses</option>
+                                        <option value="pending" t-att-selected="state.masterStatusFilter === 'pending'">Syncing</option>
+                                        <option value="synced" t-att-selected="state.masterStatusFilter === 'synced'">In Sync</option>
+                                        <option value="failed" t-att-selected="state.masterStatusFilter === 'failed'">Failed</option>
+                                        <option value="conflict" t-att-selected="state.masterStatusFilter === 'conflict'">Conflict</option>
+                                    </select>
+                                </div>
+                                <div class="ei-master-table-scroll">
+                                    <table class="ei-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Entity</th>
+                                                <th>Source System</th>
+                                                <th>Records</th>
+                                                <th>Last Sync</th>
+                                                <th>Status</th>
+                                                <th>Conflicts</th>
+                                                <th>Owner</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="filteredMasterMappings" t-as="m" t-key="m.id">
+                                                <tr t-att-class="{ 'is-selected': state.selectedMappingId === m.id }"
+                                                    t-att-data-id="m.id" t-on-click="selectMapping">
+                                                    <td t-esc="m.name"/>
+                                                    <td t-esc="m.source_system"/>
+                                                    <td t-esc="formatCount(m.record_count)"/>
+                                                    <td t-esc="formatWhen(m.last_sync_at)"/>
+                                                    <td><span t-attf-class="ei-status-pill {{m.state}}" t-esc="statusLabel(m.state)"/></td>
+                                                    <td t-att-class="{ 'text-danger fw-bold': m.conflict_count }" t-esc="m.conflict_count or '—'"/>
+                                                    <td t-esc="m.owner or '—'"/>
+                                                    <td>
+                                                        <button class="ei-icon-btn" t-att-data-id="m.id" t-on-click="onOpenMapping" title="Open">
+                                                            <i t-attf-class="fa {{masterActionIcon(m)}}"/>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                    <t t-if="!filteredMasterMappings.length">
+                                        <div class="ei-empty">No mappings for this entity type yet.</div>
+                                    </t>
+                                </div>
+                            </section>
+
+                            <section class="ei-master-right" t-if="selectedMapping">
+                                <div class="ei-panel ei-detail">
+                                    <h2 class="ei-panel-title">Source of Truth</h2>
+                                    <span class="ei-chip accent" t-esc="state.masterTab"/>
+                                    <label class="ei-field-label">Primary Owner System</label>
+                                    <div class="ei-readonly" t-esc="sotDisplay(selectedMapping)"/>
+                                    <div class="ei-info-box">
+                                        <t t-esc="selectedMapping.source_system"/> is the designated master for this entity.
+                                        Changes in non-master systems may be overwritten during sync. MOCK / DEMO.
+                                    </div>
+                                </div>
+                                <div class="ei-panel ei-conflicts-panel">
+                                    <h2 class="ei-panel-title">
+                                        Active Conflicts (<t t-esc="state.masterConflicts.length"/>)
+                                    </h2>
+                                    <t t-if="!state.masterConflicts.length">
+                                        <div class="ei-empty">No open conflicts.</div>
+                                    </t>
+                                    <div t-else="" class="ei-conflicts-scroll">
+                                        <t t-foreach="state.masterConflicts" t-as="cf" t-key="cf.id">
+                                            <div class="ei-conflict-card">
+                                                <strong t-esc="cf.name"/>
+                                                <div class="ei-conflict-sides">
+                                                    <div class="ei-conflict-side master">
+                                                        <div class="ei-field-label">External (MASTER)</div>
+                                                        <pre t-esc="truncate(cf.left_payload or '—', 90)"/>
+                                                        <button class="ei-btn ei-btn-ghost ei-btn-sm"
+                                                                t-att-data-id="cf.id" data-side="external"
+                                                                t-on-click="onResolveConflict">Keep External</button>
+                                                    </div>
+                                                    <div class="ei-conflict-side local">
+                                                        <div class="ei-field-label">PrecastMPS (LOCAL)</div>
+                                                        <pre t-esc="truncate(cf.right_payload or '—', 90)"/>
+                                                        <button class="ei-btn ei-btn-ghost ei-btn-sm"
+                                                                t-att-data-id="cf.id" data-side="local"
+                                                                t-on-click="onResolveConflict">Keep Local</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </div>
+                            </section>
+                            <section class="ei-panel ei-master-right" t-else="">
+                                <div class="ei-master-side-empty">
+                                    Select a mapping on the left to view Source of Truth and conflicts.
+                                </div>
+                            </section>
+                        </div>
+                    </t>
+
+                    <!-- ================= MONITORING ================= -->
+                    <t t-if="!state.loading and state.screen === 'monitoring'">
+                        <div class="ei-monitor-kpis">
+                            <div class="ei-kpi-row ei-kpi-4">
+                                <div class="ei-kpi-card">
+                                    <div class="ei-kpi-label">Total Requests</div>
+                                    <div class="ei-kpi-value" t-esc="formatCount(state.monitorKpis.total)"/>
+                                    <div class="ei-kpi-hint">Last 24 hours</div>
+                                </div>
+                                <div class="ei-kpi-card tone-success">
+                                    <div class="ei-kpi-label">Successful</div>
+                                    <div class="ei-kpi-value-row">
+                                        <div class="ei-kpi-value" t-esc="formatCount(state.monitorKpis.success)"/>
+                                        <span class="ei-kpi-icon-badge success"><i class="fa fa-check"/></span>
+                                    </div>
+                                    <div class="ei-kpi-hint ei-kpi-hint-up">
+                                        <i class="fa fa-arrow-up"/> <t t-esc="state.monitorKpis.successRate"/>%
+                                    </div>
+                                </div>
+                                <div class="ei-kpi-card tone-danger">
+                                    <div class="ei-kpi-label">Failed</div>
+                                    <div class="ei-kpi-value-row">
+                                        <div class="ei-kpi-value" t-esc="formatCount(state.monitorKpis.failed)"/>
+                                        <span class="ei-kpi-icon-badge danger"><i class="fa fa-exclamation"/></span>
+                                    </div>
+                                    <div class="ei-kpi-hint ei-kpi-hint-down">
+                                        <i class="fa fa-arrow-down"/> <t t-esc="state.monitorKpis.failRate"/>%
+                                    </div>
+                                </div>
+                                <div class="ei-kpi-card">
+                                    <div class="ei-kpi-label">Avg Res Time</div>
+                                    <div class="ei-kpi-value"><t t-esc="state.monitorKpis.avg"/> ms</div>
+                                    <div class="ei-kpi-hint ei-kpi-hint-up">
+                                        <t t-esc="state.monitorKpis.avgTrend || -12"/>ms vs yesterday
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="ei-kpi-row ei-kpi-4 ei-kpi-compact ei-monitor-subkpis">
+                                <div class="ei-kpi-card tone-danger">
+                                    <div class="ei-kpi-label">Webhook Failures</div>
+                                    <div class="ei-kpi-value" t-esc="formatCount(state.monitorKpis.webhookFail)"/>
+                                </div>
+                                <div class="ei-kpi-card tone-warning">
+                                    <div class="ei-kpi-label">Sync Failures</div>
+                                    <div class="ei-kpi-value" t-esc="formatCount(state.monitorKpis.syncFail)"/>
+                                </div>
+                                <div class="ei-kpi-card tone-danger">
+                                    <div class="ei-kpi-label">Connector Errors</div>
+                                    <div class="ei-kpi-value" t-esc="formatCount(state.monitorKpis.connectorErr)"/>
+                                </div>
+                                <div class="ei-kpi-card tone-success">
+                                    <div class="ei-kpi-label">Sys Availability</div>
+                                    <div class="ei-kpi-value"><t t-esc="state.monitorKpis.availability || state.monitorKpis.successRate"/>%</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ei-monitor-board">
+                            <div class="ei-panel ei-monitor-main">
+                                <div class="ei-monitor-filters">
+                                    <div class="ei-date-range">
+                                        <i class="fa fa-calendar"/>
+                                        <span>Today, 00:00 – 23:59</span>
+                                    </div>
+                                    <select data-filter="filterSystem" t-on-change="onFilterChange">
+                                        <option value="all">All Systems</option>
+                                        <t t-foreach="monitorSystems" t-as="sys" t-key="sys">
+                                            <option t-att-value="sys" t-att-selected="state.filterSystem === sys" t-esc="sys"/>
+                                        </t>
+                                    </select>
+                                    <select data-filter="filterType" t-on-change="onFilterChange">
+                                        <option value="all">All Log Types</option>
+                                        <option value="api" t-att-selected="state.filterType === 'api'">API</option>
+                                        <option value="webhook" t-att-selected="state.filterType === 'webhook'">Webhook</option>
+                                        <option value="connector" t-att-selected="state.filterType === 'connector'">Connector</option>
+                                        <option value="sync" t-att-selected="state.filterType === 'sync'">Sync</option>
+                                        <option value="master_data" t-att-selected="state.filterType === 'master_data'">Master Data</option>
+                                        <option value="system" t-att-selected="state.filterType === 'system'">System</option>
+                                    </select>
+                                    <select data-filter="filterSeverity" t-on-change="onFilterChange">
+                                        <option value="all">All Severities</option>
+                                        <option value="success" t-att-selected="state.filterSeverity === 'success'">Success</option>
+                                        <option value="failed" t-att-selected="state.filterSeverity === 'failed'">Failed</option>
+                                        <option value="warning" t-att-selected="state.filterSeverity === 'warning'">Warning</option>
+                                        <option value="timeout" t-att-selected="state.filterSeverity === 'timeout'">Timeout</option>
+                                        <option value="retrying" t-att-selected="state.filterSeverity === 'retrying'">Retrying</option>
+                                    </select>
+                                </div>
+
+                                <div class="ei-table-wrap">
+                                    <table class="ei-table ei-monitor-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Time</th>
+                                                <th>System</th>
+                                                <th>Integration / Event</th>
+                                                <th>Type</th>
+                                                <th>Status</th>
+                                                <th>Duration</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="filteredMonitorLogs" t-as="log" t-key="log.id">
+                                                <tr t-att-class="{ 'is-selected': state.selectedLogId === log.id }"
+                                                    t-att-data-id="log.id" t-on-click="selectLog">
+                                                    <td class="ei-mono" t-esc="logTime(log)"/>
+                                                    <td t-esc="log.source_system or '—'"/>
+                                                    <td>
+                                                        <div class="ei-log-event" t-esc="log.name"/>
+                                                        <div class="ei-log-id">ID: <t t-esc="shortCorrelationId(log)"/></div>
+                                                    </td>
+                                                    <td>
+                                                        <span t-attf-class="ei-type-pill {{log.category}}" t-esc="categoryLabel(log.category)"/>
+                                                    </td>
+                                                    <td>
+                                                        <span t-attf-class="ei-status-pill {{log.level}}" t-esc="levelLabel(log.level)"/>
+                                                    </td>
+                                                    <td t-esc="durationLabel(log.duration_ms)"/>
+                                                    <td class="ei-row-actions">
+                                                        <button class="ei-icon-btn" title="View details" t-att-data-id="log.id" t-on-click="selectLog">
+                                                            <i class="fa fa-eye"/>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                            <t t-if="!filteredMonitorLogs.length">
+                                                <tr>
+                                                    <td colspan="7" class="ei-empty">No logs match these filters.</td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="ei-monitor-footer" t-esc="monitorShowingLabel()"/>
+                            </div>
+
+                            <div class="ei-panel ei-log-details" t-if="selectedLog">
+                                <div class="ei-detail-head">
+                                    <h3>Log Details</h3>
+                                    <button type="button" class="ei-icon-btn" title="Close" t-on-click="closeLogDetail">
+                                        <i class="fa fa-times"/>
+                                    </button>
+                                </div>
+
+                                <div class="ei-log-detail-status">
+                                    <span t-attf-class="ei-status-pill {{selectedLog.level}}" t-esc="logStatusLabel(selectedLog)"/>
+                                    <span class="ei-muted-note" t-esc="logTime(selectedLog)"/>
+                                </div>
+
+                                <div class="ei-log-detail-title" t-esc="selectedLog.name"/>
+                                <div class="ei-log-corr" t-esc="selectedLog.correlation_id or ('#' + selectedLog.id)"/>
+
+                                <div class="ei-meta-grid ei-log-meta">
+                                    <div>
+                                        <span class="ei-field-label">System</span>
+                                        <div t-esc="selectedLog.source_system or '—'"/>
+                                    </div>
+                                    <div>
+                                        <span class="ei-field-label">Endpoint</span>
+                                        <div class="ei-mono" t-esc="logEndpoint(selectedLog)"/>
+                                    </div>
+                                    <div>
+                                        <span class="ei-field-label">Method</span>
+                                        <div t-attf-class="ei-method {{logMethod(selectedLog)}}" t-esc="logMethod(selectedLog)"/>
+                                    </div>
+                                    <div>
+                                        <span class="ei-field-label">Response Time</span>
+                                        <div t-esc="durationLabel(selectedLog.duration_ms)"/>
+                                    </div>
+                                </div>
+
+                                <div t-if="selectedLog.error_message" class="ei-error-box">
+                                    <div class="ei-error-box-head">
+                                        <i class="fa fa-exclamation-triangle"/>
+                                        <span>Error Message</span>
+                                    </div>
+                                    <div t-esc="selectedLog.error_message"/>
+                                </div>
+
+                                <button type="button" class="ei-collapse-head" t-on-click="toggleMonitorPayload">
+                                    <span>Request Payload</span>
+                                    <i t-attf-class="fa {{state.monitorPayloadOpen ? 'fa-chevron-up' : 'fa-chevron-down'}}"/>
+                                </button>
+                                <pre t-if="state.monitorPayloadOpen" class="ei-code" t-esc="selectedLog.request_summary or '—'"/>
+
+                                <button type="button" class="ei-collapse-head" t-on-click="toggleMonitorHeaders">
+                                    <span>Response Headers</span>
+                                    <i t-attf-class="fa {{state.monitorHeadersOpen ? 'fa-chevron-up' : 'fa-chevron-down'}}"/>
+                                </button>
+                                <pre t-if="state.monitorHeadersOpen" class="ei-code" t-esc="selectedLog.response_summary or '—'"/>
+
+                                <div class="ei-detail-actions">
+                                    <button class="ei-btn ei-btn-ghost" t-on-click="onCopyLogId">Copy ID</button>
+                                    <t t-if="selectedLog.retryable or selectedLog.level === 'failed'">
+                                        <button class="ei-btn ei-btn-primary" t-att-data-id="selectedLog.id" t-on-click="onRetryLog">Replay Request</button>
+                                    </t>
+                                    <t t-else="">
+                                        <button class="ei-btn ei-btn-primary" t-att-data-id="selectedLog.id" t-on-click="onOpenLog">Open Record</button>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </main>
+            </div>
+        </div>
+    </t>
+</templates>

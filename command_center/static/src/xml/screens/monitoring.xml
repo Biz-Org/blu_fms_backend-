@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="command_center.Monitoring">
+        <div class="cc-screen" data-screen="monitoring">
+            <button type="button" class="cc-sr-only" title="Refresh monitoring" t-on-click="refresh">Refresh</button>
+            <div class="cc-mon-head">
+                <h1 class="cc-page-title">Real-Time Network Monitoring</h1>
+                <div class="cc-mon-head-tools">
+                    <label class="cc-range-label">
+                        Time Range
+                        <select t-model="state.range" aria-label="Time Range">
+                            <option value="30">Last 30 Minutes</option>
+                            <option value="60">Last 60 Minutes</option>
+                            <option value="24">Last 24 Hours</option>
+                        </select>
+                    </label>
+                    <label class="cc-switch-row" title="Automatic polling is not enabled">
+                        <span>AUTO REFRESH</span>
+                        <span class="cc-toggle is-on" aria-disabled="true"/>
+                        <span class="cc-toggle-caption">ON</span>
+                    </label>
+                </div>
+            </div>
+            <div t-if="state.error" class="cc-error" role="alert">
+                <span t-esc="state.error"/>
+                <button type="button" class="cc-btn cc-btn-inline" t-on-click="refresh">Retry</button>
+            </div>
+            <div t-if="state.loading" class="cc-loading" aria-busy="true" aria-label="Loading monitoring">
+                <div class="cc-skel-row">
+                    <div class="cc-skel-bar" t-foreach="[1,2,3,4,5,6]" t-as="n" t-key="n"/>
+                </div>
+                <div class="cc-skel-line"/>
+                <div class="cc-skel-line"/>
+            </div>
+            <t t-if="!state.loading and !state.error">
+                <div class="cc-stat-grid cc-mon-stats">
+                    <div t-foreach="siteKpis" t-as="kpi" t-key="kpi.key" class="cc-stat" t-att-class="kpi.className">
+                        <div class="cc-stat-top">
+                            <span class="cc-stat-label" t-esc="kpi.label"/>
+                            <span class="cc-stat-ico"><i t-attf-class="fa {{kpi.icon}}"/></span>
+                        </div>
+                        <div class="cc-stat-value" t-esc="kpi.value"/>
+                    </div>
+                </div>
+                <div class="cc-panel cc-telemetry">
+                    <div class="cc-panel-head-row">
+                        <h2>Network Telemetry</h2>
+                        <span class="cc-live-pill"><span class="cc-dot cc-dot-ok"/> LIVE • LAST UPDATED 5 SECONDS AGO</span>
+                    </div>
+                    <div class="cc-tele-grid">
+                        <div t-foreach="telemetry" t-as="item" t-key="item.key" class="cc-tele">
+                            <div class="cc-tele-label">
+                                <t t-esc="item.label"/>
+                                <i t-if="item.icon" t-attf-class="fa {{item.icon}}" aria-hidden="true"/>
+                            </div>
+                            <div class="cc-tele-value" t-esc="item.value"/>
+                            <div t-if="item.hint" class="cc-tele-hint" t-esc="item.hint"/>
+                            <div t-if="item.bars" class="cc-tele-bars" aria-hidden="true">
+                                <span t-foreach="[1,2,3,4,5]" t-as="n" t-key="n" t-att-class="n &lt;= item.bars ? 'is-on' : ''"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div t-if="!displaySites.length" class="cc-empty">
+                    <h3>No sites</h3>
+                    <p>No operational records are currently available.</p>
+                </div>
+                <div t-else="" class="cc-panel cc-mon-table">
+                    <div class="cc-panel-head-row">
+                        <h2>Site Overview</h2>
+                        <div class="cc-panel-tools">
+                            <button type="button" class="cc-icon-btn" title="Filter" aria-label="Filter">
+                                <i class="fa fa-filter"/>
+                            </button>
+                            <button type="button" class="cc-icon-btn" title="More" aria-label="More">
+                                <i class="fa fa-ellipsis-h"/>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="cc-table-wrap">
+                        <table class="cc-table">
+                            <thead>
+                                <tr>
+                                    <th>Site</th>
+                                    <th>Status</th>
+                                    <th>Health</th>
+                                    <th class="cc-num">Active Alerts</th>
+                                    <th class="cc-num">Incidents</th>
+                                    <th>Equipment</th>
+                                    <th>Utilization</th>
+                                    <th>Last Update</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="pagedSites" t-as="site" t-key="site.id">
+                                    <td class="cc-site-cell">
+                                        <span class="cc-dot" t-att-class="statusDot(site)"/>
+                                        <span t-esc="site.name"/>
+                                    </td>
+                                    <td><span class="cc-badge" t-attf-class="cc-ops-{{site.operational_status}}" t-esc="statusLabel(site.operational_status)"/></td>
+                                    <td>
+                                        <div class="cc-health-cell">
+                                            <span t-esc="healthWidth(site) + '%'"/>
+                                            <div class="cc-bar-track cc-bar-track-sm">
+                                                <span class="cc-bar-fill" t-att-class="healthClass(site)" t-att-style="'width:' + healthWidth(site) + '%'"/>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="cc-num" t-esc="site.alerts_active"/>
+                                    <td class="cc-num" t-esc="site.incidents_open"/>
+                                    <td t-esc="site.equipment or '—'"/>
+                                    <td t-esc="site.utilization or '—'"/>
+                                    <td t-esc="formatTime(site.latest_activity_at)"/>
+                                    <td>
+                                        <button type="button" class="cc-icon-btn cc-view-btn" title="Open site">
+                                            <i class="fa fa-chevron-right"/>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="cc-pager">
+                        <span>Showing <t t-esc="pageStart"/> to <t t-esc="pageEnd"/> of <t t-esc="displaySites.length"/> sites</span>
+                        <div>
+                            <button type="button" class="cc-btn" t-att-disabled="state.page &lt;= 1" t-on-click="pagePrev">Previous</button>
+                            <button type="button" class="cc-btn" t-att-disabled="state.page &gt;= pageCount" t-on-click="pageNext">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

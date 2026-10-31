@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="seq_pm_requisition" model="ir.sequence">
+        <field name="name">Procurement Requisition</field>
+        <field name="code">procurement.management.requisition</field>
+        <field name="prefix">REQ-%(year)s-</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="seq_pm_rfq" model="ir.sequence">
+        <field name="name">Procurement RFQ</field>
+        <field name="code">procurement.management.rfq</field>
+        <field name="prefix">RFQ-%(year)s-</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="seq_pm_purchase_order" model="ir.sequence">
+        <field name="name">Procurement Purchase Order</field>
+        <field name="code">procurement.management.purchase.order</field>
+        <field name="prefix">PO-%(year)s-</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="seq_pm_receipt" model="ir.sequence">
+        <field name="name">Procurement Goods Receipt</field>
+        <field name="code">procurement.management.receipt</field>
+        <field name="prefix">GR-%(year)s-</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="seq_pm_invoice" model="ir.sequence">
+        <field name="name">Procurement Invoice Match</field>
+        <field name="code">procurement.management.invoice.match</field>
+        <field name="prefix">INV-%(year)s-</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="seq_pm_contract" model="ir.sequence">
+        <field name="name">Procurement Contract</field>
+        <field name="code">procurement.management.contract</field>
+        <field name="prefix">MSA-%(year)s-</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

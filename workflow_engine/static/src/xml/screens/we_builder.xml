@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="workflow_engine.Builder">
+        <div class="we-builder">
+            <div class="we-page-header">
+                <div>
+                    <h1>
+                        <t t-esc="state.defName or 'Purchase Approval Workflow'"/>
+                        <span t-attf-class="we-badge we-badge-muted we-builder-draft">
+                            <t t-esc="(state.version and state.version.state) or 'draft'"/>
+                        </span>
+                    </h1>
+                </div>
+                <div class="we-header-actions">
+                    <button type="button" class="we-btn we-btn-ghost" t-on-click="save" t-att-disabled="state.busy or !state.version or state.readonly">Save</button>
+                    <button type="button" class="we-btn we-btn-ghost" t-on-click="validate" t-att-disabled="state.busy or !state.version">Validate</button>
+                    <button type="button" class="we-btn we-btn-ghost" t-on-click="testRun" t-att-disabled="state.busy or !state.version">Test</button>
+                    <button type="button" class="we-btn we-btn-primary" t-on-click="publish" t-att-disabled="state.busy or !state.version or (state.version and state.version.state != 'draft')">Publish</button>
+                </div>
+            </div>
+
+            <div t-if="state.error" class="we-error" t-esc="state.error"/>
+            <div t-if="state.loading" class="we-loading">Loading builder…</div>
+
+            <div t-if="!state.loading" class="we-builder-layout">
+                <aside class="we-builder-palette">
+                    <div class="we-section-title">Nodes</div>
+                    <t t-foreach="PALETTE" t-as="nt" t-key="nt_index">
+                        <div class="we-palette-item"
+                             t-att-draggable="(state.version and !state.readonly and canManage) ? 'true' : 'false'"
+                             t-on-dragstart="(ev) => this.onPaletteDragStart(ev, nt.id, nt.name or nt.label)">
+                            <i t-attf-class="fa {{nt.icon}}"/>
+                            <span t-esc="nt.label"/>
+                        </div>
+                    </t>
+                </aside>
+
+                <div class="we-builder-canvas-wrap"
+                     t-ref="canvas"
+                     t-on-dragover="onCanvasDragOver"
+                     t-on-drop="onCanvasDrop"
+                     t-on-click="clearSelection">
+                    <svg class="we-builder-edges">
+                        <defs>
+                            <marker id="we-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+                                <path d="M0,0 L10,4 L0,8 Z" fill="#a78bfa"/>
+                            </marker>
+                        </defs>
+                        <t t-if="state.nodes.length">
+                            <t t-foreach="state.edges" t-as="edge" t-key="edge.client_key">
+                                <path t-att-d="edgePath(edge)"
+                                      class="we-edge-path"
+                                      t-att-class="{ selected: state.selectedEdgeKey === edge.client_key }"
+                                      marker-end="url(#we-arrow)"
+                                      t-on-click="(ev) => this.selectEdge(edge, ev)"/>
+                            </t>
+                        </t>
+                        <t t-else="">
+                            <path d="M276,191 C300,191 318,191 330,191" class="we-edge-path" marker-end="url(#we-arrow)"/>
+                        </t>
+                    </svg>
+
+                    <t t-if="state.nodes.length">
+                        <t t-foreach="state.nodes" t-as="node" t-key="nodeKey(node)">
+                            <div t-attf-class="we-canvas-node we-node-{{node.node_type}} {{state.selectedNodeKey === nodeKey(node) ? 'selected' : ''}}"
+                                 t-attf-style="left: {{node.pos_x}}px; top: {{node.pos_y}}px;"
+                                 t-on-mousedown="(ev) => this.onNodeMouseDown(node, ev)"
+                                 t-on-click="(ev) => this.selectNode(node, ev)">
+                                <div class="we-canvas-node-type">
+                                    <i t-attf-class="fa {{nodeIcon(node.node_type)}}"/>
+                                    <span t-esc="nodeTypeLabel(node.node_type)"/>
+                                </div>
+                                <div class="we-canvas-node-name" t-esc="node.name"/>
+                            </div>
+                        </t>
+                    </t>
+                    <t t-else="">
+                        <div class="we-canvas-node we-node-start" style="left: 90px; top: 160px;">
+                            <div class="we-canvas-node-type"><i class="fa fa-play-circle"/> START</div>
+                            <div class="we-canvas-node-name">PO Created</div>
+                        </div>
+                        <div class="we-canvas-node we-node-conditional selected" style="left: 330px; top: 148px;">
+                            <div class="we-canvas-node-type"><i class="fa fa-code-fork"/> CONDITION</div>
+                            <div class="we-canvas-node-name">Amount &gt; 100k</div>
+                        </div>
+                    </t>
+                </div>
+
+                <aside class="we-builder-props">
+                    <div class="we-builder-props-head">
+                        <div class="we-builder-props-title">Node Configuration</div>
+                        <button type="button" class="we-icon-btn" t-on-click="clearSelection">×</button>
+                    </div>
+
+                    <t t-if="selectedNode">
+                        <div class="we-node-hero">
+                            <div class="we-node-hero-icon"><i t-attf-class="fa {{nodeIcon(selectedNode.node_type)}}"/></div>
+                            <div>
+                                <strong><t t-esc="nodeTypeLabel(selectedNode.node_type)"/> Node</strong>
+                                <div class="we-muted">ID: <t t-esc="selectedNode.technical_key"/></div>
+                            </div>
+                        </div>
+                        <div class="we-form-grid we-builder-form">
+                            <div class="we-field">
+                                <label>Node Name</label>
+                                <input type="text" t-att-value="selectedNode.name"
+                                       t-att-readonly="state.readonly"
+                                       t-on-input="(ev) => this.updateSelectedField('name', ev)"/>
+                            </div>
+                            <t t-if="selectedNode.node_type === 'conditional'">
+                                <div class="we-field">
+                                    <label>Condition Type</label>
+                                    <select t-att-disabled="state.readonly">
+                                        <option>Value Comparison</option>
+                                    </select>
+                                </div>
+                                <div class="we-logic-label">Logic Rules</div>
+                                <div class="we-field">
+                                    <select t-att-disabled="state.readonly"
+                                            t-on-change="(ev) => this.updateSelectedField('rule_id', ev)">
+                                        <option value="">PO.TotalAmount</option>
+                                        <t t-foreach="state.rules" t-as="r" t-key="r.id">
+                                            <option t-att-value="r.id" t-att-selected="selectedNode.rule_id === r.id" t-esc="r.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div class="we-logic-row">
+                                    <select t-att-disabled="state.readonly"><option>GreaterThan</option></select>
+                                    <input type="text" value="100000" t-att-readonly="state.readonly"/>
+                                </div>
+                                <button type="button" class="we-link">+ Add Rule</button>
+                            </t>
+                            <t t-if="selectedNode.node_type === 'action'">
+                                <div class="we-field">
+                                    <label>Safe Action</label>
+                                    <select t-att-disabled="state.readonly"
+                                            t-on-change="(ev) => this.updateSelectedField('config_action', ev)">
+                                        <option value="noop" t-att-selected="(selectedNode.config_json and selectedNode.config_json.action) === 'noop'">noop</option>
+                                        <option value="set_payload" t-att-selected="(selectedNode.config_json and selectedNode.config_json.action) === 'set_payload'">set_payload</option>
+                                    </select>
+                                </div>
+                            </t>
+                            <t t-if="selectedNode.node_type === 'approval'">
+                                <div class="we-field">
+                                    <label>Approval Hierarchy</label>
+                                    <select t-att-disabled="state.readonly"
+                                            t-on-change="(ev) => this.updateSelectedField('hierarchy_id', ev)">
+                                        <option value="">—</option>
+                                        <t t-foreach="state.hierarchies" t-as="h" t-key="h.id">
+                                            <option t-att-value="h.id" t-att-selected="selectedNode.hierarchy_id === h.id" t-esc="h.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                            </t>
+                            <t t-if="selectedNode.node_type === 'task'">
+                                <div class="we-field">
+                                    <label>Rule</label>
+                                    <select t-att-disabled="state.readonly"
+                                            t-on-change="(ev) => this.updateSelectedField('rule_id', ev)">
+                                        <option value="">—</option>
+                                        <t t-foreach="state.rules" t-as="r" t-key="'t'+r.id">
+                                            <option t-att-value="r.id" t-att-selected="selectedNode.rule_id === r.id" t-esc="r.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                            </t>
+                            <div class="we-field">
+                                <label>SLA Timeout (Hours)</label>
+                                <input type="text" value="24" t-att-readonly="state.readonly"/>
+                            </div>
+                            <t t-if="!state.readonly and canManage">
+                                <button type="button" class="we-btn we-btn-danger we-btn-block we-btn-outline-danger" t-on-click="deleteSelected">Delete Node</button>
+                            </t>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <div class="we-node-hero">
+                            <div class="we-node-hero-icon"><i class="fa fa-code-fork"/></div>
+                            <div>
+                                <strong>Condition Node</strong>
+                                <div class="we-muted">ID: cnd_84920</div>
+                            </div>
+                        </div>
+                        <div class="we-form-grid we-builder-form">
+                            <div class="we-field">
+                                <label>Node Name</label>
+                                <input type="text" value="Amount &gt; 100k"/>
+                            </div>
+                            <div class="we-field">
+                                <label>Condition Type</label>
+                                <select><option>Value Comparison</option></select>
+                            </div>
+                            <div class="we-logic-label">Logic Rules</div>
+                            <div class="we-field">
+                                <select><option>PO.TotalAmount</option></select>
+                            </div>
+                            <div class="we-logic-row">
+                                <select><option>GreaterThan</option></select>
+                                <input type="text" value="100000"/>
+                            </div>
+                            <button type="button" class="we-link">+ Add Rule</button>
+                            <div class="we-field">
+                                <label>SLA Timeout (Hours)</label>
+                                <input type="text" value="24"/>
+                            </div>
+                            <button type="button" class="we-btn we-btn-danger we-btn-block we-btn-outline-danger">Delete Node</button>
+                        </div>
+                    </t>
+                </aside>
+            </div>
+        </div>
+    </t>
+</templates>

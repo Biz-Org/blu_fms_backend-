@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="workflow_engine.Analytics">
+        <div class="we-page we-analytics">
+            <div class="we-page-header">
+                <div>
+                    <h1>Workflow Analytics &amp; Reports</h1>
+                </div>
+            </div>
+
+            <div class="we-card we-filters">
+                <div class="we-filter-grid">
+                    <label class="we-field">
+                        <span>Date Range</span>
+                        <select class="we-input" t-model="state.rangePreset" t-on-change="() => this.applyRangePreset()">
+                            <option value="7">Last 7 Days</option>
+                            <option value="30">Last 30 Days</option>
+                            <option value="90">Last 90 Days</option>
+                            <option value="all">All time</option>
+                        </select>
+                    </label>
+                    <label class="we-field">
+                        <span>Module</span>
+                        <select class="we-input" t-model="state.filters.source_module">
+                            <option value="">All Modules</option>
+                            <t t-foreach="modules" t-as="mod" t-key="mod">
+                                <option t-att-value="mod" t-esc="mod"/>
+                            </t>
+                        </select>
+                    </label>
+                    <label class="we-field">
+                        <span>Workflow</span>
+                        <select class="we-input" t-model="state.filters.definition_id">
+                            <option value="">All Workflows</option>
+                            <t t-foreach="state.definitions" t-as="def" t-key="def.id">
+                                <option t-att-value="def.id" t-esc="def.name"/>
+                            </t>
+                        </select>
+                    </label>
+                    <label class="we-field">
+                        <span>Department</span>
+                        <select class="we-input" t-model="state.department">
+                            <option value="">All Departments</option>
+                        </select>
+                    </label>
+                </div>
+                <button type="button" class="we-btn we-btn-primary" t-on-click="() => this.applyFilters()">
+                    Apply Filters
+                </button>
+            </div>
+
+            <t t-if="state.loading">
+                <div class="we-loading">Loading analytics…</div>
+            </t>
+            <t t-elif="state.error">
+                <div class="we-error">
+                    <p t-esc="state.error"/>
+                    <button type="button" class="we-btn we-btn-primary" t-on-click="() => this.load()">Retry</button>
+                </div>
+            </t>
+            <t t-else="">
+                <div class="we-kpi-grid we-kpi-grid-4">
+                    <div class="we-kpi-tile">
+                        <div class="we-kpi-head">
+                            <i class="fa fa-refresh we-kpi-glyph we-kpi-glyph-primary"/>
+                            <span class="we-kpi-label">Total Executions</span>
+                        </div>
+                        <div class="we-kpi-value" t-esc="formatCount(state.summary.total_executions)"/>
+                    </div>
+                    <div class="we-kpi-tile">
+                        <div class="we-kpi-head">
+                            <i class="fa fa-check-circle we-kpi-glyph we-kpi-glyph-success"/>
+                            <span class="we-kpi-label">Success Rate</span>
+                        </div>
+                        <div class="we-kpi-value we-text-success"><t t-esc="state.summary.completion_rate"/>%</div>
+                    </div>
+                    <div class="we-kpi-tile">
+                        <div class="we-kpi-head">
+                            <i class="fa fa-clock-o we-kpi-glyph we-kpi-glyph-info"/>
+                            <span class="we-kpi-label">Avg Completion</span>
+                        </div>
+                        <div class="we-kpi-value" t-esc="formatDurationHours(state.summary.avg_duration_hours)"/>
+                    </div>
+                    <div class="we-kpi-tile">
+                        <div class="we-kpi-head">
+                            <i class="fa fa-shield we-kpi-glyph we-kpi-glyph-primary"/>
+                            <span class="we-kpi-label">SLA Compliance</span>
+                        </div>
+                        <div class="we-kpi-value"><t t-esc="slaCompliance"/>%</div>
+                    </div>
+                </div>
+
+                <div class="we-analytics-grid">
+                    <div class="we-card">
+                        <div class="we-card-title">Execution Trends</div>
+                        <t t-if="!state.trend.length">
+                            <div class="we-empty">More execution data is required for trend charts.</div>
+                        </t>
+                        <svg t-else="" class="we-line-chart" viewBox="0 0 320 160" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="weTrendFill" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#5629CE" stop-opacity="0.18"/>
+                                    <stop offset="100%" stop-color="#5629CE" stop-opacity="0"/>
+                                </linearGradient>
+                            </defs>
+                            <polyline fill="url(#weTrendFill)" stroke="none" t-att-points="trendArea"/>
+                            <polyline fill="none" stroke="#c4b5fd" stroke-width="2.5" t-att-points="trendPointsSecondary"/>
+                            <polyline fill="none" stroke="#5629CE" stroke-width="3" t-att-points="trendPoints"/>
+                        </svg>
+                    </div>
+                    <div class="we-card we-perf-card">
+                        <div class="we-card-title">Success Rate Distribution</div>
+                        <div class="we-donut-wrap">
+                            <svg class="we-donut" viewBox="0 0 36 36">
+                                <circle class="we-donut-bg" cx="18" cy="18" r="15.9"/>
+                                <circle class="we-donut-fail" cx="18" cy="18" r="15.9"
+                                        t-att-stroke-dasharray="donutFail"/>
+                                <circle class="we-donut-pending" cx="18" cy="18" r="15.9"
+                                        t-att-stroke-dasharray="donutPending"/>
+                                <circle class="we-donut-fg" cx="18" cy="18" r="15.9"
+                                        t-att-stroke-dasharray="donutDash"/>
+                            </svg>
+                            <div class="we-donut-label">
+                                <div class="we-donut-value"><t t-esc="state.summary.completion_rate"/>%</div>
+                                <div class="we-muted">Avg Success</div>
+                            </div>
+                        </div>
+                        <div class="we-donut-legend">
+                            <span><i class="we-dot we-dot-primary"/> Completed</span>
+                            <span><i class="we-dot we-dot-success"/> Pending</span>
+                            <span><i class="we-dot we-dot-danger"/> Failed</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="we-analytics-grid">
+                    <div class="we-card">
+                        <div class="we-card-title">Bottleneck Analysis (Wait Times)</div>
+                        <t t-if="!state.bottlenecks.length">
+                            <div class="we-empty">No waiting or failed steps.</div>
+                        </t>
+                        <table t-else="" class="we-table">
+                            <thead><tr><th>Workflow Step</th><th>Avg Wait Time</th><th>Impact</th></tr></thead>
+                            <tbody>
+                                <t t-foreach="state.bottlenecks" t-as="row" t-key="row.node_id">
+                                    <tr>
+                                        <td t-esc="row.node_name"/>
+                                        <td t-esc="row.wait or formatCount(row.count)"/>
+                                        <td>
+                                            <div class="we-progress we-progress-danger">
+                                                <div class="we-progress-bar" t-att-style="'width:' + impactWidth(row.count)"/>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="we-card">
+                        <div class="we-card-title">Module Performance Breakdown</div>
+                        <t t-if="!state.by_module.length">
+                            <div class="we-empty">No module-tagged executions.</div>
+                        </t>
+                        <t t-foreach="state.by_module" t-as="row" t-key="row.module">
+                            <div class="we-module-row">
+                                <div class="we-module-name">
+                                    <span t-esc="row.module"/>
+                                    <span class="we-muted"><t t-esc="formatCount(row.count)"/> executions</span>
+                                </div>
+                                <div class="we-progress">
+                                    <div class="we-progress-bar" t-att-style="'width:' + moduleWidth(row.count)"/>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

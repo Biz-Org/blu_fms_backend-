@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="workflow_engine.Tasks">
+        <div class="we-page we-tasks">
+            <div class="we-page-header">
+                <div>
+                    <h1>Task &amp; Execution Management</h1>
+                    <p class="we-muted">Monitor, assign, and escalate workflow tasks.</p>
+                </div>
+                <div class="we-page-actions">
+                    <button type="button" class="we-btn we-btn-ghost" t-on-click="() => this.load()">
+                        <i class="fa fa-filter"/> Filter
+                    </button>
+                    <button type="button" class="we-btn we-btn-primary" t-on-click="() => this.createTaskHint()">
+                        <i class="fa fa-plus"/> Create Task
+                    </button>
+                </div>
+            </div>
+
+            <t t-if="state.loading">
+                <div class="we-loading">Loading…</div>
+            </t>
+            <t t-elif="state.error">
+                <div class="we-error">
+                    <p t-esc="state.error"/>
+                    <button type="button" class="we-btn we-btn-primary" t-on-click="() => this.load()">Retry</button>
+                </div>
+            </t>
+            <t t-else="">
+                <div class="we-task-layout">
+                    <div>
+                        <div class="we-tabs we-tabs-underline">
+                            <button type="button" class="we-tab" t-att-class="{ active: state.taskFilter === 'active' }"
+                                    t-on-click="() => this.setTaskFilter('active')">Active Tasks</button>
+                            <button type="button" class="we-tab" t-att-class="{ active: state.taskFilter === 'completed' }"
+                                    t-on-click="() => this.setTaskFilter('completed')">Completed</button>
+                            <button type="button" class="we-tab" t-att-class="{ active: state.taskFilter === 'overdue' }"
+                                    t-on-click="() => this.setTaskFilter('overdue')">Overdue</button>
+                        </div>
+                        <div class="we-card we-table-card">
+                            <t t-if="!filteredTasks.length">
+                                <div class="we-empty">No tasks in this view.</div>
+                            </t>
+                            <table t-else="" class="we-table">
+                                <thead>
+                                    <tr>
+                                        <th>Task</th>
+                                        <th>Workflow</th>
+                                        <th>Assigned To</th>
+                                        <th>Priority</th>
+                                        <th>Due Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="filteredTasks" t-as="rec" t-key="rec.id">
+                                        <tr t-on-click="() => this.openTask(rec)">
+                                            <td t-esc="rec.name"/>
+                                            <td t-esc="rec.workflow or userLabel(rec.execution_id)"/>
+                                            <td t-esc="rec.assignee or userLabel(rec.user_id)"/>
+                                            <td><span t-attf-class="we-badge {{priorityClass(rec.priority)}}" t-esc="rec.priority or priorityLabel(rec.priority)"/></td>
+                                            <td t-att-class="(rec.dueDanger or isOverdue(rec)) ? 'we-text-danger' : ''"
+                                                t-esc="rec.due or formatDate(rec.date_deadline)"/>
+                                            <td><span t-attf-class="we-badge {{statusClass(rec.state)}}" t-esc="rec.status or rec.state"/></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <aside>
+                        <div class="we-kpi-grid we-kpi-grid-2">
+                            <div class="we-kpi-tile">
+                                <div class="we-kpi-head">
+                                    <i class="fa fa-exclamation-triangle we-kpi-glyph we-kpi-glyph-danger"/>
+                                    <span class="we-kpi-label">SLA Breaches</span>
+                                </div>
+                                <div class="we-kpi-value we-text-danger" t-esc="slaBreaches"/>
+                            </div>
+                            <div class="we-kpi-tile">
+                                <div class="we-kpi-head">
+                                    <i class="fa fa-tasks we-kpi-glyph we-kpi-glyph-primary"/>
+                                    <span class="we-kpi-label">Pending Tasks</span>
+                                </div>
+                                <div class="we-kpi-value" t-esc="pendingCount"/>
+                            </div>
+                        </div>
+                        <div class="we-card we-esc-panel">
+                            <div class="we-card-title">Active Escalations</div>
+                            <t t-if="!openEscalations.length">
+                                <div class="we-empty">No open escalations.</div>
+                            </t>
+                            <t t-foreach="openEscalations" t-as="ev" t-key="ev.id">
+                                <div class="we-esc-item" t-att-class="{ 'we-esc-l1': isLevelOne(ev), 'we-esc-l2': isLevelTwoPlus(ev) }">
+                                    <div class="we-esc-top">
+                                        <div class="we-esc-level">LEVEL <t t-esc="ev.level"/> ESCALATION</div>
+                                        <div class="we-muted" t-esc="ev.time or formatRelative(ev.date_triggered)"/>
+                                    </div>
+                                    <strong t-esc="ev.name"/>
+                                    <div t-if="ev.note" class="we-muted" t-esc="ev.note"/>
+                                    <div class="we-esc-actions">
+                                        <button t-if="isLevelTwoPlus(ev)" type="button" class="we-btn we-btn-primary we-btn-sm"
+                                                t-on-click="() => this.openTaskFromEscalation(ev)">Reassign</button>
+                                        <button t-if="isLevelTwoPlus(ev)" type="button" class="we-btn we-btn-ghost we-btn-sm">Notify Director</button>
+                                        <button t-if="isLevelOne(ev)" type="button" class="we-btn we-btn-ghost we-btn-sm"
+                                                t-on-click="() => this.openTaskFromEscalation(ev)">Ping Assignee</button>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                    </aside>
+                </div>
+
+                <div class="we-card we-table-card">
+                    <div class="we-card-head">
+                        <div class="we-card-title">Workflow Executions</div>
+                        <button type="button" class="we-link" t-on-click="() => this.load()">View All</button>
+                    </div>
+                    <t t-if="!displayExecutions.length">
+                        <div class="we-empty">No workflow executions yet.</div>
+                    </t>
+                    <table t-else="" class="we-table">
+                        <thead>
+                            <tr>
+                                <th>Execution ID</th>
+                                <th>Module</th>
+                                <th>Started</th>
+                                <th>Current Step</th>
+                                <th>Progress</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="displayExecutions" t-as="rec" t-key="rec.id">
+                                <tr t-on-click="() => this.openExecution(rec)">
+                                    <td class="we-linkish" t-esc="rec.name"/>
+                                    <td t-esc="rec.module or rec.source_module or '—'"/>
+                                    <td t-esc="rec.started or formatDate(rec.date_start)"/>
+                                    <td t-esc="rec.step or userLabel(rec.current_node_id)"/>
+                                    <td>
+                                        <div class="we-progress-cell">
+                                            <div class="we-progress">
+                                                <div class="we-progress-bar" t-att-style="'width:' + progressWidth(rec)"/>
+                                            </div>
+                                            <span class="we-progress-label" t-esc="progressWidth(rec)"/>
+                                        </div>
+                                    </td>
+                                    <td><span t-attf-class="we-badge {{statusClass(rec.state)}}" t-esc="rec.status or rec.state"/></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+
+            <div t-if="state.drawerOpen" class="we-drawer-backdrop" t-on-click="() => this.closeDrawer()"/>
+            <aside t-if="state.drawerOpen and state.detail" class="we-drawer">
+                <div class="we-drawer-header">
+                    <h2 t-esc="state.detail.record.name"/>
+                    <button type="button" class="we-btn we-btn-ghost" t-on-click="() => this.closeDrawer()">×</button>
+                </div>
+                <div class="we-drawer-body">
+                    <t t-if="state.detail.kind === 'execution'">
+                        <p>
+                            <span t-attf-class="we-badge {{statusClass(state.detail.record.state)}}"
+                                  t-esc="state.detail.record.state"/>
+                        </p>
+                        <p class="we-muted" t-if="state.detail.record.error_message"
+                           t-esc="state.detail.record.error_message"/>
+                        <button t-if="canManage and state.detail.record.state === 'failed'" type="button"
+                                class="we-btn we-btn-primary" t-att-disabled="state.busy"
+                                t-on-click="() => this.retryExecution()">
+                            Retry execution
+                        </button>
+                        <div class="we-card-title">Steps timeline</div>
+                        <t t-if="!state.steps.length">
+                            <div class="we-empty">No steps recorded.</div>
+                        </t>
+                        <ul t-else="" class="we-list we-timeline">
+                            <t t-foreach="state.steps" t-as="step" t-key="step.id">
+                                <li>
+                                    <strong t-esc="step.name"/>
+                                    <span t-attf-class="we-badge {{statusClass(step.state)}}" t-esc="step.state"/>
+                                    <span class="we-muted" t-esc="formatDate(step.date_start)"/>
+                                </li>
+                            </t>
+                        </ul>
+                    </t>
+                    <t t-else="">
+                        <p>
+                            <span t-attf-class="we-badge {{statusClass(state.detail.record.state)}}"
+                                  t-esc="state.detail.record.state"/>
+                            <span class="we-muted"> · Priority <t t-esc="priorityLabel(state.detail.record.priority)"/></span>
+                        </p>
+                        <t t-if="canManage">
+                            <label class="we-field">
+                                <span>Assignee</span>
+                                <select class="we-input" t-model="state.assignUserId">
+                                    <option value="">— Select user —</option>
+                                    <t t-foreach="state.users" t-as="u" t-key="u.id">
+                                        <option t-att-value="u.id" t-esc="u.name"/>
+                                    </t>
+                                </select>
+                            </label>
+                            <button type="button" class="we-btn we-btn-primary" t-att-disabled="state.busy"
+                                    t-on-click="() => this.assignTask()">
+                                Save assignment
+                            </button>
+                        </t>
+                        <div class="we-row-actions" style="margin-top:0.75rem">
+                            <button t-if="canComplete(state.detail.record)" type="button" class="we-btn we-btn-primary"
+                                    t-att-disabled="state.busy"
+                                    t-on-click="() => this.completeTask(state.detail.record)">Complete</button>
+                            <button t-if="canManage and ['open','in_progress'].includes(state.detail.record.state)"
+                                    type="button" class="we-btn we-btn-ghost"
+                                    t-att-disabled="state.busy"
+                                    t-on-click="() => this.escalateTask(state.detail.record)">Escalate</button>
+                        </div>
+                    </t>
+
+                    <div class="we-card-title">Escalation events</div>
+                    <t t-if="!state.escalations.length">
+                        <div class="we-empty">No escalation events.</div>
+                    </t>
+                    <ul t-else="" class="we-list">
+                        <t t-foreach="state.escalations" t-as="ev" t-key="ev.id">
+                            <li>
+                                <strong t-esc="ev.name"/>
+                                <span t-attf-class="we-badge {{statusClass(ev.state)}}" t-esc="ev.state"/>
+                                <span class="we-muted">L<t t-esc="ev.level"/> · <t t-esc="formatDate(ev.date_triggered)"/></span>
+                            </li>
+                        </t>
+                    </ul>
+                </div>
+            </aside>
+        </div>
+    </t>
+</templates>

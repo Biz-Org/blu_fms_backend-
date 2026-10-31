@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_pm_root"
+              name="Procurement"
+              sequence="70"
+              web_icon="procurement_management,static/description/icon.png"
+              action="action_pm_dashboard"
+              groups="procurement_management.group_procurement_user"/>
+
+    <menuitem id="menu_pm_dashboard"
+              name="Dashboard"
+              parent="menu_pm_root"
+              action="action_pm_dashboard"
+              sequence="1"
+              groups="procurement_management.group_procurement_user"/>
+
+    <menuitem id="menu_pm_requisitions"
+              name="Purchase Requisitions"
+              parent="menu_pm_root"
+              action="action_pm_requisitions"
+              sequence="2"
+              groups="procurement_management.group_procurement_user"/>
+
+    <menuitem id="menu_pm_rfqs"
+              name="RFQs &amp; Quotations"
+              parent="menu_pm_root"
+              action="action_pm_rfqs"
+              sequence="3"
+              groups="procurement_management.group_procurement_user"/>
+
+    <menuitem id="menu_pm_comparison"
+              name="Quotation Comparison"
+              parent="menu_pm_root"
+              action="action_pm_comparison"
+              sequence="4"
+              groups="procurement_management.group_procurement_user"/>
+
+    <menuitem id="menu_pm_approval_matrix"
+              name="Approval Matrix"
+              parent="menu_pm_root"
+              action="action_pm_approval_matrix"
+              sequence="5"
+              groups="procurement_management.group_procurement_manager"/>
+
+    <menuitem id="menu_pm_purchase_orders"
+              name="Purchase Orders"
+              parent="menu_pm_root"
+              action="action_pm_purchase_orders"
+              sequence="6"
+              groups="procurement_management.group_procurement_user"/>
+
+    <menuitem id="menu_pm_goods_receipts"
+              name="Goods Receipts"
+              parent="menu_pm_root"
+              action="action_pm_goods_receipts"
+              sequence="7"
+              groups="procurement_management.group_procurement_user"/>
+
+    <menuitem id="menu_pm_invoice_matching"
+              name="Invoice Matching"
+              parent="menu_pm_root"
+              action="action_pm_invoice_matching"
+              sequence="8"
+              groups="procurement_management.group_procurement_user"/>
+
+    <menuitem id="menu_pm_suppliers"
+              name="Supplier Management"
+              parent="menu_pm_root"
+              action="action_pm_suppliers"
+              sequence="9"
+              groups="procurement_management.group_procurement_user"/>
+
+    <menuitem id="menu_pm_reports"
+              name="Procurement Reports"
+              parent="menu_pm_root"
+              action="action_pm_reports"
+              sequence="10"
+              groups="procurement_management.group_procurement_user"/>
+
+    <menuitem id="menu_pm_report_builder"
+              name="Report Builder &amp; Export"
+              parent="menu_pm_root"
+              action="action_pm_report_builder"
+              sequence="11"
+              groups="procurement_management.group_procurement_user"/>
+
+    <menuitem id="menu_pm_audit"
+              name="Procurement Activity / Audit"
+              parent="menu_pm_root"
+              action="action_pm_audit"
+              sequence="12"
+              groups="procurement_management.group_procurement_manager"/>
+</odoo>

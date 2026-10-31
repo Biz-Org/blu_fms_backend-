@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Seed demo integration + mock connector catalog rows created after install via optional demo;
+         catalog guidance is documentation-level. Empty placeholder record not required.
+         Connectors are created by users under UI 3; is_mock defaults True. -->
+</odoo>

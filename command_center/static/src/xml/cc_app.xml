@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="command_center.App">
+        <div class="cc-shell o_action" t-att-class="{ 'is-nav-open': state.menuOpen }" t-ref="root">
+            <header class="cc-topbar">
+                <div class="cc-topbar-row">
+                    <button type="button" class="cc-icon-btn cc-menu-btn" aria-label="Open menu" t-on-click="toggleMenu">
+                        <i class="fa fa-bars"/>
+                    </button>
+                    <div class="cc-brand-lockup" aria-hidden="true">
+                        <span class="cc-brand-name">PrecastMPS</span>
+                        <span class="cc-brand-sub">Planning Suite</span>
+                    </div>
+                    <div class="cc-header-text">
+                        <nav class="cc-breadcrumbs" aria-label="Breadcrumb">
+                            <span class="cc-crumb-long">Utility Management</span>
+                            <span class="cc-crumb-sep cc-crumb-long">›</span>
+                            <span class="cc-crumb-long">Command Center</span>
+                            <span class="cc-crumb-sep cc-crumb-long">›</span>
+                            <strong class="cc-crumb-current" t-esc="current.crumb"/>
+                        </nav>
+                    </div>
+                </div>
+                <div class="cc-top-tools">
+                    <label class="cc-top-search">
+                        <i class="fa fa-search" aria-hidden="true"/>
+                        <input type="search"
+                               t-att-placeholder="searchPlaceholder"
+                               t-model="state.topSearch"
+                               t-on-change="onShellSearch"/>
+                    </label>
+                    <select class="cc-top-site" t-model="state.siteId" t-on-change="onShellSite" aria-label="Site selector">
+                        <option value="">Site Selector</option>
+                        <t t-foreach="state.sites" t-as="site" t-key="site.id">
+                            <option t-att-value="site.id" t-esc="site.name"/>
+                        </t>
+                    </select>
+                    <button type="button" class="cc-icon-btn cc-notify-btn" aria-label="Notifications" title="Notifications">
+                        <i class="fa fa-bell-o"/>
+                    </button>
+                    <div class="cc-user-avatar cc-top-avatar" t-esc="initials"/>
+                </div>
+            </header>
+            <button type="button" class="cc-nav-backdrop" aria-label="Close menu" t-on-click="closeMenu"/>
+            <aside class="cc-sidebar" aria-label="Command Center">
+                <div class="cc-sidebar-brand">
+                    <div class="cc-brand-mark" aria-hidden="true">A</div>
+                    <div class="cc-brand-text">
+                        <div class="cc-brand-name">PrecastMPS</div>
+                        <div class="cc-brand-sub">Planning Suite</div>
+                    </div>
+                    <button type="button" class="cc-icon-btn cc-sidebar-close" aria-label="Close menu" t-on-click="closeMenu">
+                        <i class="fa fa-times"/>
+                    </button>
+                </div>
+                <nav class="cc-sidebar-nav">
+                    <t t-foreach="screens" t-as="item" t-key="item.id">
+                        <button type="button"
+                                class="cc-nav-item"
+                                t-att-class="{ active: state.screen === item.id }"
+                                t-att-data-screen="item.id"
+                                t-att-aria-current="state.screen === item.id ? 'page' : false"
+                                t-att-title="item.title"
+                                t-on-click="onNavClick">
+                            <span class="cc-nav-icon" aria-hidden="true">
+                                <i t-attf-class="fa {{item.icon}}"/>
+                            </span>
+                            <span class="cc-nav-label" t-esc="item.title"/>
+                        </button>
+                    </t>
+                </nav>
+                <div class="cc-sidebar-foot">
+                    <button type="button" class="cc-nav-item cc-nav-suite" disabled="disabled" title="Settings">
+                        <span class="cc-nav-icon" aria-hidden="true"><i class="fa fa-cog"/></span>
+                        <span class="cc-nav-label">Settings</span>
+                    </button>
+                </div>
+            </aside>
+            <div class="cc-workspace">
+                <main class="cc-main">
+                    <div class="cc-page-hero" t-if="false">
+                        <div>
+                            <h1 class="cc-page-title" t-esc="current.title"/>
+                            <p class="cc-page-sub" t-esc="current.subtitle"/>
+                        </div>
+                    </div>
+                    <div t-if="state.sessionError" class="cc-error" role="alert" t-esc="state.sessionError"/>
+                    <div class="cc-page">
+                        <DashboardScreen t-if="state.screen === 'dashboard'" session="state.session" navigate.bind="navigate" shellSearch="state.topSearch" shellSiteId="state.siteId"/>
+                        <AlertsScreen t-if="state.screen === 'alerts'" session="state.session" navigate.bind="navigate" shellSearch="state.topSearch" shellSiteId="state.siteId"/>
+                        <MonitoringScreen t-if="state.screen === 'monitoring'" session="state.session" navigate.bind="navigate" shellSearch="state.topSearch" shellSiteId="state.siteId"/>
+                        <IncidentsScreen t-if="state.screen === 'incidents'" session="state.session" navigate.bind="navigate" shellSearch="state.topSearch" shellSiteId="state.siteId"/>
+                        <EmergencyScreen t-if="state.screen === 'emergency'" session="state.session" navigate.bind="navigate" shellSearch="state.topSearch" shellSiteId="state.siteId"/>
+                        <ReportsScreen t-if="state.screen === 'reports'" session="state.session" navigate.bind="navigate" shellSearch="state.topSearch" shellSiteId="state.siteId"/>
+                        <ReportBuilderScreen t-if="state.screen === 'report_builder'" session="state.session" navigate.bind="navigate" shellSearch="state.topSearch" shellSiteId="state.siteId"/>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </t>
+    <t t-name="command_center.Workflow">
+        <ol class="cc-workflow" aria-label="Command Center workflow">
+            <t t-foreach="steps" t-as="step" t-key="step.key">
+                <li>
+                    <span class="cc-workflow-node" t-att-class="{ 'is-done': step.done, 'is-current': step.current }" t-esc="step.label"/>
+                    <span t-if="!step.last" class="cc-workflow-arrow" aria-hidden="true">→</span>
+                </li>
+            </t>
+        </ol>
+    </t>
+</templates>

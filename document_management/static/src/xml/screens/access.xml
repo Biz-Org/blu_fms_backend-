@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="document_management.Access">
+        <div class="dm-screen dm-access-screen" data-screen="access" data-ui="access-ppt" style="width:100%;min-width:0;">
+            <style>
+                .dm-access-screen { color: #111827; width: 100%; min-width: 0; }
+                .dm-access-screen .dm-access-hero { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.85rem; margin: 0 0 1.05rem; flex-wrap: wrap; }
+                .dm-access-screen .dm-page-title { font-size: 1.5rem; font-weight: 700; color: #111827; letter-spacing: -0.03em; }
+                .dm-access-ctx { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.28rem; color: #9aa1b2; font-size: 0.78rem; }
+                .dm-access-ctx-name { color: #5629CE; font-weight: 600; }
+                .dm-access-screen .dm-hero-actions { display: flex; align-items: center; flex-wrap: nowrap; gap: 0.5rem; margin-left: auto; }
+                .dm-access-screen .dm-hero-actions .dm-btn { background: #fff; color: #4b5563; border: 1px solid #eceaf3; height: 34px; padding: 0 0.95rem; border-radius: 999px; font-size: 0.74rem; font-weight: 600; box-shadow: none; white-space: nowrap; }
+                .dm-access-screen .dm-hero-actions .dm-btn i { color: #9aa1b2; }
+                .dm-access-screen .dm-hero-actions .dm-btn-primary { background: #5629CE; border-color: #5629CE; color: #fff; }
+                .dm-access-screen .dm-hero-actions .dm-btn-primary i { color: #fff; }
+                .dm-access-kpis { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 0.75rem !important; background: transparent !important; border: 0 !important; margin: 0 0 1.05rem; width: 100%; }
+                .dm-access-kpis .dm-kpi { border: 1px solid #eeeaf3; border-radius: 14px; box-shadow: none; padding: 0.95rem 1rem 0.9rem; background: #fff; min-height: 108px; min-width: 0; overflow: hidden; }
+                .dm-access-kpis .dm-kpi-head { display: flex; align-items: flex-start; justify-content: space-between; }
+                .dm-access-kpis .dm-kpi-label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #9aa1b2; }
+                .dm-access-kpis .dm-kpi-icon { background: transparent; color: #d1d5db; width: auto; height: auto; font-size: 0.95rem; }
+                .dm-access-kpis .dm-kpi-metric { display: flex; align-items: center; gap: 0.45rem; margin-top: 0.7rem; flex-wrap: wrap; }
+                .dm-access-kpis .dm-kpi-value { font-size: 1.7rem; font-weight: 700; margin: 0; color: #111827; line-height: 1.1; max-width: 100%; }
+                .dm-access-kpis .dm-kpi:first-child .dm-kpi-value { font-size: 1.35rem; }
+                .dm-access-kpis .dm-kpi-hint { margin: 0; font-size: 0.72rem; color: #9aa1b2; font-weight: 500; }
+                .dm-access-kpis .dm-kpi-alert { background: #fff1f2; border-color: #fecdd3; }
+                .dm-access-kpis .dm-kpi-alert .dm-kpi-label, .dm-access-kpis .dm-kpi-alert .dm-kpi-icon { color: #fda4af; }
+                .dm-access-kpis .dm-kpi-alert .dm-kpi-value { color: #f43f5e; }
+                .dm-access-kpis .dm-kpi-alert .dm-kpi-hint { color: #fb7185; display: block; margin-top: 0.28rem; }
+                .dm-access-kpis .dm-badge { background: #F0EBFF; color: #5629CE; font-weight: 600; border-radius: 999px; padding: 0.14rem 0.55rem; font-size: 0.68rem; position: relative; top: -2px; }
+                .dm-access-matrix { background: #fff; border: 1px solid #eeeaf3; border-radius: 14px; box-shadow: none; overflow: hidden; width: 100%; }
+                .dm-access-matrix-head { display: flex; align-items: center; justify-content: space-between; padding: 0.95rem 1.15rem 0.5rem; }
+                .dm-access-matrix-head .dm-card-title { margin: 0; font-size: 0.98rem; font-weight: 700; color: #111827; }
+                .dm-access-matrix-tools { display: flex; gap: 0.1rem; }
+                .dm-access-matrix-tools .dm-icon-btn { width: 28px; height: 28px; color: #c5c9d4; }
+                .dm-access-screen .dm-table-wrap { border: 0; border-radius: 0; box-shadow: none; overflow-x: auto; }
+                .dm-access-screen .dm-table { width: 100%; table-layout: fixed; border-collapse: collapse; }
+                .dm-access-screen .dm-table th { background: #fff; color: #b0b6c3; border-bottom: 1px solid #f0eef5; font-size: 0.62rem; letter-spacing: 0.05em; font-weight: 700; text-transform: uppercase; padding: 0.55rem 0.7rem; text-align: left; }
+                .dm-access-screen .dm-table td { border-bottom: 1px solid #f4f2f8; height: 54px; color: #6b7280; padding: 0.35rem 0.7rem; font-size: 0.8rem; }
+                .dm-access-screen .dm-table tbody tr:nth-child(even) td { background: #faf8ff; }
+                .dm-access-screen .dm-table .dm-col-who { width: 24%; }
+                .dm-access-screen .dm-table .dm-col-type, .dm-access-screen .dm-table .dm-col-role { width: 10%; }
+                .dm-access-screen .dm-table .dm-col-perm { text-align: center; width: 7%; }
+                .dm-access-screen .dm-table .dm-col-status { width: 12%; }
+                .dm-access-screen .dm-table .dm-col-actions { width: 10%; }
+                .dm-access-who { display: inline-flex; align-items: center; gap: 0.6rem; font-weight: 600; color: #111827; }
+                .dm-access-ava { width: 24px; height: 24px; border-radius: 50%; background: #F0EBFF; color: #5629CE; display: inline-flex; align-items: center; justify-content: center; font-size: 0.58rem; font-weight: 800; letter-spacing: 0.02em; flex: 0 0 auto; }
+                .dm-access-ava i { width: auto; height: auto; background: transparent; font-size: 0.7rem; }
+                .dm-access-link-name { color: #5629CE; }
+                .dm-access-screen .dm-check { color: #5629CE; font-size: 1.05rem; }
+                .dm-access-screen .dm-uncheck { color: #e4e0ec; font-size: 1.05rem; }
+                .dm-access-empty { color: #9aa1b2; font-size: 0.76rem; font-weight: 500; }
+                .dm-access-empty p { margin: 0.15rem 0 0; font-size: 0.7rem; }
+                .dm-access-status { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em; color: #9aa1b2; }
+                .dm-access-status.is-exp { background: #ffe4e6; color: #e11d48; border-radius: 999px; padding: 0.16rem 0.5rem; }
+                .dm-access-status.is-expired { background: #fee2e2; color: #dc2626; border-radius: 999px; padding: 0.16rem 0.5rem; }
+                .dm-access-actions { display: inline-flex; align-items: center; gap: 0.45rem; }
+                .dm-access-revoke { background: transparent !important; border: 0 !important; color: #5629CE !important; font-weight: 600; font-size: 0.74rem; padding: 0 !important; height: auto !important; box-shadow: none !important; }
+                .dm-access-copy { width: 22px; height: 22px; color: #c5c9d4; }
+                .dm-access-foot { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.7rem 1.15rem 0.85rem; color: #b0b6c3; font-size: 0.72rem; }
+                .dm-access-pager { display: flex; align-items: center; gap: 0.15rem; }
+                .dm-access-pager .dm-btn { height: 26px; min-width: 26px; padding: 0 0.45rem; font-size: 0.68rem; border: 0; background: transparent; color: #9aa1b2; border-radius: 6px; }
+                .dm-access-pager .is-current { background: #F0EBFF; color: #5629CE; }
+                @media (max-width: 1099px) {
+                    .dm-access-kpis { grid-template-columns: 1fr 1fr !important; }
+                    .dm-access-screen .dm-hero-actions { flex-wrap: wrap; }
+                }
+                @media (max-width: 720px) {
+                    .dm-access-kpis { grid-template-columns: 1fr !important; }
+                    .dm-access-screen .dm-page-title { font-size: 1.2rem; }
+                    .dm-access-screen .dm-table { table-layout: auto; min-width: 720px; }
+                    .dm-access-foot { flex-wrap: wrap; }
+                }
+            </style>
+            <div class="dm-page-hero dm-access-hero">
+                <div>
+                    <h1 class="dm-page-title">Access Control &amp; Sharing</h1>
+                    <p class="dm-access-ctx">
+                        <i class="fa fa-file-text-o"/>
+                        Context: <strong class="dm-access-ctx-name" t-esc="contextName"/>
+                    </p>
+                    <span class="o_hidden">Select a document to manage access</span>
+                </div>
+                <div class="dm-hero-actions">
+                    <button type="button" class="dm-btn" t-on-click="openGroup">
+                        <i class="fa fa-plus"/> Add Group
+                    </button>
+                    <button type="button" class="dm-btn" t-on-click="openLink">
+                        <i class="fa fa-share-alt"/> Share Link
+                    </button>
+                    <button type="button" class="dm-btn dm-btn-primary" t-on-click="openUser">
+                        <i class="fa fa-plus"/> Add User
+                    </button>
+                    <button type="button" class="dm-icon-btn" title="Refresh access" t-on-click="refresh" aria-label="Refresh">
+                        <i class="fa fa-refresh"/>
+                    </button>
+                </div>
+            </div>
+            <div t-if="state.error" class="dm-error" role="alert">
+                <span t-esc="state.error"/>
+                <button type="button" class="dm-btn" t-on-click="refresh">Retry</button>
+            </div>
+            <div t-if="state.loading" class="dm-loading" aria-busy="true" aria-label="Loading access">
+                Loading access…
+            </div>
+            <div class="dm-kpi-grid dm-access-kpis" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem;">
+                <div class="dm-kpi">
+                    <div class="dm-kpi-head">
+                        <div class="dm-kpi-label">Access Level</div>
+                        <span class="dm-kpi-icon"><i class="fa fa-shield"/></span>
+                    </div>
+                    <div class="dm-kpi-metric">
+                        <div class="dm-kpi-value" t-esc="accessLevelValue"/>
+                        <span t-if="restrictedBadge" class="dm-badge" t-esc="restrictedBadge"/>
+                    </div>
+                </div>
+                <div class="dm-kpi">
+                    <div class="dm-kpi-head">
+                        <div class="dm-kpi-label">Active Users</div>
+                        <span class="dm-kpi-icon"><i class="fa fa-user"/></span>
+                    </div>
+                    <div class="dm-kpi-metric">
+                        <div class="dm-kpi-value" t-esc="activeUsers"/>
+                        <span t-if="usersWeekHint" class="dm-kpi-hint" t-esc="usersWeekHint"/>
+                    </div>
+                </div>
+                <div class="dm-kpi">
+                    <div class="dm-kpi-head">
+                        <div class="dm-kpi-label">Groups</div>
+                        <span class="dm-kpi-icon"><i class="fa fa-users"/></span>
+                    </div>
+                    <div class="dm-kpi-metric">
+                        <div class="dm-kpi-value" t-esc="groupCount"/>
+                    </div>
+                </div>
+                <div class="dm-kpi dm-kpi-alert">
+                    <div class="dm-kpi-head">
+                        <div class="dm-kpi-label">External Links</div>
+                        <span class="dm-kpi-icon"><i class="fa fa-exclamation-triangle"/></span>
+                    </div>
+                    <div class="dm-kpi-metric">
+                        <div class="dm-kpi-value" t-esc="externalLabel"/>
+                    </div>
+                    <p t-if="linkReviewHint" class="dm-kpi-hint" t-esc="linkReviewHint"/>
+                </div>
+            </div>
+            <section class="dm-access-matrix">
+                <div class="dm-access-matrix-head">
+                    <h2 class="dm-card-title">Permission Matrix</h2>
+                    <div class="dm-access-matrix-tools">
+                        <button type="button" class="dm-icon-btn" title="Filter matrix" aria-label="Filter"><i class="fa fa-filter"/></button>
+                        <button type="button" class="dm-icon-btn" title="More" aria-label="More"><i class="fa fa-ellipsis-v"/></button>
+                    </div>
+                </div>
+                <div class="dm-table-wrap">
+                    <table class="dm-table">
+                        <thead>
+                                <tr>
+                                    <th class="dm-col-who">User / Group</th>
+                                    <th class="dm-col-type">Type</th>
+                                    <th class="dm-col-role">Role</th>
+                                    <th class="dm-col-perm">View</th>
+                                    <th class="dm-col-perm">Edit</th>
+                                    <th class="dm-col-perm">Download</th>
+                                    <th class="dm-col-perm">Share</th>
+                                    <th class="dm-col-status">Status</th>
+                                    <th class="dm-col-actions">Actions</th>
+                                </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="displayRows" t-as="row" t-key="rowKey(row)">
+                                <tr t-if="row.empty">
+                                    <td class="dm-col-who">
+                                        <div t-if="row.first" class="dm-access-empty">
+                                            <span>Select a document to manage access</span>
+                                            <p>No access rules to display.</p>
+                                        </div>
+                                    </td>
+                                    <td class="dm-col-type"></td>
+                                    <td class="dm-col-role"></td>
+                                    <td class="dm-col-perm"><i class="fa fa-circle-o dm-uncheck" title="View"/></td>
+                                    <td class="dm-col-perm"><i class="fa fa-circle-o dm-uncheck" title="Edit"/></td>
+                                    <td class="dm-col-perm"><i class="fa fa-circle-o dm-uncheck" title="Download"/></td>
+                                    <td class="dm-col-perm"><i class="fa fa-circle-o dm-uncheck" title="Share"/></td>
+                                    <td class="dm-col-status"></td>
+                                    <td class="dm-col-actions"></td>
+                                </tr>
+                                <tr t-if="!row.empty">
+                                    <td class="dm-col-who">
+                                        <span class="dm-access-who">
+                                            <span class="dm-access-ava">
+                                                <t t-if="row.mark" t-esc="row.mark"/>
+                                                <i t-if="!row.mark" t-att-class="rowIcon(row)"/>
+                                            </span>
+                                            <span t-att-class="row.type === 'link' ? 'dm-access-link-name' : ''" t-esc="row.name"/>
+                                        </span>
+                                    </td>
+                                    <td class="dm-col-type" t-esc="typeLabel(row)"/>
+                                    <td class="dm-col-role" t-esc="label(row.role)"/>
+                                    <td class="dm-col-perm"><i t-att-class="permClass(row.perm_read)" title="View"/></td>
+                                    <td class="dm-col-perm"><i t-att-class="permClass(row.perm_write)" title="Edit"/></td>
+                                    <td class="dm-col-perm"><i t-att-class="permClass(row.perm_download)" title="Download"/></td>
+                                    <td class="dm-col-perm"><i t-att-class="permClass(row.perm_share)" title="Share"/></td>
+                                    <td class="dm-col-status"><span t-att-class="statusClass(row)" t-esc="statusLabel(row)"/></td>
+                                    <td class="dm-col-actions">
+                                        <span class="dm-access-actions">
+                                            <button t-if="row.type === 'link' and row.url" type="button" class="dm-icon-btn dm-access-copy" title="Copy link" aria-label="Copy link" t-att-data-url="row.url" t-on-click="copyLink">
+                                                <i class="fa fa-clone"/>
+                                            </button>
+                                            <button t-if="canRevoke(row)" type="button" class="dm-btn dm-access-revoke" t-att-data-id="row.id" t-att-data-type="row.type" t-on-click="revoke">Revoke</button>
+                                            <button t-if="!canRevoke(row)" type="button" class="dm-icon-btn" title="Inherited" aria-label="Inherited">
+                                                <i class="fa fa-ellipsis-h"/>
+                                            </button>
+                                        </span>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="dm-access-foot">
+                    <span t-esc="showingLabel"/>
+                    <div class="dm-access-pager">
+                        <button type="button" class="dm-btn" data-dir="-1" t-on-click="shiftPage" t-att-disabled="state.page &lt;= 1">Prev</button>
+                        <t t-foreach="pageNumbers" t-as="page" t-key="page">
+                            <button type="button" class="dm-btn" t-att-class="state.page === page ? 'is-current' : ''" t-att-data-page="page" t-on-click="setPage" t-att-disabled="page > pageCount" t-esc="page"/>
+                        </t>
+                        <button type="button" class="dm-btn" data-dir="1" t-on-click="shiftPage" t-att-disabled="state.page &gt;= pageCount">Next</button>
+                    </div>
+                </div>
+            </section>
+            <p t-if="state.lastLink" class="dm-card">Share link created: <code t-esc="state.lastLink.url"/></p>
+            <t t-if="state.dialog">
+                <button type="button" class="dm-dialog-mask" aria-label="Close" t-on-click="closeDialog"/>
+                <div class="dm-dialog" role="dialog" t-att-aria-label="state.dialog">
+                    <t t-if="state.dialog === 'user'">
+                        <h3>Add User</h3>
+                        <label class="dm-field"><span>User</span>
+                            <select t-model="state.userId">
+                                <option value="">Select user</option>
+                                <t t-foreach="users" t-as="user" t-key="user.id">
+                                    <option t-att-value="user.id" t-esc="user.name"/>
+                                </t>
+                            </select>
+                        </label>
+                        <label class="dm-field"><span>Role</span>
+                            <select t-model="state.role">
+                                <option value="viewer">Viewer</option>
+                                <option value="editor">Editor</option>
+                                <option value="owner">Owner</option>
+                            </select>
+                        </label>
+                        <div class="dm-toolbar">
+                            <button type="button" class="dm-btn" t-on-click="closeDialog">Cancel</button>
+                            <button type="button" class="dm-btn dm-btn-primary" t-on-click="addUser">Add User</button>
+                        </div>
+                    </t>
+                    <t t-if="state.dialog === 'group'">
+                        <h3>Add Group</h3>
+                        <label class="dm-field"><span>Group</span>
+                            <select t-model="state.groupId">
+                                <option value="">Select group</option>
+                                <t t-foreach="groups" t-as="group" t-key="group.id">
+                                    <option t-att-value="group.id" t-esc="group.name"/>
+                                </t>
+                            </select>
+                        </label>
+                        <label class="dm-field"><span>Role</span>
+                            <select t-model="state.role">
+                                <option value="viewer">Viewer</option>
+                                <option value="editor">Editor</option>
+                            </select>
+                        </label>
+                        <div class="dm-toolbar">
+                            <button type="button" class="dm-btn" t-on-click="closeDialog">Cancel</button>
+                            <button type="button" class="dm-btn dm-btn-primary" t-on-click="addGroup">Add Group</button>
+                        </div>
+                    </t>
+                    <t t-if="state.dialog === 'link'">
+                        <h3>Share Link</h3>
+                        <label class="dm-field"><span>Expiry</span><input type="datetime-local" t-model="state.expiry"/></label>
+                        <div class="dm-toolbar">
+                            <button type="button" class="dm-btn" t-on-click="closeDialog">Cancel</button>
+                            <button type="button" class="dm-btn dm-btn-primary" t-on-click="addLink">Create link</button>
+                        </div>
+                    </t>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

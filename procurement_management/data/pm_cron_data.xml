@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ir_cron_pm_escalate" model="ir.cron">
+        <field name="name">Procurement: Escalate Approvals</field>
+        <field name="model_id" ref="model_procurement_management_approval_decision"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_escalate()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="active" eval="True"/>
+    </record>
+    <record id="ir_cron_pm_scheduled_reports" model="ir.cron">
+        <field name="name">Procurement: Send Scheduled Reports</field>
+        <field name="model_id" ref="model_procurement_management_report_definition"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_send_scheduled()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>

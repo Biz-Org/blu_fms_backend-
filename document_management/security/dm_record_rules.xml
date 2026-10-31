@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="dm_rule_document_user" model="ir.rule">
+        <field name="name">DM Document user visibility</field>
+        <field name="model_id" ref="model_document_management_document"/>
+        <field name="domain_force">['&amp;', '|', ('company_id', '=', False), ('company_id', 'in', company_ids), '|', '|', '|', '|', '|', ('owner_id', '=', user.id), ('access_level', '=', 'internal'), ('approval_ids.step_ids.approver_id', '=', user.id), ('access_rule_ids', 'any', ['|', '&amp;', '&amp;', ('state', '=', 'active'), ('partner_type', '=', 'user'), ('user_id', '=', user.id), '&amp;', '&amp;', ('state', '=', 'active'), ('partner_type', '=', 'group'), ('group_id.member_ids', 'in', [user.id])]), ('folder_id.access_rule_ids', 'any', ['|', '&amp;', '&amp;', ('state', '=', 'active'), ('partner_type', '=', 'user'), ('user_id', '=', user.id), '&amp;', '&amp;', ('state', '=', 'active'), ('partner_type', '=', 'group'), ('group_id.member_ids', 'in', [user.id])]), ('folder_id.parent_id.access_rule_ids', 'any', ['|', '&amp;', '&amp;', ('state', '=', 'active'), ('partner_type', '=', 'user'), ('user_id', '=', user.id), '&amp;', '&amp;', ('state', '=', 'active'), ('partner_type', '=', 'group'), ('group_id.member_ids', 'in', [user.id])])]</field>
+        <field name="groups" eval="[(4, ref('group_dm_user'))]"/>
+    </record>
+    <record id="dm_rule_document_manager" model="ir.rule">
+        <field name="name">DM Document manager company</field>
+        <field name="model_id" ref="model_document_management_document"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_dm_manager'))]"/>
+    </record>
+
+    <record id="dm_rule_version_company" model="ir.rule">
+        <field name="name">DM Version multi-company</field>
+        <field name="model_id" ref="model_document_management_version"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_dm_user'))]"/>
+    </record>
+    <record id="dm_rule_category_company" model="ir.rule">
+        <field name="name">DM Category multi-company</field>
+        <field name="model_id" ref="model_document_management_category"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_dm_user'))]"/>
+    </record>
+    <record id="dm_rule_type_company" model="ir.rule">
+        <field name="name">DM Type multi-company</field>
+        <field name="model_id" ref="model_document_management_document_type"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_dm_user'))]"/>
+    </record>
+    <record id="dm_rule_folder_company" model="ir.rule">
+        <field name="name">DM Folder multi-company</field>
+        <field name="model_id" ref="model_document_management_folder"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_dm_user'))]"/>
+    </record>
+    <record id="dm_rule_tag_company" model="ir.rule">
+        <field name="name">DM Tag multi-company</field>
+        <field name="model_id" ref="model_document_management_tag"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_dm_user'))]"/>
+    </record>
+    <record id="dm_rule_favorite_user" model="ir.rule">
+        <field name="name">DM Favorite own records</field>
+        <field name="model_id" ref="model_document_management_favorite"/>
+        <field name="domain_force">['&amp;', '|', ('company_id', '=', False), ('company_id', 'in', company_ids), ('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_dm_user'))]"/>
+    </record>
+    <record id="dm_rule_comment_company" model="ir.rule">
+        <field name="name">DM Comment multi-company</field>
+        <field name="model_id" ref="model_document_management_comment"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_dm_user'))]"/>
+    </record>
+    <record id="dm_rule_access_group_company" model="ir.rule">
+        <field name="name">DM Access Group multi-company</field>
+        <field name="model_id" ref="model_document_management_access_group"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_dm_user'))]"/>
+    </record>
+    <record id="dm_rule_access_rule_company" model="ir.rule">
+        <field name="name">DM Access Rule multi-company</field>
+        <field name="model_id" ref="model_document_management_access_rule"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_dm_user'))]"/>
+    </record>
+    <record id="dm_rule_share_link_company" model="ir.rule">
+        <field name="name">DM Share Link multi-company</field>
+        <field name="model_id" ref="model_document_management_share_link"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_dm_user'))]"/>
+    </record>
+    <record id="dm_rule_approval_request_company" model="ir.rule">
+        <field name="name">DM Approval Request multi-company</field>
+        <field name="model_id" ref="model_document_management_approval_request"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_dm_user'))]"/>
+    </record>
+    <record id="dm_rule_approval_step_company" model="ir.rule">
+        <field name="name">DM Approval Step multi-company</field>
+        <field name="model_id" ref="model_document_management_approval_step"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_dm_user'))]"/>
+    </record>
+    <record id="dm_rule_audit_user" model="ir.rule">
+        <field name="name">DM Audit user visibility</field>
+        <field name="model_id" ref="model_document_management_audit_event"/>
+        <field name="domain_force">['&amp;', '|', ('company_id', '=', False), ('company_id', 'in', company_ids), '|', '|', ('document_id', '=', False), ('document_id.owner_id', '=', user.id), ('document_id.access_level', '=', 'internal')]</field>
+        <field name="groups" eval="[(4, ref('group_dm_user'))]"/>
+    </record>
+    <record id="dm_rule_audit_manager" model="ir.rule">
+        <field name="name">DM Audit manager company</field>
+        <field name="model_id" ref="model_document_management_audit_event"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_dm_manager'))]"/>
+    </record>
+    <record id="dm_rule_notification_user" model="ir.rule">
+        <field name="name">DM Notification own records</field>
+        <field name="model_id" ref="model_document_management_notification"/>
+        <field name="domain_force">['&amp;', '|', ('company_id', '=', False), ('company_id', 'in', company_ids), ('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_dm_user'))]"/>
+    </record>
+    <record id="dm_rule_notification_manager" model="ir.rule">
+        <field name="name">DM Notification manager own records</field>
+        <field name="model_id" ref="model_document_management_notification"/>
+        <field name="domain_force">['&amp;', '|', ('company_id', '=', False), ('company_id', 'in', company_ids), ('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_dm_manager'))]"/>
+    </record>
+</odoo>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+      CRITICAL: Exactly one root + six primary menus only.
+    -->
+    <menuitem id="menu_ei_root"
+              name="Enterprise Integration"
+              web_icon="enterprise_integration,static/description/icon.png"
+              action="action_ei_dashboard"
+              sequence="40"
+              groups="enterprise_integration.group_ei_user"/>
+
+    <menuitem id="menu_ei_dashboard"
+              name="Dashboard"
+              parent="menu_ei_root"
+              action="action_ei_dashboard"
+              sequence="1"
+              groups="enterprise_integration.group_ei_user"/>
+
+    <menuitem id="menu_ei_api_webhook"
+              name="API &amp; Webhook Management"
+              parent="menu_ei_root"
+              action="action_ei_api_webhook"
+              sequence="2"
+              groups="enterprise_integration.group_ei_user"/>
+
+    <menuitem id="menu_ei_connectors"
+              name="Enterprise Connectors"
+              parent="menu_ei_root"
+              action="action_ei_connectors"
+              sequence="3"
+              groups="enterprise_integration.group_ei_user"/>
+
+    <menuitem id="menu_ei_sync"
+              name="Data Synchronization"
+              parent="menu_ei_root"
+              action="action_ei_sync"
+              sequence="4"
+              groups="enterprise_integration.group_ei_user"/>
+
+    <menuitem id="menu_ei_master"
+              name="Master Data Integration"
+              parent="menu_ei_root"
+              action="action_ei_master"
+              sequence="5"
+              groups="enterprise_integration.group_ei_user"/>
+
+    <menuitem id="menu_ei_monitoring"
+              name="Integration Monitoring &amp; Logs"
+              parent="menu_ei_root"
+              action="action_ei_monitoring"
+              sequence="6"
+              groups="enterprise_integration.group_ei_user"/>
+</odoo>

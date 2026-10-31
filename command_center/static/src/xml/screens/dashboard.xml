@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="command_center.Dashboard">
+        <div class="cc-screen" data-screen="dashboard">
+            <div class="cc-dash-head">
+                <div class="cc-dash-head-text">
+                    <h1 class="cc-page-title">Command Center Dashboard</h1>
+                    <p class="cc-page-sub">Centralized single-pane operational control.</p>
+                    <t t-call="command_center.Workflow">
+                        <t t-set="steps" t-value="workflowSteps"/>
+                    </t>
+                </div>
+                <div class="cc-toolbar">
+                    <button type="button" class="cc-btn cc-btn-ghost" title="Open report builder" t-on-click="() => this.openScreen('report_builder')">
+                        <i class="fa fa-upload" aria-hidden="true"/> Export Report
+                    </button>
+                    <button type="button" class="cc-btn cc-btn-primary" title="Open emergency board" t-on-click="() => this.openScreen('emergency')">
+                        <i class="fa fa-plus" aria-hidden="true"/> New Broadcast
+                    </button>
+                    <button type="button" class="cc-icon-btn cc-refresh-btn" title="Refresh dashboard" t-on-click="refresh" aria-label="Refresh">
+                        <i class="fa fa-refresh"/>
+                        <span class="cc-sr-only">Refresh</span>
+                    </button>
+                </div>
+            </div>
+            <div t-if="state.error" class="cc-error" role="alert">
+                <span t-esc="state.error"/>
+                <button type="button" class="cc-btn cc-btn-inline" t-on-click="refresh">Retry</button>
+            </div>
+            <div t-if="state.loading" class="cc-loading" aria-busy="true" aria-label="Loading dashboard">
+                <div class="cc-skel-row">
+                    <div class="cc-skel-bar" t-foreach="[1,2,3,4,5,6]" t-as="n" t-key="n"/>
+                </div>
+                <div class="cc-skel-line"/>
+                <div class="cc-skel-line"/>
+            </div>
+            <t t-if="!state.loading and !state.error">
+                <div t-if="state.kpis" class="cc-kpi-grid">
+                    <div t-foreach="kpiItems" t-as="kpi" t-key="kpi.key" class="cc-kpi" t-att-class="kpi.className">
+                        <div class="cc-kpi-top">
+                            <div class="cc-kpi-label" t-esc="kpi.label"/>
+                            <span class="cc-kpi-ico" aria-hidden="true"><i t-attf-class="fa {{kpi.icon}}"/></span>
+                        </div>
+                        <div class="cc-kpi-value" t-esc="kpi.value"/>
+                        <div t-if="kpi.hint" class="cc-kpi-hint">
+                            <i t-if="kpi.hintIcon" t-attf-class="fa {{kpi.hintIcon}}" aria-hidden="true"/>
+                            <span t-esc="kpi.hint"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="cc-dash-grid">
+                    <div class="cc-dash-main">
+                        <div class="cc-panel cc-trend-panel">
+                            <div class="cc-panel-head cc-panel-head-row">
+                                <h2>Operational Overview Trend</h2>
+                                <span class="cc-range-chip">Last 24 Hours</span>
+                            </div>
+                            <div class="cc-trend">
+                                <div class="cc-trend-y" aria-hidden="true">
+                                    <span>100%</span>
+                                    <span>75%</span>
+                                    <span>50%</span>
+                                    <span>25%</span>
+                                </div>
+                                <div class="cc-trend-plot">
+                                    <svg class="cc-trend-svg" viewBox="0 0 400 160" preserveAspectRatio="none" aria-hidden="true">
+                                        <line x1="0" y1="2" x2="400" y2="2" class="cc-trend-grid"/>
+                                        <line x1="0" y1="54" x2="400" y2="54" class="cc-trend-grid"/>
+                                        <line x1="0" y1="106" x2="400" y2="106" class="cc-trend-grid"/>
+                                        <line x1="0" y1="158" x2="400" y2="158" class="cc-trend-grid"/>
+                                        <t t-if="hasTrend">
+                                            <polygon class="cc-trend-fill" t-att-points="trendFill"/>
+                                            <polyline class="cc-trend-line" fill="none" stroke="#5629CE" stroke-width="3" t-att-points="trendLine"/>
+                                        </t>
+                                    </svg>
+                                </div>
+                                <div class="cc-trend-x" aria-hidden="true">
+                                    <span>00:00</span>
+                                    <span>04:00</span>
+                                    <span>08:00</span>
+                                    <span>12:00</span>
+                                    <span>16:00</span>
+                                    <span>20:00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="cc-panel">
+                            <h2>Recent Operational Activity</h2>
+                            <div class="cc-table-wrap">
+                                <table class="cc-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Time</th>
+                                            <th>Site</th>
+                                            <th>Event</th>
+                                            <th>Type</th>
+                                            <th>Severity</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-if="!visibleActivity.length">
+                                            <td colspan="7" class="cc-table-empty">No recent activity</td>
+                                        </tr>
+                                        <tr t-foreach="visibleActivity" t-as="row" t-key="row.model + '-' + row.id">
+                                            <td t-esc="formatTime(row.at)"/>
+                                            <td t-esc="display(row.site_name)"/>
+                                            <td t-esc="row.name"/>
+                                            <td t-esc="eventType(row)"/>
+                                            <td>
+                                                <span t-if="row.severity" class="cc-badge" t-attf-class="cc-sev-{{row.severity}}" t-esc="row.severity"/>
+                                                <span t-else="">—</span>
+                                            </td>
+                                            <td><span class="cc-badge" t-attf-class="cc-state-{{row.state}}" t-esc="row.state"/></td>
+                                            <td>
+                                                <button type="button" class="cc-icon-btn cc-view-btn" title="View" t-on-click="() => this.openActivity(row)">
+                                                    <i class="fa fa-eye"/>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cc-dash-side">
+                        <div class="cc-panel">
+                            <h2>Alert Summary</h2>
+                            <ul class="cc-legend-list">
+                                <li t-foreach="alertSummary" t-as="bar" t-key="bar.key">
+                                    <span>
+                                        <span class="cc-dot" t-att-class="bar.className"/>
+                                        <t t-esc="bar.label"/>
+                                    </span>
+                                    <strong t-esc="bar.value"/>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="cc-panel">
+                            <div class="cc-panel-head-row">
+                                <h2>Priority Action Queue</h2>
+                                <span class="cc-muted" t-esc="queueTotal + ' Total'"/>
+                            </div>
+                            <ul class="cc-queue">
+                                <li t-foreach="actionQueue" t-as="row" t-key="row.key">
+                                    <button type="button" class="cc-queue-link" t-on-click="() => this.openScreen(row.screen)">
+                                        <span t-esc="row.label"/>
+                                        <i class="fa fa-chevron-right" aria-hidden="true"/>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="cc-panel">
+                            <h2>Site Status Overview</h2>
+                            <ul class="cc-status-list">
+                                <li t-foreach="siteStatus" t-as="row" t-key="row.key">
+                                    <span>
+                                        <span class="cc-dot" t-att-class="row.className"/>
+                                        <t t-esc="row.label"/>
+                                    </span>
+                                    <strong t-esc="row.value"/>
+                                </li>
+                            </ul>
+                            <p t-if="!visibleSites.length" class="cc-sr-only">No sites</p>
+                        </div>
+                        <div class="cc-panel">
+                            <h2>Quick Actions</h2>
+                            <div class="cc-quick-actions">
+                                <button type="button" class="cc-quick-tile" t-on-click="() => this.openScreen('alerts')">
+                                    <span class="cc-quick-ico"><i class="fa fa-bell-o"/></span>
+                                    View Alerts
+                                </button>
+                                <button type="button" class="cc-quick-tile" t-on-click="() => this.openScreen('incidents')">
+                                    <span class="cc-quick-ico"><i class="fa fa-exclamation-circle"/></span>
+                                    View Incidents
+                                </button>
+                                <button type="button" class="cc-quick-tile cc-quick-danger" t-on-click="() => this.openScreen('emergency')">
+                                    <span class="cc-quick-ico"><i class="fa fa-warning"/></span>
+                                    Emergency Response
+                                </button>
+                                <button type="button" class="cc-quick-tile" t-on-click="() => this.openScreen('monitoring')">
+                                    <span class="cc-quick-ico"><i class="fa fa-sitemap"/></span>
+                                    View Monitoring
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

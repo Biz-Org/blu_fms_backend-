@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="video_analytics.Dashboard">
+        <div class="va-page">
+            <t t-call="video_analytics.Banner"/>
+            <t t-if="!state.loading">
+                <t t-call="video_analytics.WorkflowStrip"/>
+                <div class="va-kpi-strip va-kpi-bar">
+                    <div class="va-kpi va-kpi-plain">
+                        <div class="va-kpi-label">Total Cameras</div>
+                        <div class="va-kpi-value" t-esc="state.data.kpis.cameras_total or 0"/>
+                    </div>
+                    <div class="va-kpi va-kpi-plain">
+                        <div class="va-kpi-label">Active AI Events</div>
+                        <div class="va-kpi-value" t-esc="state.data.kpis.detections_total or 0"/>
+                    </div>
+                    <div class="va-kpi va-kpi-plain">
+                        <div class="va-kpi-label"><span class="va-dot va-dot-danger"/> Intrusion</div>
+                        <div class="va-kpi-value" t-esc="state.data.kpis.events_intrusion or 0"/>
+                    </div>
+                    <div class="va-kpi va-kpi-plain">
+                        <div class="va-kpi-label"><span class="va-dot va-dot-danger"/> Fire</div>
+                        <div class="va-kpi-value" t-esc="state.data.kpis.events_fire or 0"/>
+                    </div>
+                    <div class="va-kpi va-kpi-plain">
+                        <div class="va-kpi-label"><span class="va-dot va-dot-warn"/> PPE Violations</div>
+                        <div class="va-kpi-value" t-esc="state.data.kpis.events_ppe or 0"/>
+                    </div>
+                    <div class="va-kpi va-kpi-plain">
+                        <div class="va-kpi-label">Occupancy</div>
+                        <div class="va-kpi-value" t-esc="state.data.kpis.occupancy_current or 0"/>
+                    </div>
+                    <div class="va-kpi va-kpi-plain">
+                        <div class="va-kpi-label"><span class="va-dot va-dot-danger"/> Alerts</div>
+                        <div class="va-kpi-value" t-esc="state.data.kpis.events_open or 0"/>
+                    </div>
+                </div>
+                <div class="va-dash-grid">
+                    <div class="va-dash-left">
+                        <section class="va-card">
+                            <h2 class="va-card-title">Camera Health Overview</h2>
+                            <div class="va-health-row">
+                                <span>Online</span>
+                                <div class="va-meter va-meter-success">
+                                    <span class="va-meter-fill" t-attf-style="width: {{healthWidth('cameras_online')}}"/>
+                                </div>
+                                <span class="va-health-count"><t t-esc="state.data.kpis.cameras_online or 0"/> / <t t-esc="state.data.kpis.cameras_total or 0"/></span>
+                            </div>
+                            <div class="va-health-row">
+                                <span>Offline</span>
+                                <div class="va-meter va-meter-danger">
+                                    <span class="va-meter-fill is-over" t-attf-style="width: {{healthWidth('cameras_offline')}}"/>
+                                </div>
+                                <span class="va-health-count"><t t-esc="state.data.kpis.cameras_offline or 0"/> / <t t-esc="state.data.kpis.cameras_total or 0"/></span>
+                            </div>
+                            <div class="va-health-row">
+                                <span>Maintenance Needed</span>
+                                <div class="va-meter va-meter-warn">
+                                    <span class="va-meter-fill is-warn" t-attf-style="width: {{healthWidth('cameras_degraded')}}"/>
+                                </div>
+                                <span class="va-health-count"><t t-esc="state.data.kpis.cameras_degraded or 0"/> / <t t-esc="state.data.kpis.cameras_total or 0"/></span>
+                            </div>
+                        </section>
+                        <section class="va-card">
+                            <h2 class="va-card-title">Occupancy by Zone</h2>
+                            <div t-if="!state.data.zones.length" class="va-empty va-empty-inline">
+                                <h3>No zones</h3>
+                                <p>Zone occupancy appears after zones are created.</p>
+                            </div>
+                            <div t-foreach="state.data.zones" t-as="zone" t-key="zone.id" class="va-zone-row">
+                                <span class="va-clip" t-esc="zone.name"/>
+                                <div class="va-meter">
+                                    <span class="va-meter-fill" t-att-class="{ 'is-over': zone.over_threshold }" t-attf-style="width: {{meterWidth(zone.current_occupancy_pct)}}"/>
+                                </div>
+                                <span class="va-health-count"><t t-esc="zone.current_count"/> / <t t-esc="zone.capacity"/> max</span>
+                            </div>
+                        </section>
+                    </div>
+                    <section class="va-card">
+                        <div class="va-card-head">
+                            <h2 class="va-card-title">Recent Video Events</h2>
+                            <button type="button" class="va-link-btn" t-on-click="goPlayback">View All</button>
+                        </div>
+                        <div t-if="!state.data.recent_events.length" class="va-empty va-empty-inline">
+                            <h3>No events</h3>
+                            <p>Events appear after detection or occupancy ingest.</p>
+                        </div>
+                        <div t-else="" class="va-table-wrap">
+                            <table class="va-table">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Camera</th>
+                                        <th>Event type</th>
+                                        <th>Zone</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="state.data.recent_events" t-as="row" t-key="row.id">
+                                        <td t-esc="formatTime(row.create_date)"/>
+                                        <td t-esc="row.camera_name or '—'"/>
+                                        <td t-esc="row.event_type_label"/>
+                                        <td t-esc="row.zone_name or '—'"/>
+                                        <td><span t-attf-class="va-badge va-state-{{row.state}}" t-esc="row.state_label"/></td>
+                                        <td>
+                                            <button type="button" class="va-btn va-btn-primary va-btn-sm" t-on-click="goPlayback">Review</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

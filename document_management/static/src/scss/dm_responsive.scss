@@ -1,0 +1,273 @@
+/* Document Management — fluid scale at every width. Desktop PPT layouts stay above 1100px. */
+
+.dm-table-wrap,
+.dm-access-screen .dm-table-wrap,
+.dm-approval-screen .dm-table-wrap,
+.dm-search-screen .dm-table-wrap,
+.dm-audit-screen .dm-table-wrap,
+.dm-repo-list,
+.dm-wf-steps {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dm-page,
+.dm-screen,
+.dm-workspace,
+.dm-main,
+.dm-wf,
+.dm-audit-ppt,
+.dm-search-ppt,
+.dm-approval-layout,
+.dm-repo,
+.dm-upload-grid,
+.dm-details-body {
+  max-width: 100%;
+  min-width: 0;
+  width: 100%;
+}
+
+.dm-page,
+.dm-screen {
+  height: auto;
+}
+
+.dm-table {
+  width: 100%;
+}
+
+.dm-shell img,
+.dm-shell svg,
+.dm-preview-card,
+.dm-appr-preview {
+  max-width: 100%;
+}
+
+.dm-kpi,
+.dm-card,
+.dm-panel {
+  min-width: 0;
+}
+
+.dm-repo {
+  min-width: 0 !important;
+}
+
+.dm-dash-kpis .dm-kpi-value,
+.dm-audit-kpis .dm-kpi-value,
+.dm-approval-kpis .dm-kpi-value,
+.dm-access-kpis .dm-kpi-value {
+  font-size: #{'clamp(1.15rem, 1.7vw, 1.8rem)'};
+}
+
+@media (max-width: 1099px) {
+  .dm-main {
+    padding: 0.85rem 0.85rem 1rem;
+  }
+
+  .dm-page-hero,
+  .dm-access-hero,
+  .dm-appr-hero,
+  .dm-repo-hero {
+    flex-wrap: wrap;
+  }
+
+  .dm-hero-actions {
+    margin-left: 0;
+    flex-wrap: wrap !important;
+  }
+
+  .dm-kpi-grid,
+  .dm-dash-kpis,
+  .dm-details-kpis,
+  .dm-access-kpis,
+  .dm-approval-kpis,
+  .dm-audit-kpis {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.65rem !important;
+  }
+
+  .dm-audit-screen .dm-audit-kpis {
+    gap: 0 !important;
+  }
+
+  .dm-audit-screen .dm-audit-kpis .dm-kpi:nth-child(2) {
+    border-right: 0 !important;
+  }
+
+  .dm-audit-screen .dm-audit-kpis .dm-kpi:nth-child(3),
+  .dm-audit-screen .dm-audit-kpis .dm-kpi:nth-child(4) {
+    border-top: 1px solid #f0eef5 !important;
+  }
+
+  .dm-approval-layout.has-panel,
+  .dm-wf,
+  .dm-workflow-screen .dm-wf,
+  .dm-audit-ppt,
+  .dm-search-ppt,
+  .dm-split.dm-upload-grid,
+  .dm-split.dm-details-body,
+  .dm-search-layout,
+  .dm-audit-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dm-repo {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+  }
+
+  .dm-repo-nav,
+  .dm-repo-preview {
+    border-right: 0;
+    border-top: 1px solid #eeeaf3;
+  }
+
+  .dm-dash-mid,
+  .dm-dash-bottom,
+  .dm-split-3,
+  .dm-field-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dm-audit-screen .dm-audit-tools-row {
+    flex-wrap: wrap !important;
+  }
+
+  .dm-audit-screen .dm-audit-tools-row select,
+  .dm-audit-screen .dm-audit-tools-row input {
+    max-width: none !important;
+    flex: 1 1 140px !important;
+  }
+
+  .dm-appr-actions {
+    flex-wrap: wrap;
+  }
+
+  .dm-appr-actions .dm-btn {
+    flex: 1 1 140px;
+  }
+
+  .dm-notes-panel {
+    right: 0.7rem;
+    width: #{'min(320px, calc(100% - 1.4rem))'};
+  }
+}
+
+@media (max-width: 960px) {
+  .dm-shell {
+    grid-template-columns: 1fr !important;
+    overflow: hidden !important;
+  }
+
+  .dm-topbar {
+    grid-column: 1;
+  }
+
+  .dm-workspace {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .dm-menu-btn,
+  .dm-sidebar-close {
+    display: inline-flex;
+  }
+
+  .dm-sidebar {
+    position: absolute;
+    z-index: 30;
+    top: 0;
+    left: 0;
+    width: 300px;
+    max-width: 86%;
+    height: 100%;
+    transform: translateX(-105%);
+  }
+
+  .dm-shell.is-nav-open .dm-sidebar {
+    transform: translateX(0);
+  }
+
+  .dm-nav-backdrop {
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    border: 0;
+    background: rgba(31, 36, 48, 0.4);
+  }
+
+  .dm-shell.is-nav-open .dm-nav-backdrop {
+    display: block;
+  }
+
+  .dm-crumb-long,
+  .dm-crumb-sep.dm-crumb-long {
+    display: none;
+  }
+
+  .dm-top-search {
+    width: 160px;
+  }
+
+  .dm-page-title {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .dm-kpi-grid,
+  .dm-dash-kpis,
+  .dm-details-kpis,
+  .dm-access-kpis,
+  .dm-approval-kpis,
+  .dm-audit-kpis {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dm-audit-screen .dm-audit-kpis .dm-kpi + .dm-kpi {
+    border-left: 0 !important;
+    border-top: 1px solid #f0eef5 !important;
+  }
+
+  .dm-main {
+    padding: 0.7rem 0.7rem 0.9rem;
+  }
+
+  .dm-top-search {
+    width: 120px;
+  }
+
+  .dm-top-search input {
+    font-size: 0.68rem;
+  }
+
+  .dm-dialog {
+    width: calc(100% - 1.4rem);
+    left: 0.7rem;
+    transform: none;
+    top: 8%;
+  }
+
+  .dm-appr-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .dm-access-foot,
+  .dm-audit-foot {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .dm-top-search {
+    display: none;
+  }
+
+  .dm-sidebar-user-role {
+    display: none;
+  }
+}

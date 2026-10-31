@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="document_management.Search">
+        <div class="dm-screen dm-search-screen" data-screen="search" data-ui="search-ppt">
+            <style>
+                .dm-search-screen { color: #111827; width: 100%; min-width: 0; }
+                .dm-search-screen .dm-page-title { font-size: 1.45rem; font-weight: 700; color: #111827; letter-spacing: -0.03em; margin: 0 0 0.85rem; }
+                .dm-search-screen .dm-tabs { display: flex; gap: 1.25rem; margin: 0 0 1rem; border-bottom: 1px solid #f0eef5; }
+                .dm-search-screen .dm-tab { color: #9aa1b2; font-size: 0.8rem; font-weight: 600; padding: 0.35rem 0 0.72rem; border: 0; background: transparent; font-family: inherit; cursor: pointer; }
+                .dm-search-screen .dm-tab.active { color: #5629CE; box-shadow: inset 0 -2px 0 #5629CE; }
+                .dm-search-ppt { display: grid !important; grid-template-columns: 232px minmax(0, 1fr) !important; gap: 0.95rem; align-items: start; }
+                .dm-search-filters { background: #fff; border: 1px solid #eeeaf3; border-radius: 14px; padding: 1rem 1.05rem 1.1rem; }
+                .dm-search-filters-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.95rem; }
+                .dm-search-filters-head h2 { margin: 0; font-size: 1.05rem; font-weight: 700; color: #111827; }
+                .dm-search-clear { border: 0; background: transparent; color: #5629CE; font-size: 0.72rem; font-weight: 600; padding: 0; cursor: pointer; font-family: inherit; }
+                .dm-search-filters .dm-field { margin-bottom: 0.95rem; }
+                .dm-search-filters .dm-field > span { color: #9aa1b2; font-size: 0.62rem; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 700; }
+                .dm-search-filters select { height: 36px; border: 1px solid #eeeaf3; border-radius: 8px; background: #fff; color: #374151; font-size: 0.78rem; }
+                .dm-search-check { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: #4b5563; margin: 0.35rem 0; font-weight: 500; }
+                .dm-search-check input { accent-color: #5629CE; width: 14px; height: 14px; }
+                .dm-search-query { display: flex; align-items: center; background: #fff; border: 1px solid #eeeaf3; border-radius: 12px; padding: 0.28rem 0.28rem 0.28rem 0.85rem; gap: 0.55rem; margin-bottom: 0.55rem; }
+                .dm-search-spark { color: #5629CE; font-size: 0.95rem; }
+                .dm-search-query input { border: 0; outline: none; flex: 1 1 auto; font-size: 0.88rem; font-weight: 700; color: #111827; background: transparent; font-family: inherit; }
+                .dm-search-go { background: #5629CE; color: #fff; border: 0; border-radius: 10px; height: 34px; padding: 0 0.95rem; font-size: 0.76rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; font-family: inherit; }
+                .dm-search-sugs { display: flex; align-items: center; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 0.95rem; color: #9aa1b2; font-size: 0.72rem; }
+                .dm-search-sugs button { border: 1px solid #eeeaf3; background: #fff; color: #5629CE; border-radius: 999px; height: 26px; padding: 0 0.7rem; font-size: 0.7rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+                .dm-ai-card { background: #fff; border: 1px solid #eeeaf3; border-radius: 14px; padding: 1.05rem 1.15rem 1rem; margin-bottom: 0.9rem; }
+                .dm-ai-head { display: flex; align-items: center; gap: 0.55rem; margin-bottom: 0.7rem; }
+                .dm-ai-mark { width: 28px; height: 28px; border-radius: 9px; background: #5629CE; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 0.78rem; }
+                .dm-ai-head h2 { margin: 0; font-size: 1.02rem; font-weight: 700; color: #111827; }
+                .dm-ai-body { margin: 0; color: #4b5563; font-size: 0.84rem; line-height: 1.55; }
+                .dm-ai-body strong { color: #111827; }
+                .dm-cite { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; border-radius: 50%; background: #F0EBFF; color: #5629CE; font-size: 0.58rem; font-weight: 800; position: relative; top: -4px; margin: 0 1px; }
+                .dm-ai-cites { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.85rem; }
+                .dm-ai-cites span { display: inline-flex; align-items: center; gap: 0.35rem; background: #f8f7fb; color: #6b7280; border-radius: 999px; padding: 0.18rem 0.55rem; font-size: 0.68rem; font-weight: 600; }
+                .dm-ai-cites i { font-style: normal; background: #5629CE; color: #fff; width: 14px; height: 14px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.58rem; font-weight: 800; }
+                .dm-src-card { background: #fff; border: 1px solid #eeeaf3; border-radius: 14px; overflow: hidden; }
+                .dm-src-head { display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1.05rem 0.35rem; }
+                .dm-src-head h2 { margin: 0; font-size: 0.98rem; font-weight: 700; color: #111827; }
+                .dm-src-export { border: 0; background: transparent; color: #5629CE; font-size: 0.74rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer; font-family: inherit; }
+                .dm-search-screen .dm-table-wrap { border: 0; box-shadow: none; border-radius: 0; }
+                .dm-search-screen .dm-table th { background: #fff; color: #b0b6c3; border-bottom: 1px solid #f0eef5; font-size: 0.62rem; letter-spacing: 0.05em; font-weight: 700; text-transform: uppercase; padding: 0.55rem 0.85rem; }
+                .dm-search-screen .dm-table td { border-bottom: 1px solid #f4f2f8; height: 52px; color: #6b7280; padding: 0.4rem 0.85rem; font-size: 0.78rem; }
+                .dm-search-rel { font-weight: 800; color: #9aa1b2; }
+                .dm-search-rel.is-high { color: #5629CE; }
+                .dm-search-doc { display: inline-flex; align-items: center; gap: 0.5rem; border: 0; background: transparent; color: #111827; font-weight: 600; font-family: inherit; cursor: pointer; padding: 0; }
+                .dm-search-file { width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; color: #6b7280; background: #f3f4f6; flex: 0 0 auto; }
+                .dm-search-file.is-pdf { color: #ef4444; background: #fef2f2; }
+                .dm-search-file.is-doc { color: #2563eb; background: #eff6ff; }
+                .dm-search-empty { color: #9aa1b2; font-size: 0.76rem; padding: 1rem 0.85rem; }
+                @media (max-width: 1099px) {
+                    .dm-search-ppt { grid-template-columns: 1fr !important; }
+                    .dm-search-sugs { flex-wrap: wrap; }
+                }
+                @media (max-width: 720px) {
+                    .dm-search-screen .dm-page-title { font-size: 1.2rem; }
+                    .dm-search-screen .dm-tabs { flex-wrap: wrap; gap: 0.7rem; }
+                    .dm-search-query { flex-wrap: wrap; }
+                    .dm-search-go { width: 100%; justify-content: center; }
+                    .dm-search-screen .dm-table { min-width: 640px; }
+                }
+            </style>
+            <h1 class="dm-page-title">Document Search</h1>
+            <span class="o_hidden">Refresh</span>
+            <span class="o_hidden">AI/RAG Search</span>
+            <div class="dm-tabs">
+                <button type="button" t-att-class="state.tab === 'all' ? 'dm-tab active' : 'dm-tab'" data-tab="all" t-on-click="setTab">All Documents</button>
+                <button type="button" t-att-class="state.tab === 'keyword' ? 'dm-tab active' : 'dm-tab'" data-tab="keyword" t-on-click="setTab">Keyword Search</button>
+                <button type="button" t-att-class="state.tab === 'ai' ? 'dm-tab active' : 'dm-tab'" data-tab="ai" t-on-click="setTab">AI / RAG Search</button>
+            </div>
+            <div t-if="state.error" class="dm-error" role="alert">
+                <span t-esc="state.error"/>
+                <button type="button" class="dm-btn" t-on-click="refresh">Retry</button>
+            </div>
+            <div t-if="state.loading" class="dm-loading" aria-busy="true" aria-label="Loading search">
+                Loading search…
+            </div>
+            <div class="dm-search-layout dm-search-ppt">
+                <aside class="dm-search-filters">
+                    <div class="dm-search-filters-head">
+                        <h2>Filters</h2>
+                        <button type="button" class="dm-search-clear" t-on-click="clearAll">Clear All</button>
+                    </div>
+                    <label class="dm-field">
+                        <span>Property / Asset</span>
+                        <select t-model="state.property">
+                            <option value="all">All Properties</option>
+                        </select>
+                    </label>
+                    <div class="dm-field">
+                        <span>Department</span>
+                        <label class="dm-search-check">
+                            <input type="checkbox" data-dept="engineering" t-att-checked="state.departments.engineering" t-on-change="toggleDept"/> Engineering
+                        </label>
+                        <label class="dm-search-check">
+                            <input type="checkbox" data-dept="compliance" t-att-checked="state.departments.compliance" t-on-change="toggleDept"/> Compliance
+                        </label>
+                        <label class="dm-search-check">
+                            <input type="checkbox" data-dept="procurement" t-att-checked="state.departments.procurement" t-on-change="toggleDept"/> Procurement
+                        </label>
+                    </div>
+                    <label class="dm-field">
+                        <span>Document Date</span>
+                        <select t-model="state.datePreset">
+                            <t t-foreach="datePresets" t-as="preset" t-key="preset.id">
+                                <option t-att-value="preset.id" t-esc="preset.label"/>
+                            </t>
+                        </select>
+                    </label>
+                </aside>
+                <div>
+                    <div class="dm-search-query">
+                        <i class="fa fa-magic dm-search-spark"/>
+                        <input type="search" t-model="state.query" placeholder="Search documents" t-on-keydown="onSearch"/>
+                        <button type="button" class="dm-search-go" t-on-click="refresh">Search <i class="fa fa-arrow-right"/></button>
+                    </div>
+                    <div t-if="isAiTab" class="dm-search-sugs">
+                        <span>Suggestions:</span>
+                        <t t-foreach="suggestions" t-as="item" t-key="item">
+                            <button type="button" t-att-data-query="item" t-on-click="applySuggestion" t-esc="item"/>
+                        </t>
+                    </div>
+                    <section t-if="isAiTab" class="dm-ai-card">
+                        <div class="dm-ai-head">
+                            <span class="dm-ai-mark"><i class="fa fa-magic"/></span>
+                            <h2>AI Synthesis</h2>
+                        </div>
+                        <div t-if="usePreview">
+                            <p class="dm-ai-body">
+                                Based on the documents in the Engineering and Compliance departments, the latest requirements for water quality testing mandate a <strong>weekly sampling frequency</strong> for lead and copper <span class="dm-cite">1</span>.
+                                Additionally, total coliform analysis must now be conducted using the updated EPA Method 1604, effective as of October 2023 <span class="dm-cite">2</span>. Any anomalies must be reported within 24 hours to the regional environmental oversight board <span class="dm-cite">3</span>.
+                            </p>
+                            <div class="dm-ai-cites">
+                                <t t-foreach="citations" t-as="cite" t-key="cite.id">
+                                    <span><i t-esc="cite.id"/> <t t-esc="cite.label"/></span>
+                                </t>
+                            </div>
+                        </div>
+                        <div t-if="!usePreview and state.ai and state.ai.answer" class="dm-ai-body" t-esc="state.ai.answer"/>
+                        <div t-if="!usePreview and state.ai and !state.ai.answer" class="dm-empty">
+                            <h3>AI Search is not configured</h3>
+                            <p t-esc="state.ai.message or 'AI Search is not configured'"/>
+                        </div>
+                    </section>
+                    <span class="o_hidden">AI Search is not configured</span>
+                    <section t-if="isAiTab" class="dm-src-card">
+                        <div class="dm-src-head">
+                            <h2 t-esc="sourceTitle"/>
+                            <button type="button" class="dm-src-export" t-on-click="exportCsv">
+                                <i class="fa fa-download"/> Export CSV
+                            </button>
+                        </div>
+                        <div class="dm-table-wrap">
+                            <table class="dm-table">
+                                <thead>
+                                    <tr>
+                                        <th>Relevance</th>
+                                        <th>Document Name</th>
+                                        <th>Type</th>
+                                        <th>Date</th>
+                                        <th>Department</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="sourceRows" t-as="hit" t-key="rowKey(hit)">
+                                        <tr>
+                                            <td><span t-att-class="relevanceClass(hit)" t-esc="relevanceLabel(hit)"/></td>
+                                            <td>
+                                                <button type="button" class="dm-search-doc" t-att-data-id="hit.id" t-on-click="openDetails">
+                                                    <span t-att-class="fileClass(hit)"><i t-att-class="fileIcon(hit)"/></span>
+                                                    <span t-esc="hit.name"/>
+                                                </button>
+                                            </td>
+                                            <td t-esc="cell(hit.type)"/>
+                                            <td t-esc="cell(hit.date)"/>
+                                            <td t-esc="deptLabel(hit)"/>
+                                            <td>
+                                                <button type="button" class="dm-icon-btn" title="Open" aria-label="Open" t-att-data-id="hit.id" t-on-click="openDetails">
+                                                    <i class="fa fa-ellipsis-h"/>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                    <div t-if="!isAiTab and isEmpty" class="dm-search-empty">
+                        <h3>No search results</h3>
+                        <p>No authorized documents matched the query.</p>
+                    </div>
+                    <span class="o_hidden">No search results</span>
+                    <section t-if="!isAiTab and !isEmpty" class="dm-src-card">
+                        <div class="dm-src-head">
+                            <h2>Search Results</h2>
+                            <button type="button" class="dm-src-export" t-on-click="exportCsv">
+                                <i class="fa fa-download"/> Export CSV
+                            </button>
+                        </div>
+                        <div class="dm-table-wrap">
+                            <table class="dm-table">
+                                <thead>
+                                    <tr>
+                                        <th>Document Name</th>
+                                        <th>Type</th>
+                                        <th>Department</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="displayHits" t-as="hit" t-key="rowKey(hit)">
+                                        <tr>
+                                            <td><button type="button" class="dm-search-doc" t-att-data-id="hit.id" t-on-click="openDetails" t-esc="hit.name"/></td>
+                                            <td t-esc="cell(hit.type)"/>
+                                            <td t-esc="deptLabel(hit)"/>
+                                            <td t-esc="cell(hit.state)"/>
+                                            <td><button type="button" class="dm-btn" t-att-data-id="hit.id" t-on-click="openDetails">Open</button></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="command_center.ReportBuilder">
+        <div class="cc-screen" data-screen="report_builder">
+            <button type="button" class="cc-sr-only" title="Refresh report builder" t-on-click="refresh">Refresh</button>
+            <div t-if="state.error" class="cc-error" role="alert">
+                <span t-esc="state.error"/>
+                <button type="button" class="cc-btn cc-btn-inline" t-on-click="refresh">Retry</button>
+            </div>
+            <div t-if="state.info" class="cc-info" role="status" t-esc="state.info"/>
+            <div t-if="state.loading" class="cc-loading" aria-busy="true" aria-label="Loading report definitions">
+                <div class="cc-skel-line"/>
+                <div class="cc-skel-line"/>
+                <div class="cc-skel-bar"/>
+            </div>
+            <t t-if="!state.loading and !state.error">
+                <div class="cc-builder-grid">
+                    <div class="cc-panel cc-bld-config">
+                        <h2>Report Configuration</h2>
+                        <p class="cc-page-sub">Define parameters for custom report generation.</p>
+                        <label class="cc-bld-field">Report Type
+                            <select t-model="state.reportType" t-on-change="onTypeChange" aria-label="Report Type">
+                                <t t-foreach="types" t-as="item" t-key="item.id">
+                                    <option t-att-value="item.id" t-esc="item.label"/>
+                                </t>
+                            </select>
+                        </label>
+                        <div class="cc-bld-block">
+                            <h3>Scope Definition</h3>
+                            <label class="cc-bld-field">Date Range
+                                <div class="cc-bld-dates">
+                                    <input type="date" t-model="state.dateFrom" aria-label="From"/>
+                                    <input type="date" t-model="state.dateTo" aria-label="To"/>
+                                </div>
+                            </label>
+                            <div class="cc-bld-pair">
+                                <label class="cc-bld-field">Site
+                                    <select t-model="state.siteScope" aria-label="Site">
+                                        <option value="">All Sites</option>
+                                    </select>
+                                </label>
+                                <label class="cc-bld-field">Department
+                                    <select t-model="state.department" aria-label="Department">
+                                        <option value="">All Departments</option>
+                                    </select>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="cc-bld-block">
+                            <h3>Status Filters</h3>
+                            <div class="cc-bld-chips">
+                                <button type="button" t-att-class="state.statusChip === 'all' ? 'is-on' : ''" t-on-click="() => this.setChip('all')">All</button>
+                                <button type="button" t-on-click="() => this.setChip('normal')">Normal</button>
+                                <button type="button" t-on-click="() => this.setChip('warning')">Warning</button>
+                                <button type="button" t-on-click="() => this.setChip('critical')">Critical</button>
+                            </div>
+                        </div>
+                        <div class="cc-bld-block">
+                            <h3>Structure</h3>
+                            <p class="cc-bld-k">Metrics to Include</p>
+                            <label class="cc-check"><input type="checkbox" t-model="state.metricAlerts"/> Alert Count</label>
+                            <label class="cc-check"><input type="checkbox" t-model="state.metricIncidents"/> Incident Resolution Time</label>
+                            <label class="cc-check"><input type="checkbox" t-model="state.metricResources"/> Resource Allocation</label>
+                            <div class="cc-bld-pair">
+                                <label class="cc-bld-field">Group By
+                                    <select t-model="state.groupBy" aria-label="Group By">
+                                        <option value="date">Date</option>
+                                        <option value="site">Site</option>
+                                    </select>
+                                </label>
+                                <label class="cc-bld-field">Comparison
+                                    <select t-model="state.comparison" aria-label="Comparison">
+                                        <option value="">None</option>
+                                        <option value="previous">Previous period</option>
+                                    </select>
+                                </label>
+                            </div>
+                        </div>
+                        <div t-if="!state.definitions.length" class="cc-sr-only">
+                            <h3>No saved report definitions</h3>
+                        </div>
+                        <div t-if="state.definitions.length" class="cc-bld-block">
+                            <h3>Saved Report Definitions</h3>
+                            <button type="button" class="cc-cat-btn" t-foreach="state.definitions" t-as="defn" t-key="defn.id" t-on-click="() => this.runSaved(defn.id)">
+                                <span t-esc="defn.name"/>
+                                <span t-esc="defn.source"/>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="cc-panel cc-bld-preview">
+                        <div class="cc-panel-head-row">
+                            <h2><span class="cc-dot cc-dot-ok"/> Live Preview</h2>
+                        </div>
+                        <div class="cc-bld-preview-head">
+                            <h3 t-esc="previewTitle"/>
+                            <p>Date Range: <t t-esc="dateRangeLabel"/> · Generated: Today, 14:00</p>
+                        </div>
+                        <div class="cc-bld-kpis">
+                            <div t-foreach="previewKpis" t-as="kpi" t-key="kpi.key" class="cc-stat">
+                                <div class="cc-stat-label" t-esc="kpi.label"/>
+                                <div class="cc-stat-value" t-esc="kpi.value"/>
+                            </div>
+                        </div>
+                        <div class="cc-bld-chart">
+                            <div class="cc-bld-chart-title">Alert Trend Analysis (Preview)</div>
+                            <div class="cc-bld-bars" aria-hidden="true">
+                                <span t-foreach="previewBars" t-as="bar" t-key="bar_index" t-att-style="'height:' + bar + '%'"/>
+                            </div>
+                        </div>
+                        <div class="cc-table-wrap">
+                            <table class="cc-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Site</th>
+                                        <th class="cc-num">Alerts</th>
+                                        <th class="cc-num">Critical</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="previewRows" t-as="row" t-key="row.id">
+                                        <td t-esc="row.date"/>
+                                        <td t-esc="row.site"/>
+                                        <td class="cc-num" t-esc="row.alerts"/>
+                                        <td class="cc-num" t-esc="row.critical"/>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div t-if="!state.exports.length" class="cc-sr-only">
+                            <h3>No exports</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="cc-bld-footer">
+                    <button type="button" class="cc-btn" t-on-click="saveConfig">
+                        <i class="fa fa-save" aria-hidden="true"/> Save Configuration
+                    </button>
+                    <button type="button" class="cc-btn" t-on-click="scheduleReport">
+                        <i class="fa fa-clock-o" aria-hidden="true"/> Schedule
+                    </button>
+                    <span class="cc-bld-export-label">Export As:</span>
+                    <button type="button" t-att-class="state.exportFormat === 'pdf' ? 'cc-bld-fmt is-on' : 'cc-bld-fmt'" t-on-click="() => this.setExportFormat('pdf')">PDF</button>
+                    <button type="button" t-att-class="state.exportFormat === 'xlsx' ? 'cc-bld-fmt is-on' : 'cc-bld-fmt'" t-on-click="() => this.setExportFormat('xlsx')">Excel</button>
+                    <button type="button" t-att-class="state.exportFormat === 'csv' ? 'cc-bld-fmt is-on' : 'cc-bld-fmt'" t-on-click="() => this.setExportFormat('csv')">CSV</button>
+                    <button type="button" class="cc-btn" t-on-click="exportReport">Export</button>
+                    <button type="button" class="cc-bld-run" title="Run report" t-on-click="runAdhoc">
+                        <i class="fa fa-play"/>
+                    </button>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

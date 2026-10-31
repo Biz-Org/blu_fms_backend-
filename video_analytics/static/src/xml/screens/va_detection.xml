@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="video_analytics.Detection">
+        <div class="va-page va-detect-page">
+            <div class="va-page-header">
+                <div>
+                    <h1>AI Detection &amp; Zone Monitoring</h1>
+                    <p class="va-page-subtitle">
+                        Real-time AI analysis and spatial monitoring
+                        <t t-if="selectedZoneName"> for <t t-esc="selectedZoneName"/>.</t>
+                        <t t-else="">.</t>
+                    </p>
+                </div>
+                <div class="va-page-actions">
+                    <select class="va-input va-zone-select" aria-label="Zone" t-model="state.filters.zone_id" t-on-change="load">
+                        <option value="">All zones</option>
+                        <t t-foreach="state.zones" t-as="zone" t-key="zone.id">
+                            <option t-att-value="zone.id" t-esc="zone.name"/>
+                        </t>
+                    </select>
+                    <button type="button" class="va-btn va-btn-primary" disabled="disabled" title="Rules are configured by managers">
+                        <i class="fa fa-plus" aria-hidden="true"/> New Zone Rule
+                    </button>
+                </div>
+            </div>
+            <t t-call="video_analytics.Banner"/>
+            <t t-if="!state.loading">
+                <t t-call="video_analytics.WorkflowStrip"/>
+                <div class="va-kpi-strip va-kpi-strip-4">
+                    <div class="va-kpi">
+                        <i class="fa fa-eye va-kpi-icon" aria-hidden="true"/>
+                        <div class="va-kpi-label">Active detections</div>
+                        <div class="va-kpi-value" t-esc="state.kpis.active_detections or 0"/>
+                        <div t-if="hasTrend" class="va-kpi-hint">
+                            <span t-att-class="{ 'va-text-success': trendDown, 'va-text-danger': !trendDown }">
+                                <i t-att-class="{ 'fa fa-arrow-down': trendDown, 'fa fa-arrow-up': !trendDown }" aria-hidden="true"/>
+                                <t t-esc="trendAbs"/>%
+                            </span>
+                            vs prior 24h
+                        </div>
+                    </div>
+                    <div class="va-kpi">
+                        <i class="fa fa-exclamation-triangle va-kpi-icon va-text-danger" aria-hidden="true"/>
+                        <div class="va-kpi-label">Critical alerts (24h)</div>
+                        <div class="va-kpi-value va-text-danger" t-esc="state.kpis.critical_alerts or 0"/>
+                    </div>
+                    <div class="va-kpi">
+                        <i class="fa fa-shield va-kpi-icon va-text-success" aria-hidden="true"/>
+                        <div class="va-kpi-label">PPE compliance</div>
+                        <div class="va-kpi-value" t-esc="ppeComplianceLabel"/>
+                        <div class="va-kpi-hint">
+                            <span t-att-class="{ 'va-text-success': ppeStatus === 'Stable', 'va-text-muted': ppeStatus !== 'Stable' }" t-esc="ppeStatus"/>
+                        </div>
+                    </div>
+                    <div class="va-kpi">
+                        <i class="fa fa-heartbeat va-kpi-icon va-text-success" aria-hidden="true"/>
+                        <div class="va-kpi-label">System health</div>
+                        <div class="va-kpi-value" t-esc="formatPercent(state.kpis.system_health)"/>
+                        <div class="va-kpi-hint" t-esc="healthHint"/>
+                    </div>
+                </div>
+                <div class="va-detect-layout">
+                    <div class="va-detect-main">
+                        <section class="va-card va-live-card">
+                            <div class="va-card-head">
+                                <h2 class="va-card-title">
+                                    <span class="va-live-dot" aria-hidden="true"/>
+                                    Live analytics feed
+                                    <t t-if="liveCameraLabel"> — <t t-esc="liveCameraLabel"/></t>
+                                </h2>
+                            </div>
+                            <div class="va-live-stage">
+                                <t t-if="liveEvidenceUrl">
+                                    <img class="va-live-frame" t-att-src="liveEvidenceUrl" alt="Detection evidence"/>
+                                </t>
+                                <div t-else="" class="va-live-canvas" aria-hidden="true"/>
+                                <div class="va-live-hud va-live-hud-left">
+                                    FPS <t t-esc="state.kpis.fps_label or '—'"/> · MS <t t-esc="state.kpis.ms_label or '—'"/> · LATENCY <t t-esc="state.kpis.latency_label or '—'"/>
+                                </div>
+                                <div t-if="liveCameraLabel" class="va-live-hud va-live-hud-right" t-esc="liveCameraLabel"/>
+                                <div t-if="liveAlert" class="va-live-banner">
+                                    <i class="fa fa-exclamation-triangle" aria-hidden="true"/>
+                                    Intrusion detected
+                                    <t t-if="liveAlert.zone_name"> (<t t-esc="liveAlert.zone_name"/>)</t>
+                                </div>
+                                <t t-foreach="overlayDetections" t-as="box" t-key="box.id">
+                                    <div t-attf-class="va-anno va-anno-{{box.tone}} va-anno-{{box.slot}}">
+                                        <div class="va-anno-title" t-esc="box.title"/>
+                                        <div class="va-anno-meta" t-esc="box.meta"/>
+                                    </div>
+                                </t>
+                                <div t-if="!state.detections.length" class="va-live-empty">
+                                    <i class="fa fa-crosshairs"/>
+                                    <p>No live overlay. Bounding boxes appear only when detections and evidence are stored.</p>
+                                </div>
+                            </div>
+                        </section>
+                        <section class="va-card">
+                            <div class="va-card-head">
+                                <h2 class="va-card-title">Recent AI events</h2>
+                                <button type="button" class="va-link-btn" t-on-click="goAlerts">View All</button>
+                            </div>
+                            <div t-if="!recentDetections.length" class="va-empty va-empty-inline">
+                                <h3>No detections</h3>
+                                <p>Detections are created by ingest only.</p>
+                            </div>
+                            <div t-else="" class="va-table-wrap">
+                                <table class="va-table va-table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Time</th>
+                                            <th>Type</th>
+                                            <th>Zone</th>
+                                            <th>Confidence</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="recentDetections" t-as="row" t-key="row.id">
+                                            <td t-esc="formatTime(row.timestamp)"/>
+                                            <td>
+                                                <span t-attf-class="va-dot va-dot-{{row.tone}}"/>
+                                                <t t-esc="row.detection_type_label"/>
+                                            </td>
+                                            <td t-esc="row.zone_name or '—'"/>
+                                            <td t-esc="formatConfidence(row.confidence)"/>
+                                            <td>
+                                                <button t-if="row.event_id" type="button" class="va-btn va-btn-primary va-btn-sm" t-att-data-id="row.event_id" t-on-click="goPlayback">Review</button>
+                                                <span t-else="" class="va-muted">—</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    </div>
+                    <aside class="va-detect-side">
+                        <section class="va-card">
+                            <h2 class="va-card-title">Detection summary (today)</h2>
+                            <div t-foreach="typeSummary" t-as="item" t-key="item.type" class="va-detect-sum-row">
+                                <span class="va-detect-sum-label">
+                                    <i t-attf-class="fa {{item.icon}} va-detect-sum-icon va-text-{{item.tone}}"/>
+                                    <t t-esc="item.label"/>
+                                </span>
+                                <span class="va-muted"><t t-esc="item.count"/> Events</span>
+                            </div>
+                            <div class="va-ppe-title">PPE non-compliance breakdown</div>
+                            <div class="va-ppe-break">
+                                <div class="va-ppe-box">
+                                    <div class="va-ppe-box-label"><i class="fa fa-user" aria-hidden="true"/> New</div>
+                                    <div class="va-ppe-box-value" t-esc="state.kpis.ppe_new or 0"/>
+                                </div>
+                                <div class="va-ppe-box is-warn">
+                                    <div class="va-ppe-box-label"><i class="fa fa-id-badge" aria-hidden="true"/> Linked</div>
+                                    <div class="va-ppe-box-value" t-esc="state.kpis.ppe_linked or 0"/>
+                                </div>
+                                <div class="va-ppe-box">
+                                    <div class="va-ppe-box-label"><i class="fa fa-check" aria-hidden="true"/> Dismissed</div>
+                                    <div class="va-ppe-box-value" t-esc="state.kpis.ppe_dismissed or 0"/>
+                                </div>
+                            </div>
+                        </section>
+                        <section class="va-card">
+                            <h2 class="va-card-title">Model configuration</h2>
+                            <div class="va-model-row">
+                                <span>Global confidence threshold</span>
+                                <strong t-esc="formatConfidence(thresholdValue)"/>
+                            </div>
+                            <input type="range" class="va-range" min="0" max="100" step="1" disabled="disabled" t-att-value="thresholdValue" aria-label="Global confidence threshold"/>
+                            <div class="va-range-hints">
+                                <span>More alerts (false positives)</span>
+                                <span>Fewer alerts (misses)</span>
+                            </div>
+                            <div class="va-switch-row">
+                                <span>Active monitoring schedule</span>
+                                <span t-att-class="{ 'va-switch': true, 'is-on': monitoringActive }" title="Taken from stored detection rules"/>
+                            </div>
+                            <div class="va-switch-row">
+                                <span>Auto log to production order</span>
+                                <span t-att-class="{ 'va-switch': true, 'is-on': autoLog }" title="Taken from stored detection rules (create event)"/>
+                            </div>
+                            <button type="button" class="va-btn va-btn-block va-btn-adv" disabled="disabled" title="Advanced settings are not available on this screen">
+                                <i class="fa fa-sliders" aria-hidden="true"/> Advanced Settings
+                            </button>
+                            <div t-if="!state.rules.length" class="va-muted va-model-empty">No detection rules are configured.</div>
+                        </section>
+                    </aside>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

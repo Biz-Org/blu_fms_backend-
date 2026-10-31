@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Global company isolation. Group rules below OR together for users who belong to both groups. -->
+    <record id="rule_pm_requisition_company" model="ir.rule">
+        <field name="name">Procurement requisition company</field>
+        <field name="model_id" ref="model_procurement_management_requisition"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_pm_requisition_user" model="ir.rule">
+        <field name="name">Procurement requisition requester</field>
+        <field name="model_id" ref="model_procurement_management_requisition"/>
+        <field name="domain_force">[('requester_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_user'))]"/>
+    </record>
+    <record id="rule_pm_requisition_officer" model="ir.rule">
+        <field name="name">Procurement requisition officer</field>
+        <field name="model_id" ref="model_procurement_management_requisition"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_officer'))]"/>
+    </record>
+
+    <record id="rule_pm_requisition_line_company" model="ir.rule">
+        <field name="name">Procurement requisition line company</field>
+        <field name="model_id" ref="model_procurement_management_requisition_line"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_pm_requisition_line_user" model="ir.rule">
+        <field name="name">Procurement requisition line requester</field>
+        <field name="model_id" ref="model_procurement_management_requisition_line"/>
+        <field name="domain_force">[('requisition_id.requester_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_user'))]"/>
+    </record>
+    <record id="rule_pm_requisition_line_officer" model="ir.rule">
+        <field name="name">Procurement requisition line officer</field>
+        <field name="model_id" ref="model_procurement_management_requisition_line"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_officer'))]"/>
+    </record>
+
+    <record id="rule_pm_rfq_company" model="ir.rule">
+        <field name="name">Procurement RFQ company</field>
+        <field name="model_id" ref="model_procurement_management_rfq"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_pm_rfq_user" model="ir.rule">
+        <field name="name">Procurement RFQ requester</field>
+        <field name="model_id" ref="model_procurement_management_rfq"/>
+        <field name="domain_force">['|', ('requisition_id.requester_id', '=', user.id), ('create_uid', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_user'))]"/>
+    </record>
+    <record id="rule_pm_rfq_officer" model="ir.rule">
+        <field name="name">Procurement RFQ officer</field>
+        <field name="model_id" ref="model_procurement_management_rfq"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_officer'))]"/>
+    </record>
+
+    <record id="rule_pm_rfq_supplier_company" model="ir.rule">
+        <field name="name">Procurement RFQ supplier company</field>
+        <field name="model_id" ref="model_procurement_management_rfq_supplier"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_pm_rfq_supplier_user" model="ir.rule">
+        <field name="name">Procurement RFQ supplier requester</field>
+        <field name="model_id" ref="model_procurement_management_rfq_supplier"/>
+        <field name="domain_force">['|', ('rfq_id.requisition_id.requester_id', '=', user.id), ('rfq_id.create_uid', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_user'))]"/>
+    </record>
+    <record id="rule_pm_rfq_supplier_officer" model="ir.rule">
+        <field name="name">Procurement RFQ supplier officer</field>
+        <field name="model_id" ref="model_procurement_management_rfq_supplier"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_officer'))]"/>
+    </record>
+
+    <record id="rule_pm_quotation_company" model="ir.rule">
+        <field name="name">Procurement quotation company</field>
+        <field name="model_id" ref="model_procurement_management_quotation"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_pm_quotation_user" model="ir.rule">
+        <field name="name">Procurement quotation requester</field>
+        <field name="model_id" ref="model_procurement_management_quotation"/>
+        <field name="domain_force">['|', ('rfq_id.requisition_id.requester_id', '=', user.id), ('rfq_id.create_uid', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_user'))]"/>
+    </record>
+    <record id="rule_pm_quotation_officer" model="ir.rule">
+        <field name="name">Procurement quotation officer</field>
+        <field name="model_id" ref="model_procurement_management_quotation"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_officer'))]"/>
+    </record>
+
+    <record id="rule_pm_quotation_line_company" model="ir.rule">
+        <field name="name">Procurement quotation line company</field>
+        <field name="model_id" ref="model_procurement_management_quotation_line"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_pm_quotation_line_user" model="ir.rule">
+        <field name="name">Procurement quotation line requester</field>
+        <field name="model_id" ref="model_procurement_management_quotation_line"/>
+        <field name="domain_force">['|', ('quotation_id.rfq_id.requisition_id.requester_id', '=', user.id), ('quotation_id.rfq_id.create_uid', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_user'))]"/>
+    </record>
+    <record id="rule_pm_quotation_line_officer" model="ir.rule">
+        <field name="name">Procurement quotation line officer</field>
+        <field name="model_id" ref="model_procurement_management_quotation_line"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_officer'))]"/>
+    </record>
+
+    <record id="rule_pm_matrix_company" model="ir.rule">
+        <field name="name">Procurement matrix company</field>
+        <field name="model_id" ref="model_procurement_management_approval_matrix"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_pm_level_company" model="ir.rule">
+        <field name="name">Procurement approval level company</field>
+        <field name="model_id" ref="model_procurement_management_approval_level"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="rule_pm_request_company" model="ir.rule">
+        <field name="name">Procurement approval request company</field>
+        <field name="model_id" ref="model_procurement_management_approval_request"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_pm_request_user" model="ir.rule">
+        <field name="name">Procurement approval request requester</field>
+        <field name="model_id" ref="model_procurement_management_approval_request"/>
+        <field name="domain_force">[('requester_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_user'))]"/>
+    </record>
+    <record id="rule_pm_request_officer" model="ir.rule">
+        <field name="name">Procurement approval request officer</field>
+        <field name="model_id" ref="model_procurement_management_approval_request"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_officer'))]"/>
+    </record>
+
+    <record id="rule_pm_decision_company" model="ir.rule">
+        <field name="name">Procurement approval decision company</field>
+        <field name="model_id" ref="model_procurement_management_approval_decision"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="rule_pm_po_company" model="ir.rule">
+        <field name="name">Procurement purchase order company</field>
+        <field name="model_id" ref="model_procurement_management_purchase_order"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_pm_po_user" model="ir.rule">
+        <field name="name">Procurement purchase order requester</field>
+        <field name="model_id" ref="model_procurement_management_purchase_order"/>
+        <field name="domain_force">['|', ('requisition_id.requester_id', '=', user.id), ('create_uid', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_user'))]"/>
+    </record>
+    <record id="rule_pm_po_officer" model="ir.rule">
+        <field name="name">Procurement purchase order officer</field>
+        <field name="model_id" ref="model_procurement_management_purchase_order"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_officer'))]"/>
+    </record>
+
+    <record id="rule_pm_po_line_company" model="ir.rule">
+        <field name="name">Procurement purchase order line company</field>
+        <field name="model_id" ref="model_procurement_management_purchase_order_line"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_pm_po_line_user" model="ir.rule">
+        <field name="name">Procurement purchase order line requester</field>
+        <field name="model_id" ref="model_procurement_management_purchase_order_line"/>
+        <field name="domain_force">['|', ('order_id.requisition_id.requester_id', '=', user.id), ('order_id.create_uid', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_user'))]"/>
+    </record>
+    <record id="rule_pm_po_line_officer" model="ir.rule">
+        <field name="name">Procurement purchase order line officer</field>
+        <field name="model_id" ref="model_procurement_management_purchase_order_line"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_officer'))]"/>
+    </record>
+
+    <record id="rule_pm_receipt_company" model="ir.rule">
+        <field name="name">Procurement receipt company</field>
+        <field name="model_id" ref="model_procurement_management_receipt"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_pm_receipt_user" model="ir.rule">
+        <field name="name">Procurement receipt requester</field>
+        <field name="model_id" ref="model_procurement_management_receipt"/>
+        <field name="domain_force">['|', ('order_id.requisition_id.requester_id', '=', user.id), ('order_id.create_uid', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_user'))]"/>
+    </record>
+    <record id="rule_pm_receipt_officer" model="ir.rule">
+        <field name="name">Procurement receipt officer</field>
+        <field name="model_id" ref="model_procurement_management_receipt"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_officer'))]"/>
+    </record>
+
+    <record id="rule_pm_receipt_line_company" model="ir.rule">
+        <field name="name">Procurement receipt line company</field>
+        <field name="model_id" ref="model_procurement_management_receipt_line"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_pm_receipt_line_user" model="ir.rule">
+        <field name="name">Procurement receipt line requester</field>
+        <field name="model_id" ref="model_procurement_management_receipt_line"/>
+        <field name="domain_force">['|', ('receipt_id.order_id.requisition_id.requester_id', '=', user.id), ('receipt_id.order_id.create_uid', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_user'))]"/>
+    </record>
+    <record id="rule_pm_receipt_line_officer" model="ir.rule">
+        <field name="name">Procurement receipt line officer</field>
+        <field name="model_id" ref="model_procurement_management_receipt_line"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_officer'))]"/>
+    </record>
+
+    <record id="rule_pm_invoice_company" model="ir.rule">
+        <field name="name">Procurement invoice company</field>
+        <field name="model_id" ref="model_procurement_management_invoice_match"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_pm_invoice_user" model="ir.rule">
+        <field name="name">Procurement invoice requester</field>
+        <field name="model_id" ref="model_procurement_management_invoice_match"/>
+        <field name="domain_force">['|', ('order_id.requisition_id.requester_id', '=', user.id), ('order_id.create_uid', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_user'))]"/>
+    </record>
+    <record id="rule_pm_invoice_officer" model="ir.rule">
+        <field name="name">Procurement invoice officer</field>
+        <field name="model_id" ref="model_procurement_management_invoice_match"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_officer'))]"/>
+    </record>
+
+    <record id="rule_pm_invoice_line_company" model="ir.rule">
+        <field name="name">Procurement invoice line company</field>
+        <field name="model_id" ref="model_procurement_management_invoice_match_line"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_pm_invoice_line_user" model="ir.rule">
+        <field name="name">Procurement invoice line requester</field>
+        <field name="model_id" ref="model_procurement_management_invoice_match_line"/>
+        <field name="domain_force">['|', ('match_id.order_id.requisition_id.requester_id', '=', user.id), ('match_id.order_id.create_uid', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_user'))]"/>
+    </record>
+    <record id="rule_pm_invoice_line_officer" model="ir.rule">
+        <field name="name">Procurement invoice line officer</field>
+        <field name="model_id" ref="model_procurement_management_invoice_match_line"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_procurement_officer'))]"/>
+    </record>
+
+    <record id="rule_pm_profile_company" model="ir.rule">
+        <field name="name">Procurement supplier profile company</field>
+        <field name="model_id" ref="model_procurement_management_supplier_profile"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_pm_contract_company" model="ir.rule">
+        <field name="name">Procurement contract company</field>
+        <field name="model_id" ref="model_procurement_management_contract"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_pm_report_definition_company" model="ir.rule">
+        <field name="name">Procurement report definition company</field>
+        <field name="model_id" ref="model_procurement_management_report_definition"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_pm_report_run_company" model="ir.rule">
+        <field name="name">Procurement report run company</field>
+        <field name="model_id" ref="model_procurement_management_report_run"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_pm_audit_company" model="ir.rule">
+        <field name="name">Procurement audit company</field>
+        <field name="model_id" ref="model_procurement_management_audit_event"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+</odoo>

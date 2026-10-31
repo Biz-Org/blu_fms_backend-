@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="document_management.Approval">
+        <div class="dm-screen dm-approval-screen" data-screen="approval" data-ui="approval-ppt">
+            <style>
+                .dm-approval-screen { color: #111827; width: 100%; min-width: 0; }
+                .dm-approval-screen .dm-appr-hero { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.85rem; margin: 0 0 1rem; }
+                .dm-approval-screen .dm-page-title { font-size: 1.45rem; font-weight: 700; color: #111827; letter-spacing: -0.03em; line-height: 1.15; max-width: 420px; }
+                .dm-approval-screen .dm-hero-actions { display: flex; align-items: center; gap: 0.5rem; margin-left: auto; flex-wrap: nowrap; }
+                .dm-approval-screen .dm-hero-actions .dm-btn { background: #fff; color: #4b5563; border: 1px solid #eceaf3; height: 34px; padding: 0 0.95rem; border-radius: 10px; font-size: 0.74rem; font-weight: 600; box-shadow: none; white-space: nowrap; }
+                .dm-approval-screen .dm-hero-actions .dm-btn i { color: #9aa1b2; }
+                .dm-approval-screen .dm-hero-actions .dm-btn-primary { background: #5629CE; border-color: #5629CE; color: #fff; border-radius: 10px; }
+                .dm-approval-screen .dm-hero-actions .dm-btn-primary i { color: #fff; }
+                .dm-approval-layout { display: grid !important; grid-template-columns: minmax(0, 1fr); gap: 0.9rem; align-items: start; }
+                .dm-approval-layout.has-panel { grid-template-columns: minmax(0, 1fr) 340px !important; }
+                .dm-approval-kpis { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 0.7rem !important; margin: 0 0 0.9rem; }
+                .dm-approval-kpis .dm-kpi { border: 1px solid #eeeaf3; border-radius: 14px; box-shadow: none; padding: 0.85rem 0.95rem 0.8rem; background: #fff; min-height: 92px; min-width: 0; overflow: hidden; }
+                .dm-approval-kpis .dm-kpi-head { display: flex; align-items: flex-start; justify-content: space-between; }
+                .dm-approval-kpis .dm-kpi-label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.02em; text-transform: none; color: #9aa1b2; }
+                .dm-approval-kpis .dm-kpi-icon { background: transparent; color: #d1d5db; width: auto; height: auto; font-size: 0.95rem; }
+                .dm-approval-kpis .dm-kpi-metric { display: flex; align-items: baseline; gap: 0.45rem; margin-top: 0.55rem; }
+                .dm-approval-kpis .dm-kpi-value { font-size: 1.7rem; font-weight: 700; margin: 0; color: #111827; line-height: 1; }
+                .dm-approval-kpis .dm-kpi-hint { margin: 0; font-size: 0.72rem; font-weight: 700; color: #22c55e; }
+                .dm-approval-kpis .is-warn .dm-kpi-label, .dm-approval-kpis .is-warn .dm-kpi-icon { color: #fb923c; }
+                .dm-approval-kpis .is-warn .dm-kpi-value { color: #f97316; }
+                .dm-approval-kpis .is-warn .dm-kpi-hint { color: #fb923c; }
+                .dm-approval-kpis .is-muted .dm-kpi-hint { color: #9aa1b2; }
+                .dm-appr-board { background: #fff; border: 1px solid #eeeaf3; border-radius: 14px; overflow: hidden; }
+                .dm-approval-screen .dm-tabs { display: flex; gap: 1.15rem; padding: 0 1.05rem; margin: 0; border-bottom: 1px solid #f0eef5; }
+                .dm-approval-screen .dm-tab { color: #9aa1b2; font-size: 0.78rem; font-weight: 600; padding: 0.85rem 0 0.72rem; }
+                .dm-approval-screen .dm-tab.active { color: #5629CE; box-shadow: inset 0 -2px 0 #5629CE; }
+                .dm-approval-screen .dm-table-wrap { border: 0; border-radius: 0; box-shadow: none; overflow-x: auto; }
+                .dm-approval-screen .dm-table { width: 100%; border-collapse: collapse; }
+                .dm-approval-screen .dm-table th { background: #fff; color: #b0b6c3; border-bottom: 1px solid #f0eef5; font-size: 0.62rem; letter-spacing: 0.05em; font-weight: 700; text-transform: uppercase; padding: 0.7rem 0.85rem; }
+                .dm-approval-screen .dm-table td { border-bottom: 1px solid #f4f2f8; height: 64px; color: #6b7280; padding: 0.55rem 0.85rem; font-size: 0.8rem; white-space: nowrap; }
+                .dm-approval-screen .dm-table tr.is-selected td { background: #fcfbfe; }
+                .dm-appr-doc { display: inline-flex; align-items: center; gap: 0.65rem; border: 0; background: transparent; padding: 0; font-family: inherit; font-weight: 700; color: #111827; text-align: left; cursor: pointer; white-space: normal; line-height: 1.25; max-width: 180px; }
+                .dm-appr-doc.is-active { color: #5629CE; }
+                .dm-appr-file { width: 28px; height: 28px; border-radius: 8px; background: #F0EBFF; color: #5629CE; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+                .dm-appr-status { display: inline-flex; align-items: center; border-radius: 999px; padding: 0.18rem 0.55rem; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.04em; }
+                .dm-appr-status.is-review { background: #F0EBFF; color: #5629CE; }
+                .dm-appr-status.is-pending { background: #f3f4f6; color: #6b7280; }
+                .dm-appr-status.is-ok { background: #dcfce7; color: #166534; }
+                .dm-appr-status.is-danger { background: #fee2e2; color: #991b1b; }
+                .dm-appr-kebab { width: 28px; height: 28px; border: 0; background: transparent; color: #c5c9d4; }
+                .dm-appr-empty { color: #9aa1b2; font-size: 0.76rem; padding: 1.1rem 0.85rem; }
+                .dm-appr-panel { background: #fff; border: 1px solid #eeeaf3; border-radius: 14px; padding: 1rem 1.05rem 0.95rem; min-width: 0; }
+                .dm-appr-panel-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; color: #9aa1b2; font-size: 0.72rem; }
+                .dm-appr-panel-top .dm-icon-btn { width: 28px; height: 28px; border: 0; color: #9aa1b2; }
+                .dm-appr-panel h2 { margin: 0.35rem 0 0.85rem; font-size: 1.15rem; font-weight: 700; color: #111827; }
+                .dm-appr-preview { position: relative; height: 148px; border-radius: 12px; background: #f3f4f6; overflow: hidden; margin-bottom: 0.95rem; display: flex; align-items: center; justify-content: center; }
+                .dm-appr-paper { width: 92px; height: 118px; background: #fff; border-radius: 4px; box-shadow: 0 8px 18px rgba(31,36,48,0.12); padding: 10px 8px; }
+                .dm-appr-paper span { display: block; height: 6px; background: #e5e7eb; border-radius: 4px; margin-bottom: 6px; }
+                .dm-appr-paper span:first-child { width: 42%; height: 8px; background: #d1d5db; }
+                .dm-appr-view { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); background: #111827; color: #fff; border: 0; border-radius: 999px; height: 28px; padding: 0 0.8rem; font-size: 0.68rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem; white-space: nowrap; }
+                .dm-appr-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem 1rem; margin-bottom: 1rem; }
+                .dm-appr-meta span { display: block; color: #9aa1b2; font-size: 0.68rem; margin-bottom: 0.15rem; }
+                .dm-appr-meta strong { font-size: 0.8rem; color: #111827; font-weight: 700; }
+                .dm-appr-kicker { margin: 0 0 0.55rem; font-size: 0.64rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #9aa1b2; }
+                .dm-appr-step { display: flex; align-items: flex-start; gap: 0.65rem; padding: 0.15rem 0 0.7rem; }
+                .dm-appr-mark { width: 18px; height: 18px; border-radius: 50%; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; font-size: 0.62rem; margin-top: 1px; }
+                .dm-appr-step.is-done .dm-appr-mark { background: #22c55e; color: #fff; }
+                .dm-appr-step.is-now .dm-appr-mark { background: #5629CE; }
+                .dm-appr-step.is-wait .dm-appr-mark { background: #fff; border: 2px solid #e5e7eb; }
+                .dm-appr-step strong { display: block; font-size: 0.8rem; color: #111827; }
+                .dm-appr-step p { margin: 0.12rem 0 0; font-size: 0.7rem; color: #9aa1b2; }
+                .dm-appr-step.is-now strong { color: #5629CE; }
+                .dm-appr-notes { background: #f8f7fb; border-radius: 10px; padding: 0.75rem 0.8rem; color: #4b5563; font-size: 0.74rem; line-height: 1.45; margin-bottom: 1rem; }
+                .dm-appr-actions { display: flex; align-items: center; gap: 0.45rem; }
+                .dm-appr-actions .dm-btn { flex: 1 1 0; height: 36px; justify-content: center; border-radius: 10px; font-size: 0.74rem; }
+                .dm-appr-reject { background: #fff !important; color: #e11d48 !important; border: 1px solid #fecdd3 !important; }
+                .dm-appr-changes { background: #fff !important; color: #4b5563 !important; border: 1px solid #eceaf3 !important; }
+                .dm-appr-approve { background: #5629CE !important; border-color: #5629CE !important; color: #fff !important; }
+                @media (max-width: 1099px) {
+                    .dm-approval-layout.has-panel { grid-template-columns: 1fr !important; }
+                    .dm-approval-kpis { grid-template-columns: 1fr 1fr !important; }
+                    .dm-approval-screen .dm-hero-actions { flex-wrap: wrap; }
+                    .dm-appr-actions { flex-wrap: wrap; }
+                }
+                @media (max-width: 720px) {
+                    .dm-approval-kpis { grid-template-columns: 1fr !important; }
+                    .dm-approval-screen .dm-page-title { font-size: 1.2rem; max-width: none; }
+                    .dm-appr-meta { grid-template-columns: 1fr; }
+                    .dm-approval-screen .dm-table { min-width: 640px; }
+                }
+            </style>
+            <div class="dm-page-hero dm-appr-hero">
+                <div>
+                    <h1 class="dm-page-title">Document Approval &amp; Expiry Management</h1>
+                    <span class="o_hidden">Refresh</span>
+                </div>
+                <div class="dm-hero-actions">
+                    <button type="button" class="dm-btn" t-on-click="toggleFilter">
+                        <i class="fa fa-filter"/> Filter
+                    </button>
+                    <button type="button" class="dm-btn dm-btn-primary" t-on-click="toggleRequest">
+                        <i class="fa fa-plus"/> New Request
+                    </button>
+                </div>
+            </div>
+            <div t-if="state.showRequest" class="dm-card">
+                <div class="dm-field-row">
+                    <label class="dm-field"><span>Step name</span><input type="text" t-model="state.stepName" placeholder="Review"/></label>
+                    <label class="dm-field"><span>Approver</span>
+                        <select t-model="state.approverId">
+                            <option value="">Approver</option>
+                            <t t-foreach="users" t-as="user" t-key="user.id">
+                                <option t-att-value="user.id" t-esc="user.name"/>
+                            </t>
+                        </select>
+                    </label>
+                </div>
+                <button type="button" class="dm-btn dm-btn-primary" t-on-click="submitRequest">Submit for approval</button>
+            </div>
+            <div t-if="state.showFilter" class="dm-filters">
+                <input class="dm-input" type="search" placeholder="Filter by document or requester"/>
+            </div>
+            <div t-if="state.error" class="dm-error" role="alert">
+                <span t-esc="state.error"/>
+                <button type="button" class="dm-btn" t-on-click="refresh">Retry</button>
+            </div>
+            <div t-if="state.loading" class="dm-loading" aria-busy="true" aria-label="Loading approval">
+                Loading approval…
+            </div>
+            <div t-att-class="hasPanel ? 'dm-approval-layout has-panel' : 'dm-approval-layout'">
+                <div>
+                    <div class="dm-kpi-grid dm-approval-kpis">
+                        <div class="dm-kpi">
+                            <div class="dm-kpi-head">
+                                <div class="dm-kpi-label">Pending Approval</div>
+                                <span class="dm-kpi-icon"><i class="fa fa-clock-o"/></span>
+                            </div>
+                            <div class="dm-kpi-metric">
+                                <div class="dm-kpi-value" t-esc="pendingCount"/>
+                                <span t-if="pendingHint" class="dm-kpi-hint" t-esc="pendingHint"/>
+                            </div>
+                        </div>
+                        <div class="dm-kpi">
+                            <div class="dm-kpi-head">
+                                <div class="dm-kpi-label">Approved</div>
+                                <span class="dm-kpi-icon"><i class="fa fa-check"/></span>
+                            </div>
+                            <div class="dm-kpi-metric">
+                                <div class="dm-kpi-value" t-esc="approvedCount"/>
+                                <span t-if="approvedHint" class="dm-kpi-hint" t-esc="approvedHint"/>
+                            </div>
+                        </div>
+                        <div class="dm-kpi is-warn">
+                            <div class="dm-kpi-head">
+                                <div class="dm-kpi-label">Expiring Soon</div>
+                                <span class="dm-kpi-icon"><i class="fa fa-exclamation-triangle"/></span>
+                            </div>
+                            <div class="dm-kpi-metric">
+                                <div class="dm-kpi-value" t-esc="expiringCount"/>
+                                <span t-if="expiringHint" class="dm-kpi-hint" t-esc="expiringHint"/>
+                            </div>
+                        </div>
+                        <div class="dm-kpi is-muted">
+                            <div class="dm-kpi-head">
+                                <div class="dm-kpi-label">Expired</div>
+                                <span class="dm-kpi-icon"><i class="fa fa-clock-o"/></span>
+                            </div>
+                            <div class="dm-kpi-metric">
+                                <div class="dm-kpi-value" t-esc="expiredCount"/>
+                                <span t-if="expiredHint" class="dm-kpi-hint" t-esc="expiredHint"/>
+                            </div>
+                        </div>
+                    </div>
+                    <section class="dm-appr-board">
+                        <div class="dm-tabs">
+                            <button type="button" t-att-class="state.tab === 'pending' ? 'dm-tab active' : 'dm-tab'" data-tab="pending" t-on-click="setTab">Pending Approval</button>
+                            <button type="button" t-att-class="state.tab === 'approved' ? 'dm-tab active' : 'dm-tab'" data-tab="approved" t-on-click="setTab">Approved</button>
+                            <button type="button" t-att-class="state.tab === 'expiring_soon' ? 'dm-tab active' : 'dm-tab'" data-tab="expiring_soon" t-on-click="setTab">Expiring Soon</button>
+                            <button type="button" t-att-class="state.tab === 'expired' ? 'dm-tab active' : 'dm-tab'" data-tab="expired" t-on-click="setTab">Expired</button>
+                        </div>
+                        <div class="dm-table-wrap">
+                            <table class="dm-table">
+                                <thead>
+                                    <tr>
+                                        <th>Document Name</th>
+                                        <th>Requester</th>
+                                        <th>Type</th>
+                                        <th>Submitted Date</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="displayRows" t-as="row" t-key="rowKey(row)">
+                                        <tr t-att-class="isSelected(row) ? 'is-selected' : ''">
+                                            <td>
+                                                <button type="button" t-att-class="isSelected(row) ? 'dm-appr-doc is-active' : 'dm-appr-doc'" t-att-data-row-id="row.id" t-att-data-document-id="row.document_id" t-att-data-request-id="row.request_id" t-on-click="selectRow">
+                                                    <span class="dm-appr-file"><i class="fa fa-file-text-o"/></span>
+                                                    <span t-esc="row.document"/>
+                                                </button>
+                                            </td>
+                                            <td t-esc="display(row.requester)"/>
+                                            <td t-esc="display(row.type)"/>
+                                            <td t-esc="dateLabel(row.submitted_at)"/>
+                                            <td><span t-att-class="statusClass(row)" t-esc="statusLabel(row)"/></td>
+                                            <td>
+                                                <button type="button" class="dm-icon-btn dm-appr-kebab" title="Row actions" aria-label="Row actions" t-att-data-row-id="row.id" t-att-data-document-id="row.document_id" t-att-data-request-id="row.request_id" t-on-click="selectRow">
+                                                    <i class="fa fa-ellipsis-v"/>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <tr t-if="isEmpty">
+                                        <td colspan="6">
+                                            <div class="dm-appr-empty">
+                                                <h3>No approval or expiry items</h3>
+                                                <p>There are no pending approvals or expiry records.</p>
+                                                <p>No pending approvals</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+                <aside t-if="hasPanel" class="dm-appr-panel" role="dialog" aria-label="Approval details">
+                    <div class="dm-appr-panel-top">
+                        <span><t t-esc="panelTypeLabel"/> ID: <t t-esc="display(panel.code)"/></span>
+                        <button type="button" class="dm-icon-btn" aria-label="Close drawer" t-on-click="closeDrawer"><i class="fa fa-times"/></button>
+                    </div>
+                    <h2 t-esc="panel.document"/>
+                    <div class="dm-appr-preview">
+                        <div class="dm-appr-paper">
+                            <span/><span/><span/><span/><span/>
+                        </div>
+                        <button type="button" class="dm-appr-view" t-on-click="viewDocument">
+                            <i class="fa fa-eye"/> View Full Document
+                        </button>
+                    </div>
+                    <div class="dm-appr-meta">
+                        <div>
+                            <span>Requester</span>
+                            <strong t-esc="display(panel.requester)"/>
+                        </div>
+                        <div>
+                            <span>Department</span>
+                            <strong t-esc="display(panel.department)"/>
+                        </div>
+                        <div>
+                            <span>Submitted</span>
+                            <strong t-esc="display(panel.submitted_at)"/>
+                        </div>
+                        <div>
+                            <span>Size</span>
+                            <strong t-esc="panelSize"/>
+                        </div>
+                    </div>
+                    <h3 class="dm-appr-kicker">Approval Workflow</h3>
+                    <t t-foreach="selectedSteps" t-as="step" t-key="step.id">
+                        <div t-att-class="stepClass(step)">
+                            <span class="dm-appr-mark">
+                                <i t-if="step.state === 'approved'" class="fa fa-check"/>
+                            </span>
+                            <div>
+                                <strong t-esc="step.name"/>
+                                <p t-esc="stepCaption(step)"/>
+                            </div>
+                        </div>
+                    </t>
+                    <h3 class="dm-appr-kicker">Reviewer Notes</h3>
+                    <div class="dm-appr-notes" t-esc="panelNotes"/>
+                    <label t-if="state.needComment" class="dm-field"><span>Review notes</span><textarea t-model="state.comment" placeholder="Required for reject or request changes"/></label>
+                    <div class="dm-appr-actions">
+                        <button type="button" class="dm-btn dm-appr-reject" t-att-data-id="requestId" t-on-click="reject">Reject</button>
+                        <button type="button" class="dm-btn dm-appr-changes" t-att-data-id="requestId" t-on-click="requestChanges">Request Changes</button>
+                        <button type="button" class="dm-btn dm-appr-approve" t-att-data-id="requestId" t-on-click="approve">Approve Document</button>
+                    </div>
+                    <t t-if="state.tab === 'expiring_soon' or state.tab === 'expired'">
+                        <label class="dm-field"><span>New expiry</span><input type="date" t-model="state.expiryDate"/></label>
+                        <div class="dm-toolbar">
+                            <button type="button" class="dm-btn" t-on-click="renew">Renew</button>
+                            <label class="dm-btn">Replacement<input type="file" class="o_hidden" t-on-change="replace"/></label>
+                        </div>
+                    </t>
+                </aside>
+            </div>
+        </div>
+    </t>
+</templates>

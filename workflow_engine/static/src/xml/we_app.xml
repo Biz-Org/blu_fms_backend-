@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="workflow_engine.App">
+        <div class="we-shell o_action" t-ref="root">
+            <aside class="we-sidebar">
+                <div class="we-sidebar-brand">
+                    <div class="we-brand-mark">
+                        <i class="fa fa-th-large"/>
+                    </div>
+                    <div class="we-brand-text">
+                        <div class="we-brand-name">PrecastMPS</div>
+                        <div class="we-brand-sub">Planning Suite</div>
+                    </div>
+                </div>
+                <nav class="we-sidebar-nav">
+                    <div class="we-nav-kicker">Workflow Engine</div>
+                    <t t-foreach="screens" t-as="item" t-key="item.id">
+                        <button type="button"
+                                class="we-nav-item"
+                                t-att-class="{ active: state.screen === item.id }"
+                                t-att-data-screen="item.id"
+                                t-on-click="onNavClick">
+                            <span class="we-nav-icon">
+                                <i t-attf-class="fa {{item.icon}}"/>
+                            </span>
+                            <span class="we-nav-label" t-esc="item.label"/>
+                        </button>
+                    </t>
+                </nav>
+                <div class="we-sidebar-user">
+                    <div class="we-user-avatar" t-esc="initials"/>
+                    <div class="we-sidebar-user-meta">
+                        <div class="we-sidebar-user-name" t-esc="state.session.name or 'Admin'"/>
+                        <div class="we-sidebar-user-role" t-esc="roleLabel"/>
+                    </div>
+                </div>
+            </aside>
+            <div class="we-workspace">
+                <header class="we-topbar">
+                    <div class="we-breadcrumbs">
+                        Utility Management
+                        <span class="we-crumb-sep">›</span>
+                        Workflow Engine
+                        <span class="we-crumb-sep">›</span>
+                        <strong t-esc="current.crumb"/>
+                    </div>
+                    <div class="we-top-utils">
+                        <div t-if="state.screen === 'tasks'" class="we-top-search">
+                            <i class="fa fa-search"/>
+                            <input type="search" placeholder="Search tasks..." t-model="state.taskSearch"/>
+                        </div>
+                        <button type="button" class="we-icon-btn" title="Notifications">
+                            <i class="fa fa-bell-o"/>
+                        </button>
+                        <button type="button" class="we-icon-btn" title="Site">
+                            <i class="fa fa-map-marker"/>
+                        </button>
+                        <button type="button" class="we-icon-btn" title="Calendar">
+                            <i class="fa fa-calendar-o"/>
+                        </button>
+                        <div class="we-user-avatar" t-att-title="state.session.name" t-esc="initials"/>
+                    </div>
+                </header>
+                <main class="we-main" t-att-class="{ 'we-main--fill': isBuilder }">
+                    <t t-if="state.sessionReady">
+                        <t t-if="state.screen === 'dashboard'">
+                            <WeDashboard session="state.session" onNavigate.bind="navigate"/>
+                        </t>
+                        <t t-elif="state.screen === 'builder'">
+                            <WeBuilder session="state.session" onNavigate.bind="navigate"/>
+                        </t>
+                        <t t-elif="state.screen === 'templates'">
+                            <WeTemplates session="state.session" onNavigate.bind="navigate"/>
+                        </t>
+                        <t t-elif="state.screen === 'approvals'">
+                            <WeApprovals session="state.session" onNavigate.bind="navigate"/>
+                        </t>
+                        <t t-elif="state.screen === 'tasks'">
+                            <WeTasks session="state.session" onNavigate.bind="navigate" search="state.taskSearch"/>
+                        </t>
+                        <t t-elif="state.screen === 'notifications'">
+                            <WeNotifications session="state.session" onNavigate.bind="navigate"/>
+                        </t>
+                        <t t-elif="state.screen === 'analytics'">
+                            <WeAnalytics session="state.session" onNavigate.bind="navigate"/>
+                        </t>
+                    </t>
+                    <div t-else="" class="we-loading">Loading Workflow Engine…</div>
+                </main>
+            </div>
+        </div>
+    </t>
+</templates>

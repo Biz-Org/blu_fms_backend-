@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="workflow_engine.Notifications">
+        <div class="we-page we-notifications">
+            <div class="we-page-header">
+                <div>
+                    <h1>Notifications &amp; Approval Tracking</h1>
+                    <p class="we-muted">Manage pending requests and monitor system notifications.</p>
+                </div>
+                <div class="we-seg">
+                    <button type="button" class="we-seg-btn" t-att-class="{ active: state.tab === 'approvals' }"
+                            t-on-click="() => this.setTab('approvals')">Pending Approvals</button>
+                    <button type="button" class="we-seg-btn" t-att-class="{ active: state.tab === 'history' }"
+                            t-on-click="() => this.setTab('history')">Approval History</button>
+                    <button type="button" class="we-seg-btn" t-att-class="{ active: state.tab === 'notifications' }"
+                            t-on-click="() => this.setTab('notifications')">Notifications</button>
+                </div>
+            </div>
+
+            <t t-if="state.loading">
+                <div class="we-loading">Loading…</div>
+            </t>
+            <t t-elif="state.error">
+                <div class="we-error">
+                    <p t-esc="state.error"/>
+                    <button type="button" class="we-btn we-btn-primary" t-on-click="() => this.load()">Retry</button>
+                </div>
+            </t>
+            <t t-elif="state.tab === 'approvals'">
+                <div class="we-split">
+                    <div class="we-card we-split-list">
+                        <div class="we-card-head">
+                            <div class="we-card-title">Pending Requests</div>
+                            <div class="we-search-wrap">
+                                <i class="fa fa-search"/>
+                                <input class="we-input we-input-sm" type="search" placeholder="Search requests..."
+                                       t-model="state.search"/>
+                            </div>
+                        </div>
+                        <t t-if="!filteredPending.length">
+                            <div class="we-empty">No pending approvals.</div>
+                        </t>
+                        <table t-else="" class="we-table we-table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Request ID</th>
+                                        <th>Requester</th>
+                                        <th>Priority</th>
+                                        <th>Requested Date</th>
+                                        <th>SLA Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="filteredPending" t-as="rec" t-key="rec.id">
+                                        <tr t-att-class="{ 'we-row-active': selectedPending and selectedPending.id === rec.id }"
+                                            t-on-click="() => this.selectRecord(rec)">
+                                            <td class="we-linkish" t-esc="requestCode(rec)"/>
+                                            <td>
+                                                <div t-esc="requesterName(rec)"/>
+                                                <div class="we-muted" t-esc="requesterRole(rec)"/>
+                                            </td>
+                                            <td><span t-attf-class="we-badge {{priorityClass(rec)}}" t-esc="priorityOf(rec)"/></td>
+                                            <td class="we-muted" t-esc="rec.date or formatDate(rec.date_requested)"/>
+                                            <td>
+                                                <span t-attf-class="we-sla {{slaTone(rec)}}">
+                                                    <span class="we-sla-dot"/>
+                                                    <t t-esc="slaLabel(rec)"/>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                        </table>
+                        <div class="we-table-foot">Showing 1–<t t-esc="filteredPending.length"/> of <t t-esc="filteredPending.length"/> requests</div>
+                    </div>
+                    <aside class="we-card we-split-detail">
+                        <t t-if="!selectedPending">
+                            <div class="we-empty">Select a request to review.</div>
+                        </t>
+                        <t t-else="">
+                            <div class="we-card-head">
+                                <div>
+                                    <div class="we-req-code" t-esc="requestCode(selectedPending)"/>
+                                    <h3 t-esc="selectedPending.name"/>
+                                </div>
+                                <span class="we-badge we-badge-warning">Pending Review</span>
+                            </div>
+                            <dl class="we-dl we-dl-grid">
+                                <div><dt>Requester</dt><dd t-esc="requesterName(selectedPending)"/></div>
+                                <div><dt>Department</dt><dd t-esc="selectedPending.department or requesterRole(selectedPending)"/></div>
+                            </dl>
+                            <div class="we-justification">
+                                <div class="we-just-label">Justification</div>
+                                <p t-esc="selectedPending.comment || selectedPending.name"/>
+                            </div>
+                            <div class="we-card-title">Approval Timeline</div>
+                            <ul class="we-timeline">
+                                <t t-foreach="timelineSteps(selectedPending)" t-as="step" t-key="step_index">
+                                    <li t-att-class="{ current: step.kind === 'current', done: step.kind === 'done' }">
+                                        <strong>
+                                            <t t-if="step.step"><t t-esc="step.step"/>: </t>
+                                            <t t-esc="step.title"/>
+                                        </strong>
+                                        <span t-if="step.tag" class="we-timeline-tag" t-esc="step.tag"/>
+                                        <span class="we-muted" t-esc="step.meta"/>
+                                        <span t-if="step.extra" class="we-muted" t-esc="step.extra"/>
+                                    </li>
+                                </t>
+                            </ul>
+                            <div class="we-split-actions">
+                                <button type="button" class="we-btn we-btn-success"
+                                        t-on-click="() => this.openDecide(selectedPending, 'approve')">
+                                    <i class="fa fa-check"/> Approve
+                                </button>
+                                <button type="button" class="we-btn we-btn-danger we-btn-outline-danger"
+                                        t-on-click="() => this.openDecide(selectedPending, 'reject')">
+                                    <i class="fa fa-times"/> Reject
+                                </button>
+                                <button type="button" class="we-icon-btn we-comment-btn" title="Comment"
+                                        t-on-click="() => this.openDecide(selectedPending, 'approve')">
+                                    <i class="fa fa-comment-o"/>
+                                </button>
+                            </div>
+                        </t>
+                    </aside>
+                </div>
+            </t>
+            <t t-elif="state.tab === 'history'">
+                <div class="we-card">
+                    <t t-if="!state.history.length">
+                        <div class="we-empty">No decided approvals yet.</div>
+                    </t>
+                    <table t-else="" class="we-table">
+                        <thead>
+                            <tr>
+                                <th>Request</th>
+                                <th>State</th>
+                                <th>Decided by</th>
+                                <th>When</th>
+                                <th>Comment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="state.history" t-as="rec" t-key="rec.id">
+                                <tr>
+                                    <td t-esc="rec.name"/>
+                                    <td><span t-attf-class="we-badge {{statusClass(rec.state)}}" t-esc="rec.state"/></td>
+                                    <td t-esc="userLabel(rec.decided_by)"/>
+                                    <td t-esc="formatDate(rec.date_decided)"/>
+                                    <td t-esc="rec.comment || '—'"/>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+            <t t-else="">
+                <div class="we-toolbar">
+                    <label class="we-chip">
+                        <input type="checkbox" t-model="state.filterPendingOnly"/>
+                        <span>Queued only</span>
+                    </label>
+                </div>
+                <t t-if="!filteredNotifications.length">
+                    <div class="we-empty">No notification logs match this filter.</div>
+                </t>
+                <t t-else="">
+                    <div class="we-card">
+                        <table class="we-table">
+                            <thead>
+                                <tr>
+                                    <th>Subject</th>
+                                    <th>Channel</th>
+                                    <th>State</th>
+                                    <th>Recipient</th>
+                                    <th>Sent</th>
+                                    <th>Error</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="filteredNotifications" t-as="rec" t-key="rec.id">
+                                    <tr>
+                                        <td>
+                                            <strong t-esc="rec.name"/>
+                                            <span t-if="rec.reminder" class="we-badge we-badge-muted">reminder</span>
+                                            <span t-if="rec.escalation" class="we-badge we-badge-warning">escalation</span>
+                                        </td>
+                                        <td t-esc="rec.channel"/>
+                                        <td><span t-attf-class="we-badge {{statusClass(rec.state)}}" t-esc="rec.state"/></td>
+                                        <td t-esc="userLabel(rec.user_id)"/>
+                                        <td t-esc="formatDate(rec.date_sent || rec.create_date)"/>
+                                        <td class="we-muted" t-esc="rec.error_message || '—'"/>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+
+            <div t-if="state.modalOpen" class="we-modal-backdrop" t-on-click="() => this.closeModal()">
+                <div class="we-modal" t-on-click.stop="">
+                    <div class="we-drawer-header">
+                        <h2 t-esc="state.modalAction === 'approve' ? 'Approve request' : 'Reject request'"/>
+                        <button type="button" class="we-btn we-btn-ghost" t-on-click="() => this.closeModal()">×</button>
+                    </div>
+                    <div class="we-drawer-body">
+                        <p t-esc="state.modalRecord and state.modalRecord.name"/>
+                        <label class="we-field">
+                            <span>Comment</span>
+                            <textarea class="we-input" rows="3" t-model="state.comment"
+                                      placeholder="Optional comment"/>
+                        </label>
+                    </div>
+                    <div class="we-drawer-footer">
+                        <button type="button" class="we-btn we-btn-ghost" t-on-click="() => this.closeModal()">Cancel</button>
+                        <button type="button" class="we-btn we-btn-primary" t-att-disabled="state.busy"
+                                t-on-click="() => this.confirmDecide()">
+                            <t t-esc="state.modalAction === 'approve' ? 'Approve' : 'Reject'"/>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

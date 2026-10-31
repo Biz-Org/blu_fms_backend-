@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="document_management.Audit">
+        <div class="dm-screen dm-audit-screen" data-screen="audit" data-ui="audit-ppt">
+            <style>
+                .dm-audit-screen { color: #111827; width: 100%; min-width: 0; }
+                .dm-audit-screen .dm-page-title { font-size: 1.45rem; font-weight: 700; color: #111827; letter-spacing: -0.03em; margin: 0 0 0.95rem; }
+                .dm-audit-ppt { display: grid !important; grid-template-columns: minmax(0, 1fr) 280px !important; gap: 1.15rem; align-items: start; }
+                .dm-audit-kpis { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 0 !important; background: #fff; border: 1px solid #eeeaf3; border-radius: 12px; overflow: hidden; margin: 0 0 0.85rem; }
+                .dm-audit-kpis .dm-kpi { border: 0; border-radius: 0; box-shadow: none; padding: 0.95rem 1.05rem 0.9rem; min-width: 0; background: #fff; }
+                .dm-audit-kpis .dm-kpi + .dm-kpi { border-left: 1px solid #f0eef5; }
+                .dm-audit-kpis .dm-kpi.is-share { box-shadow: inset -3px 0 0 #5629CE; }
+                .dm-audit-kpis .dm-kpi-label { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #9aa1b2; }
+                .dm-audit-kpis .dm-kpi-icon { background: transparent; color: #d1d5db; width: auto; height: auto; }
+                .dm-audit-kpis .dm-kpi-metric { display: flex; align-items: baseline; gap: 0.4rem; margin-top: 0.55rem; }
+                .dm-audit-kpis .dm-kpi-value { font-size: 1.45rem; font-weight: 700; margin: 0; color: #111827; line-height: 1; }
+                .dm-audit-kpis .dm-kpi-hint { margin: 0; font-size: 0.7rem; font-weight: 700; color: #22c55e; }
+                .dm-audit-kpis .dm-kpi-hint.is-down { color: #f43f5e; }
+                .dm-audit-board { background: #fff; border: 1px solid #eeeaf3; border-radius: 14px; overflow: hidden; }
+                .dm-audit-tools { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.8rem 0.9rem 0.55rem; }
+                .dm-audit-tools-row { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center; gap: 0.5rem; }
+                .dm-audit-search { display: flex; align-items: center; gap: 0.4rem; width: 100%; height: 34px; border: 1px solid #eeeaf3; border-radius: 8px; padding: 0 0.7rem; color: #9aa1b2; background: #fff; }
+                .dm-audit-search input { border: 0 !important; outline: none; width: 100% !important; max-width: none !important; font-size: 0.76rem; color: #111827; font-family: inherit; background: transparent; }
+                .dm-audit-tools-row select, .dm-audit-tools-row input { width: auto !important; max-width: 150px !important; flex: 0 0 auto !important; height: 34px; border: 1px solid #eeeaf3; border-radius: 8px; background: #fff; color: #4b5563; font-size: 0.74rem; padding: 0 0.55rem; font-family: inherit; }
+                .dm-audit-export { height: 34px; border: 1px solid #eeeaf3; background: #fff; color: #4b5563; border-radius: 8px; padding: 0 0.8rem; font-size: 0.74rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer; font-family: inherit; }
+                .dm-audit-screen .dm-table-wrap { border: 0; box-shadow: none; border-radius: 0; }
+                .dm-audit-screen .dm-table th { background: #fff; color: #b0b6c3; border-bottom: 1px solid #f0eef5; font-size: 0.62rem; letter-spacing: 0.05em; font-weight: 700; text-transform: uppercase; padding: 0.55rem 0.85rem; }
+                .dm-audit-screen .dm-table td { border-bottom: 1px solid #f4f2f8; height: 48px; color: #6b7280; padding: 0.35rem 0.85rem; font-size: 0.76rem; }
+                .dm-audit-screen .dm-table tr.is-alert td { background: #fff7ed; }
+                .dm-audit-foot { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.65rem 0.95rem 0.8rem; color: #9aa1b2; font-size: 0.72rem; }
+                .dm-audit-pager { display: flex; align-items: center; gap: 0.15rem; }
+                .dm-audit-pager .dm-btn { height: 26px; min-width: 26px; padding: 0 0.4rem; font-size: 0.68rem; border: 0; background: transparent; color: #9aa1b2; border-radius: 6px; }
+                .dm-audit-pager .is-current { background: #F0EBFF; color: #5629CE; }
+                .dm-audit-empty { color: #9aa1b2; font-size: 0.76rem; padding: 1.1rem 0.85rem; }
+                .dm-audit-side { background: transparent; border: 0; border-radius: 0; padding: 0.15rem 0 0; min-width: 0; }
+                .dm-audit-side h2 { margin: 0; font-size: 1.02rem; font-weight: 700; color: #111827; }
+                .dm-audit-side-date { margin: 0.2rem 0 0.95rem; color: #9aa1b2; font-size: 0.74rem; }
+                .dm-audit-kicker { margin: 0.95rem 0 0.55rem; font-size: 0.64rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: #9aa1b2; }
+                .dm-audit-alert { display: flex; align-items: flex-start; gap: 0.5rem; margin: 0 0 0.7rem; }
+                .dm-audit-dot { width: 8px; height: 8px; border-radius: 50%; background: #f43f5e; flex: 0 0 auto; margin-top: 5px; }
+                .dm-audit-alert strong { display: block; font-size: 0.76rem; color: #111827; font-weight: 700; }
+                .dm-audit-alert p { margin: 0.12rem 0 0; font-size: 0.68rem; color: #9aa1b2; }
+                .dm-audit-chart { display: flex; align-items: flex-end; gap: 0.55rem; min-height: 110px; padding: 0.2rem 0.1rem 0; }
+                .dm-audit-col { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; min-width: 0; }
+                .dm-audit-bar { width: 100%; max-width: 28px; border-radius: 4px 4px 0 0; min-height: 8px; }
+                .dm-audit-col span { margin-top: 0.35rem; font-size: 0.62rem; color: #9aa1b2; }
+                .dm-audit-user { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.32rem 0; font-size: 0.74rem; color: #4b5563; }
+                .dm-audit-user em { font-style: normal; color: #9aa1b2; width: 14px; flex: 0 0 auto; }
+                .dm-audit-user span { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+                .dm-audit-user strong { color: #111827; }
+                .dm-audit-act { display: inline-flex; align-items: center; gap: 0.28rem; border-radius: 999px; padding: 0.16rem 0.5rem; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.04em; }
+                .dm-audit-act i { font-size: 0.7rem; }
+                .dm-audit-act.is-down { background: #dcfce7; color: #15803d; }
+                .dm-audit-act.is-up { background: #e0f2fe; color: #0369a1; }
+                .dm-audit-act.is-access { background: #ffedd5; color: #c2410c; }
+                .dm-audit-act.is-mute { background: #f3f4f6; color: #6b7280; }
+                @media (max-width: 1099px) {
+                    .dm-audit-ppt { grid-template-columns: 1fr !important; }
+                    .dm-audit-kpis { grid-template-columns: 1fr 1fr !important; }
+                    .dm-audit-tools-row { flex-wrap: wrap !important; }
+                    .dm-audit-tools-row select, .dm-audit-tools-row input { max-width: none !important; flex: 1 1 140px !important; }
+                }
+                @media (max-width: 720px) {
+                    .dm-audit-kpis { grid-template-columns: 1fr !important; }
+                    .dm-audit-screen .dm-page-title { font-size: 1.2rem; }
+                    .dm-audit-kpis .dm-kpi + .dm-kpi { border-left: 0; border-top: 1px solid #f0eef5; }
+                    .dm-audit-screen .dm-table { min-width: 720px; }
+                    .dm-audit-foot { flex-wrap: wrap; }
+                }
+            </style>
+            <span class="o_hidden">Refresh</span>
+            <div t-if="state.error" class="dm-error" role="alert">
+                <span t-esc="state.error"/>
+                <button type="button" class="dm-btn" t-on-click="refresh">Retry</button>
+            </div>
+            <div t-if="state.loading" class="dm-loading" aria-busy="true" aria-label="Loading audit">
+                Loading audit…
+            </div>
+            <h1 class="dm-page-title">Document Activity &amp; Audit</h1>
+            <div class="dm-audit-layout dm-audit-ppt">
+                <div>
+                    <div class="dm-kpi-grid dm-audit-kpis" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;">
+                        <div class="dm-kpi">
+                            <div class="dm-kpi-head">
+                                <div class="dm-kpi-label">Activity Events</div>
+                                <span class="dm-kpi-icon"><i class="fa fa-line-chart"/></span>
+                            </div>
+                            <div class="dm-kpi-metric">
+                                <div class="dm-kpi-value" t-esc="comma(eventCount)"/>
+                                <span t-if="eventHint" class="dm-kpi-hint" t-esc="eventHint"/>
+                            </div>
+                        </div>
+                        <div class="dm-kpi">
+                            <div class="dm-kpi-head">
+                                <div class="dm-kpi-label">Uploads</div>
+                                <span class="dm-kpi-icon"><i class="fa fa-cloud-upload"/></span>
+                            </div>
+                            <div class="dm-kpi-metric">
+                                <div class="dm-kpi-value" t-esc="comma(uploadCount)"/>
+                                <span t-if="uploadHint" class="dm-kpi-hint" t-esc="uploadHint"/>
+                            </div>
+                        </div>
+                        <div class="dm-kpi">
+                            <div class="dm-kpi-head">
+                                <div class="dm-kpi-label">Downloads</div>
+                                <span class="dm-kpi-icon"><i class="fa fa-download"/></span>
+                            </div>
+                            <div class="dm-kpi-metric">
+                                <div class="dm-kpi-value" t-esc="comma(downloadCount)"/>
+                                <span t-if="downloadHint" class="dm-kpi-hint is-down" t-esc="downloadHint"/>
+                            </div>
+                        </div>
+                        <div class="dm-kpi is-share">
+                            <div class="dm-kpi-head">
+                                <div class="dm-kpi-label">Shares</div>
+                                <span class="dm-kpi-icon"><i class="fa fa-share-alt"/></span>
+                            </div>
+                            <div class="dm-kpi-metric">
+                                <div class="dm-kpi-value" t-esc="comma(shareCount)"/>
+                                <span t-if="shareHint" class="dm-kpi-hint" t-esc="shareHint"/>
+                            </div>
+                        </div>
+                    </div>
+                    <section class="dm-audit-board">
+                        <div class="dm-audit-tools">
+                            <label class="dm-audit-search">
+                                <i class="fa fa-search"/>
+                                <input type="search" placeholder="Filter activity..." t-model="state.query"/>
+                            </label>
+                            <div class="dm-audit-tools-row" style="display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:8px;">
+                                <select t-model="state.filters.document">
+                                    <option value="">All Documents</option>
+                                </select>
+                                <select t-model="state.filters.user">
+                                    <option value="">All Users</option>
+                                </select>
+                                <select t-model="state.filters.event_type" t-on-change="applyFilters">
+                                    <option value="">All Actions</option>
+                                    <option value="uploaded">Upload</option>
+                                    <option value="downloaded">Download</option>
+                                    <option value="viewed">View</option>
+                                    <option value="metadata_modified">Modify Meta</option>
+                                    <option value="unauthorized_access">Access</option>
+                                </select>
+                                <input type="text" placeholder="dd-mm-yyyy" t-model="state.filters.date_from" t-on-change="applyFilters"/>
+                                <button type="button" class="dm-audit-export" t-on-click="exportCsv">
+                                    <i class="fa fa-download"/> Export
+                                </button>
+                            </div>
+                        </div>
+                        <div class="dm-table-wrap">
+                            <table class="dm-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date/Time</th>
+                                        <th>User</th>
+                                        <th>Document</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="displayRows" t-as="row" t-key="rowKey(row)">
+                                        <tr t-att-class="rowClass(row)">
+                                            <td t-esc="timeLabel(row.timestamp)"/>
+                                            <td t-esc="cell(row.user)"/>
+                                            <td t-esc="cell(row.document)"/>
+                                            <td>
+                                                <span t-att-class="actionClass(row)">
+                                                    <t t-esc="actionLabel(row)"/>
+                                                    <i class="fa fa-angle-down"/>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <tr t-if="isEmpty">
+                                        <td colspan="4">
+                                            <div class="dm-audit-empty">
+                                                <h3>No audit events</h3>
+                                                <p>Activity will appear here after document operations.</p>
+                                                <p>No activity recorded</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="dm-audit-foot">
+                            <span t-esc="showingLabel"/>
+                            <div class="dm-audit-pager">
+                                <button type="button" class="dm-btn" t-on-click="prevPage" t-att-disabled="!canPrev">‹</button>
+                                <t t-foreach="pageNumbers" t-as="page" t-key="page">
+                                    <button type="button" t-att-class="state.page === page ? 'dm-btn is-current' : 'dm-btn'" t-att-data-page="page" t-on-click="setPage" t-esc="page"/>
+                                </t>
+                                <button type="button" class="dm-btn" t-on-click="nextPage" t-att-disabled="!canNext">›</button>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                <aside class="dm-audit-side">
+                    <h2>Audit Summary</h2>
+                    <p class="dm-audit-side-date" t-esc="summaryDate"/>
+                    <h3 class="dm-audit-kicker">Security Alerts</h3>
+                    <t t-foreach="displayAlerts" t-as="alert" t-key="alert.id">
+                        <div class="dm-audit-alert">
+                            <span class="dm-audit-dot"/>
+                            <div>
+                                <strong t-esc="alert.title"/>
+                                <p t-esc="alert.detail"/>
+                            </div>
+                        </div>
+                    </t>
+                    <div t-if="!displayAlerts.length" class="dm-audit-empty">
+                        <p>No unauthorized access events.</p>
+                    </div>
+                    <h3 class="dm-audit-kicker">Activity Breakdown</h3>
+                    <div class="dm-audit-chart">
+                        <t t-foreach="displayBreakdown" t-as="row" t-key="row.action">
+                            <div class="dm-audit-col">
+                                <div class="dm-audit-bar" t-att-style="barStyle(row)"/>
+                                <span t-esc="row.action"/>
+                            </div>
+                        </t>
+                    </div>
+                    <h3 class="dm-audit-kicker">Top Active Users</h3>
+                    <t t-foreach="displayUsers" t-as="user" t-key="user.name">
+                        <div class="dm-audit-user">
+                            <em t-esc="user.rank or ''"/>
+                            <span t-esc="user.name"/>
+                            <strong t-esc="userCount(user)"/>
+                        </div>
+                    </t>
+                </aside>
+            </div>
+            <span class="o_hidden">No audit events</span>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Demo master mappings so Master Data UI matches Stitch mockup (not blank). -->
+    <record id="ei_master_map_b2b_customers" model="ei.master.mapping">
+        <field name="name">B2B Customers</field>
+        <field name="entity_id" ref="ei_master_entity_customer"/>
+        <field name="source_system">Salesforce CRM</field>
+        <field name="target_system">PrecastMPS</field>
+        <field name="source_of_truth">source</field>
+        <field name="owner">Data Governance Team</field>
+        <field name="record_count">12450</field>
+        <field name="state">pending</field>
+        <field name="last_sync_at">2026-09-03 08:30:00</field>
+        <field name="duplicate_detection_keys">external_id,email</field>
+    </record>
+
+    <record id="ei_master_map_retail_customers" model="ei.master.mapping">
+        <field name="name">Retail Customers</field>
+        <field name="entity_id" ref="ei_master_entity_customer"/>
+        <field name="source_system">Shopify E-Comm</field>
+        <field name="target_system">PrecastMPS</field>
+        <field name="source_of_truth">source</field>
+        <field name="owner">Marketing Ops</field>
+        <field name="record_count">45102</field>
+        <field name="state">synced</field>
+        <field name="last_sync_at">2026-09-02 23:00:00</field>
+    </record>
+
+    <record id="ei_master_map_internal_accounts" model="ei.master.mapping">
+        <field name="name">Internal Accounts</field>
+        <field name="entity_id" ref="ei_master_entity_customer"/>
+        <field name="source_system">PrecastMPS (Native)</field>
+        <field name="target_system">ERP Export</field>
+        <field name="source_of_truth">precastmps</field>
+        <field name="owner">IT SysAdmin</field>
+        <field name="record_count">340</field>
+        <field name="state">failed</field>
+        <field name="last_sync_at">2026-09-03 09:15:00</field>
+    </record>
+
+    <record id="ei_master_map_vendors" model="ei.master.mapping">
+        <field name="name">Preferred Vendors</field>
+        <field name="entity_id" ref="ei_master_entity_supplier"/>
+        <field name="source_system">SAP ERP</field>
+        <field name="target_system">PrecastMPS</field>
+        <field name="source_of_truth">source</field>
+        <field name="owner">Procurement</field>
+        <field name="record_count">820</field>
+        <field name="state">synced</field>
+        <field name="last_sync_at">2026-09-03 04:00:00</field>
+    </record>
+
+    <record id="ei_master_map_catalog_products" model="ei.master.mapping">
+        <field name="name">Catalog Products</field>
+        <field name="entity_id" ref="ei_master_entity_product"/>
+        <field name="source_system">PIM Hub</field>
+        <field name="target_system">PrecastMPS</field>
+        <field name="source_of_truth">source</field>
+        <field name="owner">Product Ops</field>
+        <field name="record_count">5600</field>
+        <field name="state">pending</field>
+        <field name="last_sync_at">2026-09-03 01:00:00</field>
+    </record>
+
+    <record id="ei_master_conflict_cust_billing" model="ei.master.conflict">
+        <field name="name">CUST-8902 · Billing Address</field>
+        <field name="mapping_id" ref="ei_master_map_b2b_customers"/>
+        <field name="state">conflict</field>
+        <field name="external_ref">CUST-8902</field>
+        <field name="left_payload">{"street":"120 Market St","city":"San Francisco","zip":"94105"}</field>
+        <field name="right_payload">{"street":"120 Market Street","city":"SF","zip":"94105"}</field>
+    </record>
+
+    <record id="ei_master_conflict_cust_email" model="ei.master.conflict">
+        <field name="name">CUST-8902 · Email</field>
+        <field name="mapping_id" ref="ei_master_map_b2b_customers"/>
+        <field name="state">conflict</field>
+        <field name="external_ref">CUST-8902</field>
+        <field name="left_payload">{"email":"ops@acme.example"}</field>
+        <field name="right_payload">{"email":"operations@acme.example"}</field>
+    </record>
+
+    <record id="ei_master_conflict_cust_phone" model="ei.master.conflict">
+        <field name="name">CUST-4411 · Phone</field>
+        <field name="mapping_id" ref="ei_master_map_b2b_customers"/>
+        <field name="state">conflict</field>
+        <field name="external_ref">CUST-4411</field>
+        <field name="left_payload">{"phone":"+1-415-555-0100"}</field>
+        <field name="right_payload">{"phone":"+1 415 555 0100"}</field>
+    </record>
+
+    <record id="ei_master_conflict_cust_name" model="ei.master.conflict">
+        <field name="name">CUST-2208 · Legal Name</field>
+        <field name="mapping_id" ref="ei_master_map_b2b_customers"/>
+        <field name="state">conflict</field>
+        <field name="external_ref">CUST-2208</field>
+        <field name="left_payload">{"name":"Acme Precast LLC"}</field>
+        <field name="right_payload">{"name":"Acme Precast"}</field>
+    </record>
+</odoo>

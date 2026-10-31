@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Primary dashboard destination is defined in ei_client_actions.xml (ei_app shell). -->
+</odoo>

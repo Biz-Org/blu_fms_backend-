@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+      CRITICAL: Exactly one root + seven primary menus only.
+    -->
+    <menuitem id="menu_we_root"
+              name="Workflow Engine"
+              web_icon="workflow_engine,static/description/icon.png"
+              action="action_we_dashboard"
+              sequence="45"
+              groups="workflow_engine.group_we_user"/>
+
+    <menuitem id="menu_we_dashboard"
+              name="Dashboard"
+              parent="menu_we_root"
+              action="action_we_dashboard"
+              sequence="1"
+              groups="workflow_engine.group_we_user"/>
+
+    <menuitem id="menu_we_builder"
+              name="Workflow Builder"
+              parent="menu_we_root"
+              action="action_we_builder"
+              sequence="2"
+              groups="workflow_engine.group_we_user"/>
+
+    <menuitem id="menu_we_templates"
+              name="Workflow Templates"
+              parent="menu_we_root"
+              action="action_we_templates"
+              sequence="3"
+              groups="workflow_engine.group_we_user"/>
+
+    <menuitem id="menu_we_approvals"
+              name="Approval &amp; Rule Management"
+              parent="menu_we_root"
+              action="action_we_approvals"
+              sequence="4"
+              groups="workflow_engine.group_we_user"/>
+
+    <menuitem id="menu_we_tasks"
+              name="Task &amp; Execution Management"
+              parent="menu_we_root"
+              action="action_we_tasks"
+              sequence="5"
+              groups="workflow_engine.group_we_user"/>
+
+    <menuitem id="menu_we_notifications"
+              name="Notifications &amp; Approval Tracking"
+              parent="menu_we_root"
+              action="action_we_notifications"
+              sequence="6"
+              groups="workflow_engine.group_we_user"/>
+
+    <menuitem id="menu_we_analytics"
+              name="Workflow Analytics &amp; Reports"
+              parent="menu_we_root"
+              action="action_we_analytics"
+              sequence="7"
+              groups="workflow_engine.group_we_user"/>
+</odoo>

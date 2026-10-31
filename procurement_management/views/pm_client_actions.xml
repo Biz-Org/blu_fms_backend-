@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_pm_dashboard" model="ir.actions.client">
+        <field name="name">Dashboard</field>
+        <field name="tag">procurement_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'pm_screen': 'dashboard'}</field>
+        <field name="params" eval="{'screen': 'dashboard'}"/>
+    </record>
+
+    <record id="action_pm_requisitions" model="ir.actions.client">
+        <field name="name">Purchase Requisitions</field>
+        <field name="tag">procurement_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'pm_screen': 'requisitions'}</field>
+        <field name="params" eval="{'screen': 'requisitions'}"/>
+    </record>
+
+    <record id="action_pm_rfqs" model="ir.actions.client">
+        <field name="name">RFQs &amp; Quotations</field>
+        <field name="tag">procurement_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'pm_screen': 'rfqs'}</field>
+        <field name="params" eval="{'screen': 'rfqs'}"/>
+    </record>
+
+    <record id="action_pm_comparison" model="ir.actions.client">
+        <field name="name">Quotation Comparison</field>
+        <field name="tag">procurement_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'pm_screen': 'comparison'}</field>
+        <field name="params" eval="{'screen': 'comparison'}"/>
+    </record>
+
+    <record id="action_pm_approval_matrix" model="ir.actions.client">
+        <field name="name">Approval Matrix</field>
+        <field name="tag">procurement_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'pm_screen': 'approval_matrix'}</field>
+        <field name="params" eval="{'screen': 'approval_matrix'}"/>
+    </record>
+
+    <record id="action_pm_purchase_orders" model="ir.actions.client">
+        <field name="name">Purchase Orders</field>
+        <field name="tag">procurement_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'pm_screen': 'purchase_orders'}</field>
+        <field name="params" eval="{'screen': 'purchase_orders'}"/>
+    </record>
+
+    <record id="action_pm_goods_receipts" model="ir.actions.client">
+        <field name="name">Goods Receipts</field>
+        <field name="tag">procurement_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'pm_screen': 'goods_receipts'}</field>
+        <field name="params" eval="{'screen': 'goods_receipts'}"/>
+    </record>
+
+    <record id="action_pm_invoice_matching" model="ir.actions.client">
+        <field name="name">Invoice Matching</field>
+        <field name="tag">procurement_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'pm_screen': 'invoice_matching'}</field>
+        <field name="params" eval="{'screen': 'invoice_matching'}"/>
+    </record>
+
+    <record id="action_pm_suppliers" model="ir.actions.client">
+        <field name="name">Supplier Management</field>
+        <field name="tag">procurement_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'pm_screen': 'suppliers'}</field>
+        <field name="params" eval="{'screen': 'suppliers'}"/>
+    </record>
+
+    <record id="action_pm_reports" model="ir.actions.client">
+        <field name="name">Procurement Reports</field>
+        <field name="tag">procurement_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'pm_screen': 'reports'}</field>
+        <field name="params" eval="{'screen': 'reports'}"/>
+    </record>
+
+    <record id="action_pm_report_builder" model="ir.actions.client">
+        <field name="name">Report Builder &amp; Export</field>
+        <field name="tag">procurement_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'pm_screen': 'report_builder'}</field>
+        <field name="params" eval="{'screen': 'report_builder'}"/>
+    </record>
+
+    <record id="action_pm_audit" model="ir.actions.client">
+        <field name="name">Procurement Activity / Audit</field>
+        <field name="tag">procurement_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'pm_screen': 'audit'}</field>
+        <field name="params" eval="{'screen': 'audit'}"/>
+    </record>
+</odoo>

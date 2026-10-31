@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+      One OWL client action implementation: tag workflow_engine_app.
+      Seven menu routes share that tag with different params.screen values.
+    -->
+    <record id="action_we_dashboard" model="ir.actions.client">
+        <field name="name">Dashboard</field>
+        <field name="tag">workflow_engine_app</field>
+        <field name="target">current</field>
+        <field name="context">{'we_screen': 'dashboard'}</field>
+        <field name="params" eval="{'screen': 'dashboard'}"/>
+    </record>
+
+    <record id="action_we_builder" model="ir.actions.client">
+        <field name="name">Workflow Builder</field>
+        <field name="tag">workflow_engine_app</field>
+        <field name="target">current</field>
+        <field name="context">{'we_screen': 'builder'}</field>
+        <field name="params" eval="{'screen': 'builder'}"/>
+    </record>
+
+    <record id="action_we_templates" model="ir.actions.client">
+        <field name="name">Workflow Templates</field>
+        <field name="tag">workflow_engine_app</field>
+        <field name="target">current</field>
+        <field name="context">{'we_screen': 'templates'}</field>
+        <field name="params" eval="{'screen': 'templates'}"/>
+    </record>
+
+    <record id="action_we_approvals" model="ir.actions.client">
+        <field name="name">Approval &amp; Rule Management</field>
+        <field name="tag">workflow_engine_app</field>
+        <field name="target">current</field>
+        <field name="context">{'we_screen': 'approvals'}</field>
+        <field name="params" eval="{'screen': 'approvals'}"/>
+    </record>
+
+    <record id="action_we_tasks" model="ir.actions.client">
+        <field name="name">Task &amp; Execution Management</field>
+        <field name="tag">workflow_engine_app</field>
+        <field name="target">current</field>
+        <field name="context">{'we_screen': 'tasks'}</field>
+        <field name="params" eval="{'screen': 'tasks'}"/>
+    </record>
+
+    <record id="action_we_notifications" model="ir.actions.client">
+        <field name="name">Notifications &amp; Approval Tracking</field>
+        <field name="tag">workflow_engine_app</field>
+        <field name="target">current</field>
+        <field name="context">{'we_screen': 'notifications'}</field>
+        <field name="params" eval="{'screen': 'notifications'}"/>
+    </record>
+
+    <record id="action_we_analytics" model="ir.actions.client">
+        <field name="name">Workflow Analytics &amp; Reports</field>
+        <field name="tag">workflow_engine_app</field>
+        <field name="target">current</field>
+        <field name="context">{'we_screen': 'analytics'}</field>
+        <field name="params" eval="{'screen': 'analytics'}"/>
+    </record>
+</odoo>
