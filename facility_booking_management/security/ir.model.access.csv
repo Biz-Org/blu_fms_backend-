@@ -1,0 +1,26 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_fms_property_resident,fms.property resident,model_fms_property,group_facility_resident,1,0,0,0
+access_fms_property_manager,fms.property manager,model_fms_property,group_facility_manager,1,1,1,1
+access_fms_resident_resident,fms.resident resident,model_fms_resident,group_facility_resident,1,0,0,0
+access_fms_resident_manager,fms.resident manager,model_fms_resident,group_facility_manager,1,1,1,1
+access_facility_type_manager,facility.type manager,model_facility_type,group_facility_manager,1,1,1,1
+access_facility_type_user,facility.type user,model_facility_type,group_facility_resident,1,0,0,0
+access_facility_facility_resident,facility.facility resident,model_facility_facility,group_facility_resident,1,0,0,0
+access_facility_facility_manager,facility.facility manager,model_facility_facility,group_facility_manager,1,1,1,1
+access_facility_slot_config_manager,facility.slot.config manager,model_facility_slot_config,group_facility_manager,1,1,1,1
+access_facility_slot_config_user,facility.slot.config user,model_facility_slot_config,group_facility_resident,1,0,0,0
+access_facility_working_day_manager,facility.working.day manager,model_facility_working_day,group_facility_manager,1,1,1,1
+access_facility_working_day_user,facility.working.day user,model_facility_working_day,group_facility_resident,1,0,0,0
+access_facility_slot_holiday_manager,facility.slot.holiday manager,model_facility_slot_holiday,group_facility_manager,1,1,1,1
+access_facility_booking_resident,facility.booking resident,model_facility_booking,group_facility_resident,1,1,1,0
+access_facility_booking_approver,facility.booking approver,model_facility_booking,group_facility_approver,1,1,0,0
+access_facility_booking_manager,facility.booking manager,model_facility_booking,group_facility_manager,1,1,1,1
+access_facility_block_manager,facility.block manager,model_facility_block,group_facility_manager,1,1,1,1
+access_facility_block_resident,facility.block resident,model_facility_block,group_facility_resident,1,0,0,0
+access_facility_approval_history_manager,facility.approval.history manager,model_facility_approval_history,group_facility_manager,1,1,1,1
+access_facility_approval_history_approver,facility.approval.history approver,model_facility_approval_history,group_facility_approver,1,0,0,0
+access_facility_notification_resident,facility.booking.notification resident,model_facility_booking_notification,group_facility_resident,1,1,1,0
+access_facility_notification_manager,facility.booking.notification manager,model_facility_booking_notification,group_facility_manager,1,1,1,1
+access_facility_booking_config_manager,facility.booking.config manager,model_facility_booking_config,group_facility_manager,1,1,1,1
+access_booking_reject_wizard,booking.reject.wizard,model_facility_booking_reject_wizard,group_facility_approver,1,1,1,1
+access_booking_cancel_wizard,booking.cancel.wizard,model_facility_booking_cancel_wizard,group_facility_resident,1,1,1,1

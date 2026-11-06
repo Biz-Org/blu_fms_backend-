@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_facility_booking_tree" model="ir.ui.view">
+        <field name="name">facility.booking.tree</field>
+        <field name="model">facility.booking</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="facility_id"/>
+                <field name="resident_id"/>
+                <field name="booking_date"/>
+                <field name="start_time" widget="float_time"/>
+                <field name="end_time" widget="float_time"/>
+                <field name="booking_status"/>
+                <field name="payment_status"/>
+                <field name="approval_status"/>
+                <field name="total_amount"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_facility_booking_report" model="ir.actions.report">
+        <field name="name">Booking Receipt</field>
+        <field name="model">facility.booking</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">facility_booking_management.report_booking_receipt</field>
+        <field name="report_file">facility_booking_management.report_booking_receipt</field>
+        <field name="binding_model_id" ref="model_facility_booking"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

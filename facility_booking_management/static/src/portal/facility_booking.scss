@@ -1,0 +1,411 @@
+/* Facility Booking Management — consolidated portal styles */
+
+$o-fbm-purple: #6d28d9;
+$o-fbm-purple-dark: #5b21b6;
+$o-fbm-purple-light: #ede9fe;
+$o-fbm-bg: #f4f5f9;
+$o-fbm-card: #ffffff;
+$o-fbm-border: #e5e7eb;
+$o-fbm-text: #111827;
+$o-fbm-muted: #6b7280;
+
+.fbm-root {
+    display: flex;
+    height: 100%;
+    min-height: 0;
+    background: $o-fbm-bg;
+    color: $o-fbm-text;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+    * {
+        box-sizing: border-box;
+    }
+}
+
+.fbm-sidebar {
+    width: 260px;
+    background: linear-gradient(180deg, $o-fbm-purple-dark 0%, $o-fbm-purple 100%);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+
+    .fbm-brand {
+        padding: 20px 18px;
+        font-weight: 700;
+        font-size: 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .fbm-nav-section {
+        padding: 12px 10px 4px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        opacity: 0.75;
+    }
+
+    .fbm-nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        margin: 2px 8px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: background 0.15s;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        &.active {
+            background: rgba(255, 255, 255, 0.22);
+            font-weight: 600;
+        }
+    }
+}
+
+.fbm-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.fbm-topbar {
+    background: $o-fbm-card;
+    border-bottom: 1px solid $o-fbm-border;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+
+    .fbm-title {
+        font-size: 20px;
+        font-weight: 700;
+    }
+
+    .fbm-breadcrumb {
+        font-size: 12px;
+        color: $o-fbm-muted;
+        margin-top: 2px;
+    }
+}
+
+.fbm-content {
+    padding: 20px 24px 32px;
+    overflow: auto;
+    flex: 1;
+}
+
+.fbm-card {
+    background: $o-fbm-card;
+    border: 1px solid $o-fbm-border;
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+    padding: 16px;
+}
+
+.fbm-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.fbm-kpi {
+    @extend .fbm-card;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+
+    .fbm-kpi-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        background: $o-fbm-purple-light;
+        color: $o-fbm-purple;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+    .fbm-kpi-value {
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+
+    .fbm-kpi-label {
+        font-size: 12px;
+        color: $o-fbm-muted;
+    }
+}
+
+.fbm-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 14px;
+    align-items: center;
+
+    input, select {
+        border: 1px solid $o-fbm-border;
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 13px;
+        min-height: 36px;
+    }
+}
+
+.fbm-btn {
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 600;
+
+    &.primary {
+        background: $o-fbm-purple;
+        color: #fff;
+    }
+
+    &.secondary {
+        background: #fff;
+        border: 1px solid $o-fbm-border;
+        color: $o-fbm-text;
+    }
+
+    &.danger {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.fbm-table-wrap {
+    @extend .fbm-card;
+    padding: 0;
+    overflow: auto;
+}
+
+.fbm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    th, td {
+        padding: 10px 12px;
+        border-bottom: 1px solid $o-fbm-border;
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    th {
+        background: #fafafa;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: $o-fbm-muted;
+    }
+
+    tr:hover td {
+        background: #fafafa;
+    }
+}
+
+.fbm-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: capitalize;
+
+    &.confirmed, &.paid, &.approved, &.available, &.active {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    &.pending, &.payment_pending, &.partial {
+        background: #fef9c3;
+        color: #854d0e;
+    }
+
+    &.cancelled, &.rejected, &.blocked, &.overdue {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    &.closed, &.expired, &.draft {
+        background: #f3f4f6;
+        color: #374151;
+    }
+}
+
+.fbm-split {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 16px;
+
+    @media (max-width: 1100px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.fbm-panel {
+    @extend .fbm-card;
+
+    h4 {
+        margin: 0 0 10px;
+        font-size: 14px;
+    }
+}
+
+.fbm-empty, .fbm-loading {
+    padding: 40px;
+    text-align: center;
+    color: $o-fbm-muted;
+}
+
+.fbm-steps {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+
+    .fbm-step {
+        flex: 1;
+        padding: 8px;
+        border-radius: 8px;
+        background: #fff;
+        border: 1px solid $o-fbm-border;
+        text-align: center;
+        font-size: 12px;
+
+        &.active {
+            border-color: $o-fbm-purple;
+            background: $o-fbm-purple-light;
+            color: $o-fbm-purple-dark;
+            font-weight: 600;
+        }
+    }
+}
+
+.fbm-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+
+    label {
+        display: block;
+        font-size: 12px;
+        color: $o-fbm-muted;
+        margin-bottom: 4px;
+    }
+
+    input, select, textarea {
+        width: 100%;
+        border: 1px solid $o-fbm-border;
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+
+    .full {
+        grid-column: 1 / -1;
+    }
+}
+
+.fbm-slot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+
+    .fbm-slot {
+        border-radius: 8px;
+        padding: 10px;
+        border: 1px solid $o-fbm-border;
+        text-align: center;
+        font-size: 12px;
+        cursor: pointer;
+
+        &.available {
+            background: #ecfdf5;
+            border-color: #6ee7b7;
+        }
+
+        &.booked, &.blocked {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+    }
+}
+
+.fbm-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+
+    button {
+        @extend .fbm-btn;
+        &.active {
+            @extend .primary;
+        }
+    }
+}
+
+.fbm-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+
+    .fbm-cal-day {
+        min-height: 90px;
+        border: 1px solid $o-fbm-border;
+        border-radius: 8px;
+        padding: 6px;
+        background: #fff;
+        font-size: 11px;
+    }
+}
+
+.fbm-alert-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .fbm-alert-item {
+        border: 1px solid $o-fbm-border;
+        border-radius: 8px;
+        padding: 10px;
+        background: #fff;
+        font-size: 13px;
+    }
+}
+
+.fbm-detail-drawer {
+    @extend .fbm-panel;
+    position: sticky;
+    top: 0;
+}
+
+.fbm-notification-item.unread {
+    border-left: 3px solid $o-fbm-purple;
+}
+
+.fbm-form-hint {
+    margin-top: 10px;
+    color: $o-fbm-muted;
+    font-size: 13px;
+}

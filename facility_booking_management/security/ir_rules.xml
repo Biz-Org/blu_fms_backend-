@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="rule_booking_resident_own" model="ir.rule">
+        <field name="name">Resident: own bookings</field>
+        <field name="model_id" ref="model_facility_booking"/>
+        <field name="domain_force">['|', ('resident_id.user_id', '=', user.id), ('resident_id.partner_id', '=', user.partner_id.id)]</field>
+        <field name="groups" eval="[(4, ref('group_facility_resident'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="rule_booking_approver_pending" model="ir.rule">
+        <field name="name">Approver: pending bookings in assigned properties</field>
+        <field name="model_id" ref="model_facility_booking"/>
+        <field name="domain_force">[('approval_status', '=', 'pending'), '|', ('property_id', '=', False), ('property_id.manager_ids', 'in', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_facility_approver'))]"/>
+    </record>
+
+    <record id="rule_booking_manager_scoped" model="ir.rule">
+        <field name="name">Community Manager: bookings in assigned properties</field>
+        <field name="model_id" ref="model_facility_booking"/>
+        <field name="domain_force">['|', ('property_id', '=', False), ('property_id.manager_ids', 'in', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_facility_manager'))]"/>
+    </record>
+
+    <record id="rule_notification_resident" model="ir.rule">
+        <field name="name">Resident: own notifications</field>
+        <field name="model_id" ref="model_facility_booking_notification"/>
+        <field name="domain_force">['|', ('user_id', '=', user.id), ('resident_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_facility_resident'))]"/>
+    </record>
+
+    <record id="rule_notification_manager" model="ir.rule">
+        <field name="name">Community Manager: notifications in assigned properties</field>
+        <field name="model_id" ref="model_facility_booking_notification"/>
+        <field name="domain_force">['|', ('booking_id', '=', False), ('booking_id.property_id.manager_ids', 'in', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_facility_manager'))]"/>
+    </record>
+
+    <record id="rule_property_resident" model="ir.rule">
+        <field name="name">Resident: own property</field>
+        <field name="model_id" ref="model_fms_property"/>
+        <field name="domain_force">[('id', '=', user.fbm_resident_property_id.id)]</field>
+        <field name="groups" eval="[(4, ref('group_facility_resident'))]"/>
+    </record>
+
+    <record id="rule_property_manager" model="ir.rule">
+        <field name="name">Community Manager: assigned properties</field>
+        <field name="model_id" ref="model_fms_property"/>
+        <field name="domain_force">[('manager_ids', 'in', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_facility_manager'))]"/>
+        <field name="perm_create" eval="False"/>
+    </record>
+
+    <record id="rule_property_manager_create" model="ir.rule">
+        <field name="name">Community Manager: create properties</field>
+        <field name="model_id" ref="model_fms_property"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_facility_manager'))]"/>
+        <field name="perm_read" eval="False"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="rule_resident_manager" model="ir.rule">
+        <field name="name">Community Manager: residents in assigned properties</field>
+        <field name="model_id" ref="model_fms_resident"/>
+        <field name="domain_force">['|', ('property_id', '=', False), ('property_id.manager_ids', 'in', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_facility_manager'))]"/>
+    </record>
+
+    <record id="rule_resident_own" model="ir.rule">
+        <field name="name">Resident: own resident record</field>
+        <field name="model_id" ref="model_fms_resident"/>
+        <field name="domain_force">['|', ('user_id', '=', user.id), ('partner_id', '=', user.partner_id.id)]</field>
+        <field name="groups" eval="[(4, ref('group_facility_resident'))]"/>
+    </record>
+
+    <record id="rule_facility_resident" model="ir.rule">
+        <field name="name">Resident: facilities in own property</field>
+        <field name="model_id" ref="model_facility_facility"/>
+        <field name="domain_force">[('property_id', '=', user.fbm_resident_property_id.id)]</field>
+        <field name="groups" eval="[(4, ref('group_facility_resident'))]"/>
+    </record>
+
+    <record id="rule_facility_manager" model="ir.rule">
+        <field name="name">Community Manager: facilities in assigned properties</field>
+        <field name="model_id" ref="model_facility_facility"/>
+        <field name="domain_force">['|', ('property_id', '=', False), ('property_id.manager_ids', 'in', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_facility_manager'))]"/>
+    </record>
+
+    <record id="rule_block_manager" model="ir.rule">
+        <field name="name">Community Manager: blocks in assigned properties</field>
+        <field name="model_id" ref="model_facility_block"/>
+        <field name="domain_force">['|', ('facility_id', '=', False), ('facility_id.property_id.manager_ids', 'in', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_facility_manager'))]"/>
+    </record>
+
+    <record id="rule_block_resident_read" model="ir.rule">
+        <field name="name">Resident: blocks affecting own property facilities</field>
+        <field name="model_id" ref="model_facility_block"/>
+        <field name="domain_force">[('facility_id.property_id', '=', user.fbm_resident_property_id.id)]</field>
+        <field name="groups" eval="[(4, ref('group_facility_resident'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+</odoo>

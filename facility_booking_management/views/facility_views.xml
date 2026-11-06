@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- FMS integration placeholders: property & resident master data -->
+    <record id="view_fms_property_tree" model="ir.ui.view">
+        <field name="name">fms.property.tree</field>
+        <field name="model">fms.property</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="building"/>
+                <field name="city"/>
+                <field name="manager_ids" widget="many2many_tags"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_fms_property_form" model="ir.ui.view">
+        <field name="name">fms.property.form</field>
+        <field name="model">fms.property</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="code"/>
+                        <field name="building"/>
+                        <field name="city"/>
+                        <field name="active"/>
+                    </group>
+                    <group>
+                        <field name="manager_ids" widget="many2many_tags"/>
+                    </group>
+                    <field name="address"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_fms_resident_tree" model="ir.ui.view">
+        <field name="name">fms.resident.tree</field>
+        <field name="model">fms.resident</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="property_id"/>
+                <field name="unit"/>
+                <field name="phone"/>
+                <field name="email"/>
+                <field name="user_id"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_fms_resident_form" model="ir.ui.view">
+        <field name="name">fms.resident.form</field>
+        <field name="model">fms.resident</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="partner_id"/>
+                        <field name="user_id"/>
+                        <field name="property_id"/>
+                        <field name="unit"/>
+                        <field name="phone"/>
+                        <field name="email"/>
+                        <field name="active"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_facility_facility_tree" model="ir.ui.view">
+        <field name="name">facility.facility.tree</field>
+        <field name="model">facility.facility</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="code"/>
+                <field name="name"/>
+                <field name="facility_type_id"/>
+                <field name="property_id"/>
+                <field name="capacity"/>
+                <field name="charge_type"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_facility_facility_form" model="ir.ui.view">
+        <field name="name">facility.facility.form</field>
+        <field name="model">facility.facility</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="code" readonly="1"/>
+                        <field name="name"/>
+                        <field name="facility_type_id"/>
+                        <field name="property_id"/>
+                        <field name="capacity"/>
+                        <field name="charge_type"/>
+                        <field name="approval_required"/>
+                        <field name="active"/>
+                    </group>
+                    <group>
+                        <field name="location"/>
+                        <field name="floor_block"/>
+                        <field name="booking_status"/>
+                        <field name="base_charge"/>
+                    </group>
+                    <field name="description"/>
+                    <field name="rules_restrictions"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_facility_type_tree" model="ir.ui.view">
+        <field name="name">facility.type.tree</field>
+        <field name="model">facility.type</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_fms_property" model="ir.actions.act_window">
+        <field name="name">Properties</field>
+        <field name="res_model">fms.property</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <record id="action_fms_resident" model="ir.actions.act_window">
+        <field name="name">Residents</field>
+        <field name="res_model">fms.resident</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <record id="action_facility_facility" model="ir.actions.act_window">
+        <field name="name">Facilities</field>
+        <field name="res_model">facility.facility</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <record id="action_facility_type" model="ir.actions.act_window">
+        <field name="name">Facility Types</field>
+        <field name="res_model">facility.type</field>
+        <field name="view_mode">list</field>
+    </record>
+</odoo>

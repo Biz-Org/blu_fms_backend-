@@ -1,0 +1,628 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="facility_booking_management.FbmKpiCard">
+        <div class="fbm-kpi">
+                    <div class="fbm-kpi-icon"><t t-esc="props.icon"/></div>
+                    <div>
+                        <div class="fbm-kpi-value"><t t-esc="props.value"/></div>
+                        <div class="fbm-kpi-label"><t t-esc="props.label"/></div>
+                    </div>
+                </div>
+    </t>
+    <t t-name="facility_booking_management.FbmStatusBadge">
+        <span t-attf-class="fbm-badge {{ props.status }}">
+                    <t t-esc="props.label || props.status"/>
+                </span>
+    </t>
+    <t t-name="facility_booking_management.FbmDataTable">
+        <div class="fbm-table-wrap">
+                    <table class="fbm-table">
+                        <thead>
+                            <tr>
+                                <th t-foreach="props.columns" t-as="col" t-key="col.key">
+                                    <t t-esc="col.label"/>
+                                </th>
+                                <th t-if="props.actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="props.rows" t-as="row" t-key="row.id">
+                                <td t-foreach="props.columns" t-as="col" t-key="col.key">
+                                    <t t-if="col.type === 'badge'">
+                                        <span t-attf-class="fbm-badge {{ row[col.key] }}"><t t-esc="row[col.key]"/></span>
+                                    </t>
+                                    <t t-else="">
+                                        <t t-esc="row[col.key]"/>
+                                    </t>
+                                </td>
+                                <td t-if="props.actions">
+                                    <button class="fbm-btn secondary" t-on-click="() => props.onRowAction('view', row)">View</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div t-if="!props.rows.length" class="fbm-empty">No records found.</div>
+                </div>
+    </t>
+    <t t-name="facility_booking_management.FbmSidebar">
+        <aside class="fbm-sidebar">
+                    <div class="fbm-brand">Facility Booking</div>
+                    <div class="fbm-nav-section">Main Menu</div>
+                    <t t-foreach="props.mainItems" t-as="item" t-key="item.id">
+                        <div t-attf-class="fbm-nav-item {{ props.active === item.id ? 'active' : '' }}"
+                             t-on-click="() => props.onNavigate(item.id)">
+                            <span><t t-esc="item.label"/></span>
+                        </div>
+                    </t>
+                    <div class="fbm-nav-section">System</div>
+                    <div t-attf-class="fbm-nav-item {{ props.active === 'settings' ? 'active' : '' }}"
+                         t-on-click="() => props.onNavigate('settings')">
+                        Settings &amp; Configuration
+                    </div>
+                </aside>
+    </t>
+    <t t-name="facility_booking_management.FbmTopbar">
+        <header class="fbm-topbar">
+                    <div>
+                        <div class="fbm-title"><t t-esc="props.title"/></div>
+                        <div class="fbm-breadcrumb"><t t-esc="props.breadcrumb"/></div>
+                    </div>
+                    <div><t t-esc="props.userName"/></div>
+                </header>
+    </t>
+    <t t-name="facility_booking_management.FbmDashboardScreen">
+        <div>
+                    <div class="fbm-toolbar">
+                        <select t-model="state.propertyId" t-on-change="load">
+                            <option value="">All Properties</option>
+                            <option t-foreach="props.context.properties" t-as="p" t-key="p.id" t-att-value="p.id"><t t-esc="p.name"/></option>
+                        </select>
+                        <button class="fbm-btn primary" t-on-click="() => props.onNavigate('create_booking')">Create Booking</button>
+                        <button class="fbm-btn secondary" t-on-click="() => props.onNavigate('approval_center')">Pending Approvals</button>
+                    </div>
+                    <div t-if="state.loading" class="fbm-loading">Loading dashboard...</div>
+                    <div t-else="">
+                        <div class="fbm-kpi-grid">
+                            <FbmKpiCard icon="'🏢'" label="'Total Facilities'" value="state.data.kpis.total_facilities"/>
+                            <FbmKpiCard icon="'📅'" label="'Today\'s Bookings'" value="state.data.kpis.today_bookings"/>
+                            <FbmKpiCard icon="'⏳'" label="'Pending Approvals'" value="state.data.kpis.pending_approvals"/>
+                            <FbmKpiCard icon="'📈'" label="'Utilization %'" value="state.data.kpis.utilization_percent + '%'"/>
+                            <FbmKpiCard icon="'💰'" label="'Booking Revenue'" value="state.data.kpis.booking_revenue"/>
+                        </div>
+                        <div class="fbm-split">
+                            <div>
+                                <div class="fbm-panel">
+                                    <h4>Upcoming Bookings</h4>
+                                    <FbmDataTable columns="upcomingCols" rows="state.data.upcoming_bookings" actions="true"
+                                        onRowAction.bind="(action, row) => props.onOpenBooking(row.id)"/>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="fbm-panel">
+                                    <h4>Booking Alerts</h4>
+                                    <div class="fbm-alert-list">
+                                        <div t-foreach="state.data.alerts" t-as="alert" t-key="alert.id" class="fbm-alert-item">
+                                            <strong><t t-esc="alert.title"/></strong>
+                                            <div><t t-esc="alert.message"/></div>
+                                        </div>
+                                        <div t-if="!state.data.alerts.length" class="fbm-empty">No alerts.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+    </t>
+    <t t-name="facility_booking_management.FbmFacilitiesScreen">
+        <div class="fbm-split">
+                    <div>
+                        <div class="fbm-toolbar">
+                            <input placeholder="Search facilities..." t-model="state.search" t-on-keyup="(ev) => ev.key === 'Enter' &amp;&amp; load()"/>
+                            <button class="fbm-btn secondary" t-on-click="load">Search</button>
+                            <button t-if="props.context.is_manager" class="fbm-btn primary" t-on-click="startCreate">Add Facility</button>
+                        </div>
+                        <FbmDataTable columns="cols" rows="state.rows" actions="true" onRowAction.bind="(a,r)=>selectRow(r)"/>
+                        <p t-if="state.message" class="fbm-form-hint"><t t-esc="state.message"/></p>
+                    </div>
+                    <div class="fbm-detail-drawer" t-if="state.selected">
+                        <h4>Facility Details</h4>
+                        <div class="fbm-form-grid">
+                            <div><label>Name</label><input t-model="state.form.name"/></div>
+                            <div><label>Type</label>
+                                <select t-model="state.form.facility_type_id" required="required">
+                                    <option t-if="!props.context.facility_types.length" value="">No facility types — add types in Backend Records</option>
+                                    <option t-foreach="props.context.facility_types" t-as="t" t-key="t.id" t-att-value="t.id"><t t-esc="t.name"/></option>
+                                </select>
+                            </div>
+                            <div><label>Property</label>
+                                <select t-model="state.form.property_id">
+                                    <option value=""></option>
+                                    <option t-foreach="props.context.properties" t-as="p" t-key="p.id" t-att-value="p.id"><t t-esc="p.name"/></option>
+                                </select>
+                            </div>
+                            <div><label>Capacity</label><input type="number" t-model="state.form.capacity"/></div>
+                            <div><label>Paid/Free</label>
+                                <select t-model="state.form.charge_type"><option value="free">Free</option><option value="paid">Paid</option></select>
+                            </div>
+                            <div><label>Base Charge</label><input type="number" t-model="state.form.base_charge"/></div>
+                            <div class="full"><label>Location</label><input t-model="state.form.location"/></div>
+                            <div class="full"><label>Rules</label><textarea t-model="state.form.rules_restrictions"/></div>
+                        </div>
+                        <div class="fbm-toolbar" t-if="props.context.is_manager">
+                            <button class="fbm-btn primary" t-on-click="save">Save</button>
+                        </div>
+                    </div>
+                </div>
+    </t>
+    <t t-name="facility_booking_management.FbmPropertiesScreen">
+        <div class="fbm-split">
+                    <div>
+                        <div class="fbm-toolbar">
+                            <input placeholder="Search properties..." t-model="state.search" t-on-keyup="(ev) => ev.key === 'Enter' &amp;&amp; load()"/>
+                            <button class="fbm-btn secondary" t-on-click="load">Search</button>
+                            <button t-if="props.context.can_manage_properties" class="fbm-btn primary" t-on-click="startCreate">Add Property</button>
+                        </div>
+                        <FbmDataTable columns="cols" rows="state.rows" actions="true" onRowAction.bind="(a,r)=>selectRow(r)"/>
+                        <p t-if="state.message" class="fbm-form-hint"><t t-esc="state.message"/></p>
+                    </div>
+                    <div class="fbm-detail-drawer" t-if="state.selected">
+                        <h4 t-if="props.context.can_manage_properties">Property Details</h4>
+                        <h4 t-else="">My Property</h4>
+                        <div class="fbm-form-grid">
+                            <div><label>Name</label><input t-model="state.form.name" t-att-readonly="!props.context.can_manage_properties"/></div>
+                            <div><label>Code</label><input t-model="state.form.code" t-att-readonly="!props.context.can_manage_properties"/></div>
+                            <div><label>Building</label><input t-model="state.form.building" t-att-readonly="!props.context.can_manage_properties"/></div>
+                            <div><label>City</label><input t-model="state.form.city" t-att-readonly="!props.context.can_manage_properties"/></div>
+                            <div t-if="state.form.manager_names" class="full"><label>Managers</label><input t-att-value="state.form.manager_names" readonly="readonly"/></div>
+                            <div class="full"><label>Address</label><textarea t-model="state.form.address" t-att-readonly="!props.context.can_manage_properties"/></div>
+                            <div t-if="props.context.can_manage_properties"><label>Active</label><input type="checkbox" t-model="state.form.active"/></div>
+                        </div>
+                        <div class="fbm-toolbar" t-if="props.context.can_manage_properties">
+                            <button class="fbm-btn primary" t-on-click="save">Save Property</button>
+                        </div>
+                    </div>
+                </div>
+    </t>
+    <t t-name="facility_booking_management.FbmAvailabilityScreen">
+        <div>
+                    <div class="fbm-toolbar">
+                        <select t-model="state.facilityId">
+                            <option value="">Select Facility</option>
+                            <option t-foreach="props.facilities" t-as="f" t-key="f.id" t-att-value="f.id"><t t-esc="f.name"/></option>
+                        </select>
+                        <input type="date" t-model="state.date"/>
+                        <button class="fbm-btn primary" t-on-click="check">Check Availability</button>
+                    </div>
+                    <div t-if="state.data" class="fbm-panel">
+                        <div class="fbm-toolbar">
+                            <strong><t t-esc="state.data.facility_name"/></strong>
+                            <FbmStatusBadge status="state.data.status"/>
+                            <span>Capacity: <t t-esc="state.data.capacity"/></span>
+                        </div>
+                        <div class="fbm-slot-grid">
+                            <div t-foreach="state.data.slots" t-as="slot" t-key="slot.start_time"
+                                 t-attf-class="fbm-slot {{ slot.status }}"
+                                 t-on-click="() => bookSlot(slot)">
+                                <div><t t-esc="slot.start_label"/> - <t t-esc="slot.end_label"/></div>
+                                <div><t t-esc="slot.status"/></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+    </t>
+    <t t-name="facility_booking_management.FbmBookingsScreen">
+        <div>
+                    <div class="fbm-toolbar">
+                        <select t-model="state.statusFilter" t-on-change="load">
+                            <option value="">All Statuses</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="pending_approval">Pending Approval</option>
+                            <option value="payment_pending">Payment Pending</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                        <button class="fbm-btn secondary" t-on-click="load">Refresh</button>
+                    </div>
+                    <FbmDataTable columns="cols" rows="state.rows" actions="true"
+                        onRowAction.bind="(a, row) => props.onOpenBooking(row.id)"/>
+                </div>
+    </t>
+    <t t-name="facility_booking_management.FbmBookingDetailScreen">
+        <div t-if="state.booking" class="fbm-split">
+                    <div class="fbm-panel">
+                        <h4>Booking Information</h4>
+                        <p>ID: <t t-esc="state.booking.name"/></p>
+                        <p>Facility: <t t-esc="state.booking.facility_name"/></p>
+                        <p>Date: <t t-esc="state.booking.booking_date"/></p>
+                        <p>Time: <t t-esc="state.booking.start_label"/> - <t t-esc="state.booking.end_label"/></p>
+                        <p>Guests: <t t-esc="state.booking.guest_count"/></p>
+                        <p>Status: <FbmStatusBadge status="state.booking.booking_status"/></p>
+                        <h4>Payment</h4>
+                        <p>Total: <t t-esc="state.booking.total_amount"/></p>
+                        <p>Paid: <t t-esc="state.booking.paid_amount"/></p>
+                        <p>Payment Status: <t t-esc="state.booking.payment_status"/></p>
+                        <div class="fbm-toolbar">
+                            <a class="fbm-btn secondary" t-att-href="receiptUrl()" target="_blank">Download Receipt</a>
+                            <button t-if="props.context.is_manager &amp;&amp; state.booking.payment_status === 'pending'" class="fbm-btn primary" t-on-click="confirmPayment">Confirm Payment</button>
+                            <button t-if="props.context.is_approver &amp;&amp; state.booking.approval_status === 'pending'" class="fbm-btn primary" t-on-click="approve">Approve</button>
+                            <button t-if="props.context.is_approver &amp;&amp; state.booking.approval_status === 'pending'" class="fbm-btn danger" t-on-click="reject">Reject</button>
+                            <button class="fbm-btn secondary" t-on-click="cancel">Cancel</button>
+                        </div>
+                        <div t-if="props.context.is_manager &amp;&amp; state.booking.payment_status === 'pending'" class="fbm-form-grid">
+                            <div><label>Payment Amount</label><input type="number" t-model="state.payAmount"/></div>
+                            <div><label>Method</label>
+                                <select t-model="state.payMethod">
+                                    <option value="cash">Cash</option>
+                                    <option value="card">Card</option>
+                                    <option value="bank">Bank Transfer</option>
+                                    <option value="online">Online</option>
+                                </select>
+                            </div>
+                            <div><label>Transaction ID</label><input t-model="state.txnId"/></div>
+                        </div>
+                        <div t-if="props.context.is_approver">
+                            <label>Rejection Comment</label>
+                            <textarea t-model="state.rejectComment"/>
+                        </div>
+                    </div>
+                    <div class="fbm-panel">
+                        <h4>Requester</h4>
+                        <p><t t-esc="state.booking.resident_name"/></p>
+                        <p><t t-esc="state.booking.contact_phone"/></p>
+                        <p><t t-esc="state.booking.contact_email"/></p>
+                        <h4>Approval</h4>
+                        <p><t t-esc="state.booking.approval_status"/></p>
+                        <p><t t-esc="state.booking.approval_comment"/></p>
+                    </div>
+                </div>
+    </t>
+    <t t-name="facility_booking_management.FbmCreateBookingScreen">
+        <div>
+                    <div class="fbm-steps">
+                        <div t-attf-class="fbm-step {{ state.step === 1 ? 'active' : '' }}">1. Select Facility</div>
+                        <div t-attf-class="fbm-step {{ state.step === 2 ? 'active' : '' }}">2. Booking Details</div>
+                        <div t-attf-class="fbm-step {{ state.step === 3 ? 'active' : '' }}">3. Additional Info</div>
+                        <div t-attf-class="fbm-step {{ state.step === 4 ? 'active' : '' }}">4. Review</div>
+                    </div>
+                    <div class="fbm-panel" t-if="state.step === 1">
+                        <div class="fbm-form-grid">
+                            <div><label>Property</label>
+                                <select t-model="state.form.property_id">
+                                    <option t-foreach="props.context.properties" t-as="p" t-key="p.id" t-att-value="p.id"><t t-esc="p.name"/></option>
+                                </select>
+                            </div>
+                            <div><label>Facility</label>
+                                <select t-model="state.form.facility_id" t-on-change="loadSlots">
+                                    <option t-foreach="props.facilities" t-as="f" t-key="f.id" t-att-value="f.id"><t t-esc="f.name"/></option>
+                                </select>
+                            </div>
+                            <div><label>Booking Date</label><input type="date" t-model="state.form.booking_date" t-on-change="loadSlots"/></div>
+                        </div>
+                        <button class="fbm-btn primary" t-on-click="() => state.step = 2">Next</button>
+                    </div>
+                    <div class="fbm-panel" t-if="state.step === 2">
+                        <div class="fbm-slot-grid">
+                            <div t-foreach="state.slots" t-as="slot" t-key="slot.start_time"
+                                 t-attf-class="fbm-slot {{ slot.status }}"
+                                 t-on-click="() => selectSlot(slot)">
+                                <t t-esc="slot.start_label"/> - <t t-esc="slot.end_label"/>
+                            </div>
+                        </div>
+                        <div class="fbm-form-grid">
+                            <div><label>Guests</label><input type="number" t-model="state.form.guest_count"/></div>
+                            <div><label>Contact Phone</label><input t-model="state.form.contact_phone"/></div>
+                            <div><label>Email</label><input t-model="state.form.contact_email"/></div>
+                        </div>
+                        <button class="fbm-btn secondary" t-on-click="() => state.step = 1">Back</button>
+                        <button class="fbm-btn primary" t-on-click="() => state.step = 3">Next</button>
+                    </div>
+                    <div class="fbm-panel" t-if="state.step === 3">
+                        <div class="fbm-form-grid">
+                            <div class="full"><label>Purpose</label><input t-model="state.form.purpose"/></div>
+                            <div class="full"><label>Special Requirements</label><textarea t-model="state.form.special_requirements"/></div>
+                            <div><label>Payment Method</label>
+                                <select t-model="state.form.payment_method">
+                                    <option value="cash">Cash</option>
+                                    <option value="card">Card</option>
+                                    <option value="bank">Bank Transfer</option>
+                                    <option value="online">Online</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="fbm-btn secondary" t-on-click="() => state.step = 2">Back</button>
+                        <button class="fbm-btn primary" t-on-click="() => state.step = 4">Next</button>
+                    </div>
+                    <div class="fbm-panel" t-if="state.step === 4">
+                        <button class="fbm-btn secondary" t-on-click="() => state.step = 3">Back</button>
+                        <button class="fbm-btn primary" t-on-click="submit">Confirm Booking</button>
+                        <p t-if="state.message"><t t-esc="state.message"/></p>
+                    </div>
+                </div>
+    </t>
+    <t t-name="facility_booking_management.FbmGenericTableScreen">
+        <div>
+                    <div t-if="props.kpis" class="fbm-kpi-grid">
+                        <FbmKpiCard t-foreach="props.kpis" t-as="kpi" t-key="kpi.label"
+                            icon="kpi.icon" label="kpi.label" value="kpi.value"/>
+                    </div>
+                    <t t-out="props.toolbar"/>
+                    <FbmDataTable columns="props.columns" rows="props.rows" actions="true"
+                        onRowAction.bind="(a, row) => props.onOpenBooking(row.id)"/>
+                </div>
+    </t>
+    <t t-name="facility_booking_management.FbmTimeSlotsScreen">
+        <div>
+                    <div class="fbm-toolbar">
+                        <select t-model="state.facilityId" t-on-change="load">
+                            <option value="">All Facilities</option>
+                            <option t-foreach="props.facilities" t-as="f" t-key="f.id" t-att-value="f.id"><t t-esc="f.name"/></option>
+                        </select>
+                        <button t-if="props.context.is_manager" class="fbm-btn primary"
+                            t-on-click="() => state.form = { facility_id: props.facilities.length ? props.facilities[0].id : false, active: true, opening_time: 6, closing_time: 22, slot_duration: 2, buffer_time: 0.5 }">
+                                New Config
+                        </button>
+                    </div>
+                    <div class="fbm-table-wrap">
+                        <table class="fbm-table">
+                            <thead><tr><th>Facility</th><th>Hours</th><th>Duration</th><th>Buffer</th><th>Active</th><th></th></tr></thead>
+                            <tbody>
+                                <tr t-foreach="state.configs" t-as="c" t-key="c.id">
+                                    <td><t t-esc="c.facility_name"/></td>
+                                    <td><t t-esc="c.opening_label"/> - <t t-esc="c.closing_label"/></td>
+                                    <td><t t-esc="c.slot_duration"/></td>
+                                    <td><t t-esc="c.buffer_time"/></td>
+                                    <td><t t-esc="c.active"/></td>
+                                    <td><button class="fbm-btn secondary" t-on-click="() => edit(c)">Edit</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="fbm-panel" t-if="state.form &amp;&amp; props.context.is_manager">
+                        <div class="fbm-form-grid">
+                            <div><label>Facility</label>
+                                <select t-model="state.form.facility_id">
+                                    <option t-foreach="props.facilities" t-as="f" t-key="f.id" t-att-value="f.id"><t t-esc="f.name"/></option>
+                                </select>
+                            </div>
+                            <div><label>Opening (float hours)</label><input type="number" step="0.25" t-model="state.form.opening_time"/></div>
+                            <div><label>Closing</label><input type="number" step="0.25" t-model="state.form.closing_time"/></div>
+                            <div><label>Slot Duration</label><input type="number" step="0.25" t-model="state.form.slot_duration"/></div>
+                            <div><label>Buffer</label><input type="number" step="0.25" t-model="state.form.buffer_time"/></div>
+                        </div>
+                        <button class="fbm-btn primary" t-on-click="save">Save Configuration</button>
+                    </div>
+                </div>
+    </t>
+    <t t-name="facility_booking_management.FbmBlockingScreen">
+        <div class="fbm-split">
+                    <div class="fbm-table-wrap">
+                        <table class="fbm-table">
+                            <thead><tr><th>Facility</th><th>Start</th><th>End</th><th>Reason</th><th>Status</th><th>Affected</th></tr></thead>
+                            <tbody>
+                                <tr t-foreach="state.rows" t-as="r" t-key="r.id">
+                                    <td><t t-esc="r.facility_name"/></td>
+                                    <td><t t-esc="r.block_start_date"/></td>
+                                    <td><t t-esc="r.block_end_date"/></td>
+                                    <td><t t-esc="r.block_reason"/></td>
+                                    <td><t t-esc="r.state"/></td>
+                                    <td><t t-esc="r.affected_booking_count"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="fbm-panel" t-if="props.context.is_manager">
+                        <h4>Create / Edit Block</h4>
+                        <div class="fbm-form-grid">
+                            <div><label>Facility</label>
+                                <select t-model="state.form.facility_id">
+                                    <option t-foreach="props.facilities" t-as="f" t-key="f.id" t-att-value="f.id"><t t-esc="f.name"/></option>
+                                </select>
+                            </div>
+                            <div><label>Start Date</label><input type="date" t-model="state.form.block_start_date"/></div>
+                            <div><label>End Date</label><input type="date" t-model="state.form.block_end_date"/></div>
+                            <div><label>Reason</label>
+                                <select t-model="state.form.block_reason">
+                                    <option value="maintenance">Maintenance</option>
+                                    <option value="cleaning">Cleaning</option>
+                                    <option value="private_event">Private Event</option>
+                                    <option value="renovation">Renovation</option>
+                                    <option value="safety">Safety Issue</option>
+                                    <option value="holiday">Holiday</option>
+                                    <option value="management">Management Restriction</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="full"><label>Description</label><textarea t-model="state.form.description"/></div>
+                        </div>
+                        <button class="fbm-btn primary" t-on-click="save">Save Block</button>
+                    </div>
+                </div>
+    </t>
+    <t t-name="facility_booking_management.FbmCalendarScreen">
+        <div>
+                    <div class="fbm-toolbar">
+                        <select t-model="state.view"><option value="month">Month</option><option value="week">Week</option><option value="day">Day</option></select>
+                        <select t-model="state.facilityId" t-on-change="load">
+                            <option value="">All Facilities</option>
+                            <option t-foreach="props.facilities" t-as="f" t-key="f.id" t-att-value="f.id"><t t-esc="f.name"/></option>
+                        </select>
+                        <button class="fbm-btn secondary" t-on-click="load">Refresh</button>
+                    </div>
+                    <div class="fbm-calendar-grid">
+                        <div t-foreach="dayList()" t-as="day" t-key="day" class="fbm-cal-day">
+                            <strong><t t-esc="day"/></strong>
+                            <div t-foreach="eventsForDay(day)" t-as="ev" t-key="ev.id + '-' + ev.type"
+                                 t-on-click="() => ev.type === 'booking' ? props.onOpenBooking(ev.id) : null">
+                                <span t-esc="ev.title"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+    </t>
+    <t t-name="facility_booking_management.FbmPaymentsScreen">
+        <div t-if="state.summary">
+                    <div class="fbm-kpi-grid">
+                        <div class="fbm-kpi"><div><div class="fbm-kpi-value"><t t-esc="state.summary.total_collections"/></div><div class="fbm-kpi-label">Total Collections</div></div></div>
+                        <div class="fbm-kpi"><div><div class="fbm-kpi-value"><t t-esc="state.summary.paid_bookings"/></div><div class="fbm-kpi-label">Paid Bookings</div></div></div>
+                        <div class="fbm-kpi"><div><div class="fbm-kpi-value"><t t-esc="state.summary.pending_payments"/></div><div class="fbm-kpi-label">Pending Payments</div></div></div>
+                        <div class="fbm-kpi"><div><div class="fbm-kpi-value"><t t-esc="state.summary.overdue_payments"/></div><div class="fbm-kpi-label">Overdue</div></div></div>
+                    </div>
+                    <div class="fbm-table-wrap">
+                        <table class="fbm-table">
+                            <thead><tr><th>Booking</th><th>Facility</th><th>Total</th><th>Paid</th><th>Status</th><th>Method</th></tr></thead>
+                            <tbody>
+                                <tr t-foreach="state.summary.records" t-as="r" t-key="r.id" t-on-click="() => props.onOpenBooking(r.id)">
+                                    <td><t t-esc="r.name"/></td>
+                                    <td><t t-esc="r.facility_name"/></td>
+                                    <td><t t-esc="r.total_amount"/></td>
+                                    <td><t t-esc="r.paid_amount"/></td>
+                                    <td><t t-esc="r.payment_status"/></td>
+                                    <td><t t-esc="r.payment_method"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+    </t>
+    <t t-name="facility_booking_management.FbmReportsScreen">
+        <div>
+                    <div class="fbm-tabs">
+                        <button t-attf-class="fbm-btn {{ state.tab === 'revenue' ? 'primary' : 'secondary' }}" t-on-click="() => state.tab = 'revenue'">Revenue</button>
+                        <button t-attf-class="fbm-btn {{ state.tab === 'utilization' ? 'primary' : 'secondary' }}" t-on-click="() => state.tab = 'utilization'">Utilization Analytics</button>
+                    </div>
+                    <div t-if="state.tab === 'revenue' &amp;&amp; state.reports" class="fbm-panel">
+                        <p>Total Bookings: <t t-esc="state.reports.total_bookings"/></p>
+                        <p>Total Revenue: <t t-esc="state.reports.total_revenue"/></p>
+                        <p>Pending Amount: <t t-esc="state.reports.pending_amount"/></p>
+                        <p>Cancellation Rate: <t t-esc="state.reports.cancellation_rate"/>%</p>
+                        <p>Average Value: <t t-esc="state.reports.average_value"/></p>
+                    </div>
+                    <div t-if="state.tab === 'utilization' &amp;&amp; state.utilization" class="fbm-table-wrap">
+                        <table class="fbm-table">
+                            <thead><tr><th>Facility</th><th>Utilization %</th><th>Booked Hrs</th><th>Blocked Hrs</th><th>Bookings</th></tr></thead>
+                            <tbody>
+                                <tr t-foreach="state.utilization.facilities" t-as="f" t-key="f.facility_id">
+                                    <td><t t-esc="f.facility_name"/></td>
+                                    <td><t t-esc="f.utilization_percent"/></td>
+                                    <td><t t-esc="f.booked_hours"/></td>
+                                    <td><t t-esc="f.blocked_hours"/></td>
+                                    <td><t t-esc="f.booking_count"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+    </t>
+    <t t-name="facility_booking_management.FbmNotificationsScreen">
+        <div>
+                    <div class="fbm-toolbar">
+                        <select t-model="state.category" t-on-change="load">
+                            <option value="all">All</option>
+                            <option value="unread">Unread</option>
+                            <option value="booking">Bookings</option>
+                            <option value="approval">Approvals</option>
+                            <option value="cancellation">Cancellations</option>
+                            <option value="alert">Alerts</option>
+                            <option value="system">System</option>
+                        </select>
+                        <input placeholder="Search..." t-model="state.search" t-on-keyup="(ev) => ev.key === 'Enter' &amp;&amp; load()"/>
+                        <button class="fbm-btn secondary" t-on-click="markAll">Mark All Read</button>
+                    </div>
+                    <div class="fbm-alert-list">
+                        <div t-foreach="state.items" t-as="n" t-key="n.id"
+                             t-attf-class="fbm-alert-item fbm-notification-item {{ n.is_read ? '' : 'unread' }}"
+                             t-on-click="() => markRead(n.id)">
+                            <strong><t t-esc="n.name"/></strong>
+                            <div><t t-esc="n.message"/></div>
+                        </div>
+                    </div>
+                </div>
+    </t>
+    <t t-name="facility_booking_management.FbmSettingsScreen">
+        <div t-if="props.context.is_manager">
+                    <div class="fbm-tabs">
+                        <button t-attf-class="fbm-btn {{ state.tab === 'booking' ? 'primary' : 'secondary' }}" t-on-click="() => state.tab = 'booking'">Booking Rules</button>
+                        <button t-attf-class="fbm-btn {{ state.tab === 'cancel' ? 'primary' : 'secondary' }}" t-on-click="() => state.tab = 'cancel'">Cancellation</button>
+                        <button t-attf-class="fbm-btn {{ state.tab === 'approval' ? 'primary' : 'secondary' }}" t-on-click="() => state.tab = 'approval'">Approval</button>
+                        <button t-attf-class="fbm-btn {{ state.tab === 'hours' ? 'primary' : 'secondary' }}" t-on-click="() => state.tab = 'hours'">Working Hours</button>
+                        <button t-attf-class="fbm-btn {{ state.tab === 'notify' ? 'primary' : 'secondary' }}" t-on-click="() => state.tab = 'notify'">Notifications</button>
+                    </div>
+                    <div class="fbm-panel">
+                        <div class="fbm-form-grid" t-if="state.tab === 'booking'">
+                            <div><label>Advance Booking Days</label><input type="number" t-model="state.config.advance_booking_days"/></div>
+                            <div><label>Max Guests</label><input type="number" t-model="state.config.max_guests"/></div>
+                            <div><label>Min Duration (hrs)</label><input type="number" step="0.25" t-model="state.config.min_booking_duration"/></div>
+                            <div><label>Max Duration (hrs)</label><input type="number" step="0.25" t-model="state.config.max_booking_duration"/></div>
+                            <div><label>Buffer Time</label><input type="number" step="0.25" t-model="state.config.buffer_time"/></div>
+                            <div><label>Back-to-back</label><input type="checkbox" t-model="state.config.allow_back_to_back"/></div>
+                        </div>
+                        <div class="fbm-form-grid" t-if="state.tab === 'cancel'">
+                            <div><label>Free Cancellation (hours)</label><input type="number" t-model="state.config.free_cancellation_hours"/></div>
+                            <div><label>Refund %</label><input type="number" t-model="state.config.refund_percent"/></div>
+                            <div><label>Cancellation Penalty %</label><input type="number" t-model="state.config.cancellation_penalty_percent"/></div>
+                            <div><label>No-show Penalty %</label><input type="number" t-model="state.config.no_show_penalty_percent"/></div>
+                        </div>
+                        <div class="fbm-form-grid" t-if="state.tab === 'approval'">
+                            <div><label>Auto Approval</label><input type="checkbox" t-model="state.config.auto_approval"/></div>
+                            <div><label>Amount Threshold</label><input type="number" t-model="state.config.approval_amount_threshold"/></div>
+                            <div><label>Approval Time Limit (hrs)</label><input type="number" t-model="state.config.approval_time_limit_hours"/></div>
+                        </div>
+                        <div class="fbm-form-grid" t-if="state.tab === 'hours'">
+                            <div><label>Default Opening</label><input type="number" step="0.25" t-model="state.config.default_opening_time"/></div>
+                            <div><label>Default Closing</label><input type="number" step="0.25" t-model="state.config.default_closing_time"/></div>
+                            <div><label>Default Tax %</label><input type="number" t-model="state.config.default_tax_percent"/></div>
+                        </div>
+                        <div class="fbm-form-grid" t-if="state.tab === 'notify'">
+                            <div><label>Booking Confirmation</label><input type="checkbox" t-model="state.config.notify_booking_confirmation"/></div>
+                            <div><label>Approval Notifications</label><input type="checkbox" t-model="state.config.notify_approval"/></div>
+                            <div><label>Cancellation Notifications</label><input type="checkbox" t-model="state.config.notify_cancellation"/></div>
+                            <div><label>Payment Notifications</label><input type="checkbox" t-model="state.config.notify_payment"/></div>
+                            <div><label>Reminder Notifications</label><input type="checkbox" t-model="state.config.notify_reminder"/></div>
+                        </div>
+                        <div class="fbm-toolbar">
+                            <button class="fbm-btn primary" t-on-click="saveAll">Save All Changes</button>
+                            <span t-if="state.message"><t t-esc="state.message"/></span>
+                        </div>
+                    </div>
+                </div>
+                <div t-else="" class="fbm-empty">Settings are restricted to community managers.</div>
+    </t>
+    <t t-name="facility_booking_management.FbmApp">
+        <div class="fbm-root" t-if="!state.loading">
+                    <FbmSidebar mainItems="filteredNavItems()" active="state.screen === 'settings' ? 'settings' : state.screen"
+                        onNavigate.bind="navigate"/>
+                    <div class="fbm-main">
+                        <FbmTopbar title="screenMeta().title" breadcrumb="screenMeta().breadcrumb" userName="state.context.user_name"/>
+                        <div class="fbm-content">
+                            <FbmDashboardScreen t-if="state.screen === 'dashboard'" context="state.context"
+                                onNavigate.bind="navigate" onOpenBooking.bind="openBooking"/>
+                            <FbmPropertiesScreen t-if="state.screen === 'properties'" context="state.context"
+                                onContextRefresh.bind="refreshContext"/>
+                            <FbmFacilitiesScreen t-if="state.screen === 'facilities'" context="state.context"
+                                onNavigate.bind="navigate" onOpenBooking.bind="openBooking"/>
+                            <FbmAvailabilityScreen t-if="state.screen === 'availability'" facilities="state.facilities"
+                                onNavigate.bind="navigate"/>
+                            <FbmTimeSlotsScreen t-if="state.screen === 'time_slots'" context="state.context" facilities="state.facilities"/>
+                            <FbmBookingsScreen t-if="state.screen === 'booking_management'" onOpenBooking.bind="openBooking"/>
+                            <FbmBookingsScreen t-if="state.screen === 'approval_center'"
+                                domain="approvalDomain" onOpenBooking.bind="openBooking"/>
+                            <FbmCreateBookingScreen t-if="state.screen === 'create_booking'" context="state.context"
+                                facilities="state.facilities" initial="state.createInitial" onOpenBooking.bind="openBooking"/>
+                            <FbmBookingsScreen t-if="state.screen === 'my_bookings'"
+                                domain="myBookingsDomain" onOpenBooking.bind="openBooking"/>
+                            <FbmBookingsScreen t-if="state.screen === 'booking_history'"
+                                domain="historyDomain" onOpenBooking.bind="openBooking"/>
+                            <FbmBlockingScreen t-if="state.screen === 'facility_blocking'" context="state.context" facilities="state.facilities"/>
+                            <FbmCalendarScreen t-if="state.screen === 'facility_calendar'" facilities="state.facilities"
+                                onOpenBooking.bind="openBooking"/>
+                            <FbmPaymentsScreen t-if="state.screen === 'payments'" onOpenBooking.bind="openBooking"/>
+                            <FbmReportsScreen t-if="state.screen === 'reports'"/>
+                            <FbmNotificationsScreen t-if="state.screen === 'notifications'"/>
+                            <FbmSettingsScreen t-if="state.screen === 'settings'" context="state.context"/>
+                            <FbmBookingDetailScreen t-if="state.screen === 'booking_detail'" bookingId="state.bookingId"
+                                context="state.context"/>
+                        </div>
+                    </div>
+                </div>
+                <div t-else="" class="fbm-loading">Loading Facility Booking...</div>
+    </t>
+</templates>

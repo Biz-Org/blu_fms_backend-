@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_facility_booking_config_form" model="ir.ui.view">
+        <field name="name">facility.booking.config.form</field>
+        <field name="model">facility.booking.config</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group string="Booking Rules">
+                        <field name="advance_booking_days"/>
+                        <field name="min_booking_duration"/>
+                        <field name="max_booking_duration"/>
+                        <field name="max_guests"/>
+                        <field name="allow_back_to_back"/>
+                        <field name="buffer_time"/>
+                    </group>
+                    <group string="Cancellation">
+                        <field name="free_cancellation_hours"/>
+                        <field name="refund_percent"/>
+                        <field name="cancellation_penalty_percent"/>
+                        <field name="no_show_penalty_percent"/>
+                        <field name="allow_rescheduling"/>
+                    </group>
+                    <group string="Approval">
+                        <field name="auto_approval"/>
+                        <field name="approval_amount_threshold"/>
+                        <field name="approval_time_limit_hours"/>
+                        <field name="notify_approver"/>
+                    </group>
+                    <group string="Defaults">
+                        <field name="default_opening_time" widget="float_time"/>
+                        <field name="default_closing_time" widget="float_time"/>
+                        <field name="default_tax_percent"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_facility_booking_config" model="ir.actions.act_window">
+        <field name="name">Booking Configuration</field>
+        <field name="res_model">facility.booking.config</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'form_view_initial_mode': 'edit'}</field>
+    </record>
+</odoo>

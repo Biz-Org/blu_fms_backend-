@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="mail_template_booking_confirmed" model="mail.template">
+        <field name="name">Facility Booking Confirmed</field>
+        <field name="model_id" ref="model_facility_booking"/>
+        <field name="subject">Booking Confirmed: {{ object.name }}</field>
+        <field name="body_html" type="html">
+            <p>Your booking <strong><t t-out="object.name"/></strong> for
+            <strong><t t-out="object.facility_id.name"/></strong> on
+            <t t-out="object.booking_date"/> is confirmed.</p>
+        </field>
+    </record>
+</odoo>

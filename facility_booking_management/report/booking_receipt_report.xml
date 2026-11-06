@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_booking_receipt">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <div class="page">
+                    <h2>Facility Booking Receipt</h2>
+                    <p><strong>Booking ID:</strong> <span t-field="o.name"/></p>
+                    <p><strong>Facility:</strong> <span t-field="o.facility_id.name"/></p>
+                    <p><strong>Date:</strong> <span t-field="o.booking_date"/></p>
+                    <p><strong>Time:</strong> <span t-field="o.start_time"/> - <span t-field="o.end_time"/></p>
+                    <p><strong>Requester:</strong> <span t-field="o.resident_id.name"/></p>
+                    <p><strong>Total:</strong> <span t-field="o.total_amount"/></p>
+                    <p><strong>Paid:</strong> <span t-field="o.paid_amount"/></p>
+                    <p><strong>Payment Status:</strong> <span t-field="o.payment_status"/></p>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

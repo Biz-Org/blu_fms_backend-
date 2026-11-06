@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_fbm_client" model="ir.actions.client">
+        <field name="name">Facility Booking</field>
+        <field name="tag">facility_booking_management.fbm_app</field>
+    </record>
+
+    <menuitem id="menu_fbm_root"
+              name="Facility Booking"
+              action="action_fbm_client"
+              sequence="15"
+              groups="base.group_user"/>
+
+    <menuitem id="menu_fbm_backend"
+              name="Backend Records"
+              parent="menu_fbm_root"
+              sequence="90"
+              groups="facility_booking_management.group_facility_manager"/>
+
+    <menuitem id="menu_fbm_properties"
+              name="Properties"
+              parent="menu_fbm_backend"
+              action="action_fms_property"
+              sequence="1"/>
+    <menuitem id="menu_fbm_residents"
+              name="Residents"
+              parent="menu_fbm_backend"
+              action="action_fms_resident"
+              sequence="2"/>
+    <menuitem id="menu_fbm_facility_types"
+              name="Facility Types"
+              parent="menu_fbm_backend"
+              action="action_facility_type"
+              sequence="3"/>
+    <menuitem id="menu_fbm_facilities"
+              name="Facilities"
+              parent="menu_fbm_backend"
+              action="action_facility_facility"
+              sequence="4"/>
+    <menuitem id="menu_fbm_slot_config"
+              name="Time Slots"
+              parent="menu_fbm_backend"
+              action="action_facility_slot_config"
+              sequence="5"/>
+    <menuitem id="menu_fbm_blocks"
+              name="Facility Blocks"
+              parent="menu_fbm_backend"
+              action="action_facility_block"
+              sequence="6"/>
+    <menuitem id="menu_fbm_booking_config"
+              name="Booking Configuration"
+              parent="menu_fbm_backend"
+              action="action_facility_booking_config"
+              sequence="7"/>
+</odoo>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_facility_block_tree" model="ir.ui.view">
+        <field name="name">facility.block.tree</field>
+        <field name="model">facility.block</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="facility_id"/>
+                <field name="block_start_date"/>
+                <field name="block_end_date"/>
+                <field name="block_reason"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_facility_block_form" model="ir.ui.view">
+        <field name="name">facility.block.form</field>
+        <field name="model">facility.block</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="facility_id"/>
+                        <field name="state"/>
+                        <field name="block_reason"/>
+                        <field name="all_day"/>
+                    </group>
+                    <group>
+                        <field name="block_start_date"/>
+                        <field name="block_end_date"/>
+                        <field name="start_time" widget="float_time"/>
+                        <field name="end_time" widget="float_time"/>
+                    </group>
+                    <field name="description"/>
+                    <field name="attachment_ids" widget="many2many_binary"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_facility_block" model="ir.actions.act_window">
+        <field name="name">Facility Blocks</field>
+        <field name="res_model">facility.block</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>
