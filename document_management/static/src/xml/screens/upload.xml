@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="document_management.Upload">
+        <div class="dm-screen dm-upload-screen" data-screen="upload">
+            <style>
+                .dm-upload-screen .dm-upload-hero { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin: 0 0 1.05rem; }
+                .dm-upload-screen .dm-page-title { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.03em; color: #111827; }
+                .dm-upload-screen .dm-hero-actions .dm-btn { background: #fff; color: #374151; border: 1px solid #d4d0dc; height: 34px; padding: 0 0.85rem; border-radius: 8px; font-size: 0.74rem; font-weight: 600; }
+                .dm-upload-screen .dm-hero-actions .dm-btn-primary { background: #5629CE; border-color: #5629CE; color: #fff; }
+                .dm-upload-grid { display: grid !important; grid-template-columns: minmax(0, 1fr) 320px !important; gap: 0.9rem !important; align-items: start; }
+                .dm-upload-screen .dm-empty { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+                .dm-upload-screen .dm-card { border-color: #c9c5d4; box-shadow: none; }
+                .dm-upload-screen .dm-card-title { display: flex; align-items: center; gap: 0.45rem; font-size: 0.88rem; }
+                .dm-upload-screen .dm-card-title i { color: #5629CE; }
+                .dm-dropzone { border: 1px dashed #c9c5d4; background: #fff; border-radius: 12px; min-height: 210px; margin-bottom: 0.9rem; padding: 2rem 1.2rem; }
+                .dm-drop-ico { width: 44px; height: 44px; border-radius: 10px; background: #F0EBFF; color: #5629CE; display: inline-flex; align-items: center; justify-content: center; font-size: 1.15rem; margin-bottom: 0.75rem; }
+                .dm-dropzone strong { font-size: 1rem; color: #111827; }
+                .dm-drop-hint, .dm-upload-ready + p { font-size: 0.7rem; color: #9aa1b2; }
+                .dm-upload-ready { margin: 0.65rem 0 0.1rem; font-size: 0.78rem; color: #6b7280; }
+                .dm-upload-screen .dm-field > span { font-size: 0.72rem; font-weight: 600; color: #374151; }
+                .dm-upload-screen .dm-field input, .dm-upload-screen .dm-field select, .dm-upload-screen .dm-field textarea { border-color: #c9c5d4; min-height: 36px; }
+                .dm-upload-screen .dm-field textarea { min-height: 72px; }
+                .dm-req { color: #dc2626; }
+                .dm-chip-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
+                .dm-chip { display: inline-flex; align-items: center; gap: 0.3rem; border-radius: 999px; padding: 0.18rem 0.5rem; background: #F0EBFF; color: #5629CE; font-size: 0.68rem; font-weight: 700; }
+                .dm-chip button { border: 0; background: transparent; color: inherit; cursor: pointer; padding: 0; }
+                .dm-tag-input { width: 110px !important; min-height: 28px !important; border: 0 !important; background: transparent !important; padding: 0.1rem 0 !important; }
+                .dm-access-choice { border-bottom-color: #eceaf3; padding: 0.65rem 0; }
+                .dm-access-choice input { accent-color: #5629CE; margin-top: 0.2rem; }
+                .dm-owner-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+                .dm-owner-row select { flex: 1 1 auto; }
+                .dm-folder-row { display: flex; align-items: center; gap: 0.4rem; }
+                .dm-folder-row select { flex: 1 1 auto; }
+                .dm-version-row { display: flex; align-items: center; justify-content: space-between; padding: 0.2rem 0 0.55rem; }
+                @media (max-width: 1099px) {
+                    .dm-upload-grid { grid-template-columns: 1fr !important; }
+                    .dm-upload-screen .dm-upload-hero { flex-wrap: wrap; }
+                    .dm-upload-screen .dm-hero-actions { flex-wrap: wrap; }
+                }
+                @media (max-width: 720px) {
+                    .dm-upload-screen .dm-page-title { font-size: 1.15rem; }
+                    .dm-field-row { grid-template-columns: 1fr !important; }
+                }
+            </style>
+            <div class="dm-page-hero dm-upload-hero">
+                <div>
+                    <h1 class="dm-page-title">Upload Document</h1>
+                    <p class="dm-page-sub">Add new files to the document repository with required metadata.</p>
+                </div>
+                <div class="dm-hero-actions">
+                    <button type="button" class="dm-btn" t-on-click="cancel">Cancel</button>
+                    <button type="button" class="dm-btn" t-on-click="saveDraft">Save Draft</button>
+                    <button type="button" class="dm-btn dm-btn-primary" t-on-click="uploadDoc">
+                        <i class="fa fa-plus"/> Upload Document
+                    </button>
+                    <button type="button" class="dm-icon-btn" title="Refresh upload" t-on-click="refresh" aria-label="Refresh">
+                        <i class="fa fa-refresh"/>
+                    </button>
+                </div>
+            </div>
+            <div t-if="state.error" class="dm-error" role="alert">
+                <span t-esc="state.error"/>
+                <button type="button" class="dm-btn" t-on-click="refresh">Retry</button>
+            </div>
+            <div t-if="state.loading" class="dm-loading" aria-busy="true" aria-label="Loading upload">
+                Loading upload…
+            </div>
+            <t t-if="!state.loading and !state.error">
+                <div class="dm-split dm-upload-grid">
+                    <div>
+                        <div class="dm-dropzone" t-on-drop="onDrop" t-on-dragover="onDragOver">
+                            <div class="dm-drop-ico"><i class="fa fa-file-o"/></div>
+                            <strong>Drag &amp; Drop files here</strong>
+                            <p>or <label class="dm-browse">click to browse from your computer<input type="file" class="o_hidden" t-on-change="onFile"/></label></p>
+                            <p class="dm-drop-hint">Supported formats: PDF, DOCX, XLSX, JPG, PNG (Max size: 50MB)</p>
+                            <div class="dm-empty">
+                                <h3 class="dm-upload-ready">Ready to upload</h3>
+                                <p>Allowed types: PDF, DOCX, XLSX, JPG, PNG. Maximum 50 MB.</p>
+                            </div>
+                            <p t-if="state.file" t-esc="state.file.name"/>
+                        </div>
+                        <section class="dm-card">
+                            <h2 class="dm-card-title">Document Details</h2>
+                            <label class="dm-field">
+                                <span>Document Name <span class="dm-req">*</span></span>
+                                <input type="text" t-model="state.form.name" placeholder="e.g. Pipeline Maintenance Report"/>
+                            </label>
+                            <label class="dm-field">
+                                <span>Description</span>
+                                <textarea t-model="state.form.description" placeholder="Brief summary of document contents"/>
+                            </label>
+                            <div class="dm-field-row">
+                                <label class="dm-field">
+                                    <span>Document Type <span class="dm-req">*</span></span>
+                                    <select t-model="state.form.type_id">
+                                        <option value="">Select type</option>
+                                        <t t-foreach="catalogs.types or []" t-as="item" t-key="item.id">
+                                            <option t-att-value="item.id" t-esc="item.name"/>
+                                        </t>
+                                    </select>
+                                </label>
+                                <label class="dm-field">
+                                    <span>Category <span class="dm-req">*</span></span>
+                                    <select t-model="state.form.category_id">
+                                        <option value="">Select category</option>
+                                        <t t-foreach="catalogs.categories or []" t-as="item" t-key="item.id">
+                                            <option t-att-value="item.id" t-esc="item.name"/>
+                                        </t>
+                                    </select>
+                                </label>
+                            </div>
+                            <div class="dm-field-row">
+                                <label class="dm-field">
+                                    <span>Department</span>
+                                    <input type="text" t-model="state.form.department_label" placeholder="Assign department"/>
+                                </label>
+                                <label class="dm-field">
+                                    <span>Destination Folder</span>
+                                    <div class="dm-folder-row">
+                                        <i class="fa fa-folder-o"/>
+                                        <select t-model="state.form.folder_id">
+                                            <option value="">Browse folders</option>
+                                            <t t-foreach="catalogs.folders or []" t-as="item" t-key="item.id">
+                                                <option t-att-value="item.id" t-esc="item.name"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="dm-field">
+                                <span>Tags</span>
+                                <div class="dm-chip-row">
+                                    <t t-foreach="tagItems" t-as="tag" t-key="tag">
+                                        <span class="dm-chip">
+                                            <t t-esc="tag"/>
+                                            <button type="button" t-att-data-tag="tag" t-on-click="removeTag" aria-label="Remove tag">×</button>
+                                        </span>
+                                    </t>
+                                    <input class="dm-tag-input" type="text" placeholder="Add tag" t-model="state.tagDraft" t-on-keydown="onTagKeydown"/>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div>
+                        <section class="dm-card">
+                            <h2 class="dm-card-title"><i class="fa fa-lock"/> Access Settings</h2>
+                            <label class="dm-access-choice">
+                                <input type="radio" name="dm-access" value="role_restricted" t-model="state.form.access_level"/>
+                                <span><strong>Role Restricted</strong><p>Only users with specific roles can view.</p></span>
+                            </label>
+                            <label class="dm-access-choice">
+                                <input type="radio" name="dm-access" value="internal" t-model="state.form.access_level"/>
+                                <span><strong>Internal Only</strong><p>Only authenticated employees within your organization.</p></span>
+                            </label>
+                            <label class="dm-access-choice">
+                                <input type="radio" name="dm-access" value="private" t-model="state.form.access_level"/>
+                                <span><strong>Private</strong><p>Only you and explicitly invited users.</p></span>
+                            </label>
+                            <label class="dm-field">
+                                <span>Document Owner</span>
+                                <div class="dm-owner-row">
+                                    <select t-model="state.form.owner_id">
+                                        <t t-foreach="users" t-as="user" t-key="user.id">
+                                            <option t-att-value="user.id" t-esc="user.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                            </label>
+                        </section>
+                        <section class="dm-card">
+                            <h2 class="dm-card-title"><i class="fa fa-calendar-o"/> Lifecycle &amp; Expiry</h2>
+                            <div class="dm-field-row">
+                                <label class="dm-field"><span>Effective Date</span><input type="date" t-model="state.form.effective_date"/></label>
+                                <label class="dm-field"><span>Expiry Date</span><input type="date" t-model="state.form.expiry_date"/></label>
+                            </div>
+                            <label class="dm-field">
+                                <span><input type="checkbox" t-model="state.form.expiry_notify"/> Enable Expiry Notifications</span>
+                            </label>
+                        </section>
+                        <section class="dm-card">
+                            <h2 class="dm-card-title"><i class="fa fa-code-fork"/> Version Control</h2>
+                            <div class="dm-version-row">
+                                <span>Initial Version</span>
+                                <strong>v1.0</strong>
+                            </div>
+                            <p class="dm-page-sub">If a file with the same name exists, you must explicitly create a new version.</p>
+                        </section>
+                    </div>
+                </div>
+                <div t-if="state.duplicate" class="dm-dialog" role="dialog" aria-label="Duplicate document">
+                    <h3>A duplicate exists</h3>
+                    <p t-esc="state.duplicate.name"/>
+                    <p>ID <t t-esc="state.duplicate.document_id"/> · Current version <t t-esc="state.duplicate.current_version or 'none'"/></p>
+                    <div class="dm-toolbar">
+                        <button type="button" class="dm-btn" t-on-click="cancel">Cancel</button>
+                        <button type="button" class="dm-btn dm-btn-primary" t-on-click="useNewVersion">Create new version</button>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

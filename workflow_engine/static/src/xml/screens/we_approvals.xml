@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="workflow_engine.Approvals">
+        <div class="we-page we-approvals">
+            <div class="we-page-header">
+                <div>
+                    <h1>Approval &amp; Rule Management</h1>
+                    <p class="we-muted">Configure automated routing, escalation rules, and hierarchical sign-offs.</p>
+                </div>
+                <div class="we-page-actions">
+                    <button type="button" class="we-btn we-btn-ghost" t-on-click="() => this.openHistory()">
+                        <i class="fa fa-history"/> History
+                    </button>
+                    <button t-if="canManage" type="button" class="we-btn we-btn-primary"
+                            t-on-click="() => this.openRuleCreate()">
+                        <i class="fa fa-plus"/> New Rule
+                    </button>
+                </div>
+            </div>
+
+            <t t-if="state.loading">
+                <div class="we-loading">Loading…</div>
+            </t>
+            <t t-elif="state.error">
+                <div class="we-error">
+                    <p t-esc="state.error"/>
+                    <button type="button" class="we-btn we-btn-primary" t-on-click="() => this.load()">Retry</button>
+                </div>
+            </t>
+            <t t-else="">
+                <div class="we-approval-board">
+                    <aside class="we-appr-rail">
+                        <div class="we-kpi-tile">
+                            <div class="we-kpi-head">
+                                <i class="fa fa-check-square-o we-kpi-glyph we-kpi-glyph-primary"/>
+                                <span class="we-kpi-label">Active Rules</span>
+                            </div>
+                            <div class="we-kpi-value" t-esc="activeRuleCount"/>
+                        </div>
+                        <div class="we-kpi-tile">
+                            <div class="we-kpi-head">
+                                <i class="fa fa-exclamation-triangle we-kpi-glyph we-kpi-glyph-danger"/>
+                                <span class="we-kpi-label">Expiring Rules</span>
+                            </div>
+                            <div class="we-kpi-value we-text-danger" t-esc="expiringCount"/>
+                        </div>
+                        <div class="we-card we-health-card">
+                            <div class="we-card-title">Rule Health</div>
+                            <div class="we-health-row"><span>Conflicts Detected</span><strong t-esc="conflictCount"/></div>
+                            <div class="we-health-row"><span>Avg Routing Time</span><strong t-esc="useMockup ? '1.2s' : '—'"/></div>
+                            <button type="button" class="we-link" t-on-click="() => this.runDiagnostic()">Run diagnostic →</button>
+                        </div>
+                    </aside>
+
+                    <div class="we-appr-center">
+                        <div class="we-tabs we-tabs-underline">
+                            <button type="button" class="we-tab" t-att-class="{ active: state.tab === 'hierarchies' }"
+                                    t-on-click="() => this.setTab('hierarchies')">Approval Hierarchies</button>
+                            <button type="button" class="we-tab" t-att-class="{ active: state.tab === 'rules' }"
+                                    t-on-click="() => this.setTab('rules')">Conditional Rules</button>
+                            <button type="button" class="we-tab" t-att-class="{ active: state.tab === 'levels' }"
+                                    t-on-click="() => this.setTab('levels')">Approval Levels</button>
+                            <button type="button" class="we-tab" t-att-class="{ active: state.tab === 'groups' }"
+                                    t-on-click="() => this.setTab('groups')">Approver Groups</button>
+                        </div>
+
+                        <t t-if="state.tab === 'hierarchies' or state.tab === 'levels'">
+                            <div class="we-card we-flow-card">
+                                <div class="we-card-head">
+                                    <div class="we-card-title" t-esc="selectedHierarchy ? selectedHierarchy.name : 'Select a hierarchy'"/>
+                                    <button t-if="canManage and selectedHierarchy and !useMockup" type="button" class="we-icon-btn"
+                                            t-on-click="() => this.openHierarchyEdit(selectedHierarchy)">
+                                        <i class="fa fa-pencil"/>
+                                    </button>
+                                </div>
+                                <div t-if="displayLevels.length" class="we-level-flow">
+                                    <t t-foreach="displayLevels" t-as="level" t-key="level.id or level_index">
+                                        <div class="we-level-node">
+                                            <div class="we-level-rail">
+                                                <div class="we-level-badge">L<t t-esc="level_index + 1"/></div>
+                                                <div class="we-level-connector"/>
+                                            </div>
+                                            <div class="we-level-body">
+                                                <div class="we-level-title-row">
+                                                    <strong t-esc="levelTitle(level, level_index)"/>
+                                                    <span class="we-pill" t-esc="levelRole(level)"/>
+                                                </div>
+                                                <div class="we-muted" t-if="level.hint" t-esc="level.hint"/>
+                                                <div class="we-muted" t-else="">
+                                                    <t t-esc="level.mode"/> · threshold <t t-esc="level.threshold"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </div>
+                                <div t-else="" class="we-empty">
+                                    <p>No approval hierarchies.</p>
+                                    <button t-if="canManage" type="button" class="we-btn we-btn-primary"
+                                            t-on-click="() => this.openHierarchyCreate()">Create hierarchy</button>
+                                </div>
+                            </div>
+                        </t>
+                        <t t-elif="state.tab === 'rules'">
+                            <div class="we-card we-logic-card">
+                                <t t-if="!state.rules.length">
+                                    <div class="we-empty">No conditional rules yet.</div>
+                                </t>
+                                <t t-foreach="state.rules" t-as="rec" t-key="rec.id">
+                                    <button type="button" class="we-rule-row"
+                                            t-att-class="{ active: state.selectedRuleId === rec.id }"
+                                            t-on-click="() => this.selectRule(rec)">
+                                        <div class="we-rule-if">IF <strong t-esc="rec.criterion"/> <span t-esc="rec.operator"/> <strong t-esc="rec.value"/></div>
+                                        <div class="we-rule-then">THEN <span t-esc="rec.rule_type"/> · <span t-esc="rec.name"/></div>
+                                    </button>
+                                </t>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <div class="we-card">
+                                <div class="we-card-title">Approver Groups</div>
+                                <t t-if="!state.groups.length">
+                                    <div class="we-empty">No groups available.</div>
+                                </t>
+                                <div t-else="" class="we-chip-row">
+                                    <t t-foreach="state.groups" t-as="g" t-key="g.id">
+                                        <span class="we-pill">GROUP · <t t-esc="groupLabel(g)"/></span>
+                                    </t>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+
+                    <aside class="we-card we-logic-panel">
+                        <div class="we-card-head">
+                            <div class="we-card-title">Conditional Logic</div>
+                            <span class="we-muted" t-esc="state.ruleForm.id ? ('Rule ID: ' + state.ruleForm.id) : 'New rule'"/>
+                        </div>
+                        <div class="we-logic-block">
+                            <div class="we-logic-label">IF</div>
+                            <div class="we-logic-row">
+                                <select class="we-input" t-model="state.ruleForm.criterion" t-att-disabled="!canManage">
+                                    <option value="value">Total Amount</option>
+                                    <t t-foreach="CRITERIA" t-as="c" t-key="c.id">
+                                        <option t-att-value="c.id" t-esc="c.label"/>
+                                    </t>
+                                </select>
+                                <select class="we-input" t-model="state.ruleForm.operator" t-att-disabled="!canManage">
+                                    <t t-foreach="OPERATORS" t-as="op" t-key="op.id">
+                                        <option t-att-value="op.id" t-esc="op.label"/>
+                                    </t>
+                                </select>
+                                <input class="we-input" type="text" t-model="state.ruleForm.value" t-att-readonly="!canManage"/>
+                            </div>
+                            <div class="we-logic-and">
+                                <span>AND</span>
+                                <select class="we-input" disabled="disabled">
+                                    <option>Department</option>
+                                </select>
+                                <select class="we-input" disabled="disabled">
+                                    <option>equals</option>
+                                </select>
+                                <input class="we-input" type="text" placeholder="Production" disabled="disabled"/>
+                            </div>
+                        </div>
+                        <div class="we-logic-block">
+                            <div class="we-logic-label">THEN</div>
+                            <div class="we-logic-row we-logic-row-1">
+                                <select class="we-input" t-model="state.ruleForm.name" t-att-disabled="!canManage">
+                                    <option value="Require Additional Level">Require Additional Level</option>
+                                    <option t-att-value="state.ruleForm.name" t-esc="state.ruleForm.name"/>
+                                </select>
+                                <select class="we-input">
+                                    <option>Level: L3 (Operations Director)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="we-logic-actions">
+                            <button type="button" class="we-btn we-btn-ghost" t-on-click="() => this.resetRuleForm()">Cancel</button>
+                            <button t-if="canManage" type="button" class="we-btn we-btn-primary" t-att-disabled="state.saving"
+                                    t-on-click="() => this.saveRule()">Save Rule</button>
+                        </div>
+                    </aside>
+                </div>
+            </t>
+
+            <div t-if="state.drawerOpen" class="we-drawer-backdrop" t-on-click="() => this.closeDrawer()"/>
+            <aside t-if="state.drawerOpen" class="we-drawer">
+                <div class="we-drawer-header">
+                    <h2 t-esc="state.drawerKind === 'hierarchy' ? (state.hierarchyForm.id ? 'Edit hierarchy' : 'New hierarchy') : (state.ruleForm.id ? 'Edit rule' : 'New rule')"/>
+                    <button type="button" class="we-btn we-btn-ghost" t-on-click="() => this.closeDrawer()">×</button>
+                </div>
+
+                <t t-if="state.drawerKind === 'hierarchy'">
+                    <div class="we-drawer-body">
+                        <label class="we-field"><span>Name</span>
+                            <input class="we-input" type="text" t-model="state.hierarchyForm.name"/>
+                        </label>
+                        <label class="we-field"><span>Description</span>
+                            <textarea class="we-input" rows="2" t-model="state.hierarchyForm.description"/>
+                        </label>
+                        <label class="we-field"><span>Priority</span>
+                            <input class="we-input" type="number" t-model.number="state.hierarchyForm.priority"/>
+                        </label>
+                        <label class="we-field"><span>Source module</span>
+                            <input class="we-input" type="text" t-model="state.hierarchyForm.source_module"/>
+                        </label>
+                        <label class="we-field"><span>Effective from</span>
+                            <input class="we-input" type="date" t-model="state.hierarchyForm.date_from"/>
+                        </label>
+                        <label class="we-field"><span>Effective to</span>
+                            <input class="we-input" type="date" t-model="state.hierarchyForm.date_to"/>
+                        </label>
+                        <label class="we-check">
+                            <input type="checkbox" t-model="state.hierarchyForm.active"/>
+                            Active
+                        </label>
+                        <div class="we-card-title">Levels &amp; approvers</div>
+                        <t t-foreach="state.hierarchyForm.levels" t-as="level" t-key="level_index">
+                            <div class="we-level-block">
+                                <div class="we-level-row">
+                                    <input class="we-input" type="text" placeholder="Level name" t-model="level.name"/>
+                                    <input class="we-input" type="number" placeholder="Seq" t-model.number="level.sequence"/>
+                                    <select class="we-input" t-model="level.mode">
+                                        <option value="sequential">Sequential</option>
+                                        <option value="parallel">Parallel</option>
+                                    </select>
+                                    <input class="we-input" type="number" placeholder="Threshold" t-model.number="level.threshold"/>
+                                    <button type="button" class="we-btn we-btn-ghost we-btn-sm"
+                                            t-on-click="() => this.removeLevel(level_index)">Remove</button>
+                                </div>
+                                <div class="we-approver-section-label">Users</div>
+                                <div class="we-approver-chips">
+                                    <t t-foreach="state.users" t-as="u" t-key="u.id">
+                                        <label class="we-chip">
+                                            <input type="checkbox"
+                                                   t-att-checked="level.approver_user_ids.includes(u.id)"
+                                                   t-on-change="() => this.toggleApprover(level, u.id)"/>
+                                            <span t-esc="u.name"/>
+                                        </label>
+                                    </t>
+                                </div>
+                                <div class="we-approver-section-label">Groups</div>
+                                <div class="we-group-chips">
+                                    <t t-foreach="state.groups" t-as="g" t-key="g.id">
+                                        <label class="we-chip">
+                                            <input type="checkbox"
+                                                   t-att-checked="level.approver_group_ids.includes(g.id)"
+                                                   t-on-change="() => this.toggleGroup(level, g.id)"/>
+                                            <span t-esc="groupLabel(g)"/>
+                                        </label>
+                                    </t>
+                                </div>
+                                <label class="we-field" style="margin-top: 0.45rem;">
+                                    <span>Fallback user</span>
+                                    <select class="we-input"
+                                            t-att-value="level.fallback_user_id || ''"
+                                            t-on-change="(ev) => this.setFallback(level, ev)">
+                                        <option value="">None</option>
+                                        <t t-foreach="state.users" t-as="u" t-key="'fb_' + u.id">
+                                            <option t-att-value="u.id" t-esc="u.name"/>
+                                        </t>
+                                    </select>
+                                </label>
+                            </div>
+                        </t>
+                        <button type="button" class="we-btn we-btn-ghost" t-on-click="() => this.addLevel()">
+                            + Add level
+                        </button>
+                    </div>
+                    <div class="we-drawer-footer">
+                        <button type="button" class="we-btn we-btn-ghost" t-on-click="() => this.closeDrawer()">Cancel</button>
+                        <button type="button" class="we-btn we-btn-primary" t-att-disabled="state.saving"
+                                t-on-click="() => this.saveHierarchy()">Save</button>
+                    </div>
+                </t>
+                <t t-else="">
+                    <div class="we-drawer-body">
+                        <label class="we-field"><span>Name</span>
+                            <input class="we-input" type="text" t-model="state.ruleForm.name"/>
+                        </label>
+                        <label class="we-field"><span>Rule type</span>
+                            <select class="we-input" t-model="state.ruleForm.rule_type">
+                                <t t-foreach="RULE_TYPES" t-as="rt" t-key="rt.id">
+                                    <option t-att-value="rt.id" t-esc="rt.label"/>
+                                </t>
+                            </select>
+                        </label>
+                        <label class="we-field"><span>Criterion</span>
+                            <select class="we-input" t-model="state.ruleForm.criterion">
+                                <t t-foreach="CRITERIA" t-as="c" t-key="c.id">
+                                    <option t-att-value="c.id" t-esc="c.label"/>
+                                </t>
+                            </select>
+                        </label>
+                        <label class="we-field"><span>Operator</span>
+                            <select class="we-input" t-model="state.ruleForm.operator">
+                                <t t-foreach="OPERATORS" t-as="op" t-key="op.id">
+                                    <option t-att-value="op.id" t-esc="op.label"/>
+                                </t>
+                            </select>
+                        </label>
+                        <label class="we-field"><span>Value</span>
+                            <input class="we-input" type="text" t-model="state.ruleForm.value"/>
+                        </label>
+                        <label class="we-field"><span>Priority</span>
+                            <input class="we-input" type="number" t-model.number="state.ruleForm.priority"/>
+                        </label>
+                        <label class="we-check">
+                            <input type="checkbox" t-model="state.ruleForm.active"/>
+                            Active
+                        </label>
+                    </div>
+                    <div class="we-drawer-footer">
+                        <button type="button" class="we-btn we-btn-ghost" t-on-click="() => this.closeDrawer()">Cancel</button>
+                        <button type="button" class="we-btn we-btn-primary" t-att-disabled="state.saving"
+                                t-on-click="() => this.saveRule()">Save</button>
+                    </div>
+                </t>
+            </aside>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="va_rule_camera_company" model="ir.rule">
+        <field name="name">VA Camera multi-company</field>
+        <field name="model_id" ref="model_va_camera"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_va_user'))]"/>
+    </record>
+    <record id="va_rule_zone_company" model="ir.rule">
+        <field name="name">VA Zone multi-company</field>
+        <field name="model_id" ref="model_va_zone"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_va_user'))]"/>
+    </record>
+    <record id="va_rule_detection_rule_company" model="ir.rule">
+        <field name="name">VA Detection Rule multi-company</field>
+        <field name="model_id" ref="model_va_detection_rule"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_va_user'))]"/>
+    </record>
+    <record id="va_rule_detection_company" model="ir.rule">
+        <field name="name">VA Detection multi-company</field>
+        <field name="model_id" ref="model_va_detection"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_va_user'))]"/>
+    </record>
+    <record id="va_rule_event_company" model="ir.rule">
+        <field name="name">VA Event multi-company</field>
+        <field name="model_id" ref="model_va_event"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_va_user'))]"/>
+    </record>
+    <record id="va_rule_investigation_note_company" model="ir.rule">
+        <field name="name">VA Investigation Note multi-company</field>
+        <field name="model_id" ref="model_va_investigation_note"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_va_user'))]"/>
+    </record>
+    <record id="va_rule_occupancy_snapshot_company" model="ir.rule">
+        <field name="name">VA Occupancy Snapshot multi-company</field>
+        <field name="model_id" ref="model_va_occupancy_snapshot"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_va_user'))]"/>
+    </record>
+</odoo>

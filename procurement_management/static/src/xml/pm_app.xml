@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="procurement_management.NavIcon">
+        <svg class="pm-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <t t-if="item.id === 'dashboard'">
+                <rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/>
+                <rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/>
+                <rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/>
+                <rect x="13.5" y="13.5" width="7" height="7" rx="1.2"/>
+            </t>
+            <t t-elif="item.id === 'requisitions'">
+                <path d="M7 3.5h7l5 5V20.5H7z"/>
+                <path d="M14 3.5V9h5"/>
+                <path d="M10 13h6"/>
+                <path d="M10 16.5h4"/>
+            </t>
+            <t t-elif="item.id === 'rfqs'">
+                <path d="M6 6h9l3 3v9H6z"/>
+                <path d="M15 6v3h3"/>
+                <path d="M9 12h6"/>
+                <path d="M9 15h4"/>
+            </t>
+            <t t-elif="item.id === 'comparison'">
+                <path d="M4 7h7v10H4z"/>
+                <path d="M13 7h7v10h-7z"/>
+                <path d="M6.2 12.2l1.3 1.3 2.4-2.6"/>
+            </t>
+            <t t-elif="item.id === 'approval_matrix'">
+                <path d="M4 5h16v14H4z"/>
+                <path d="M4 10h16"/>
+                <path d="M4 15h16"/>
+                <path d="M10 5v14"/>
+                <path d="M16 5v14"/>
+            </t>
+            <t t-elif="item.id === 'purchase_orders'">
+                <path d="M6 7h12l-1 12H7z"/>
+                <path d="M9 7V5h6v2"/>
+            </t>
+            <t t-elif="item.id === 'goods_receipts'">
+                <path d="M3.5 8.5l8.5-4 8.5 4-8.5 4z"/>
+                <path d="M3.5 8.5v7l8.5 4 8.5-4v-7"/>
+                <path d="M12 12.5v7"/>
+            </t>
+            <t t-elif="item.id === 'invoice_matching'">
+                <path d="M7 3.5h10v17l-2-1.2-2 1.2-2-1.2-2 1.2-2-1.2z"/>
+                <path d="M10 8h4"/>
+                <path d="M10 12h4"/>
+            </t>
+            <t t-elif="item.id === 'suppliers'">
+                <circle cx="9" cy="8" r="2.2"/>
+                <circle cx="16" cy="9" r="1.7"/>
+                <path d="M4.8 18.2c.5-2.3 2.2-3.5 4.2-3.5s3.7 1.2 4.2 3.5"/>
+                <path d="M14.2 15c1.3-.3 2.6.1 3.5 1.5"/>
+            </t>
+            <t t-elif="item.id === 'reports'">
+                <path d="M4 19V5"/>
+                <path d="M4 19h16"/>
+                <path d="M8 16v-5"/>
+                <path d="M12 16V8"/>
+                <path d="M16 16v-3"/>
+            </t>
+            <t t-elif="item.id === 'report_builder'">
+                <path d="M4 7h16"/>
+                <path d="M4 12h16"/>
+                <path d="M4 17h10"/>
+                <circle cx="8" cy="7" r="1.5"/>
+                <circle cx="15" cy="12" r="1.5"/>
+                <circle cx="9" cy="17" r="1.5"/>
+            </t>
+            <t t-else="">
+                <circle cx="12" cy="12" r="8"/>
+                <path d="M12 8v5l3 2"/>
+            </t>
+        </svg>
+    </t>
+
+    <t t-name="procurement_management.App">
+        <div class="pm-shell o_action">
+            <aside class="pm-sidebar" aria-label="Procurement">
+                <div class="pm-logo">
+                    <span class="pm-logo-mark" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8">
+                            <rect x="4" y="4" width="6" height="6" rx="1"/>
+                            <rect x="14" y="4" width="6" height="6" rx="1"/>
+                            <rect x="4" y="14" width="6" height="6" rx="1"/>
+                            <rect x="14" y="14" width="6" height="6" rx="1"/>
+                        </svg>
+                    </span>
+                    <span class="pm-logo-text">
+                        <strong>PrecastMPS</strong>
+                        <small>Planning Suite</small>
+                    </span>
+                </div>
+                <nav class="pm-nav">
+                    <t t-foreach="screens" t-as="item" t-key="item.id">
+                        <button t-if="navAllowed(item.id)" type="button"
+                                class="pm-nav-item"
+                                t-att-class="{ active: state.screen === item.id }"
+                                t-att-data-screen="item.id"
+                                t-att-aria-current="state.screen === item.id ? 'page' : false"
+                                t-on-click="onNavClick">
+                            <t t-call="procurement_management.NavIcon"/>
+                            <span t-esc="item.label"/>
+                        </button>
+                    </t>
+                </nav>
+            </aside>
+            <section class="pm-main">
+                <header class="pm-topbar">
+                    <span class="pm-suite-name">PrecastMPS Planning Suite</span>
+                    <label class="pm-top-search">
+                        <input class="pm-input" placeholder="Search..." t-model="state.query" t-on-keydown="onSearchKey"/>
+                    </label>
+                    <div class="pm-top-tools">
+                        <span class="pm-icon-btn" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/>
+                                <path d="M10 19a2 2 0 0 0 4 0"/>
+                            </svg>
+                        </span>
+                        <button type="button" class="pm-icon-btn" aria-label="Odoo apps" t-on-click="openOdooHome">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="6" cy="6" r="1.6"/>
+                                <circle cx="12" cy="6" r="1.6"/>
+                                <circle cx="18" cy="6" r="1.6"/>
+                                <circle cx="6" cy="12" r="1.6"/>
+                                <circle cx="12" cy="12" r="1.6"/>
+                                <circle cx="18" cy="12" r="1.6"/>
+                                <circle cx="6" cy="18" r="1.6"/>
+                                <circle cx="12" cy="18" r="1.6"/>
+                                <circle cx="18" cy="18" r="1.6"/>
+                            </svg>
+                        </button>
+                        <span class="pm-help">Help</span>
+                        <span class="pm-avatar" t-esc="userInitial()"/>
+                    </div>
+                </header>
+                <div class="pm-body">
+                <nav class="pm-crumb" aria-label="Breadcrumb">
+                    <span>Utility Management</span>
+                    <span class="pm-crumb-sep">/</span>
+                    <span>Procurement</span>
+                    <span class="pm-crumb-sep">/</span>
+                    <span t-esc="current.label"/>
+                </nav>
+                <div class="pm-content">
+                    <nav t-if="showFlow" class="pm-flow" aria-label="Procurement flow">
+                        <t t-foreach="flowSteps" t-as="step" t-key="step_index">
+                            <button type="button" class="pm-flow-step" t-att-data-screen="step.screen" t-att-class="{ active: flowIndex === step_index }" t-on-click="openFlow" t-esc="step.label"/>
+                            <span t-if="step_index &lt; flowSteps.length - 1" class="pm-flow-arrow">→</span>
+                        </t>
+                    </nav>
+                    <header class="pm-page-head">
+                        <div class="pm-page-title">
+                            <h1 t-esc="current.title"/>
+                            <p t-if="state.screen === 'approval_matrix'" class="pm-subtitle">Configure and manage purchasing authorization workflows.</p>
+                            <p t-if="state.screen === 'invoice_matching'" class="pm-subtitle">3 way match validation for pending supplier invoices.</p>
+                        </div>
+                        <div class="pm-actions">
+                            <t t-if="state.screen === 'dashboard'">
+                                <button type="button" class="pm-btn" t-on-click="goReports" t-att-disabled="state.busy">Export Report</button>
+                                <button type="button" class="pm-btn pm-btn-primary" t-on-click="goRequisition" t-att-disabled="state.busy">+ New Requisition</button>
+                            </t>
+                            <t t-if="state.screen === 'requisitions'">
+                                <button type="button" class="pm-btn pm-btn-primary" t-on-click="openCreate" t-att-disabled="state.busy">Create Requisition</button>
+                            </t>
+                            <t t-if="state.screen === 'rfqs'">
+                                <button type="button" class="pm-btn" t-on-click="focusRfqSearch">Filter</button>
+                                <button t-if="state.data.actions and state.data.actions.create" type="button" class="pm-btn pm-btn-primary" t-on-click="openCreate" t-att-disabled="state.busy">+ New RFQ</button>
+                            </t>
+                            <t t-if="state.screen === 'comparison'">
+                                <button type="button" class="pm-btn" t-on-click="comparisonReject" t-att-disabled="state.busy or !(state.data.actions and state.data.actions.reject) or !state.form.focusId">Reject</button>
+                                <button type="button" class="pm-btn" t-on-click="comparisonSave" t-att-disabled="state.busy or !(state.data.actions and state.data.actions.save)">Save</button>
+                                <button type="button" class="pm-btn pm-btn-primary" t-on-click="comparisonSelect" t-att-disabled="state.busy or !(state.data.actions and state.data.actions.select) or !state.form.focusId">Select Supplier</button>
+                            </t>
+                            <t t-if="state.screen === 'approval_matrix'">
+                                <button type="button" class="pm-btn pm-btn-primary" t-on-click="openCreate" t-att-disabled="state.busy">+ New Matrix</button>
+                            </t>
+                            <t t-if="state.screen === 'invoice_matching'">
+                                <button type="button" class="pm-btn" t-on-click="focusInvoiceSearch">Filter</button>
+                                <button type="button" class="pm-btn pm-btn-primary" data-command="batch" t-on-click="invoiceAction" t-att-disabled="state.busy">Auto-Match Batch</button>
+                            </t>
+                            <t t-if="state.screen === 'reports'">
+                                <button type="button" class="pm-btn pm-btn-primary" t-on-click="goBuilder" t-att-disabled="state.busy">+ New Custom Report</button>
+                            </t>
+                            <t t-if="state.screen === 'report_builder'">
+                                <button type="button" class="pm-btn" data-format="pdf" t-on-click="exportReport" t-att-disabled="state.busy">PDF</button>
+                                <button type="button" class="pm-btn" data-format="xlsx" t-on-click="exportReport" t-att-disabled="state.busy">Excel</button>
+                                <button type="button" class="pm-btn" data-format="csv" t-on-click="exportReport" t-att-disabled="state.busy">CSV</button>
+                                <button type="button" class="pm-btn pm-btn-primary" t-on-click="() => this.saveReport(false)" t-att-disabled="state.busy">Save Configuration</button>
+                            </t>
+                            <t t-if="state.screen === 'purchase_orders'">
+                                <button type="button" class="pm-btn" t-on-click="focusOrderSearch">Filter</button>
+                                <button type="button" class="pm-btn pm-btn-primary" t-on-click="orderCreate" t-att-disabled="state.busy">+</button>
+                            </t>
+                            <t t-if="state.screen === 'suppliers'">
+                                <button type="button" class="pm-btn pm-btn-primary" t-on-click="openCreate" t-att-disabled="state.busy">+ Add Supplier</button>
+                            </t>
+                            <t t-if="state.screen === 'audit'">
+                                <button type="button" class="pm-btn" t-on-click="exportAudit" t-att-disabled="state.busy">Export</button>
+                            </t>
+                        </div>
+                    </header>
+                    <p t-if="state.notice" class="pm-notice" t-esc="state.notice"/>
+                    <p t-if="state.error" class="pm-banner" t-esc="state.error"/>
+                    <div t-if="state.loading" class="pm-loading" role="status">
+                        <span class="pm-skel"/>
+                        <span class="pm-skel"/>
+                        <span class="pm-skel"/>
+                        <span>Loading procurement data...</span>
+                    </div>
+                    <t t-else="">
+                        <t t-if="state.screen === 'dashboard'" t-call="procurement_management.Dashboard"/>
+                        <t t-if="state.screen === 'requisitions'" t-call="procurement_management.Requisitions"/>
+                        <t t-if="state.screen === 'rfqs'" t-call="procurement_management.Rfqs"/>
+                        <t t-if="state.screen === 'comparison'" t-call="procurement_management.Comparison"/>
+                        <t t-if="state.screen === 'approval_matrix'" t-call="procurement_management.Matrix"/>
+                        <t t-if="state.screen === 'purchase_orders'" t-call="procurement_management.Orders"/>
+                        <t t-if="state.screen === 'goods_receipts'" t-call="procurement_management.Receipts"/>
+                        <t t-if="state.screen === 'invoice_matching'" t-call="procurement_management.Invoices"/>
+                        <t t-if="state.screen === 'suppliers'" t-call="procurement_management.Suppliers"/>
+                        <t t-if="state.screen === 'reports'" t-call="procurement_management.Reports"/>
+                        <t t-if="state.screen === 'report_builder'" t-call="procurement_management.Builder"/>
+                        <t t-if="state.screen === 'audit'" t-call="procurement_management.Audit"/>
+                    </t>
+                    <t t-if="state.drawer and state.screen !== 'purchase_orders' and state.screen !== 'goods_receipts' and state.screen !== 'invoice_matching' and state.screen !== 'suppliers'" t-call="procurement_management.Drawer"/>
+                </div>
+                </div>
+            </section>
+        </div>
+    </t>
+</templates>

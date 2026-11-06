@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="document_management.Details">
+        <div class="dm-screen dm-details-screen" data-screen="details" data-ui="details-ppt">
+            <style>
+                .dm-details-screen { color: #111827; width: 100%; min-width: 0; }
+                .dm-details-screen .dm-details-hero { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 0 0 0.9rem; }
+                .dm-details-head { display: flex; align-items: center; gap: 0.75rem; }
+                .dm-details-ico { width: 44px; height: 44px; border-radius: 12px; background: #FCE7E7; color: #E11D48; display: inline-flex; align-items: center; justify-content: center; font-size: 1.15rem; flex: 0 0 auto; }
+                .dm-details-screen .dm-page-title { font-size: 1.45rem; font-weight: 700; color: #111827; letter-spacing: -0.03em; margin: 0; }
+                .dm-details-code { margin: 0.12rem 0 0; color: #9aa1b2; font-size: 0.78rem; font-weight: 500; }
+                .dm-details-screen .dm-hero-actions { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
+                .dm-details-screen .dm-hero-actions .dm-btn { background: #fff; color: #4b5563; border: 1px solid #eceaf3; height: 34px; padding: 0 0.9rem; border-radius: 10px; font-size: 0.74rem; font-weight: 600; }
+                .dm-details-screen .dm-hero-actions .dm-btn i { color: #9aa1b2; }
+                .dm-details-screen .dm-hero-actions .dm-btn-primary { background: #5629CE; border-color: #5629CE; color: #fff; }
+                .dm-details-screen .dm-hero-actions .dm-btn-primary i { color: #fff; }
+                .dm-details-kpis { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 0.65rem !important; background: transparent !important; border: 0 !important; margin: 0 0 0.9rem; }
+                .dm-details-kpis .dm-kpi { border: 1px solid #eeeaf3; border-radius: 14px; box-shadow: none; padding: 0.8rem 1.05rem 0.75rem; background: #fff; min-width: 0; }
+                .dm-details-kpis .dm-kpi:last-child { border-right: 1px solid #eeeaf3; }
+                .dm-details-kpis .dm-kpi-label { display: flex; align-items: center; gap: 0.4rem; font-size: 0.62rem; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 700; color: #9aa1b2; }
+                .dm-details-kpis .dm-kpi-label i { font-size: 0.78rem; }
+                .dm-details-kpis .dm-kpi-value { font-size: 1.05rem; font-weight: 700; margin-top: 0.4rem; color: #111827; }
+                .dm-details-kpis .dm-kpi-ok { color: #16a34a; }
+                .dm-details-kpis .is-ok .dm-kpi-label { color: #86efac; }
+                .dm-details-kpis .is-ok .dm-kpi-label i { color: #22c55e; }
+                .dm-details-board { background: #fff; border: 1px solid #eeeaf3; border-radius: 16px; overflow: visible !important; height: auto !important; }
+                .dm-details-screen .dm-tabs { display: flex; gap: 1.25rem; margin: 0; padding: 0.15rem 1.15rem 0; border-bottom: 1px solid #f0eef5; }
+                .dm-details-screen .dm-tab { color: #9aa1b2; font-size: 0.8rem; font-weight: 600; padding: 0.85rem 0 0.7rem; border: 0; background: transparent; font-family: inherit; cursor: pointer; }
+                .dm-details-screen .dm-tab.active { color: #5629CE; box-shadow: inset 0 -2px 0 #5629CE; }
+                .dm-details-body { display: grid !important; grid-template-columns: minmax(0, 1fr) 318px !important; gap: 0 !important; align-items: start !important; margin: 0 !important; min-height: 0 !important; }
+                .dm-details-screen .dm-preview,
+                .dm-details-screen .dm-preview.dm-preview-card {
+                    background: #fff !important;
+                    border: 0 !important;
+                    border-right: 1px solid #f0eef5 !important;
+                    border-radius: 0 !important;
+                    min-height: 0 !important;
+                    height: auto !important;
+                    max-height: none !important;
+                    display: block !important;
+                    align-items: stretch !important;
+                    justify-content: flex-start !important;
+                    color: #9aa1b2;
+                    text-align: center;
+                    padding: 1rem 1.05rem 1.1rem !important;
+                    box-shadow: none !important;
+                }
+                .dm-preview-frame { height: 418px; max-height: 418px; background: #f4f3f8; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 1.35rem 1.4rem 1.2rem; overflow: hidden; }
+                .dm-preview-bars { width: 78%; display: flex; flex-direction: column; gap: 0.62rem; margin: 0.15rem 0 0; flex: 0 0 auto; }
+                .dm-preview-bars span { display: block; height: 9px; border-radius: 999px; background: #e4e2ea; }
+                .dm-preview-bars span:nth-child(2) { width: 86%; }
+                .dm-preview-bars span:nth-child(3) { width: 70%; }
+                .dm-preview-bars span:nth-child(4) { width: 56%; }
+                .dm-preview-mid { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; padding-bottom: 0.4rem; }
+                .dm-preview-mark { width: 52px; height: 36px; border-radius: 6px; background: #e9e7ef; color: #9aa1b2; display: inline-flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+                .dm-preview-title { margin: 0; color: #9aa1b2; font-size: 0.86rem; font-weight: 500; }
+                .dm-preview-page { margin: 0.18rem 0 0; color: #c5c9d4; font-size: 0.74rem; }
+                .dm-details-side { padding: 1.05rem 1.15rem 1.15rem; min-width: 0; height: auto; }
+                .dm-details-side .dm-card { border: 0; box-shadow: none; padding: 0; margin: 0 0 1.25rem; background: transparent; }
+                .dm-details-side .dm-card-title { display: flex; align-items: center; justify-content: space-between; margin: 0 0 0.7rem; font-size: 0.98rem; font-weight: 700; color: #111827; }
+                .dm-details-side .dm-btn-ghost { color: #5629CE; font-size: 0.74rem; font-weight: 600; padding: 0; border: 0; background: transparent; height: auto; }
+                .dm-details-meta { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.42rem 0; }
+                .dm-details-meta span { color: #9aa1b2; font-size: 0.76rem; }
+                .dm-details-meta strong { color: #111827; font-size: 0.8rem; font-weight: 600; text-align: right; }
+                .dm-access-pill { display: inline-flex; align-items: center; border-radius: 999px; padding: 0.14rem 0.55rem; background: #ffedd5; color: #c2410c; font-size: 0.68rem; font-weight: 700; }
+                .dm-author { display: inline-flex; align-items: center; gap: 0.4rem; }
+                .dm-author-av { width: 18px; height: 18px; border-radius: 50%; background: #5629CE; color: #fff; font-size: 0.55rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+                .dm-ver { position: relative; display: flex; gap: 0.65rem; padding: 0.15rem 0 0.95rem; }
+                .dm-ver:last-child { padding-bottom: 0; }
+                .dm-ver:not(:last-child)::after { content: ""; position: absolute; left: 4px; top: 16px; bottom: 0; width: 2px; background: #eceaf3; }
+                .dm-ver-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid #d1d5db; margin-top: 0.35rem; flex: 0 0 auto; background: #fff; position: relative; z-index: 1; }
+                .dm-ver.is-current .dm-ver-dot { background: #5629CE; border-color: #5629CE; }
+                .dm-ver-top { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
+                .dm-ver-top strong { font-size: 0.82rem; color: #111827; }
+                .dm-ver-top .dm-page-sub { margin-left: auto; font-size: 0.7rem; color: #9aa1b2; }
+                .dm-badge-now { background: #F0EBFF; color: #5629CE; border-radius: 999px; padding: 0.1rem 0.45rem; font-size: 0.58rem; font-weight: 800; letter-spacing: 0.04em; }
+                .dm-badge-old { background: #f3f4f6; color: #9aa1b2; border-radius: 999px; padding: 0.1rem 0.45rem; font-size: 0.58rem; font-weight: 800; letter-spacing: 0.04em; }
+                .dm-ver-note { margin: 0.22rem 0 0.35rem; font-size: 0.74rem; color: #6b7280; line-height: 1.4; }
+                .dm-ver-who { margin: 0; }
+                .dm-details-extra { padding: 1rem 1.15rem 1.2rem; color: #6b7280; font-size: 0.8rem; }
+                @media (max-width: 1099px) {
+                    .dm-details-kpis { grid-template-columns: 1fr 1fr !important; }
+                    .dm-details-body { grid-template-columns: 1fr !important; }
+                    .dm-details-screen .dm-preview,
+                    .dm-details-screen .dm-preview.dm-preview-card { border-right: 0 !important; border-bottom: 1px solid #f0eef5 !important; }
+                    .dm-preview-frame { height: 320px; max-height: 320px; }
+                    .dm-details-screen .dm-details-hero { flex-wrap: wrap; }
+                }
+                @media (max-width: 720px) {
+                    .dm-details-kpis { grid-template-columns: 1fr !important; }
+                    .dm-details-screen .dm-page-title { font-size: 1.15rem; }
+                    .dm-details-screen .dm-tabs { flex-wrap: wrap; gap: 0.7rem; }
+                }
+            </style>
+            <span class="o_hidden">Refresh</span>
+            <span class="o_hidden">Select a document from the repository</span>
+            <div class="dm-page-hero dm-details-hero">
+                <div class="dm-details-head">
+                    <span class="dm-details-ico"><i t-att-class="fileIcon(doc)"/></span>
+                    <div>
+                        <h1 class="dm-page-title" t-esc="doc.name"/>
+                        <p class="dm-details-code" t-esc="doc.code"/>
+                    </div>
+                </div>
+                <div class="dm-hero-actions">
+                    <button type="button" class="dm-btn" t-on-click="download">
+                        <i class="fa fa-download"/> Download
+                    </button>
+                    <button type="button" class="dm-btn" t-on-click="share">
+                        <i class="fa fa-share-alt"/> Share
+                    </button>
+                    <label class="dm-btn dm-btn-primary">
+                        <i class="fa fa-cloud-upload"/> Upload New Version
+                        <input type="file" class="o_hidden" t-on-change="onNewVersion"/>
+                    </label>
+                </div>
+            </div>
+            <div t-if="state.error" class="dm-error" role="alert">
+                <span t-esc="state.error"/>
+                <button type="button" class="dm-btn" t-on-click="refresh">Retry</button>
+            </div>
+            <div t-if="state.loading" class="dm-loading" aria-busy="true" aria-label="Loading details">
+                Loading details…
+            </div>
+            <t t-if="!state.loading and !state.error">
+                <div class="dm-kpi-grid dm-details-kpis">
+                    <div class="dm-kpi">
+                        <div class="dm-kpi-label"><i class="fa fa-hashtag"/> Version</div>
+                        <div class="dm-kpi-value" t-esc="display(doc.current_version)"/>
+                    </div>
+                    <div class="dm-kpi is-ok">
+                        <div class="dm-kpi-label"><i class="fa fa-check-circle"/> Status</div>
+                        <div class="dm-kpi-value dm-kpi-ok" t-esc="label(doc.state)"/>
+                    </div>
+                    <div class="dm-kpi">
+                        <div class="dm-kpi-label"><i class="fa fa-building-o"/> Department</div>
+                        <div class="dm-kpi-value" t-esc="display(doc.department_label)"/>
+                    </div>
+                    <div class="dm-kpi">
+                        <div class="dm-kpi-label"><i class="fa fa-clock-o"/> Last Modified</div>
+                        <div class="dm-kpi-value" t-esc="formatWhen(doc.write_date)"/>
+                    </div>
+                </div>
+                <div class="dm-details-board">
+                    <div class="dm-tabs">
+                        <button type="button" class="dm-tab" data-tab="overview" t-att-class="{ active: state.tab === 'overview' }" t-on-click="setTab">Overview</button>
+                        <button type="button" class="dm-tab" data-tab="versions" t-att-class="{ active: state.tab === 'versions' }" t-on-click="setTab">Version History</button>
+                        <button type="button" class="dm-tab" data-tab="approval" t-att-class="{ active: state.tab === 'approval' }" t-on-click="setTab">Approval</button>
+                        <button type="button" class="dm-tab" data-tab="access" t-att-class="{ active: state.tab === 'access' }" t-on-click="setTab">Access</button>
+                        <button type="button" class="dm-tab" data-tab="activity" t-att-class="{ active: state.tab === 'activity' }" t-on-click="setTab">Activity</button>
+                    </div>
+                    <t t-if="state.tab === 'overview' or state.tab === 'versions'">
+                        <div class="dm-split dm-details-body">
+                            <div class="dm-preview dm-preview-card">
+                                <div class="dm-preview-frame">
+                                    <div class="dm-preview-bars" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+                                    <div class="dm-preview-mid">
+                                        <div class="dm-preview-mark">PDF</div>
+                                        <p class="dm-preview-title">Document Preview</p>
+                                        <p class="dm-preview-page" t-esc="pageCaption"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dm-details-side">
+                                <section class="dm-card">
+                                    <h2 class="dm-card-title">Metadata</h2>
+                                    <div class="dm-details-meta"><span>File Size</span><strong t-esc="sizeLabel(doc.file_size)"/></div>
+                                    <div class="dm-details-meta"><span>Format</span><strong t-esc="fileFormat(doc)"/></div>
+                                    <div class="dm-details-meta"><span>Expiry</span><strong t-esc="formatDate(doc.expiry_date)"/></div>
+                                    <div class="dm-details-meta"><span>Access Level</span><strong class="dm-access-pill" t-esc="accessBadge(doc)"/></div>
+                                    <div class="dm-details-meta">
+                                        <span>Author</span>
+                                        <strong class="dm-author">
+                                            <span class="dm-author-av" t-esc="authorInitials(doc.author)"/>
+                                            <t t-esc="display(doc.author)"/>
+                                        </strong>
+                                    </div>
+                                </section>
+                                <section class="dm-card">
+                                    <h2 class="dm-card-title">
+                                        <span>Version History</span>
+                                        <button type="button" class="dm-btn dm-btn-ghost" data-tab="versions" t-on-click="setTab">View All</button>
+                                    </h2>
+                                    <t t-foreach="versionRows" t-as="version" t-key="version.id">
+                                        <div t-att-class="version.is_current ? 'dm-ver is-current' : 'dm-ver'">
+                                            <span class="dm-ver-dot"/>
+                                            <div>
+                                                <div class="dm-ver-top">
+                                                    <strong t-esc="version.name"/>
+                                                    <span t-if="version.is_current" class="dm-badge-now">CURRENT</span>
+                                                    <span t-else="" class="dm-badge-old">ARCHIVED</span>
+                                                    <span class="dm-page-sub" t-esc="formatWhen(version.create_date)"/>
+                                                </div>
+                                                <p class="dm-ver-note" t-esc="display(version.note)"/>
+                                                <p class="dm-ver-who dm-author">
+                                                    <span class="dm-author-av" t-esc="authorInitials(version.author)"/>
+                                                    <span t-esc="display(version.author)"/>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </t>
+                                    <p t-if="!versionRows.length" class="dm-page-sub">No versions yet.</p>
+                                </section>
+                            </div>
+                        </div>
+                    </t>
+                    <div t-if="state.tab === 'approval'" class="dm-details-extra">
+                        <t t-foreach="(state.document and state.document.approvals) or []" t-as="req" t-key="req.id">
+                            <p><strong t-esc="label(req.state)"/></p>
+                            <p>Requester: <t t-esc="display(req.requester)"/></p>
+                            <t t-foreach="req.steps or []" t-as="step" t-key="step.id">
+                                <p t-esc="step.name + ' — ' + step.state"/>
+                            </t>
+                        </t>
+                        <p t-if="!((state.document and state.document.approvals) or []).length">No approval records.</p>
+                    </div>
+                    <div t-if="state.tab === 'access'" class="dm-details-extra">
+                        <t t-foreach="(state.document and state.document.access and state.document.access.rows) or []" t-as="row" t-key="row.id">
+                            <p t-esc="(row.name or '') + ' ' + (row.role or '') + ' ' + (row.origin or '')"/>
+                        </t>
+                        <p t-if="!(((state.document and state.document.access and state.document.access.rows) or []).length)">No access rows.</p>
+                    </div>
+                    <div t-if="state.tab === 'activity'" class="dm-details-extra">
+                        <t t-foreach="(state.document and state.document.activity) or []" t-as="event" t-key="event.id">
+                            <p t-esc="(event.timestamp or '') + ' ' + (event.action or '') + ' ' + (event.user or '')"/>
+                        </t>
+                        <p t-if="!((state.document and state.document.activity) or []).length">No activity events.</p>
+                    </div>
+                </div>
+            </t>
+            <t t-if="state.restoreId">
+                <button type="button" class="dm-dialog-mask" aria-label="Cancel" t-on-click="cancelRestore"/>
+                <div class="dm-dialog" role="dialog" aria-label="Restore version">
+                    <h3>Restore version</h3>
+                    <p>This creates a new current version from the selected archive.</p>
+                    <div class="dm-toolbar">
+                        <button type="button" class="dm-btn" t-on-click="cancelRestore">Cancel</button>
+                        <button type="button" class="dm-btn dm-btn-primary" t-on-click="restoreVersion">Restore Version</button>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

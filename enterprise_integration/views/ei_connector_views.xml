@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- UI 3: Enterprise Connectors -->
+    <record id="view_ei_connector_search" model="ir.ui.view">
+        <field name="name">ei.connector.search</field>
+        <field name="model">ei.connector</field>
+        <field name="arch" type="xml">
+            <search string="Enterprise Connectors">
+                <field name="name"/>
+                <field name="provider_code"/>
+                <field name="site_ref"/>
+                <filter string="All" name="all" domain="[]"/>
+                <filter string="ERP" name="cat_erp" domain="[('category', '=', 'erp')]"/>
+                <filter string="CRM" name="cat_crm" domain="[('category', '=', 'crm')]"/>
+                <filter string="Banking" name="cat_bank" domain="[('category', '=', 'bank')]"/>
+                <filter string="WhatsApp" name="cat_whatsapp" domain="[('category', '=', 'whatsapp')]"/>
+                <filter string="Legacy" name="cat_legacy" domain="[('category', '=', 'legacy')]"/>
+                <separator/>
+                <filter string="Mock / Stub" name="is_mock" domain="[('is_mock', '=', True)]"/>
+                <filter string="Connected" name="connected" domain="[('state', '=', 'connected')]"/>
+                <filter string="Error" name="error" domain="[('state', '=', 'error')]"/>
+                <group>
+                    <filter string="Category" name="group_category" context="{'group_by': 'category'}"/>
+                    <filter string="State" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Health" name="group_health" context="{'group_by': 'health_state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_ei_connector_kanban" model="ir.ui.view">
+        <field name="name">ei.connector.kanban</field>
+        <field name="model">ei.connector</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile" default_group_by="category">
+                <field name="name"/>
+                <field name="category"/>
+                <field name="state"/>
+                <field name="health_state"/>
+                <field name="is_mock"/>
+                <field name="provider_code"/>
+                <field name="last_health_at"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="ei-connector-card">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                <div class="ei-connector-card-title"><field name="name"/></div>
+                                <span t-if="record.is_mock.raw_value" class="ei-badge-mock">MOCK / DEMO</span>
+                            </div>
+                            <div class="text-muted small mb-1">
+                                <field name="category"/> · <field name="provider_code"/>
+                            </div>
+                            <div class="mb-1">
+                                <field name="state" widget="badge"/>
+                                <field name="health_state" widget="badge"/>
+                            </div>
+                            <div class="text-muted small">Last check: <field name="last_health_at"/></div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_ei_connector_list" model="ir.ui.view">
+        <field name="name">ei.connector.list</field>
+        <field name="model">ei.connector</field>
+        <field name="arch" type="xml">
+            <list string="Enterprise Connectors">
+                <field name="name"/>
+                <field name="category"/>
+                <field name="provider_code"/>
+                <field name="adapter_key"/>
+                <field name="is_mock" string="Mock"/>
+                <field name="state" widget="badge"
+                         decoration-success="state == 'connected'"
+                         decoration-danger="state == 'error'"
+                         decoration-warning="state in ('pending_configuration', 'connecting')"/>
+                <field name="health_state" widget="badge"/>
+                <field name="last_health_at"/>
+                <field name="sync_frequency"/>
+                <field name="site_ref" optional="hide"/>
+                <field name="integration_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_ei_connector_form" model="ir.ui.view">
+        <field name="name">ei.connector.form</field>
+        <field name="model">ei.connector</field>
+        <field name="arch" type="xml">
+            <form string="Enterprise Connector">
+                <header>
+                    <button name="action_test_connection" type="object" string="Test Connection"
+                            class="btn-primary" groups="enterprise_integration.group_ei_manager"/>
+                    <button name="action_health_check" type="object" string="Health Check"
+                            groups="enterprise_integration.group_ei_manager"/>
+                    <button name="action_enable" type="object" string="Enable"
+                            groups="enterprise_integration.group_ei_manager"/>
+                    <button name="action_disable" type="object" string="Disable"
+                            groups="enterprise_integration.group_ei_manager"/>
+                    <button name="action_reconnect" type="object" string="Reconnect"
+                            groups="enterprise_integration.group_ei_manager"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="pending_configuration,connecting,connected,disconnected,error,disabled"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="MOCK / DEMO" bg_color="text-bg-warning" invisible="not is_mock"/>
+                    <div class="ei-page-banner">
+                        <h1>Enterprise Connectors</h1>
+                        <p>Manage and monitor external system integrations. ERP, CRM, Banking, WhatsApp and Legacy are category filters — not sidebar menus.</p>
+                    </div>                    <div class="ei-section-note" invisible="not is_mock">
+                        This connector uses a mock/stub adapter. It is not a live external connection.
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="integration_id"/>
+                            <field name="category"/>
+                            <field name="provider_code"/>
+                            <field name="adapter_key"/>
+                            <field name="is_mock"/>
+                            <field name="version"/>
+                            <field name="auth_method"/>
+                        </group>
+                        <group>
+                            <field name="direction"/>
+                            <field name="sync_frequency"/>
+                            <field name="base_url"/>
+                            <field name="health_state"/>
+                            <field name="last_health_at"/>
+                            <field name="last_error"/>
+                            <field name="site_ref"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Credentials" groups="enterprise_integration.group_ei_manager">
+                            <field name="credential_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="auth_type"/>
+                                    <field name="username"/>
+                                    <field name="secret_display"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                                <form>
+                                    <group>
+                                        <field name="name"/>
+                                        <field name="auth_type"/>
+                                        <field name="username"/>
+                                        <field name="secret" password="True"/>
+                                        <field name="token" password="True"/>
+                                        <field name="secret_display"/>
+                                        <field name="extra_json"/>
+                                        <field name="state"/>
+                                        <field name="active"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="Mapping / Transformation">
+                            <field name="mapping_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="source_field"/>
+                                    <field name="target_field"/>
+                                    <field name="transform_type"/>
+                                    <field name="transform_expr"/>
+                                    <field name="active"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Sync / Settings">
+                            <group>
+                                <field name="sync_frequency"/>
+                                <field name="settings_json" placeholder='{"mock_scenario":"success","protocol":"rest"}'/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_ei_connectors_legacy_window" model="ir.actions.act_window">
+        <field name="name">Enterprise Connectors (Records)</field>
+        <field name="res_model">ei.connector</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_ei_connector_search"/>
+        <field name="context">{'search_default_group_category': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Add an enterprise connector</p>
+            <p>ERP, CRM, Banking, WhatsApp and Legacy are category filters inside this screen. Connectors default to MOCK / DEMO adapters.</p>
+        </field>
+    </record>
+</odoo>

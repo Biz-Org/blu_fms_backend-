@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="workflow_engine.Dashboard">
+        <div class="we-page we-dashboard">
+            <div class="we-page-header">
+                <div>
+                    <h1>Workflow Engine Dashboard</h1>
+                    <p class="we-muted">Overview of workflow status, tasks, and system performance.</p>
+                </div>
+                <div class="we-page-actions">
+                    <button type="button" class="we-btn we-btn-ghost we-btn-outline" t-on-click="() => this.navigate('templates')">
+                        <i class="fa fa-clone"/> Browse Templates
+                    </button>
+                    <button type="button" class="we-btn we-btn-primary" t-on-click="() => this.navigate('builder')">
+                        <i class="fa fa-plus"/> Create Workflow
+                    </button>
+                </div>
+            </div>
+
+            <div class="we-kpi-grid we-kpi-grid-4">
+                <div class="we-kpi-tile" t-on-click="() => this.navigate('builder')">
+                    <div class="we-kpi-head">
+                        <i class="fa fa-share-alt we-kpi-glyph we-kpi-glyph-primary"/>
+                        <span class="we-kpi-label">Active Workflows</span>
+                    </div>
+                    <div class="we-kpi-value">24</div>
+                </div>
+                <div class="we-kpi-tile" t-on-click="() => this.navigate('tasks')">
+                    <div class="we-kpi-head">
+                        <i class="fa fa-male we-kpi-glyph we-kpi-glyph-primary"/>
+                        <span class="we-kpi-label">Running Instances</span>
+                    </div>
+                    <div class="we-kpi-value">38</div>
+                </div>
+                <div class="we-kpi-tile" t-on-click="() => this.navigate('notifications')">
+                    <div class="we-kpi-head">
+                        <i class="fa fa-hourglass-half we-kpi-glyph we-kpi-glyph-warning"/>
+                        <span class="we-kpi-label">Pending Approvals</span>
+                    </div>
+                    <div class="we-kpi-value">17</div>
+                </div>
+                <div class="we-kpi-tile" t-on-click="() => this.navigate('tasks')">
+                    <div class="we-kpi-head">
+                        <i class="fa fa-clipboard we-kpi-glyph we-kpi-glyph-info"/>
+                        <span class="we-kpi-label">Pending Tasks</span>
+                    </div>
+                    <div class="we-kpi-value">26</div>
+                </div>
+            </div>
+
+            <div class="we-kpi-grid we-kpi-grid-3">
+                <div class="we-kpi-tile" t-on-click="() => this.navigate('tasks')">
+                    <div class="we-kpi-head">
+                        <i class="fa fa-exclamation-triangle we-kpi-glyph we-kpi-glyph-danger"/>
+                        <span class="we-kpi-label">Escalated Tasks</span>
+                    </div>
+                    <div class="we-kpi-value we-text-danger">5</div>
+                </div>
+                <div class="we-kpi-tile">
+                    <div class="we-kpi-head">
+                        <i class="fa fa-check-circle we-kpi-glyph we-kpi-glyph-success"/>
+                        <span class="we-kpi-label">Completed Today</span>
+                    </div>
+                    <div class="we-kpi-value">142</div>
+                </div>
+                <div class="we-kpi-tile" t-on-click="() => this.navigate('analytics')">
+                    <div class="we-kpi-head">
+                        <i class="fa fa-exclamation-circle we-kpi-glyph we-kpi-glyph-danger"/>
+                        <span class="we-kpi-label">Failed Executions</span>
+                    </div>
+                    <div class="we-kpi-value we-text-danger">4</div>
+                    <div class="we-kpi-hint">Requires immediate attention.</div>
+                </div>
+            </div>
+
+            <div class="we-dash-main">
+                <div class="we-dash-col">
+                    <div class="we-card we-table-card">
+                        <div class="we-card-head">
+                            <div class="we-card-title">Pending Approvals</div>
+                            <button type="button" class="we-link" t-on-click="() => this.navigate('notifications')">View All</button>
+                        </div>
+                        <table class="we-table we-table-dash">
+                            <thead>
+                                <tr>
+                                    <th>Workflow</th>
+                                    <th>Request</th>
+                                    <th>Requester</th>
+                                    <th>Created</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="we-td-strong">Mould Purchase Request</td>
+                                    <td>PR-2023-089</td>
+                                    <td>John Doe</td>
+                                    <td class="we-muted">2 hrs ago</td>
+                                    <td><span class="we-badge we-badge-warning">Pending</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="we-td-strong">Design Change Approval</td>
+                                    <td>DCA-042</td>
+                                    <td>Jane Smith</td>
+                                    <td class="we-muted">5 hrs ago</td>
+                                    <td><span class="we-badge we-badge-warning">Pending</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="we-card we-table-card">
+                        <div class="we-card-head">
+                            <div class="we-card-title">Pending Tasks</div>
+                            <button type="button" class="we-link" t-on-click="() => this.navigate('tasks')">View All</button>
+                        </div>
+                        <table class="we-table we-table-dash">
+                            <thead>
+                                <tr>
+                                    <th>Task</th>
+                                    <th>Workflow</th>
+                                    <th>Assigned To</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="we-td-strong">Review QA Specs</td>
+                                    <td>Panel Production Setup</td>
+                                    <td>QA Team</td>
+                                    <td class="we-text-danger">Today</td>
+                                    <td><span class="we-badge we-badge-info">In Progress</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <aside class="we-dash-side">
+                    <div class="we-card we-perf-card">
+                        <div class="we-card-title">Performance</div>
+                        <div class="we-perf-board">
+                            <span>Success Rate: 98.2%</span>
+                        </div>
+                    </div>
+                    <div class="we-card we-activity-card">
+                        <div class="we-card-title">Recent Activity</div>
+                        <ul class="we-activity">
+                            <li>
+                                <i class="fa fa-check-circle we-activity-icon we-activity-icon-success"/>
+                                <div>
+                                    <div>Workflow Invoice Processing completed</div>
+                                    <div class="we-muted">10 mins ago</div>
+                                </div>
+                            </li>
+                            <li>
+                                <i class="fa fa-times-circle we-activity-icon we-activity-icon-danger"/>
+                                <div>
+                                    <div>Execution failed for Data Sync Daily</div>
+                                    <div class="we-muted">45 mins ago</div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </t>
+</templates>

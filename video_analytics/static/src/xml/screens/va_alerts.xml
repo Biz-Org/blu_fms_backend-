@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="video_analytics.Alerts">
+        <div class="va-page va-alerts-page">
+            <div class="va-page-header">
+                <div>
+                    <h1>Video-Based Alerts &amp; Event Management</h1>
+                </div>
+            </div>
+            <t t-call="video_analytics.Banner"/>
+            <t t-if="!state.loading">
+                <t t-call="video_analytics.WorkflowStrip"/>
+                <div class="va-kpi-strip va-kpi-strip-4">
+                    <div class="va-kpi va-kpi-accent-purple">
+                        <i class="fa fa-bell-o va-kpi-icon" aria-hidden="true"/>
+                        <div class="va-kpi-label">Active alerts</div>
+                        <div class="va-kpi-value" t-esc="state.kpis.active or 0"/>
+                    </div>
+                    <div class="va-kpi va-kpi-accent-danger">
+                        <i class="fa fa-exclamation-triangle va-kpi-icon va-text-danger" aria-hidden="true"/>
+                        <div class="va-kpi-label">Critical</div>
+                        <div class="va-kpi-value va-text-danger" t-esc="state.kpis.critical or 0"/>
+                    </div>
+                    <div class="va-kpi va-kpi-accent-warn">
+                        <i class="fa fa-exclamation-circle va-kpi-icon va-text-warn" aria-hidden="true"/>
+                        <div class="va-kpi-label">Warning</div>
+                        <div class="va-kpi-value va-text-warn" t-esc="state.kpis.warning or 0"/>
+                    </div>
+                    <div class="va-kpi va-kpi-accent-success">
+                        <i class="fa fa-check-circle va-kpi-icon va-text-success" aria-hidden="true"/>
+                        <div class="va-kpi-label">Resolved today</div>
+                        <div class="va-kpi-value va-text-success" t-esc="state.kpis.resolved_today or 0"/>
+                    </div>
+                </div>
+                <div class="va-alert-toolbar" role="search">
+                    <span class="va-filter-chip">
+                        <i class="fa fa-filter" aria-hidden="true"/>
+                        Filters
+                    </span>
+                    <div class="va-filter-item">
+                        <select class="va-input" aria-label="Severity" t-model="state.filters.severity" t-on-change="applyFilters">
+                            <option value="">All severities</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                    <div class="va-filter-item">
+                        <select class="va-input" aria-label="Camera" t-model="state.filters.camera_id" t-on-change="applyFilters">
+                            <option value="">All cameras</option>
+                            <t t-foreach="state.cameras" t-as="cam" t-key="cam.id">
+                                <option t-att-value="cam.id" t-esc="cam.name"/>
+                            </t>
+                        </select>
+                    </div>
+                    <div class="va-filter-item">
+                        <select class="va-input" aria-label="Time window" t-model="state.filters.window" t-on-change="applyFilters">
+                            <option value="24h">Last 24 hours</option>
+                            <option value="7d">Last 7 days</option>
+                            <option value="">All time</option>
+                        </select>
+                    </div>
+                    <div class="va-alert-toolbar-end">
+                        <button type="button" class="va-btn" disabled="disabled" title="Export is not available yet">
+                            <i class="fa fa-download" aria-hidden="true"/>
+                            Export Report
+                        </button>
+                    </div>
+                </div>
+                <div class="va-alert-layout">
+                    <section class="va-card va-alert-table-card">
+                        <h2 class="va-card-title">Recent Alerts</h2>
+                        <div class="va-table-wrap">
+                            <table class="va-table va-table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Status</th>
+                                        <th>Alert ID</th>
+                                        <th>Time</th>
+                                        <th>Location</th>
+                                        <th>Event type</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-if="!state.events.length">
+                                        <td colspan="6" class="va-muted">No alerts match the current filters.</td>
+                                    </tr>
+                                    <tr t-foreach="state.events" t-as="row" t-key="row.id"
+                                        t-att-class="{ 'va-row-active': state.selected and state.selected.id === row.id }"
+                                        t-att-data-id="row.id" t-on-click="selectEvent">
+                                        <td><span t-attf-class="va-dot va-dot-{{row.severity}}"/></td>
+                                        <td class="va-alert-id" t-esc="row.name"/>
+                                        <td t-esc="formatTime(row.create_date)"/>
+                                        <td t-esc="locationLine(row)"/>
+                                        <td><span t-attf-class="va-type-pill va-type-{{row.event_type}}" t-esc="row.event_type_label"/></td>
+                                        <td>
+                                            <span t-if="row.state === 'resolved' or row.state === 'closed'" class="va-muted" t-esc="row.state_label"/>
+                                            <span t-else="" class="va-link-btn">View</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                    <aside class="va-card va-detail va-alert-detail">
+                        <t t-if="state.selected">
+                            <div class="va-card-head">
+                                <span t-attf-class="va-badge va-badge-{{state.selected.severity}}" t-esc="state.selected.severity_label"/>
+                                <span t-attf-class="va-badge va-state-{{state.selected.state}}" t-esc="state.selected.state_label"/>
+                            </div>
+                            <h2 class="va-card-title" t-esc="state.selected.event_type_label"/>
+                            <p class="va-muted"><t t-esc="state.selected.name"/> · <t t-esc="formatDatetime(state.selected.create_date)"/></p>
+                            <div class="va-evidence-label">Video evidence</div>
+                            <div class="va-video-stage">
+                                <div t-if="state.selected.camera_code" class="va-player-overlay" t-esc="state.selected.camera_code"/>
+                                <div class="va-video-placeholder">
+                                    <i class="fa fa-play-circle"/>
+                                    <p t-if="state.selected.evidence_url" class="va-clip" t-esc="state.selected.evidence_url"/>
+                                    <p t-else="">No evidence clip stored.</p>
+                                </div>
+                            </div>
+                            <t t-if="state.selected.evidence_url">
+                                <a class="va-download-link" t-att-href="state.selected.evidence_url" target="_blank" rel="noopener">
+                                    <i class="fa fa-download" aria-hidden="true"/> Download clip
+                                </a>
+                            </t>
+                            <p t-else="" class="va-muted va-download-link">Download clip is unavailable until an evidence URL is stored.</p>
+                            <h3 class="va-card-title-sm">Event details</h3>
+                            <dl class="va-dl">
+                                <div><dt>Location</dt><dd t-esc="locationLine(state.selected)"/></div>
+                                <div><dt>AI confidence</dt><dd t-esc="formatConfidence(state.selected.confidence)"/></div>
+                                <div><dt>Description</dt><dd t-esc="state.selected.resolution_note or '—'"/></div>
+                            </dl>
+                            <div class="va-alert-actions">
+                                <button t-if="state.selected.state === 'open'" type="button" class="va-btn va-btn-primary va-btn-block" t-att-disabled="state.busy" t-on-click="onAck">
+                                    <i class="fa fa-check" aria-hidden="true"/> Verify
+                                </button>
+                                <button t-if="state.selected.state === 'open' or state.selected.state === 'acknowledged'" type="button" class="va-btn va-btn-block" t-att-disabled="state.busy" t-on-click="onInvestigate">
+                                    Confirm Incident
+                                </button>
+                                <button t-if="props.session.can_resolve and (state.selected.state === 'acknowledged' or state.selected.state === 'investigating')" type="button" class="va-btn va-btn-block" t-att-disabled="state.busy" t-on-click="onResolve">
+                                    Resolve
+                                </button>
+                                <button t-if="props.session.can_resolve and state.selected.state === 'resolved'" type="button" class="va-btn va-btn-primary va-btn-block" t-att-disabled="state.busy" t-on-click="onClose">
+                                    Close
+                                </button>
+                                <div class="va-alert-action-row">
+                                    <select class="va-input" aria-label="Assignee" t-model="state.assignUserId">
+                                        <t t-foreach="state.assignable_users" t-as="user" t-key="user.id">
+                                            <option t-att-value="user.id" t-esc="user.name"/>
+                                        </t>
+                                    </select>
+                                    <button type="button" class="va-btn" t-att-disabled="state.busy" t-on-click="onAssign">Assign to Guard</button>
+                                </div>
+                                <button t-if="props.session.can_resolve and (state.selected.state === 'open' or state.selected.state === 'acknowledged' or state.selected.state === 'investigating')" type="button" class="va-btn va-btn-block" t-att-disabled="state.busy" t-on-click="onFalsePositive">Mark False Alarm</button>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <h2 class="va-card-title">Alert details</h2>
+                            <p class="va-muted">Select an alert from the list to inspect stored evidence and take action.</p>
+                            <div class="va-evidence-label">Video evidence</div>
+                            <div class="va-video-stage">
+                                <div class="va-video-placeholder">
+                                    <i class="fa fa-play-circle"/>
+                                    <p>No alert selected.</p>
+                                </div>
+                            </div>
+                        </t>
+                    </aside>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- UI 4: Data Synchronization -->
+    <record id="view_ei_sync_job_search" model="ir.ui.view">
+        <field name="name">ei.sync.job.search</field>
+        <field name="model">ei.sync.job</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="entity_name"/>
+                <field name="source_system"/>
+                <field name="dest_system"/>
+                <filter string="All" name="all" domain="[]"/>
+                <filter string="Active Jobs" name="active" domain="[('state', '=', 'active')]"/>
+                <filter string="Paused" name="paused" domain="[('state', '=', 'paused')]"/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <separator/>
+                <filter string="Scheduled" name="scheduled" domain="[('trigger', '=', 'scheduled')]"/>
+                <filter string="Manual" name="manual" domain="[('trigger', '=', 'manual')]"/>
+                <filter string="Realtime" name="realtime" domain="[('trigger', '=', 'realtime')]"/>
+                <group>
+                    <filter string="Direction" name="group_direction" context="{'group_by': 'direction'}"/>
+                    <filter string="Mode" name="group_mode" context="{'group_by': 'mode'}"/>
+                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_ei_sync_job_list" model="ir.ui.view">
+        <field name="name">ei.sync.job.list</field>
+        <field name="model">ei.sync.job</field>
+        <field name="arch" type="xml">
+            <list string="Data Synchronization">
+                <field name="name"/>
+                <field name="source_connector_id" string="Source"/>
+                <field name="dest_connector_id" string="Destination"/>
+                <field name="entity_name"/>
+                <field name="direction"/>
+                <field name="mode"/>
+                <field name="trigger" string="Schedule"/>
+                <field name="frequency"/>
+                <field name="state" widget="badge"/>
+                <field name="last_success_at" string="Last Run"/>
+                <field name="last_run_state"/>
+                <field name="integration_id" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_ei_sync_job_form" model="ir.ui.view">
+        <field name="name">ei.sync.job.form</field>
+        <field name="model">ei.sync.job</field>
+        <field name="arch" type="xml">
+            <form string="Synchronization Job">
+                <header>
+                    <button name="action_run_now" type="object" string="Run Now" class="btn-primary"
+                            groups="enterprise_integration.group_ei_manager"/>
+                    <button name="action_trigger_realtime" type="object" string="Queue Realtime Event"
+                            groups="enterprise_integration.group_ei_manager"
+                            invisible="trigger != 'realtime'"/>
+                    <button name="action_activate" type="object" string="Activate / Resume"
+                            groups="enterprise_integration.group_ei_manager"/>
+                    <button name="action_pause" type="object" string="Pause"
+                            groups="enterprise_integration.group_ei_manager"/>
+                    <button name="action_cancel" type="object" string="Cancel"
+                            groups="enterprise_integration.group_ei_manager"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,active,paused,cancelled"/>
+                </header>
+                <sheet>
+                    <div class="ei-page-banner">
+                        <h1>Data Synchronization</h1>
+                        <p>Manage and monitor enterprise data flow across systems.</p>
+                    </div>
+                    <div class="ei-section-note">
+                        Mapping, transformation, conflicts, duplicates, failed records and sync history are sections of this UI — not sidebar menus.
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="integration_id"/>
+                            <field name="entity_name"/>
+                            <field name="direction"/>
+                            <field name="mode"/>
+                            <field name="trigger"/>
+                            <field name="frequency"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="source_connector_id"/>
+                            <field name="dest_connector_id"/>
+                            <field name="source_system"/>
+                            <field name="dest_system"/>
+                            <field name="conflict_policy"/>
+                            <field name="duplicate_policy"/>
+                            <field name="retry_max"/>
+                            <field name="last_success_at"/>
+                            <field name="last_run_state"/>
+                            <field name="realtime_pending" invisible="trigger != 'realtime'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Mapping / Transformation">
+                            <field name="mapping_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="source_field"/>
+                                    <field name="target_field"/>
+                                    <field name="transform_type"/>
+                                    <field name="transform_expr"/>
+                                    <field name="active"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Sync History / Runs">
+                            <field name="run_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="state" widget="badge"
+                                             decoration-success="state == 'completed'"
+                                             decoration-danger="state == 'failed'"
+                                             decoration-warning="state in ('running', 'pending', 'partially_completed')"/>
+                                    <field name="started_at"/>
+                                    <field name="ended_at"/>
+                                    <field name="records_processed"/>
+                                    <field name="records_success"/>
+                                    <field name="records_failed"/>
+                                    <field name="records_conflict"/>
+                                    <field name="records_duplicate"/>
+                                    <field name="correlation_id"/>
+                                    <button name="action_retry" type="object" string="Retry"
+                                            groups="enterprise_integration.group_ei_manager"/>
+                                </list>
+                                <form>
+                                    <header>
+                                        <button name="action_retry" type="object" string="Retry"
+                                                groups="enterprise_integration.group_ei_manager"/>
+                                        <field name="state" widget="statusbar"/>
+                                    </header>
+                                    <sheet>
+                                        <group>
+                                            <field name="name"/>
+                                            <field name="job_id"/>
+                                            <field name="started_at"/>
+                                            <field name="ended_at"/>
+                                            <field name="records_processed"/>
+                                            <field name="records_success"/>
+                                            <field name="records_failed"/>
+                                            <field name="records_conflict"/>
+                                            <field name="records_duplicate"/>
+                                            <field name="retry_count"/>
+                                            <field name="correlation_id"/>
+                                            <field name="error_message"/>
+                                        </group>
+                                        <notebook>
+                                            <page string="Records / Failures / Conflicts">
+                                                <field name="record_ids">
+                                                    <list>
+                                                        <field name="external_id"/>
+                                                        <field name="state" widget="badge"/>
+                                                        <field name="is_duplicate"/>
+                                                        <field name="correlation_id"/>
+                                                        <field name="error_message"/>
+                                                        <field name="payload_summary"/>
+                                                    </list>
+                                                </field>
+                                            </page>
+                                        </notebook>
+                                    </sheet>
+                                </form>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_ei_sync_legacy_window" model="ir.actions.act_window">
+        <field name="name">Data Synchronization (Records)</field>
+        <field name="res_model">ei.sync.job</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_ei_sync_job_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create a synchronization job</p>
+            <p>Configuration, mapping, history, failed records and retry all stay inside this screen.</p>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="ei_master_entity_customer" model="ei.master.entity">
+        <field name="name">Customer</field>
+        <field name="code">customer</field>
+        <field name="description">Customer master data</field>
+    </record>
+    <record id="ei_master_entity_supplier" model="ei.master.entity">
+        <field name="name">Supplier</field>
+        <field name="code">supplier</field>
+    </record>
+    <record id="ei_master_entity_product" model="ei.master.entity">
+        <field name="name">Product / Item</field>
+        <field name="code">product</field>
+    </record>
+    <record id="ei_master_entity_employee" model="ei.master.entity">
+        <field name="name">Employee</field>
+        <field name="code">employee</field>
+    </record>
+    <record id="ei_master_entity_account" model="ei.master.entity">
+        <field name="name">Chart / Account</field>
+        <field name="code">account</field>
+    </record>
+    <record id="ei_master_entity_site_location" model="ei.master.entity">
+        <field name="name">Site / Location</field>
+        <field name="code">site_location</field>
+    </record>
+    <record id="ei_master_entity_department" model="ei.master.entity">
+        <field name="name">Department</field>
+        <field name="code">department</field>
+    </record>
+</odoo>

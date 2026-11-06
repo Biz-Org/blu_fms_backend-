@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="command_center.Emergency">
+        <div class="cc-screen" data-screen="emergency">
+            <button type="button" class="cc-sr-only" title="Refresh emergency" t-on-click="refresh">Refresh</button>
+            <div class="cc-emg-head">
+                <div>
+                    <h1 class="cc-page-title">Emergency Command Center</h1>
+                    <p class="cc-page-sub">Real-time monitoring and escalation protocol management.</p>
+                    <t t-call="command_center.Workflow">
+                        <t t-set="steps" t-value="moduleWorkflowSteps"/>
+                    </t>
+                </div>
+                <button type="button" class="cc-btn cc-btn-broadcast" t-on-click="broadcastAlert">
+                    <i class="fa fa-bullhorn" aria-hidden="true"/> BROADCAST EMERGENCY ALERT
+                </button>
+            </div>
+            <div t-if="state.error" class="cc-error" role="alert">
+                <span t-esc="state.error"/>
+                <button type="button" class="cc-btn cc-btn-inline" t-on-click="refresh">Retry</button>
+            </div>
+            <div t-if="state.loading" class="cc-loading" aria-busy="true" aria-label="Loading emergencies">
+                <div class="cc-skel-row">
+                    <div class="cc-skel-bar" t-foreach="[1,2,3,4,5,6]" t-as="n" t-key="n"/>
+                </div>
+                <div class="cc-skel-line"/>
+                <div class="cc-skel-line"/>
+            </div>
+            <t t-if="!state.loading and !state.error">
+                <div class="cc-stat-grid cc-emg-stats">
+                    <div t-foreach="emergencyKpis" t-as="kpi" t-key="kpi.key" class="cc-stat" t-att-class="kpi.className">
+                        <div class="cc-stat-top">
+                            <span class="cc-stat-ico"><i t-attf-class="fa {{kpi.icon}}"/></span>
+                            <span class="cc-stat-label" t-esc="kpi.label"/>
+                        </div>
+                        <div class="cc-stat-value" t-esc="kpi.value"/>
+                    </div>
+                </div>
+                <div t-if="!displayAlerts.length" class="cc-empty">
+                    <h3>No emergency alerts</h3>
+                    <p>No operational records are currently available.</p>
+                </div>
+                <div t-else="" class="cc-emg-board">
+                    <div class="cc-emg-main">
+                        <div class="cc-panel cc-emg-hero">
+                            <t t-call="command_center.Workflow">
+                                <t t-set="steps" t-value="workflowSteps"/>
+                            </t>
+                            <div class="cc-emg-hero-top">
+                                <div class="cc-emg-hero-title">
+                                    <i class="fa fa-exclamation-triangle" aria-hidden="true"/>
+                                    <h2 t-esc="heroTitle(displaySelected)"/>
+                                </div>
+                                <span class="cc-badge cc-sev-critical" t-esc="severityLabel(displaySelected.severity)"/>
+                            </div>
+                            <div class="cc-emg-hero-grid">
+                                <div>
+                                    <div class="cc-emg-meta">
+                                        <div>
+                                            <span class="cc-emg-k">Location</span>
+                                            <strong t-esc="display(displaySelected.site_name)"/>
+                                        </div>
+                                        <div>
+                                            <span class="cc-emg-k">Triggered Time</span>
+                                            <strong t-esc="triggeredLabel(displaySelected)"/>
+                                        </div>
+                                    </div>
+                                    <div class="cc-emg-msg">
+                                        <span class="cc-emg-k">System Status Message</span>
+                                        <p t-esc="statusMessage(displaySelected)"/>
+                                    </div>
+                                </div>
+                                <div class="cc-emg-status">
+                                    <span class="cc-emg-k">Current Status</span>
+                                    <div class="cc-emg-status-mark" aria-hidden="true">
+                                        <i class="fa fa-repeat"/>
+                                    </div>
+                                    <strong t-esc="statusLabel(displaySelected.state)"/>
+                                </div>
+                            </div>
+                            <div class="cc-emg-hero-actions">
+                                <button type="button" class="cc-btn" t-on-click="visualAction">View Map</button>
+                                <button type="button" class="cc-btn" t-on-click="visualAction">Join Comm Channel</button>
+                            </div>
+                        </div>
+                        <div class="cc-panel cc-emg-timeline">
+                            <h2>Emergency Event Timeline</h2>
+                            <div t-if="!displayHistory.length" class="cc-empty cc-empty-sm">
+                                <p>No escalation history.</p>
+                            </div>
+                            <ul t-else="" class="cc-emg-events">
+                                <li t-foreach="displayHistory" t-as="row" t-key="row.id">
+                                    <span class="cc-emg-event-dot" t-att-class="row.tone"/>
+                                    <div>
+                                        <strong t-esc="row.title"/>
+                                        <p t-esc="row.body"/>
+                                    </div>
+                                    <span class="cc-emg-event-time" t-esc="row.time"/>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <aside class="cc-panel cc-emg-protocol" aria-label="Emergency detail">
+                        <div t-if="!displaySelected" class="cc-empty">
+                            <h3>Select an emergency</h3>
+                            <p>Choose an emergency alert to view details, history, and actions.</p>
+                        </div>
+                        <t t-else="">
+                            <h2>Escalation Protocol</h2>
+                            <p class="cc-emg-workflow" t-esc="displaySelected.name + ' Workflow Status'"/>
+                            <ol t-if="protocolLevels.length" class="cc-emg-levels">
+                                <li t-foreach="protocolLevels" t-as="level" t-key="level.key" t-att-class="level.active ? 'is-active' : ''">
+                                    <div class="cc-emg-level-head">
+                                        <span class="cc-emg-level-dot" t-att-class="level.tone"/>
+                                        <strong>Level <t t-esc="level.level"/> · <t t-esc="level.name"/></strong>
+                                        <span class="cc-emg-clock" t-esc="level.clock"/>
+                                    </div>
+                                    <div class="cc-emg-level-status">Status: <t t-esc="level.status"/></div>
+                                    <div t-if="level.active" class="cc-emg-level-actions">
+                                        <button type="button" class="cc-btn cc-btn-ghost-warn" t-att-disabled="state.busy" t-on-click="() => this.runAction('resolve')">Clear Event</button>
+                                        <button type="button" class="cc-btn cc-btn-ghost-warn" t-att-disabled="state.busy" t-on-click="() => this.runAction('escalate')">Force Escalate</button>
+                                    </div>
+                                </li>
+                            </ol>
+                            <div t-else="" class="cc-empty cc-empty-sm">
+                                <p>No operational records are currently available.</p>
+                            </div>
+                        </t>
+                    </aside>
+                </div>
+            </t>
+            <div t-if="state.modal" class="cc-modal-backdrop" t-on-click="closeModal">
+                <div class="cc-modal" role="dialog" aria-modal="true" t-on-click.stop="() => {}">
+                    <div class="cc-modal-head">
+                        <h3 t-esc="actionLabel(state.modal)"/>
+                        <button type="button" class="cc-icon-btn" aria-label="Close" t-on-click="closeModal">
+                            <i class="fa fa-times"/>
+                        </button>
+                    </div>
+                    <t t-if="state.modal === 'escalate'">
+                        <label>Rule
+                            <select t-model="state.extra.rule_id">
+                                <option value="">Select automatically</option>
+                                <t t-foreach="state.rules" t-as="rule" t-key="rule.id">
+                                    <option t-att-value="rule.id" t-esc="rule.name"/>
+                                </t>
+                            </select>
+                        </label>
+                        <label>Note
+                            <textarea t-model="state.extra.note"/>
+                        </label>
+                    </t>
+                    <t t-if="state.modal === 'resolve'">
+                        <p class="cc-confirm">Resolve this emergency? The server remains the source of truth.</p>
+                    </t>
+                    <t t-if="state.modal === 'handle_overdue'">
+                        <p class="cc-confirm">Handle this overdue emergency using the applicable escalation rule?</p>
+                    </t>
+                    <t t-if="state.modal === 'reopen'">
+                        <p class="cc-confirm">Reopen this emergency? State will be reset by the server.</p>
+                    </t>
+                    <div class="cc-modal-actions">
+                        <button type="button" class="cc-btn cc-btn-primary" t-att-disabled="state.busy" t-on-click="() => this.runAction(state.modal)">Confirm</button>
+                        <button type="button" class="cc-btn" t-on-click="closeModal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

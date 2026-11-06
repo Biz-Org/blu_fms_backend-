@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_dm_dashboard" model="ir.actions.client">
+        <field name="name">Document Management Dashboard</field>
+        <field name="tag">document_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'dm_screen': 'dashboard'}</field>
+        <field name="params" eval="{'screen': 'dashboard'}"/>
+    </record>
+
+    <record id="action_dm_repository" model="ir.actions.client">
+        <field name="name">Document Repository</field>
+        <field name="tag">document_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'dm_screen': 'repository'}</field>
+        <field name="params" eval="{'screen': 'repository'}"/>
+    </record>
+
+    <record id="action_dm_upload" model="ir.actions.client">
+        <field name="name">Document Upload</field>
+        <field name="tag">document_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'dm_screen': 'upload'}</field>
+        <field name="params" eval="{'screen': 'upload'}"/>
+    </record>
+
+    <record id="action_dm_details" model="ir.actions.client">
+        <field name="name">Document Details</field>
+        <field name="tag">document_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'dm_screen': 'details'}</field>
+        <field name="params" eval="{'screen': 'details'}"/>
+    </record>
+
+    <record id="action_dm_access" model="ir.actions.client">
+        <field name="name">Access Control &amp; Sharing</field>
+        <field name="tag">document_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'dm_screen': 'access'}</field>
+        <field name="params" eval="{'screen': 'access'}"/>
+    </record>
+
+    <record id="action_dm_approval" model="ir.actions.client">
+        <field name="name">Approval &amp; Expiry</field>
+        <field name="tag">document_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'dm_screen': 'approval'}</field>
+        <field name="params" eval="{'screen': 'approval'}"/>
+    </record>
+
+    <record id="action_dm_workflow" model="ir.actions.client">
+        <field name="name">Document Workflow</field>
+        <field name="tag">document_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'dm_screen': 'workflow'}</field>
+        <field name="params" eval="{'screen': 'workflow'}"/>
+    </record>
+
+    <record id="action_dm_search" model="ir.actions.client">
+        <field name="name">Document Search</field>
+        <field name="tag">document_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'dm_screen': 'search'}</field>
+        <field name="params" eval="{'screen': 'search'}"/>
+    </record>
+
+    <record id="action_dm_audit" model="ir.actions.client">
+        <field name="name">Activity &amp; Audit</field>
+        <field name="tag">document_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'dm_screen': 'audit'}</field>
+        <field name="params" eval="{'screen': 'audit'}"/>
+    </record>
+</odoo>

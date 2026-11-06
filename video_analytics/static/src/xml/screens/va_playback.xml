@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="video_analytics.Playback">
+        <div class="va-page va-playback-page">
+        <style>
+            .va-playback-page .va-play-filters { display:flex !important; align-items:center !important; gap:10px !important; width:100% !important; margin:0 0 12px !important; }
+            .va-playback-page .va-play-filter-group { display:flex !important; align-items:center !important; gap:10px !important; flex:1 1 auto !important; min-width:0 !important; }
+            .va-playback-page .va-play-filters .va-filter-pill { width:auto !important; margin:0 !important; flex:0 0 auto !important; position:relative !important; }
+            .va-playback-page .va-play-filters .va-date-chip,
+            .va-playback-page .va-play-filters .va-select-pill select,
+            .va-playback-page .va-play-filters .va-btn-apply,
+            .va-playback-page .va-play-filters .va-btn-clear {
+                height:32px !important; min-height:32px !important; max-height:32px !important;
+                border-radius:6px !important; box-sizing:border-box !important; box-shadow:none !important; font-size:13px !important;
+            }
+            .va-playback-page .va-play-filters .va-date-chip {
+                position:relative !important; display:inline-flex !important; align-items:center !important; gap:8px !important;
+                min-width:160px !important; padding:0 12px !important; border:1px solid #E8E3F4 !important; background:#fff !important;
+            }
+            .va-playback-page .va-play-filters .va-date-chip .fa { color:#B9B3C9 !important; }
+            .va-playback-page .va-play-filters .va-date-label { color:#7B7590 !important; white-space:nowrap !important; pointer-events:none !important; }
+            .va-playback-page .va-play-filters .va-date-input { position:absolute !important; inset:0 !important; opacity:0 !important; cursor:pointer !important; border:0 !important; }
+            .va-playback-page .va-play-filters .va-date-input::-webkit-calendar-picker-indicator { opacity:0 !important; position:absolute !important; inset:0 !important; width:100% !important; height:100% !important; cursor:pointer !important; }
+            .va-playback-page .va-play-filters .va-select-pill select {
+                appearance:none !important; -webkit-appearance:none !important; display:block !important;
+                width:168px !important; min-width:168px !important;
+                padding:0 28px 0 12px !important; border:1px solid #E8E3F4 !important; background:#fff !important; color:#7B7590 !important;
+            }
+            .va-playback-page .va-play-filters .va-select-pill:after {
+                content:"" !important; position:absolute !important; right:12px !important; top:50% !important; margin-top:-2px !important;
+                border-left:5px solid transparent !important; border-right:5px solid transparent !important; border-top:5px solid #B9B3C9 !important; pointer-events:none !important;
+            }
+            .va-playback-page .va-play-filters .va-play-toolbar-end { margin-left:auto !important; display:flex !important; align-items:center !important; gap:8px !important; }
+            .va-playback-page .va-play-filters .va-btn-apply { display:inline-flex !important; align-items:center !important; gap:6px !important; padding:0 12px !important; border:0 !important; background:#5629CE !important; color:#fff !important; font-weight:600 !important; }
+            .va-playback-page .va-play-filters .va-btn-clear { padding:0 12px !important; border:1px solid #E8E3F4 !important; background:#fff !important; color:#5629CE !important; font-weight:500 !important; }
+        </style>
+            <div class="va-page-header">
+                <div>
+                    <h1>Event Playback &amp; Investigation</h1>
+                </div>
+            </div>
+            <t t-call="video_analytics.Banner"/>
+            <t t-if="!state.loading">
+                <t t-call="video_analytics.WorkflowStrip"/>
+                <div class="va-kpi-strip va-kpi-strip-4 va-play-kpis">
+                    <div class="va-kpi">
+                        <div class="va-kpi-label">Events today</div>
+                        <div class="va-kpi-value" t-esc="state.kpis.events_today or 0"/>
+                        <div t-if="hasYesterdayTrend" t-att-class="trendClass" t-esc="yesterdayTrendLabel"/>
+                    </div>
+                    <div class="va-kpi">
+                        <div class="va-kpi-label">Under review</div>
+                        <div class="va-kpi-value" t-esc="state.kpis.under_review or 0"/>
+                        <div t-if="state.kpis.under_review" class="va-kpi-chip va-text-warn">Action required</div>
+                    </div>
+                    <div class="va-kpi">
+                        <i class="fa fa-exclamation-triangle va-kpi-icon va-text-danger" aria-hidden="true"/>
+                        <div class="va-kpi-label">Confirmed incidents</div>
+                        <div class="va-kpi-value va-text-danger" t-esc="state.kpis.confirmed or 0"/>
+                    </div>
+                    <div class="va-kpi">
+                        <i class="fa fa-check-circle va-kpi-icon va-text-success" aria-hidden="true"/>
+                        <div class="va-kpi-label">False positives</div>
+                        <div class="va-kpi-value" t-esc="state.kpis.false_positives or 0"/>
+                    </div>
+                </div>
+                <div class="va-play-toolbar va-play-filters" role="search">
+                    <div class="va-play-filter-group">
+                        <div class="va-filter-item va-filter-pill">
+                            <label class="va-date-chip">
+                                <i class="fa fa-calendar-o" aria-hidden="true"/>
+                                <span class="va-date-label" t-esc="dateChipLabel"/>
+                                <input type="date" class="va-date-input" aria-label="From date" t-model="state.filters.date_from"/>
+                            </label>
+                        </div>
+                        <div class="va-filter-item va-filter-pill va-select-pill">
+                            <select class="va-input" aria-label="Camera" t-model="state.filters.camera_id">
+                                <option value="">All Cameras</option>
+                                <t t-foreach="state.cameras" t-as="cam" t-key="cam.id">
+                                    <option t-att-value="cam.id" t-esc="cam.name"/>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="va-filter-item va-filter-pill va-select-pill">
+                            <select class="va-input" aria-label="Event type" t-model="state.filters.event_type">
+                                <option value="">All Event Types</option>
+                                <option value="intrusion">Intrusion</option>
+                                <option value="fire_smoke">Fire/Smoke</option>
+                                <option value="ppe_violation">PPE Violation</option>
+                                <option value="vehicle_speeding">Vehicle Speeding</option>
+                                <option value="crowd_density">Crowd Density</option>
+                                <option value="object_detection">Object Detection</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="va-play-toolbar-end">
+                        <button type="button" class="va-btn va-btn-primary va-btn-apply" t-on-click="applyFilters">
+                            <i class="fa fa-filter" aria-hidden="true"/> Apply
+                        </button>
+                        <button type="button" class="va-btn va-btn-ghost va-btn-clear" t-on-click="clearFilters">Clear</button>
+                    </div>
+                </div>
+                <div class="va-play-layout">
+                    <aside class="va-card va-queue">
+                        <div class="va-card-head">
+                            <h2 class="va-card-title">Event queue</h2>
+                            <span class="va-loc-count" t-esc="state.events.length"/>
+                        </div>
+                        <div t-if="!state.events.length" class="va-queue-empty">
+                            <i class="fa fa-play-circle-o" aria-hidden="true"/>
+                            <p>No events to investigate.</p>
+                        </div>
+                        <button t-foreach="state.events" t-as="row" t-key="row.id" type="button"
+                                class="va-queue-item"
+                                t-att-class="{ active: state.selected and state.selected.id === row.id }"
+                                t-att-data-id="row.id" t-on-click="selectEvent">
+                            <div class="va-queue-top">
+                                <span class="va-queue-id" t-esc="row.name"/>
+                                <span class="va-muted" t-esc="formatTime(row.create_date)"/>
+                            </div>
+                            <div class="va-queue-type" t-esc="row.event_type_label"/>
+                            <div class="va-queue-meta">
+                                <span class="va-queue-cam">
+                                    <i class="fa fa-map-marker" aria-hidden="true"/>
+                                    <t t-esc="cameraLine(row)"/>
+                                </span>
+                                <span t-if="row.state === 'false_positive'" class="va-fp-pill">False Pos</span>
+                            </div>
+                        </button>
+                    </aside>
+                    <section class="va-card va-player-card">
+                        <div class="va-video-stage va-video-stage-lg va-player-stage">
+                            <div class="va-player-overlay">Video Event Playback &amp; Investigation</div>
+                            <div class="va-video-placeholder">
+                                <i class="fa fa-play-circle-o va-player-play"/>
+                                <t t-if="state.selected">
+                                    <p t-if="state.selected.evidence_url" class="va-clip">Evidence: <t t-esc="state.selected.evidence_url"/></p>
+                                    <p t-else="">Stored evidence clip is not available.</p>
+                                </t>
+                                <p t-else="">Select an event from the queue.</p>
+                            </div>
+                            <div class="va-player-bar">
+                                <i class="fa fa-play" aria-hidden="true"/>
+                                <span class="va-player-time" t-esc="playbackRange"/>
+                                <span class="va-player-track" aria-hidden="true"/>
+                                <span class="va-player-flag">AI Overlay</span>
+                            </div>
+                        </div>
+                        <div class="va-decision-bar">
+                            <span class="va-decision-label">Workflow action</span>
+                            <button t-if="state.selected and state.selected.state === 'open'" type="button" class="va-btn" t-att-disabled="state.busy" t-on-click="onAck">
+                                Verify
+                            </button>
+                            <button t-if="state.selected and (state.selected.state === 'open' or state.selected.state === 'acknowledged')" type="button" class="va-btn va-btn-review" t-att-disabled="state.busy" t-on-click="onInvestigate">
+                                Confirm Incident
+                            </button>
+                            <button t-if="props.session.can_resolve and state.selected and (state.selected.state === 'acknowledged' or state.selected.state === 'investigating')" type="button" class="va-btn va-btn-confirm" t-att-disabled="state.busy" t-on-click="onResolve">
+                                Resolve
+                            </button>
+                            <button t-if="props.session.can_resolve and state.selected and state.selected.state === 'resolved'" type="button" class="va-btn va-btn-primary" t-att-disabled="state.busy" t-on-click="onClose">
+                                Close
+                            </button>
+                            <button t-if="props.session.can_resolve and state.selected and (state.selected.state === 'open' or state.selected.state === 'acknowledged' or state.selected.state === 'investigating')" type="button" class="va-btn va-btn-fp" t-att-disabled="state.busy" t-on-click="onFalsePositive">
+                                False Positive
+                            </button>
+                        </div>
+                    </section>
+                    <aside class="va-play-side">
+                        <section class="va-card va-detail va-info-card">
+                            <h2 class="va-card-title">Event information</h2>
+                            <dl class="va-dl va-info-dl">
+                                <div>
+                                    <dt>ID</dt>
+                                    <dd class="va-alert-id">
+                                        <t t-if="state.selected" t-esc="state.selected.name"/><t t-else="">—</t>
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt>Camera</dt>
+                                    <dd class="va-cam-link">
+                                        <t t-if="state.selected" t-esc="cameraLine(state.selected)"/><t t-else="">—</t>
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt>Rule triggered</dt>
+                                    <dd>
+                                        <t t-if="state.selected">
+                                            <span class="va-rule-pill">
+                                                <t t-if="state.selected.zone_name"><t t-esc="state.selected.zone_name"/> · </t>
+                                                <t t-esc="state.selected.event_type_label"/>
+                                            </span>
+                                        </t>
+                                        <t t-else="">—</t>
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt>AI confidence</dt>
+                                    <dd>
+                                        <t t-if="state.selected">
+                                            <span t-esc="formatConfidence(state.selected.confidence)"/>
+                                            <div class="va-meter va-conf-meter">
+                                                <span class="va-meter-fill" t-attf-style="width: {{meterWidth(state.selected.confidence)}}"/>
+                                            </div>
+                                        </t>
+                                        <t t-else="">—</t>
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt>Status</dt>
+                                    <dd>
+                                        <span t-if="state.selected" t-attf-class="va-badge va-state-{{state.selected.state}}" t-esc="state.selected.state_label"/>
+                                        <t t-else="">—</t>
+                                    </dd>
+                                </div>
+                            </dl>
+                        </section>
+                        <section class="va-card va-detail va-notes-card">
+                            <h2 class="va-card-title">Activity notes</h2>
+                            <ul class="va-notes">
+                                <li t-foreach="(state.selected and state.selected.notes) or []" t-as="note" t-key="note.id" class="va-note-bubble">
+                                    <div class="va-note-head">
+                                        <strong t-esc="note.user_name"/>
+                                        <span class="va-muted" t-esc="formatDatetime(note.create_date)"/>
+                                    </div>
+                                    <p t-esc="note.body"/>
+                                </li>
+                            </ul>
+                            <p t-if="!(state.selected and state.selected.notes and state.selected.notes.length)" class="va-muted">No investigation notes yet.</p>
+                            <div class="va-note-composer">
+                                <input type="text" class="va-input" id="va-playback-note" placeholder="Add investigation note…" t-model="state.note"/>
+                                <button type="button" class="va-icon-btn va-note-send" t-att-disabled="!state.selected or state.busy" t-on-click="onAddNote" aria-label="Add note">
+                                    <i class="fa fa-paper-plane"/>
+                                </button>
+                            </div>
+                        </section>
+                    </aside>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

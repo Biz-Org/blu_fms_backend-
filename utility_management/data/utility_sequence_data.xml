@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="seq_utility_reading" model="ir.sequence">
+        <field name="name">Utility Reading</field>
+        <field name="code">utility.management.reading</field>
+        <field name="prefix">RDG/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="seq_utility_leak" model="ir.sequence">
+        <field name="name">Utility Leak</field>
+        <field name="code">utility.management.leak</field>
+        <field name="prefix">LK/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="seq_utility_alert" model="ir.sequence">
+        <field name="name">Utility Alert</field>
+        <field name="code">utility.management.alert</field>
+        <field name="prefix">ALT/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="seq_utility_report_run" model="ir.sequence">
+        <field name="name">Utility Report Run</field>
+        <field name="code">utility.management.report.run</field>
+        <field name="prefix">RPT/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

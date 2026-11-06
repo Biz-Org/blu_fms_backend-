@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- UI 5: Master Data Integration -->
+    <record id="view_ei_master_entity_search" model="ir.ui.view">
+        <field name="name">ei.master.entity.search</field>
+        <field name="model">ei.master.entity</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="code"/>
+                <filter string="Customer" name="customer" domain="[('code', '=', 'customer')]"/>
+                <filter string="Supplier" name="supplier" domain="[('code', '=', 'supplier')]"/>
+                <filter string="Product" name="product" domain="[('code', '=', 'product')]"/>
+                <filter string="Employee" name="employee" domain="[('code', '=', 'employee')]"/>
+                <filter string="Account" name="account" domain="[('code', '=', 'account')]"/>
+                <filter string="Site / Location" name="site_location" domain="[('code', '=', 'site_location')]"/>
+                <filter string="Department" name="department" domain="[('code', '=', 'department')]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_ei_master_entity_kanban" model="ir.ui.view">
+        <field name="name">ei.master.entity.kanban</field>
+        <field name="model">ei.master.entity</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="mapping_count"/>
+                <field name="active"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="ei-connector-card">
+                            <div class="ei-connector-card-title"><field name="name"/></div>
+                            <div>Code: <field name="code"/></div>
+                            <div>Mappings: <field name="mapping_count"/></div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_ei_master_entity_list" model="ir.ui.view">
+        <field name="name">ei.master.entity.list</field>
+        <field name="model">ei.master.entity</field>
+        <field name="arch" type="xml">
+            <list string="Master Data Integration">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="mapping_count"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_ei_master_entity_form" model="ir.ui.view">
+        <field name="name">ei.master.entity.form</field>
+        <field name="model">ei.master.entity</field>
+        <field name="arch" type="xml">
+            <form string="Master Data Entity">
+                <sheet>
+                    <div class="ei-page-banner">
+                        <h1>Master Data Integration</h1>
+                        <p>Manage single source of truth configurations and resolve synchronization conflicts.</p>
+                    </div>
+                    <div class="ei-section-note">
+                        Entity tabs (Customer, Supplier, Product, Employee, Account, Site/Location, Department) are filters inside this screen — not sidebar menus.
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <field name="code"/>
+                        <field name="active"/>
+                        <field name="mapping_count"/>
+                        <field name="description"/>
+                    </group>
+                    <notebook>
+                        <page string="Mappings / Source of Truth">
+                            <field name="mapping_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="source_system"/>
+                                    <field name="target_system"/>
+                                    <field name="source_of_truth"/>
+                                    <field name="owner"/>
+                                    <field name="state" widget="badge"/>
+                                    <field name="last_sync_at"/>
+                                    <field name="conflict_count"/>
+                                </list>
+                                <form>
+                                    <header>
+                                        <button name="action_sync_now" type="object" string="Sync Now"
+                                                class="btn-primary"
+                                                groups="enterprise_integration.group_ei_manager"/>
+                                        <button name="action_mark_synced" type="object" string="Mark Synced"
+                                                groups="enterprise_integration.group_ei_manager"/>
+                                        <button name="action_resolve_conflicts" type="object"
+                                                string="Resolve Conflicts"
+                                                groups="enterprise_integration.group_ei_manager"/>
+                                        <field name="state" widget="statusbar"/>
+                                    </header>
+                                    <sheet>
+                                        <group>
+                                            <field name="name"/>
+                                            <field name="entity_id"/>
+                                            <field name="integration_id"/>
+                                            <field name="source_system"/>
+                                            <field name="target_system"/>
+                                            <field name="source_of_truth"/>
+                                            <field name="owner"/>
+                                            <field name="source_connector_id"/>
+                                            <field name="target_connector_id"/>
+                                            <field name="last_sync_at"/>
+                                            <field name="active"/>
+                                        </group>
+                                        <group string="Validation &amp; Field Mapping">
+                                            <field name="validation_rules" placeholder="required:name,code"/>
+                                            <field name="duplicate_detection_keys"/>
+                                            <field name="field_mapping_json" placeholder='{"name":"full_name"} or list of mapping objects'/>
+                                            <field name="transform_rules"/>
+                                            <field name="change_note"/>
+                                        </group>
+                                        <notebook>
+                                            <page string="Conflicts / Duplicates">
+                                                <field name="conflict_ids">
+                                                    <list>
+                                                        <field name="name"/>
+                                                        <field name="state" widget="badge"/>
+                                                        <field name="is_duplicate"/>
+                                                        <field name="resolved_by"/>
+                                                        <field name="resolved_at"/>
+                                                        <button name="action_ignore" type="object" string="Ignore"
+                                                                groups="enterprise_integration.group_ei_manager"/>
+                                                    </list>
+                                                    <form>
+                                                        <group>
+                                                            <field name="name"/>
+                                                            <field name="state"/>
+                                                            <field name="is_duplicate"/>
+                                                            <field name="left_payload"/>
+                                                            <field name="right_payload"/>
+                                                            <field name="resolution"/>
+                                                            <field name="resolved_by"/>
+                                                            <field name="resolved_at"/>
+                                                        </group>
+                                                    </form>
+                                                </field>
+                                            </page>
+                                        </notebook>
+                                    </sheet>
+                                </form>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_ei_master_legacy_window" model="ir.actions.act_window">
+        <field name="name">Master Data Integration (Records)</field>
+        <field name="res_model">ei.master.entity</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_ei_master_entity_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Master data entities</p>
+            <p>Customer, Supplier, Product, Employee, Account, Site/Location and Department are records/filters here — not separate menus.</p>
+        </field>
+    </record>
+</odoo>

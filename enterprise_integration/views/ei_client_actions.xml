@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+      Primary destinations = full-screen OWL shell (ei_app).
+      Do NOT delete/recreate these xmlids (breaks bookmarks + root menu action ids).
+      Backend list/form windows remain available for create/open-form flows.
+    -->
+    <record id="action_ei_dashboard" model="ir.actions.client">
+        <field name="name">Dashboard</field>
+        <field name="tag">ei_app</field>
+        <field name="target">current</field>
+        <field name="context">{'ei_screen': 'dashboard'}</field>
+        <field name="params" eval="{'screen': 'dashboard'}"/>
+    </record>
+
+    <record id="action_ei_api_webhook" model="ir.actions.client">
+        <field name="name">API &amp; Webhook Management</field>
+        <field name="tag">ei_app</field>
+        <field name="target">current</field>
+        <field name="context">{'ei_screen': 'api'}</field>
+        <field name="params" eval="{'screen': 'api'}"/>
+    </record>
+
+    <record id="action_ei_connectors" model="ir.actions.client">
+        <field name="name">Enterprise Connectors</field>
+        <field name="tag">ei_app</field>
+        <field name="target">current</field>
+        <field name="context">{'ei_screen': 'connectors'}</field>
+        <field name="params" eval="{'screen': 'connectors'}"/>
+    </record>
+
+    <record id="action_ei_sync" model="ir.actions.client">
+        <field name="name">Data Synchronization</field>
+        <field name="tag">ei_app</field>
+        <field name="target">current</field>
+        <field name="context">{'ei_screen': 'sync'}</field>
+        <field name="params" eval="{'screen': 'sync'}"/>
+    </record>
+
+    <record id="action_ei_master" model="ir.actions.client">
+        <field name="name">Master Data Integration</field>
+        <field name="tag">ei_app</field>
+        <field name="target">current</field>
+        <field name="context">{'ei_screen': 'master'}</field>
+        <field name="params" eval="{'screen': 'master'}"/>
+    </record>
+
+    <record id="action_ei_monitoring" model="ir.actions.client">
+        <field name="name">Integration Monitoring &amp; Logs</field>
+        <field name="tag">ei_app</field>
+        <field name="target">current</field>
+        <field name="context">{'ei_screen': 'monitoring'}</field>
+        <field name="params" eval="{'screen': 'monitoring'}"/>
+    </record>
+
+    <!-- Backend list/form windows still available for "Open Form" / create flows -->
+    <record id="action_ei_api_webhook_backend" model="ir.actions.act_window">
+        <field name="name">API &amp; Webhook Records</field>
+        <field name="res_model">ei.integration</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_ei_api_webhook_integration_search"/>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_ei_api_webhook_integration_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_ei_api_webhook_integration_form')})]"/>
+    </record>
+
+    <record id="action_ei_connectors_backend" model="ir.actions.act_window">
+        <field name="name">Connector Records</field>
+        <field name="res_model">ei.connector</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_ei_connector_search"/>
+    </record>
+
+    <record id="action_ei_sync_backend" model="ir.actions.act_window">
+        <field name="name">Sync Job Records</field>
+        <field name="res_model">ei.sync.job</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_ei_sync_job_search"/>
+    </record>
+
+    <record id="action_ei_master_backend" model="ir.actions.act_window">
+        <field name="name">Master Entity Records</field>
+        <field name="res_model">ei.master.entity</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_ei_master_entity_search"/>
+    </record>
+
+    <record id="action_ei_monitoring_backend" model="ir.actions.act_window">
+        <field name="name">Log Records</field>
+        <field name="res_model">ei.log</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_ei_log_search"/>
+    </record>
+</odoo>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="seq_cc_site" model="ir.sequence">
+        <field name="name">Command Center Site</field>
+        <field name="code">cc.site</field>
+        <field name="prefix">CC-SITE</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="seq_cc_alert" model="ir.sequence">
+        <field name="name">Command Center Alert</field>
+        <field name="code">cc.alert</field>
+        <field name="prefix">CC-ALT</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="seq_cc_incident" model="ir.sequence">
+        <field name="name">Command Center Incident</field>
+        <field name="code">cc.incident</field>
+        <field name="prefix">CC-INC</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="document_management.Workflow">
+        <div class="dm-screen dm-workflow-screen" data-screen="workflow" data-ui="workflow-ppt">
+            <style>
+                .dm-workflow-screen { color: #111827; width: 100%; min-width: 0; }
+                .dm-wf { display: grid !important; grid-template-columns: minmax(220px, 300px) minmax(0, 1fr) !important; gap: 1.05rem; align-items: stretch; min-height: min(640px, 78vh); min-width: 0; }
+                .dm-wf-list { background: #fff; border: 1px solid #eeeaf3; border-radius: 16px; padding: 1.15rem 1.1rem 1rem; display: flex; flex-direction: column; min-height: 0; }
+                .dm-wf-list .dm-page-title { font-size: 1.45rem; font-weight: 700; letter-spacing: -0.03em; color: #111827; margin: 0 0 0.95rem; }
+                .dm-wf-search { display: flex; align-items: center; gap: 0.45rem; height: 38px; border: 1px solid #eeeaf3; border-radius: 10px; padding: 0 0.75rem; color: #9aa1b2; background: #fff; margin-bottom: 1.05rem; }
+                .dm-wf-search input { border: 0; outline: none; width: 100%; background: transparent; font-size: 0.78rem; color: #111827; font-family: inherit; }
+                .dm-wf-kicker { margin: 0 0 0.45rem; font-size: 0.72rem; font-weight: 600; color: #9aa1b2; }
+                .dm-wf-items { display: flex; flex-direction: column; gap: 0.2rem; flex: 1 1 auto; }
+                .dm-wf-item { display: flex; align-items: center; gap: 0.65rem; width: 100%; border: 0; background: transparent; border-radius: 10px; padding: 0.62rem 0.65rem; color: #374151; cursor: pointer; font-family: inherit; font-size: 0.84rem; font-weight: 600; text-align: left; }
+                .dm-wf-item i.fa-file-text-o { width: 18px; color: #9aa1b2; }
+                .dm-wf-item span { flex: 1 1 auto; }
+                .dm-wf-item .fa-chevron-right { color: #d1d5db; font-size: 0.7rem; }
+                .dm-wf-item.is-active { background: #F0EBFF; color: #5629CE; }
+                .dm-wf-item.is-active i.fa-file-text-o, .dm-wf-item.is-active .fa-chevron-right { color: #5629CE; }
+                .dm-wf-empty { color: #9aa1b2; font-size: 0.76rem; padding: 0.7rem 0.35rem; }
+                .dm-wf-create { margin-top: 0.85rem; width: 100%; height: 40px; border: 0; border-radius: 10px; background: #5629CE; color: #fff; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; cursor: pointer; font-family: inherit; }
+                .dm-wf-main { min-width: 0; display: flex; flex-direction: column; gap: 0.95rem; }
+                .dm-wf-hero { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+                .dm-wf-hero h2 { margin: 0; font-size: 1.7rem; font-weight: 700; letter-spacing: -0.03em; color: #111827; }
+                .dm-wf-hero p { margin: 0.28rem 0 0; color: #9aa1b2; font-size: 0.84rem; }
+                .dm-wf-hero-actions { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+                .dm-wf-hero-actions .dm-btn { background: #fff; color: #4b5563; border: 1px solid #eceaf3; height: 36px; padding: 0 0.95rem; border-radius: 10px; font-size: 0.76rem; font-weight: 600; }
+                .dm-wf-hero-actions .dm-btn i { color: #9aa1b2; }
+                .dm-wf-hero-actions .dm-btn-primary { background: #5629CE; border-color: #5629CE; color: #fff; }
+                .dm-wf-hero-actions .dm-btn-primary i { color: #fff; }
+                .dm-wf-board { background: #fff; border: 1px solid #eeeaf3; border-radius: 16px; padding: 2.1rem 1.4rem 1.55rem; }
+                .dm-wf-steps { display: flex; align-items: flex-start; justify-content: space-between; gap: 0; }
+                .dm-wf-step { display: flex; flex-direction: column; align-items: center; gap: 0.7rem; min-width: 72px; position: relative; z-index: 1; }
+                .dm-wf-dot { width: 52px; height: 52px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 1.05rem; font-weight: 700; background: #fff; border: 2px solid #e5e7eb; color: #9aa1b2; }
+                .dm-wf-step.is-done .dm-wf-dot { background: #22c55e; border-color: #22c55e; color: #fff; }
+                .dm-wf-step.is-now .dm-wf-dot { background: #5629CE; border-color: #5629CE; color: #fff; }
+                .dm-wf-step-name { font-size: 0.78rem; font-weight: 600; color: #6b7280; text-align: center; white-space: nowrap; }
+                .dm-wf-step.is-now .dm-wf-step-name { color: #5629CE; }
+                .dm-wf-line { flex: 1 1 28px; height: 0; border-top: 2px dotted #d1d5db; margin: 25px 0.35rem 0; }
+                .dm-wf-details { background: #fff; border: 1px solid #eeeaf3; border-radius: 16px; padding: 1.15rem 1.25rem 1.2rem; }
+                .dm-wf-details h3 { margin: 0 0 1rem; font-size: 1.05rem; font-weight: 700; color: #111827; }
+                .dm-wf-meta { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.4rem; }
+                .dm-wf-meta h4 { margin: 0 0 0.55rem; font-size: 0.72rem; font-weight: 700; color: #6b7280; }
+                .dm-wf-roles { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.05rem; }
+                .dm-wf-role { display: inline-flex; align-items: center; border-radius: 999px; padding: 0.22rem 0.7rem; background: #F0EBFF; color: #5629CE; font-size: 0.72rem; font-weight: 700; }
+                .dm-wf-sla { margin: 0; font-size: 0.92rem; font-weight: 700; color: #111827; }
+                .dm-wf-trig { display: flex; align-items: center; gap: 0.5rem; margin: 0 0 0.55rem; color: #374151; font-size: 0.84rem; font-weight: 500; }
+                .dm-wf-trig i { color: #22c55e; }
+                @media (max-width: 1099px) {
+                    .dm-wf { grid-template-columns: 1fr !important; min-height: 0; }
+                    .dm-wf-hero { flex-wrap: wrap; }
+                    .dm-wf-steps { overflow-x: auto; padding-bottom: 0.35rem; }
+                }
+                @media (max-width: 720px) {
+                    .dm-wf-hero h2, .dm-wf-list .dm-page-title { font-size: 1.2rem; }
+                    .dm-wf-meta { grid-template-columns: 1fr; }
+                    .dm-wf-step-name { white-space: normal; max-width: 72px; }
+                }
+            </style>
+            <span class="o_hidden">Refresh</span>
+            <span class="o_hidden">Invoice Approval</span>
+            <span class="o_hidden">Intake</span>
+            <span class="o_hidden">Approve/Share</span>
+            <div t-if="state.error" class="dm-error" role="alert">
+                <span t-esc="state.error"/>
+                <button type="button" class="dm-btn" t-on-click="refresh">Retry</button>
+            </div>
+            <div t-if="state.loading" class="dm-loading" aria-busy="true" aria-label="Loading workflows">
+                Loading workflows…
+            </div>
+            <t t-if="!state.loading and !state.error">
+                <div class="dm-wf">
+                    <aside class="dm-wf-list">
+                        <h1 class="dm-page-title">Document Workflow</h1>
+                        <label class="dm-wf-search">
+                            <i class="fa fa-search" aria-hidden="true"/>
+                            <input type="search" placeholder="Search Workflows" t-model="state.query"/>
+                        </label>
+                        <div class="dm-wf-kicker">Workflows</div>
+                        <div class="dm-wf-items">
+                            <t t-foreach="filteredWorkflows" t-as="item" t-key="item.id">
+                                <button type="button"
+                                        t-att-class="isSelected(item) ? 'dm-wf-item is-active' : 'dm-wf-item'"
+                                        t-att-data-id="item.id"
+                                        t-on-click="selectWorkflow">
+                                    <i class="fa fa-file-text-o" aria-hidden="true"/>
+                                    <span t-esc="item.name"/>
+                                    <i class="fa fa-chevron-right" aria-hidden="true"/>
+                                </button>
+                            </t>
+                            <div t-if="isEmpty" class="dm-wf-empty">
+                                <h3>No workflows</h3>
+                                <p>No workflow matches this search.</p>
+                            </div>
+                        </div>
+                        <button type="button" class="dm-wf-create" t-on-click="createWorkflow">
+                            <i class="fa fa-plus"/> Create New Workflow
+                        </button>
+                    </aside>
+                    <section class="dm-wf-main" t-if="selected">
+                        <div class="dm-wf-hero">
+                            <div>
+                                <h2 t-esc="selected.name"/>
+                                <p t-esc="selected.description"/>
+                            </div>
+                            <div class="dm-wf-hero-actions">
+                                <button type="button" class="dm-btn" t-on-click="editWorkflow">
+                                    <i class="fa fa-pencil"/> Edit Workflow
+                                </button>
+                                <button type="button" class="dm-btn dm-btn-primary" t-on-click="newVersion">
+                                    <i class="fa fa-plus"/> New Version
+                                </button>
+                            </div>
+                        </div>
+                        <div class="dm-wf-board">
+                            <div class="dm-wf-steps">
+                                <t t-foreach="selected.steps" t-as="step" t-key="step.id">
+                                    <div t-att-class="stepClass(step)">
+                                        <span class="dm-wf-dot">
+                                            <i t-if="isDone(step)" class="fa fa-check"/>
+                                            <t t-else="" t-esc="step.id"/>
+                                        </span>
+                                        <span class="dm-wf-step-name" t-esc="step.name"/>
+                                    </div>
+                                    <div t-if="!step_last" class="dm-wf-line"/>
+                                </t>
+                            </div>
+                        </div>
+                        <div class="dm-wf-details">
+                            <h3>Workflow Details</h3>
+                            <div class="dm-wf-meta">
+                                <div>
+                                    <h4>Assigned Roles</h4>
+                                    <div class="dm-wf-roles">
+                                        <t t-foreach="selected.roles" t-as="role" t-key="role">
+                                            <span class="dm-wf-role" t-esc="role"/>
+                                        </t>
+                                        <span t-if="!hasRoles" class="dm-page-sub">No roles assigned.</span>
+                                    </div>
+                                    <h4>SLA</h4>
+                                    <p class="dm-wf-sla" t-esc="selected.sla"/>
+                                </div>
+                                <div>
+                                    <h4>Automated Triggers</h4>
+                                    <t t-foreach="selected.triggers" t-as="trigger" t-key="trigger">
+                                        <div class="dm-wf-trig">
+                                            <i class="fa fa-play-circle" aria-hidden="true"/>
+                                            <span t-esc="trigger"/>
+                                        </div>
+                                    </t>
+                                    <p t-if="!hasTriggers" class="dm-page-sub">No automated triggers.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

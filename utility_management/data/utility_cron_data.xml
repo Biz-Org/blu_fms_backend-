@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="ir_cron_utility_offline" model="ir.cron">
+        <field name="name">Utility: Mark Offline Meters</field>
+        <field name="model_id" ref="model_utility_management_config"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_offline()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="active" eval="True"/>
+    </record>
+    <record id="ir_cron_utility_missing_reading" model="ir.cron">
+        <field name="name">Utility: Flag Missing Readings</field>
+        <field name="model_id" ref="model_utility_management_config"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_missing()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="active" eval="True"/>
+    </record>
+    <record id="ir_cron_utility_escalate" model="ir.cron">
+        <field name="name">Utility: Escalate Alerts</field>
+        <field name="model_id" ref="model_utility_management_alert"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_escalate()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="active" eval="True"/>
+    </record>
+    <record id="ir_cron_utility_scheduled_reports" model="ir.cron">
+        <field name="name">Utility: Send Scheduled Reports</field>
+        <field name="model_id" ref="model_utility_management_report_definition"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_scheduled()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>

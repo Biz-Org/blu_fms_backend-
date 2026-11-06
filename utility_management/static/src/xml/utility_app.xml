@@ -1,0 +1,1123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="utility_management.App">
+        <div class="o_action um-shell" t-ref="root" t-att-class="{ 'is-nav-open': state.menuOpen }">
+            <button type="button" class="um-backdrop" aria-label="Close menu" t-on-click="closeMenu"/>
+            <aside class="um-sidebar" aria-label="Utility Management">
+                <div class="um-brand">
+                    <span class="um-brand-name">Utility Management</span>
+                    <small>MANAGEMENT SUITE</small>
+                </div>
+                <nav class="um-nav-list">
+                    <t t-foreach="screens" t-as="item" t-key="item.id">
+                        <button type="button"
+                                class="um-nav"
+                                t-att-class="{ 'is-active': state.screen === item.id }"
+                                t-att-aria-current="state.screen === item.id ? 'page' : false"
+                                t-on-click="() => this.openScreen(item.id)">
+                            <svg class="um-nav-ico" viewBox="0 0 24 24" aria-hidden="true">
+                                <path t-att-d="item.icon" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span t-esc="item.label"/>
+                        </button>
+                    </t>
+                </nav>
+            </aside>
+            <div class="um-workspace">
+                <header class="um-header" t-att-class="{ 'um-dash-header': state.page === 'smart_meter_dashboard' }">
+                    <button type="button" class="um-menu-btn" aria-label="Open menu" t-on-click="toggleMenu">Menu</button>
+                    <nav class="um-breadcrumb" aria-label="Breadcrumb">
+                        <span>Utility Management</span>
+                        <span class="um-breadcrumb-sep" aria-hidden="true">/</span>
+                        <t t-if="state.page === 'smart_meter_dashboard'">
+                            <span t-esc="pageInfo.title"/>
+                        </t>
+                        <t t-else="">
+                            <span t-esc="current.label"/>
+                            <t t-if="pageInfo.title !== current.label">
+                                <span class="um-breadcrumb-sep" aria-hidden="true">/</span>
+                                <span t-esc="pageInfo.title"/>
+                            </t>
+                        </t>
+                    </nav>
+                    <h1 class="um-title" t-esc="pageInfo.title"/>
+                    <form class="um-header-controls" t-if="showPlant || showDates" t-on-submit.prevent="applyFilters">
+                        <label t-if="showPlant">
+                            <span t-if="state.page === 'smart_meter_dashboard'">Plant</span>
+                            <span t-else="">Property</span>
+                            <select name="property_ref" t-on-change="onFilter">
+                                <option value=""><t t-if="state.page === 'smart_meter_dashboard'">All plants</t><t t-else="">All properties</t></option>
+                                <option t-foreach="state.propertyOptions" t-as="ref" t-key="ref" t-att-value="ref" t-att-selected="state.filters.property_ref === ref" t-esc="ref"/>
+                            </select>
+                        </label>
+                        <label t-if="showDates">From
+                            <input type="date" name="date_from" t-att-value="state.filters.date_from || ''" t-on-change="onFilter"/>
+                        </label>
+                        <label t-if="showDates">To
+                            <input type="date" name="date_to" t-att-value="state.filters.date_to || ''" t-on-change="onFilter"/>
+                        </label>
+                        <button type="submit" class="um-btn">Apply</button>
+                    </form>
+                </header>
+                <main class="um-content">
+                    <t t-if="state.status === 'loading'">
+                        <p class="um-state" role="status">Loading</p>
+                    </t>
+                    <t t-elif="state.status === 'error'">
+                        <section class="um-state um-state-error" role="alert">
+                            <p t-esc="state.error"/>
+                            <button type="button" class="um-btn" t-on-click="boot">Try again</button>
+                        </section>
+                    </t>
+                    <t t-else="">
+                        <nav class="um-subnav" aria-label="Section" t-if="areaPages.length &gt; 1">
+                            <t t-foreach="areaPages" t-as="page" t-key="page.id">
+                                <button type="button"
+                                        class="um-subnav-btn"
+                                        t-att-data-page="page.id"
+                                        t-att-class="{ 'is-active': state.page === page.id }"
+                                        t-on-click="() => this.openPage(page.id)">
+                                    <t t-esc="page.title"/>
+                                </button>
+                            </t>
+                        </nav>
+                        <p t-if="state.notice" class="um-notice" role="status" t-esc="state.notice"/>
+                        <p t-if="state.formError" class="um-state um-state-error" role="alert" t-esc="state.formError"/>
+
+                        <form class="um-filters" t-if="filterFields.length" t-on-submit.prevent="applyFilters">
+                            <t t-foreach="filterFields" t-as="field" t-key="field.name">
+                                <label>
+                                    <span t-esc="field.label"/>
+                                    <select t-if="field.type === 'select'" t-att-name="field.name" t-on-change="onFilter">
+                                        <option value="">Any</option>
+                                        <t t-foreach="field.options" t-as="option" t-key="option">
+                                            <option t-att-value="option" t-esc="option"/>
+                                        </t>
+                                    </select>
+                                    <input t-else="" t-att-type="field.type || 'text'" t-att-name="field.name" t-on-change="onFilter"/>
+                                </label>
+                            </t>
+                            <button type="submit" class="um-btn">Apply</button>
+                        </form>
+
+                        <div class="um-kpis" t-if="kpiItems.length">
+                            <article class="um-kpi" t-foreach="kpiItems" t-as="kpi" t-key="kpi.label">
+                                <span t-esc="kpi.label"/>
+                                <strong t-esc="kpi.value"/>
+                            </article>
+                        </div>
+
+                        <t t-if="state.page === 'smart_meter_dashboard'">
+                            <div class="um-dash">
+                                <div class="um-dash-kpis">
+                                    <article class="um-stat um-stat-total">
+                                        <span>Total smart meters</span>
+                                        <strong t-esc="dash.total"/>
+                                        <small>Across all properties</small>
+                                    </article>
+                                    <article class="um-stat um-stat-online">
+                                        <span>Online meters</span>
+                                        <strong t-esc="dash.online"/>
+                                        <small><t t-esc="dash.percent"/> of total</small>
+                                    </article>
+                                    <article class="um-stat um-stat-offline">
+                                        <span>Offline meters</span>
+                                        <strong t-esc="dash.offline"/>
+                                        <small t-if="dash.offline">Requires attention</small>
+                                        <small t-else="">None offline</small>
+                                    </article>
+                                    <article class="um-stat um-stat-error">
+                                        <span>Meter errors</span>
+                                        <strong>
+                                            <t t-esc="dash.error"/>
+                                            <em t-if="dash.critical" class="um-stat-note"><t t-esc="dash.critical"/> critical</em>
+                                        </strong>
+                                        <small t-if="dash.error">Needs review</small>
+                                        <small t-else="">No errors</small>
+                                    </article>
+                                    <article class="um-summary">
+                                        <h2>Meter Summary</h2>
+                                        <ul>
+                                            <li><span>Total Meters</span><strong t-esc="dash.total"/></li>
+                                            <li><span>Active</span><strong t-esc="dash.active"/></li>
+                                            <li><span>Inactive</span><strong t-esc="dash.inactive"/></li>
+                                        </ul>
+                                    </article>
+                                </div>
+                                <div class="um-dash-mid">
+                                    <section class="um-panel" aria-label="Meter Connectivity Overview">
+                                        <h2>Meter Connectivity Overview</h2>
+                                        <p class="um-muted">Latest connectivity status</p>
+                                        <div class="um-status-bar um-dash-bar" t-if="statusSegments.length">
+                                            <span t-foreach="statusSegments" t-as="segment" t-key="segment.key" t-attf-class="um-seg um-seg-{{ segment.key }}" t-attf-style="width: {{ segment.width }}%"/>
+                                        </div>
+                                        <div t-else="" class="um-status-bar um-dash-bar" aria-hidden="true"/>
+                                        <ul class="um-legend">
+                                            <li t-foreach="dashLegend" t-as="item" t-key="item.key">
+                                                <i t-attf-class="um-dot um-seg-{{ item.key }}"/>
+                                                <t t-esc="item.label"/>
+                                            </li>
+                                        </ul>
+                                    </section>
+                                    <aside class="um-panel" aria-label="Meter Warnings">
+                                        <h2>Meter Warnings</h2>
+                                        <ul class="um-warn-list">
+                                            <li class="um-warn um-warn-offline"><span>Offline</span><strong t-esc="dash.offline"/></li>
+                                            <li class="um-warn um-warn-sync"><span>Sync issues</span><strong t-esc="dash.syncIssues"/></li>
+                                            <li class="um-warn um-warn-critical"><span>Critical Errors</span><strong t-esc="dash.critical"/></li>
+                                        </ul>
+                                    </aside>
+                                </div>
+                                <section class="um-panel um-dash-table" aria-label="Meter Status Overview">
+                                    <div class="um-dash-table-head">
+                                        <h2>Meter Status Overview</h2>
+                                        <form class="um-dash-search" t-on-submit.prevent="applyFilters">
+                                            <input type="search" name="search" placeholder="Search meters..." t-att-value="state.filters.search || ''" t-on-input="onFilter"/>
+                                            <select name="status" aria-label="Filter" t-on-change="onDashStatus">
+                                                <option value="" t-att-selected="!state.filters.status">Filter</option>
+                                                <option value="online" t-att-selected="state.filters.status === 'online'">Online</option>
+                                                <option value="offline" t-att-selected="state.filters.status === 'offline'">Offline</option>
+                                                <option value="connecting" t-att-selected="state.filters.status === 'connecting'">Connecting</option>
+                                                <option value="error" t-att-selected="state.filters.status === 'error'">Error</option>
+                                                <option value="maintenance" t-att-selected="state.filters.status === 'maintenance'">Maintenance</option>
+                                                <option value="deactivated" t-att-selected="state.filters.status === 'deactivated'">Deactivated</option>
+                                            </select>
+                                        </form>
+                                    </div>
+                                    <div class="um-table-wrap">
+                                        <table class="um-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Resource</th>
+                                                    <th>Utility</th>
+                                                    <th>Property</th>
+                                                    <th>Latest Reading</th>
+                                                    <th>Last Sync</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr t-if="!(state.data.meters || []).length">
+                                                    <td colspan="6">No meters yet.</td>
+                                                </tr>
+                                                <tr t-foreach="state.data.meters || []" t-as="row" t-key="row.id" t-on-click="() => this.openRecord('meter_details', row.id)">
+                                                    <td data-label="Resource" t-esc="row.meter_code"/>
+                                                    <td data-label="Utility" class="um-cap" t-esc="row.utility_type"/>
+                                                    <td data-label="Property" t-esc="propertyLabel(row)"/>
+                                                    <td data-label="Latest Reading" t-esc="readingLabel(row)"/>
+                                                    <td data-label="Last Sync" t-esc="cell(row, 'last_sync')"/>
+                                                    <td data-label="Status">
+                                                        <span t-attf-class="um-pill um-pill-{{ row.status }}" t-esc="row.status"/>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </section>
+                                <div class="um-dash-actions">
+                                    <div class="um-dash-actions-left">
+                                        <button type="button" class="um-btn" t-on-click="meterHealthCheck">Meter Health Check</button>
+                                        <button type="button" class="um-btn" t-on-click="() => this.openScreen('utility_meter_inventory')">View Inventory</button>
+                                        <button type="button" class="um-btn" t-on-click="() => this.openScreen('utility_settings')">Configure Integration</button>
+                                    </div>
+                                    <button t-if="state.isManager" type="button" class="um-btn um-btn-primary" t-on-click="startNewMeter">+ Add Meter</button>
+                                </div>
+                            </div>
+                        </t>
+
+                        <t t-if="state.page === 'meter_inventory'">
+                            <div class="um-toolbar">
+                                <label>Utility
+                                    <select name="utility_type" t-on-change="onFilter">
+                                        <option value="">All</option>
+                                        <option value="electricity">Electricity</option>
+                                        <option value="water">Water</option>
+                                        <option value="gas">Gas</option>
+                                    </select>
+                                </label>
+                                <label>Status
+                                    <select name="status" t-on-change="onFilter">
+                                        <option value="">All</option>
+                                        <option value="connecting">Connecting</option>
+                                        <option value="online">Online</option>
+                                        <option value="offline">Offline</option>
+                                        <option value="error">Error</option>
+                                        <option value="maintenance">Maintenance</option>
+                                        <option value="deactivated">Deactivated</option>
+                                    </select>
+                                </label>
+                                <button type="button" class="um-btn" t-on-click="applyFilters">Apply</button>
+                                <button t-if="state.isManager &amp;&amp; state.selected.length === 1" type="button" class="um-btn" t-on-click="configureSelected">Configure</button>
+                                <button t-if="state.isManager &amp;&amp; state.selected.length" type="button" class="um-btn" t-on-click="askDeactivateSelected">Deactivate</button>
+                                <button t-if="state.isManager" type="button" class="um-btn um-btn-primary" t-on-click="startNewMeter">Add Meter</button>
+                            </div>
+                        </t>
+
+                        <t t-if="state.page === 'add_configure_meter'">
+                            <form class="um-form" t-on-submit.prevent="saveMeter">
+                                <label>Name<input name="name" required="" t-att-value="state.form.name || ''" t-on-change="onForm"/></label>
+                                <label>Meter code<input name="meter_code" required="" t-att-value="state.form.meter_code || ''" t-on-change="onForm"/></label>
+                                <label>Serial<input name="serial_number" t-att-value="state.form.serial_number || ''" t-on-change="onForm"/></label>
+                                <label>Utility
+                                    <select name="utility_type" t-att-value="state.form.utility_type || 'electricity'" t-on-change="onForm">
+                                        <option value="electricity">Electricity</option>
+                                        <option value="water">Water</option>
+                                        <option value="gas">Gas</option>
+                                    </select>
+                                </label>
+                                <label>Role
+                                    <select name="meter_role" t-att-value="state.form.meter_role || 'consumption'" t-on-change="onForm">
+                                        <option value="consumption">Consumption</option>
+                                        <option value="tank">Tank</option>
+                                        <option value="leak_sensor">Leak sensor</option>
+                                        <option value="power_monitor">Power monitor</option>
+                                    </select>
+                                </label>
+                                <label>Reading mode
+                                    <select name="reading_mode" t-on-change="onForm">
+                                        <option value="cumulative">Cumulative</option>
+                                        <option value="interval">Interval</option>
+                                    </select>
+                                </label>
+                                <label>Protocol
+                                    <select name="protocol" t-on-change="onForm">
+                                        <option value="manual">Manual</option>
+                                        <option value="mqtt">MQTT</option>
+                                        <option value="modbus">Modbus</option>
+                                        <option value="rest">REST</option>
+                                        <option value="import">Import</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </label>
+                                <label>Manufacturer<input name="manufacturer" t-att-value="state.form.manufacturer || ''" t-on-change="onForm"/></label>
+                                <label>Model<input name="model" t-att-value="state.form.model || ''" t-on-change="onForm"/></label>
+                                <label>UoM<input name="uom" t-att-value="state.form.uom || ''" t-on-change="onForm"/></label>
+                                <label>Property ref<input name="property_ref" t-att-value="state.form.property_ref || ''" t-on-change="onForm"/></label>
+                                <label>Property label<input name="property_label" t-att-value="state.form.property_label || ''" t-on-change="onForm"/></label>
+                                <label>Site ref<input name="site_ref" t-att-value="state.form.site_ref || ''" t-on-change="onForm"/></label>
+                                <label>Site label<input name="site_label" t-att-value="state.form.site_label || ''" t-on-change="onForm"/></label>
+                                <label>Floor ref<input name="floor_ref" t-att-value="state.form.floor_ref || ''" t-on-change="onForm"/></label>
+                                <label>Area ref<input name="area_ref" t-att-value="state.form.area_ref || ''" t-on-change="onForm"/></label>
+                                <label>Department ref<input name="department_ref" t-att-value="state.form.department_ref || ''" t-on-change="onForm"/></label>
+                                <label>Department label<input name="department_label" t-att-value="state.form.department_label || ''" t-on-change="onForm"/></label>
+                                <label>Sync minutes<input type="number" name="sync_frequency_minutes" t-att-value="state.form.sync_frequency_minutes || ''" t-on-change="onForm"/></label>
+                                <label>Tank capacity<input type="number" name="tank_capacity" t-att-value="state.form.tank_capacity || ''" t-on-change="onForm"/></label>
+                                <label>Anomaly percent<input type="number" name="anomaly_percent" t-att-value="state.form.anomaly_percent || ''" t-on-change="onForm"/></label>
+                                <label class="um-check"><input type="checkbox" name="anomaly_enabled" t-on-change="onForm"/> Anomaly enabled</label>
+                                <div class="um-form-actions">
+                                    <button t-if="state.isManager" type="submit" class="um-btn um-btn-primary" t-att-disabled="state.busy">Save meter</button>
+                                    <p t-else="" class="um-muted">Only a Facility Manager can configure meters.</p>
+                                </div>
+                            </form>
+                        </t>
+
+                        <t t-if="state.page === 'meter_details'">
+                            <section t-if="!state.data.meter" class="um-empty"><p>Select a meter from Meter Inventory.</p></section>
+                            <section t-else="" class="um-panel">
+                                <header class="um-panel-head">
+                                    <h2 t-esc="state.data.meter.name"/>
+                                    <span class="um-badge" t-esc="state.data.meter.status"/>
+                                    <span class="um-badge" t-esc="state.data.meter.health"/>
+                                </header>
+                                <div class="um-tabs" role="tablist">
+                                    <button type="button" class="um-subnav-btn" t-att-class="{ 'is-active': state.detailTab === 'overview' }" t-on-click="() => this.setDetailTab('overview')">Overview</button>
+                                    <button type="button" class="um-subnav-btn" t-att-class="{ 'is-active': state.detailTab === 'readings' }" t-on-click="() => this.setDetailTab('readings')">Readings</button>
+                                    <button type="button" class="um-subnav-btn" t-att-class="{ 'is-active': state.detailTab === 'connectivity' }" t-on-click="() => this.setDetailTab('connectivity')">Connectivity History</button>
+                                    <button type="button" class="um-subnav-btn" t-att-class="{ 'is-active': state.detailTab === 'configuration' }" t-on-click="() => this.setDetailTab('configuration')">Configuration</button>
+                                    <button type="button" class="um-subnav-btn" t-att-class="{ 'is-active': state.detailTab === 'alerts' }" t-on-click="() => this.setDetailTab('alerts')">Alerts</button>
+                                </div>
+                                <div class="um-split" t-if="state.detailTab === 'overview'">
+                                    <dl class="um-facts">
+                                        <dt>Code</dt><dd t-esc="state.data.meter.meter_code"/>
+                                        <dt>Utility</dt><dd t-esc="state.data.meter.utility_type"/>
+                                        <dt>Role</dt><dd t-esc="state.data.meter.meter_role"/>
+                                        <dt>Property</dt><dd t-esc="state.data.meter.property_label || state.data.meter.property_ref || '—'"/>
+                                        <dt>Site</dt><dd t-esc="state.data.meter.site_label || state.data.meter.site_ref || '—'"/>
+                                        <dt>Last sync</dt><dd t-esc="state.data.meter.last_sync || '—'"/>
+                                    </dl>
+                                    <section class="um-panel" aria-label="Device health">
+                                        <h2>Device health</h2>
+                                        <dl class="um-facts">
+                                            <dt>Health</dt><dd t-esc="state.data.meter.health"/>
+                                            <dt>Status</dt><dd t-esc="state.data.meter.status"/>
+                                            <dt>Battery</dt><dd t-esc="state.data.meter.battery_percent === false || state.data.meter.battery_percent === undefined ? '—' : state.data.meter.battery_percent"/>
+                                            <dt>Firmware</dt><dd t-esc="state.data.meter.firmware || '—'"/>
+                                        </dl>
+                                    </section>
+                                </div>
+                                <div t-if="state.detailTab === 'readings'" class="um-table-wrap">
+                                    <table class="um-table">
+                                        <thead><tr><th>Reading</th><th>Observed</th><th>Consumption</th><th>Status</th></tr></thead>
+                                        <tbody>
+                                            <tr t-foreach="state.data.readings || []" t-as="row" t-key="row.id">
+                                                <td data-label="Reading" t-esc="row.name"/>
+                                                <td data-label="Observed" t-esc="row.observed_at"/>
+                                                <td data-label="Consumption" t-esc="row.consumption_qty"/>
+                                                <td data-label="Status" t-esc="row.status"/>
+                                            </tr>
+                                            <tr t-if="!(state.data.readings || []).length"><td colspan="4">No records yet.</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div t-if="state.detailTab === 'connectivity'">
+                                    <h2>Connectivity history</h2>
+                                    <svg t-if="connectivityLine" class="um-line" viewBox="0 0 100 40" role="img" aria-label="Connectivity history">
+                                        <polyline t-att-points="connectivityLine"/>
+                                    </svg>
+                                    <p t-else="" class="um-muted">No connectivity history.</p>
+                                    <div class="um-table-wrap">
+                                        <table class="um-table">
+                                            <thead><tr><th>Observed</th><th>Status</th><th>Health</th><th>Error</th><th>Response ms</th></tr></thead>
+                                            <tbody>
+                                                <tr t-foreach="state.data.history || []" t-as="row" t-key="row.id">
+                                                    <td data-label="Observed" t-esc="row.observed_at"/>
+                                                    <td data-label="Status" t-esc="row.status"/>
+                                                    <td data-label="Health" t-esc="row.health"/>
+                                                    <td data-label="Error" t-esc="row.error_message || '—'"/>
+                                                    <td data-label="Response ms" t-esc="row.response_ms || '—'"/>
+                                                </tr>
+                                                <tr t-if="!(state.data.history || []).length"><td colspan="5">No connectivity history.</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <dl class="um-facts" t-if="state.detailTab === 'configuration'">
+                                    <dt>Protocol</dt><dd t-esc="state.data.meter.protocol"/>
+                                    <dt>Manufacturer</dt><dd t-esc="state.data.meter.manufacturer || '—'"/>
+                                    <dt>Model</dt><dd t-esc="state.data.meter.model || '—'"/>
+                                    <dt>Reading mode</dt><dd t-esc="state.data.meter.reading_mode"/>
+                                    <dt>Sync minutes</dt><dd t-esc="state.data.meter.sync_frequency_minutes || '—'"/>
+                                </dl>
+                                <ul class="um-list" t-if="state.detailTab === 'alerts'">
+                                    <li t-foreach="state.data.alerts || []" t-as="alert" t-key="alert.id">
+                                        <button type="button" class="um-link" t-on-click="() => this.openRecord('alert_detail', alert.id)">
+                                            <t t-esc="alert.name"/> · <t t-esc="alert.severity"/> · <t t-esc="alert.state"/>
+                                        </button>
+                                    </li>
+                                    <li t-if="!(state.data.alerts || []).length" class="um-muted">No records yet.</li>
+                                </ul>
+                                <div class="um-toolbar">
+                                    <button type="button" class="um-btn" t-on-click="testConnection">Test connection</button>
+                                    <button t-if="state.isManager" type="button" class="um-btn" t-on-click="() => this.configureMeter(state.data.meter)">Configure</button>
+                                    <t t-if="state.isManager">
+                                        <button t-foreach="nextStatuses('meter')" t-as="status" t-key="status" type="button" class="um-btn" t-on-click="() => this.setMeterStatus(status)">
+                                            <t t-esc="status"/>
+                                        </button>
+                                    </t>
+                                </div>
+                            </section>
+                        </t>
+
+                        <t t-if="trendLine &amp;&amp; state.page !== 'electricity_buildings'">
+                            <section class="um-chart" aria-label="Trend">
+                                <h2>Trend</h2>
+                                <p t-if="state.data.peak_bucket">Peak bucket <t t-esc="state.data.peak_bucket"/></p>
+                                <svg class="um-line" viewBox="0 0 100 40" role="img" aria-label="Consumption trend">
+                                    <polygon class="um-area" t-att-points="areaPoints(trendLine)"/>
+                                    <polyline t-att-points="trendLine"/>
+                                </svg>
+                            </section>
+                        </t>
+                        <t t-elif="chartRows.length">
+                            <section class="um-chart" aria-label="Building consumption">
+                                <h2>Building consumption</h2>
+                                <div class="um-bar-row" t-foreach="chartRows" t-as="bar" t-key="bar.bucket">
+                                    <span t-esc="bar.bucket"/>
+                                    <div class="um-bar-track"><div class="um-bar" t-attf-style="width: {{ bar.width }}%"/></div>
+                                    <span t-esc="bar.consumption"/>
+                                </div>
+                            </section>
+                        </t>
+
+                        <t t-if="state.page === 'electricity_monitoring' &amp;&amp; state.data.voltage">
+                            <div class="um-kpis">
+                                <article class="um-kpi"><span>Voltage avg</span><strong t-esc="state.data.voltage.average"/></article>
+                                <article class="um-kpi"><span>Current avg</span><strong t-esc="state.data.current.average"/></article>
+                                <article class="um-kpi"><span>Frequency avg</span><strong t-esc="state.data.frequency.average"/></article>
+                                <article class="um-kpi"><span>Power factor avg</span><strong t-esc="state.data.power_factor.average"/></article>
+                                <article class="um-kpi"><span>Load max</span><strong t-esc="state.data.load_kw.maximum"/></article>
+                            </div>
+                        </t>
+                        <t t-if="state.page === 'water_dashboard' &amp;&amp; state.data.flow_rate">
+                            <div class="um-kpis">
+                                <article class="um-kpi"><span>Flow avg</span><strong t-esc="state.data.flow_rate.average"/></article>
+                                <article class="um-kpi"><span>Inflow avg</span><strong t-esc="state.data.inflow.average"/></article>
+                                <article class="um-kpi"><span>Outflow avg</span><strong t-esc="state.data.outflow.average"/></article>
+                            </div>
+                        </t>
+                        <t t-if="state.page === 'gas_monitoring' &amp;&amp; state.data.pressure">
+                            <div class="um-kpis">
+                                <article class="um-kpi"><span>Flow avg</span><strong t-esc="state.data.flow_rate.average"/></article>
+                                <article class="um-kpi"><span>Pressure avg</span><strong t-esc="state.data.pressure.average"/></article>
+                                <article class="um-kpi"><span>Pressure max</span><strong t-esc="state.data.pressure.maximum"/></article>
+                            </div>
+                        </t>
+                        <t t-if="state.page === 'water_dashboard' || state.page === 'water_tanks'">
+                            <section t-if="distributionHealth" class="um-panel" aria-label="Distribution health">
+                                <h2>Distribution health</h2>
+                                <p>Tanks with capacity <strong t-esc="distributionHealth.tanks"/></p>
+                                <p>Level <strong t-esc="distributionHealth.percent"/>%</p>
+                                <p>Availability <strong t-esc="distributionHealth.availability"/></p>
+                            </section>
+                            <div class="um-cards" t-if="tankCards.length">
+                                <article class="um-card" t-foreach="tankCards" t-as="tank" t-key="tank.meter_id">
+                                    <h3 t-esc="tank.meter_code || tank.name"/>
+                                    <div class="um-level"><span t-attf-style="height: {{ tank.percent }}%"/></div>
+                                    <p>Level <t t-esc="tank.tank_level === false ? '—' : tank.tank_level"/> / <t t-esc="tank.tank_capacity === false ? '—' : tank.tank_capacity"/></p>
+                                    <p>Flow <t t-esc="tank.flow_rate === false ? '—' : tank.flow_rate"/></p>
+                                </article>
+                            </div>
+                            <p t-if="!tankCards.length" class="um-muted">No tank meters.</p>
+                        </t>
+                        <t t-if="state.page === 'electricity_monitoring' || state.page === 'water_dashboard' || state.page === 'gas_monitoring'">
+                            <section class="um-panel" aria-label="Warnings">
+                                <h2>Warnings</h2>
+                                <ul class="um-list">
+                                    <li t-foreach="attentionItems" t-as="item" t-key="item_index">
+                                        <button t-if="item.id" type="button" class="um-link" t-on-click="() => this.openRecord('alert_detail', item.id)">
+                                            <t t-esc="item.label"/> · <t t-esc="item.value"/>
+                                        </button>
+                                        <t t-else=""><t t-esc="item.label"/> · <t t-esc="item.value"/></t>
+                                    </li>
+                                    <li t-if="!attentionItems.length" class="um-muted">No warnings.</li>
+                                </ul>
+                                <ul class="um-list" t-if="state.page === 'gas_monitoring'">
+                                    <li t-foreach="state.data.safetyWarnings || []" t-as="row" t-key="row.meter_id">
+                                        <t t-esc="row.meter_code"/> · <t t-esc="row.safety_observation"/>
+                                    </li>
+                                </ul>
+                            </section>
+                        </t>
+
+                        <t t-if="state.page === 'power_dashboard'">
+                            <div class="um-split">
+                                <section class="um-panel" aria-label="Current source">
+                                    <h2>Current source</h2>
+                                    <p t-if="currentSource"><t t-esc="currentSource.name"/> · <span class="um-badge" t-esc="currentSource.status"/></p>
+                                    <p t-else="" class="um-muted">No power source.</p>
+                                    <ul class="um-list">
+                                        <li t-foreach="state.data.sources || []" t-as="source" t-key="source.id">
+                                            <t t-esc="source.source_kind"/> · <t t-esc="source.name"/> · <t t-esc="source.status"/>
+                                        </li>
+                                    </ul>
+                                </section>
+                                <section class="um-panel" aria-label="Power warnings">
+                                    <h2>Warnings</h2>
+                                    <ul class="um-list">
+                                        <li t-foreach="powerWarnings" t-as="source" t-key="source.id">
+                                            <t t-esc="source.name"/> · <t t-esc="source.status"/>
+                                        </li>
+                                        <li t-if="!powerWarnings.length" class="um-muted">No outages or generator faults.</li>
+                                    </ul>
+                                </section>
+                            </div>
+                        </t>
+
+                        <t t-if="state.page === 'power_grid'">
+                            <form class="um-form" t-on-submit.prevent="transitionPower">
+                                <p class="um-muted">Select a source in the table, then apply the next allowed status.</p>
+                                <label>Next status
+                                    <select name="status" t-on-change="onForm">
+                                        <option value="">Select</option>
+                                        <option t-foreach="nextStatuses('power')" t-as="status" t-key="status" t-att-value="status" t-esc="status"/>
+                                    </select>
+                                </label>
+                                <label>Load<input type="number" name="load" t-on-change="onForm"/></label>
+                                <label>Fuel level<input type="number" name="fuel_level_percent" t-on-change="onForm"/></label>
+                                <label>Fuel consumed<input type="number" name="fuel_consumed" t-on-change="onForm"/></label>
+                                <button type="submit" class="um-btn um-btn-primary" t-att-disabled="state.busy">Apply transition</button>
+                                <button type="button" class="um-btn" t-on-click="() => this.openRecord('power_history', state.recordId)">Open history</button>
+                            </form>
+                        </t>
+
+                        <t t-if="state.page === 'power_history'">
+                            <section t-if="!state.data.source" class="um-empty"><p>Select a source from Grid &amp; Generator Monitoring.</p></section>
+                            <section t-else="" class="um-panel">
+                                <h2 t-esc="state.data.source.name"/>
+                                <p><span class="um-badge" t-esc="state.data.source.status"/></p>
+                                <svg t-if="powerLine" class="um-line" viewBox="0 0 100 40" role="img" aria-label="Load history">
+                                    <polygon class="um-area" t-att-points="areaPoints(powerLine)"/>
+                                    <polyline t-att-points="powerLine"/>
+                                </svg>
+                                <p t-else="" class="um-muted">No load history.</p>
+                                <p>Fuel <t t-esc="state.data.source.fuel_level_percent === false ? '—' : state.data.source.fuel_level_percent"/></p>
+                                <div class="um-table-wrap">
+                                    <table class="um-table">
+                                        <thead><tr><th>Event</th><th>State</th><th>Started</th><th>Ended</th><th>Runtime hours</th><th>Load</th><th>Fuel</th></tr></thead>
+                                        <tbody>
+                                            <tr t-foreach="state.data.events || []" t-as="event" t-key="event.id">
+                                                <td data-label="Event" t-esc="event.event_type"/>
+                                                <td data-label="State" t-esc="event.state"/>
+                                                <td data-label="Started" t-esc="event.started_at"/>
+                                                <td data-label="Ended" t-esc="event.ended_at || '—'"/>
+                                                <td data-label="Runtime hours" t-esc="event.runtime_hours === false ? '—' : event.runtime_hours"/>
+                                                <td data-label="Load" t-esc="event.load"/>
+                                                <td data-label="Fuel" t-esc="event.fuel_level_percent === false ? '—' : event.fuel_level_percent"/>
+                                            </tr>
+                                            <tr t-if="!(state.data.events || []).length"><td colspan="7">No power events.</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </section>
+                        </t>
+
+                        <t t-if="state.page === 'consumption_dashboard'">
+                            <section class="um-chart" aria-label="Utility comparison">
+                                <h2>Utility comparison</h2>
+                                <div class="um-bar-row" t-foreach="consumptionBars" t-as="bar" t-key="bar.label">
+                                    <span t-esc="bar.label"/>
+                                    <div class="um-bar-track"><div class="um-bar" t-attf-style="width: {{ bar.width }}%"/></div>
+                                    <span t-esc="bar.value"/>
+                                </div>
+                                <div t-foreach="comparisonCharts" t-as="chart" t-key="chart.utility">
+                                    <h3 t-esc="chart.utility"/>
+                                    <p>Previous period <t t-esc="chart.previous"/></p>
+                                    <svg t-if="linePoints(chart.rows, 'consumption')" class="um-line" viewBox="0 0 100 40" role="img">
+                                        <polygon class="um-area" t-att-points="areaPoints(linePoints(chart.rows, 'consumption'))"/>
+                                        <polyline t-att-points="linePoints(chart.rows, 'consumption')"/>
+                                    </svg>
+                                    <p t-else="" class="um-muted">No buckets in this period.</p>
+                                </div>
+                            </section>
+                        </t>
+
+                        <t t-if="state.page === 'consumption_analysis'">
+                            <h2>Property comparison</h2>
+                            <div class="um-table-wrap">
+                                <table class="um-table">
+                                    <thead><tr><th>Property</th><th>Electricity</th><th>Water</th><th>Gas</th></tr></thead>
+                                    <tbody>
+                                        <tr t-foreach="state.data.properties || []" t-as="row" t-key="row_index">
+                                            <td data-label="Property" t-esc="row.property_ref || '—'"/>
+                                            <td data-label="Electricity" t-esc="row.electricity"/>
+                                            <td data-label="Water" t-esc="row.water"/>
+                                            <td data-label="Gas" t-esc="row.gas"/>
+                                        </tr>
+                                        <tr t-if="!(state.data.properties || []).length"><td colspan="4">No property totals.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <h2>Abnormal meters</h2>
+                            <ul class="um-list">
+                                <li t-foreach="state.data.abnormal || []" t-as="row" t-key="row.meter_id" t-esc="row.meter_code"/>
+                                <li t-if="!(state.data.abnormal || []).length" class="um-muted">No abnormal meters.</li>
+                            </ul>
+                        </t>
+
+                        <t t-if="state.page === 'consumption_comparison'">
+                            <section t-foreach="comparisonCharts" t-as="chart" t-key="chart.utility" class="um-chart">
+                                <h2 t-esc="chart.utility"/>
+                                <p>Previous period <t t-esc="chart.previous"/></p>
+                                <p t-if="chart.peak">Peak bucket <t t-esc="chart.peak"/></p>
+                                <svg t-if="linePoints(chart.rows, 'consumption')" class="um-line" viewBox="0 0 100 40" role="img" aria-label="Comparison trend">
+                                    <polygon class="um-area" t-att-points="areaPoints(linePoints(chart.rows, 'consumption'))"/>
+                                    <polyline t-att-points="linePoints(chart.rows, 'consumption')"/>
+                                </svg>
+                                <p t-if="!chart.rows.length" class="um-muted">No buckets in this period.</p>
+                                <div class="um-bar-row" t-foreach="chart.rows" t-as="bar" t-key="bar.bucket">
+                                    <span t-esc="bar.bucket"/>
+                                    <div class="um-bar-track"><div class="um-bar" t-attf-style="width: {{ bar.width }}%"/></div>
+                                    <span t-esc="bar.consumption"/>
+                                </div>
+                            </section>
+                        </t>
+
+                        <t t-if="state.page === 'reading_form'">
+                            <form class="um-form" t-on-submit.prevent="saveReading">
+                                <label>Meter
+                                    <select name="meter_id" t-on-change="onForm" required="">
+                                        <option value="">Select</option>
+                                        <option t-foreach="state.meters" t-as="meter" t-key="meter.id" t-att-value="meter.id">
+                                            <t t-esc="meter.meter_code"/> · <t t-esc="meter.utility_type"/>
+                                        </option>
+                                    </select>
+                                </label>
+                                <label>Observed<input type="datetime-local" name="observed_at" required="" t-on-change="onForm"/></label>
+                                <label>Source
+                                    <select name="source" t-on-change="onForm">
+                                        <option value="manual">Manual</option>
+                                        <option value="imported">Imported</option>
+                                        <option value="smart_meter">Smart meter</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </label>
+                                <label>Register<input type="number" name="register_value" t-on-change="onForm"/></label>
+                                <label>Interval quantity<input type="number" name="interval_quantity" t-on-change="onForm"/></label>
+                                <label>Voltage<input type="number" name="voltage" t-on-change="onForm"/></label>
+                                <label>Current<input type="number" name="current" t-on-change="onForm"/></label>
+                                <label>Frequency<input type="number" name="frequency" t-on-change="onForm"/></label>
+                                <label>Power factor<input type="number" step="0.01" name="power_factor" t-on-change="onForm"/></label>
+                                <label>Demand kW<input type="number" name="demand_kw" t-on-change="onForm"/></label>
+                                <label>Load kW<input type="number" name="load_kw" t-on-change="onForm"/></label>
+                                <label>Flow<input type="number" name="flow_rate" t-on-change="onForm"/></label>
+                                <label>Tank level<input type="number" name="tank_level" t-on-change="onForm"/></label>
+                                <label>Inflow<input type="number" name="inflow" t-on-change="onForm"/></label>
+                                <label>Outflow<input type="number" name="outflow" t-on-change="onForm"/></label>
+                                <label>Pressure<input type="number" name="pressure" t-on-change="onForm"/></label>
+                                <label>Safety
+                                    <select name="safety_observation" t-on-change="onForm">
+                                        <option value="">None</option>
+                                        <option value="normal">Normal</option>
+                                        <option value="warning">Warning</option>
+                                        <option value="critical">Critical</option>
+                                    </select>
+                                </label>
+                                <label>Notes<textarea name="notes" t-on-change="onForm"/>
+                                </label>
+                                <label>Meter photo<input type="file" accept="image/jpeg,image/png,image/webp" t-on-change="onPhoto"/></label>
+                                <button type="submit" class="um-btn um-btn-primary" t-att-disabled="state.busy">Record reading</button>
+                            </form>
+                        </t>
+
+                        <t t-if="state.page === 'reading_detail'">
+                            <section t-if="!state.data.reading" class="um-empty"><p>Select a reading from the list.</p></section>
+                            <section t-else="" class="um-panel">
+                                <header class="um-panel-head">
+                                    <h2 t-esc="state.data.reading.name"/>
+                                    <span class="um-badge" t-esc="state.data.reading.status"/>
+                                    <span t-if="state.data.reading.is_abnormal" class="um-badge um-badge-warn">Abnormal</span>
+                                </header>
+                                <dl class="um-facts">
+                                    <dt>Meter</dt><dd t-esc="state.data.reading.meter_code"/>
+                                    <dt>Observed</dt><dd t-esc="state.data.reading.observed_at"/>
+                                    <dt>Source</dt><dd t-esc="state.data.reading.source"/>
+                                    <dt>Consumption</dt><dd t-esc="state.data.reading.consumption_qty"/>
+                                    <dt>Register</dt><dd t-esc="state.data.reading.register_value"/>
+                                    <dt>Property</dt><dd t-esc="state.data.reading.property_ref || '—'"/>
+                                    <dt>Notes</dt><dd t-esc="state.data.reading.notes || '—'"/>
+                                    <dt>Reason</dt><dd t-esc="state.data.reading.abnormal_reason || '—'"/>
+                                </dl>
+                                <button t-if="state.data.reading.photo_attachment_id" type="button" class="um-btn" t-on-click="() => this.downloadFile(state.data.reading.photo_attachment_id)">Download private photo</button>
+                                <form t-if="state.isManager" class="um-form" t-on-submit.prevent="">
+                                    <label>Reason<input name="reason" t-on-change="onForm"/></label>
+                                    <label>Corrected register<input type="number" name="register_value" t-on-change="onForm"/></label>
+                                    <div class="um-toolbar">
+                                        <button type="button" class="um-btn" t-on-click="verifyReading">Verify</button>
+                                        <button type="button" class="um-btn" t-on-click="invalidateReading">Invalidate</button>
+                                        <button type="button" class="um-btn" t-on-click="correctReading">Correct</button>
+                                    </div>
+                                </form>
+                            </section>
+                        </t>
+
+                        <t t-if="state.page === 'leak_list'">
+                            <form class="um-form" t-on-submit.prevent="saveLeak">
+                                <h2>Record leak</h2>
+                                <label>Type
+                                    <select name="leak_type" t-on-change="onForm">
+                                        <option value="">Select</option>
+                                        <option value="water">Water</option>
+                                        <option value="gas">Gas</option>
+                                        <option value="suspected">Suspected</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </label>
+                                <label>Severity
+                                    <select name="severity" t-on-change="onForm">
+                                        <option value="low">Low</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="high">High</option>
+                                        <option value="critical">Critical</option>
+                                    </select>
+                                </label>
+                                <label>Meter
+                                    <select name="meter_id" t-on-change="onForm">
+                                        <option value="">None</option>
+                                        <option t-foreach="state.meters" t-as="meter" t-key="meter.id" t-att-value="meter.id" t-esc="meter.meter_code"/>
+                                    </select>
+                                </label>
+                                <label>Property<input name="property_ref" t-on-change="onForm"/></label>
+                                <button type="submit" class="um-btn um-btn-primary" t-att-disabled="state.busy">Create leak</button>
+                            </form>
+                        </t>
+
+                        <t t-if="state.page === 'leak_detail'">
+                            <section t-if="!state.data.leak" class="um-empty"><p>Select a leak from the list.</p></section>
+                            <section t-else="" class="um-panel">
+                                <header class="um-panel-head">
+                                    <h2 t-esc="state.data.leak.name"/>
+                                    <span class="um-badge" t-esc="state.data.leak.state"/>
+                                    <span class="um-badge" t-esc="state.data.leak.severity"/>
+                                </header>
+                                <dl class="um-facts">
+                                    <dt>Type</dt><dd t-esc="state.data.leak.leak_type"/>
+                                    <dt>Detected</dt><dd t-esc="state.data.leak.detected_at"/>
+                                    <dt>Response minutes</dt><dd t-esc="state.data.leak.response_minutes === false ? '—' : state.data.leak.response_minutes"/>
+                                    <dt>Resolution minutes</dt><dd t-esc="state.data.leak.resolution_minutes === false ? '—' : state.data.leak.resolution_minutes"/>
+                                    <dt>Property</dt><dd t-esc="state.data.leak.property_ref || '—'"/>
+                                </dl>
+                                <label>Assignee
+                                    <select t-on-change="assignLeak">
+                                        <option value="">Select</option>
+                                        <option t-foreach="state.users" t-as="user" t-key="user.id" t-att-value="user.id" t-esc="user.name"/>
+                                    </select>
+                                </label>
+                                <div class="um-toolbar">
+                                    <button t-foreach="nextStatuses('leak')" t-as="next" t-key="next" type="button" class="um-btn" t-on-click="() => this.transitionLeak(next)" t-esc="next"/>
+                                </div>
+                                <h2>Actions</h2>
+                                <ul class="um-list">
+                                    <li t-foreach="state.data.leak.actions || []" t-as="action" t-key="action.id">
+                                        <t t-esc="action.entry_kind"/> — <t t-esc="action.note"/>
+                                    </li>
+                                    <li t-if="!(state.data.leak.actions || []).length" class="um-muted">No actions yet.</li>
+                                </ul>
+                                <form class="um-form" t-on-submit.prevent="addLeakAction">
+                                    <label>Entry
+                                        <select name="entry_kind" t-on-change="onForm">
+                                            <option value="investigation">Investigation</option>
+                                            <option value="action">Action</option>
+                                            <option value="resolution">Resolution</option>
+                                        </select>
+                                    </label>
+                                    <label>Note<textarea name="note" t-on-change="onForm"/></label>
+                                    <button type="submit" class="um-btn">Add action</button>
+                                </form>
+                            </section>
+                        </t>
+
+                        <t t-if="state.page === 'alert_detail'">
+                            <section t-if="state.data.alert" class="um-panel">
+                                <header class="um-panel-head">
+                                    <h2 t-esc="state.data.alert.name"/>
+                                    <span class="um-badge" t-esc="state.data.alert.state"/>
+                                    <span class="um-badge" t-esc="state.data.alert.severity"/>
+                                </header>
+                                <dl class="um-facts">
+                                    <dt>Type</dt><dd t-esc="state.data.alert.alert_type"/>
+                                    <dt>Value</dt><dd t-esc="state.data.alert.observed_value"/>
+                                    <dt>Threshold</dt><dd t-esc="state.data.alert.threshold_value"/>
+                                    <dt>Escalations</dt><dd t-esc="state.data.alert.escalation_count"/>
+                                    <dt>Triggered</dt><dd t-esc="state.data.alert.triggered_at"/>
+                                    <dt>Property</dt><dd t-esc="state.data.alert.property_ref || '—'"/>
+                                </dl>
+                                <label t-if="state.isManager">Resolution note<input name="resolution_note" t-on-change="onForm"/></label>
+                                <div class="um-toolbar">
+                                    <button t-foreach="nextStatuses('alert')" t-as="next" t-key="next" type="button" class="um-btn" t-on-click="() => this.transitionAlert(next)" t-esc="next"/>
+                                </div>
+                            </section>
+                            <section t-else="" class="um-empty"><p>Select an alert from the list.</p></section>
+                            <section t-if="state.isManager" class="um-panel">
+                                <h2>Alert rules</h2>
+                                <ul class="um-list">
+                                    <li t-foreach="state.data.rules || []" t-as="rule" t-key="rule.id">
+                                        <t t-esc="rule.name"/> · <t t-esc="rule.rule_type"/> · <t t-esc="rule.severity"/>
+                                    </li>
+                                    <li t-if="!(state.data.rules || []).length" class="um-muted">No alert rules.</li>
+                                </ul>
+                                <form class="um-form" t-on-submit.prevent="saveRule">
+                                    <label>Name<input name="name" t-on-change="onForm"/></label>
+                                    <label>Type
+                                        <select name="rule_type" t-on-change="onForm">
+                                            <option value="threshold">Threshold</option>
+                                            <option value="spike">Spike</option>
+                                            <option value="tank_level">Tank level</option>
+                                            <option value="gas_pressure">Gas pressure</option>
+                                            <option value="meter_offline">Meter offline</option>
+                                            <option value="missing_reading">Missing reading</option>
+                                            <option value="grid_outage">Grid outage</option>
+                                            <option value="generator_fault">Generator fault</option>
+                                        </select>
+                                    </label>
+                                    <label>Utility
+                                        <select name="utility_type" t-on-change="onForm">
+                                            <option value="">Any</option>
+                                            <option value="electricity">Electricity</option>
+                                            <option value="water">Water</option>
+                                            <option value="gas">Gas</option>
+                                        </select>
+                                    </label>
+                                    <label>Meter
+                                        <select name="meter_id" t-on-change="onForm">
+                                            <option value="">Any</option>
+                                            <option t-foreach="state.meters" t-as="meter" t-key="meter.id" t-att-value="meter.id" t-esc="meter.meter_code"/>
+                                        </select>
+                                    </label>
+                                    <label>Threshold<input type="number" name="threshold_value" t-on-change="onForm"/></label>
+                                    <label>Percent<input type="number" name="threshold_percent" t-on-change="onForm"/></label>
+                                    <label>Tank bound
+                                        <select name="tank_bound" t-on-change="onForm">
+                                            <option value="">None</option>
+                                            <option value="low">Low</option>
+                                            <option value="high">High</option>
+                                        </select>
+                                    </label>
+                                    <label>Severity
+                                        <select name="severity" t-on-change="onForm">
+                                            <option value="informational">Informational</option>
+                                            <option value="low">Low</option>
+                                            <option value="medium">Medium</option>
+                                            <option value="high">High</option>
+                                            <option value="critical">Critical</option>
+                                        </select>
+                                    </label>
+                                    <label>Escalation minutes<input type="number" name="escalation_minutes" t-on-change="onForm"/></label>
+                                    <label>Property<input name="property_ref" t-on-change="onForm"/></label>
+                                    <button type="submit" class="um-btn um-btn-primary">Save rule</button>
+                                </form>
+                            </section>
+                        </t>
+
+                        <t t-if="state.page === 'report_dashboard'">
+                            <div class="um-cards">
+                                <article class="um-card" t-foreach="reportTemplates" t-as="template" t-key="template.type">
+                                    <h3 t-esc="template.title"/>
+                                    <p t-esc="template.text"/>
+                                    <button type="button" class="um-btn" t-on-click="() => this.openTemplate(template.type)">Use template</button>
+                                </article>
+                            </div>
+                        </t>
+
+                        <t t-if="state.page === 'report_builder'">
+                            <form class="um-form" t-on-submit.prevent="saveDefinition">
+                                <label>Name<input name="name" t-att-value="state.form.name || ''" t-on-change="onForm"/></label>
+                                <label>Type
+                                    <select name="report_type" t-on-change="onForm">
+                                        <option value="electricity_consumption">Electricity consumption</option>
+                                        <option value="water_consumption">Water consumption</option>
+                                        <option value="gas_consumption">Gas consumption</option>
+                                        <option value="combined_usage">Combined usage</option>
+                                        <option value="grid_vs_generator">Grid vs generator</option>
+                                        <option value="meter_reading">Meter reading</option>
+                                        <option value="leak_detection">Leak detection</option>
+                                        <option value="consumption_alert">Consumption alert</option>
+                                        <option value="utility_trend">Utility trend</option>
+                                        <option value="utility_performance">Utility performance</option>
+                                    </select>
+                                </label>
+                                <label>From<input type="date" name="date_from" t-on-change="onForm"/></label>
+                                <label>To<input type="date" name="date_to" t-on-change="onForm"/></label>
+                                <label>Property<input name="property_ref" t-att-value="state.form.property_ref || ''" t-on-change="onForm"/></label>
+                                <label>Site<input name="site_ref" t-att-value="state.form.site_ref || ''" t-on-change="onForm"/></label>
+                                <label>Utility
+                                    <select name="utility_type" t-on-change="onForm">
+                                        <option value="">Any</option>
+                                        <option value="electricity">Electricity</option>
+                                        <option value="water">Water</option>
+                                        <option value="gas">Gas</option>
+                                    </select>
+                                </label>
+                                <label>Meter
+                                    <select name="meter_id" t-on-change="onForm">
+                                        <option value="">Any</option>
+                                        <option t-foreach="state.meters" t-as="meter" t-key="meter.id" t-att-value="meter.id" t-esc="meter.meter_code"/>
+                                    </select>
+                                </label>
+                                <label>Grouping
+                                    <select name="grouping" t-on-change="onForm">
+                                        <option value="day">Day</option>
+                                        <option value="week">Week</option>
+                                        <option value="month">Month</option>
+                                        <option value="year">Year</option>
+                                    </select>
+                                </label>
+                                <label>Comparison
+                                    <select name="comparison" t-on-change="onForm">
+                                        <option value="none">None</option>
+                                        <option value="previous_period">Previous period</option>
+                                    </select>
+                                </label>
+                                <label>Schedule
+                                    <select name="schedule" t-on-change="onForm">
+                                        <option value="none">None</option>
+                                        <option value="daily">Daily</option>
+                                        <option value="weekly">Weekly</option>
+                                        <option value="monthly">Monthly</option>
+                                    </select>
+                                </label>
+                                <div class="um-toolbar" t-if="state.isManager">
+                                    <button type="submit" class="um-btn um-btn-primary" t-att-disabled="state.busy">Save definition</button>
+                                </div>
+                                <p t-else="" class="um-muted">Only a Facility Manager can save a report definition or schedule.</p>
+                            </form>
+                            <div class="um-toolbar">
+                                <button type="button" class="um-btn" t-on-click="() => this.runReport('csv')">Export CSV</button>
+                                <button type="button" class="um-btn" t-on-click="() => this.runReport('xlsx')">Export Excel</button>
+                                <button type="button" class="um-btn" t-on-click="() => this.runReport('pdf')">Export PDF</button>
+                            </div>
+                        </t>
+
+                        <t t-if="state.page === 'report_detail'">
+                            <section t-if="state.data.run" class="um-panel">
+                                <h2 t-esc="state.data.run.name"/>
+                                <p>Type <t t-esc="state.data.run.report_type"/></p>
+                                <p>Format <t t-esc="state.data.run.export_format"/></p>
+                                <p>Status <span class="um-badge" t-att-class="{ 'um-badge-warn': state.data.run.execution_state === 'failed' }" t-esc="state.data.run.execution_state"/></p>
+                                <p t-if="state.data.run.error_message" class="um-state-error" role="alert" t-esc="state.data.run.error_message"/>
+                                <svg t-if="reportLine" class="um-line" viewBox="0 0 100 40" role="img" aria-label="Report result">
+                                    <polygon class="um-area" t-att-points="areaPoints(reportLine)"/>
+                                    <polyline t-att-points="reportLine"/>
+                                </svg>
+                                <div class="um-table-wrap" t-if="(state.data.run.chart || []).length">
+                                    <table class="um-table">
+                                        <thead><tr><th>Result</th><th>Value</th></tr></thead>
+                                        <tbody>
+                                            <tr t-foreach="state.data.run.chart" t-as="point" t-key="point_index">
+                                                <td data-label="Result" t-esc="point.label"/>
+                                                <td data-label="Value" t-esc="point.value"/>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p t-elif="state.data.run.chart_state === 'unavailable'" class="um-muted">The stored result for this run is unavailable.</p>
+                                <p t-elif="state.data.run.execution_state === 'completed'" class="um-muted">This run has no chart rows.</p>
+                                <button t-if="state.data.run.attachment_id" type="button" class="um-btn" t-on-click="() => this.downloadFile(state.data.run.attachment_id)">Download private file</button>
+                            </section>
+                        </t>
+
+                        <t t-if="state.page === 'settings'">
+                            <form class="um-form" t-on-submit.prevent="saveSettings">
+                                <label class="um-check"><input type="checkbox" name="verification_required" t-att-checked="state.form.verification_required" t-att-disabled="!state.isManager" t-on-change="onForm"/> Verification required</label>
+                                <label>Offline after minutes<input type="number" name="offline_after_minutes" t-att-value="state.form.offline_after_minutes" t-att-disabled="!state.isManager" t-on-change="onForm"/></label>
+                                <label>Missing reading after minutes<input type="number" name="missing_reading_after_minutes" t-att-value="state.form.missing_reading_after_minutes" t-att-disabled="!state.isManager" t-on-change="onForm"/></label>
+                                <label>Default anomaly percent<input type="number" name="default_anomaly_percent" t-att-value="state.form.default_anomaly_percent" t-att-disabled="!state.isManager" t-on-change="onForm"/></label>
+                                <label>Default escalation minutes<input type="number" name="default_escalation_minutes" t-att-value="state.form.default_escalation_minutes" t-att-disabled="!state.isManager" t-on-change="onForm"/></label>
+                                <label class="um-check"><input type="checkbox" name="mail_notifications" t-att-checked="state.form.mail_notifications" t-att-disabled="!state.isManager" t-on-change="onForm"/> Mail notifications</label>
+                                <button t-if="state.isManager" type="submit" class="um-btn um-btn-primary">Save settings</button>
+                                <p t-else="" class="um-muted">Settings are read-only for Utility Staff.</p>
+                            </form>
+                            <div t-if="state.isManager" class="um-toolbar">
+                                <button type="button" class="um-btn" t-on-click="openAudit">Audit log</button>
+                            </div>
+                            <section t-if="state.isManager" class="um-panel">
+                                <h2>Staff scope</h2>
+                                <div class="um-table-wrap">
+                                    <table class="um-table">
+                                        <thead><tr><th>User</th><th>Dimension</th><th>Code</th><th>Label</th><th></th></tr></thead>
+                                        <tbody>
+                                            <tr t-foreach="state.data.scopes || []" t-as="scope" t-key="scope.id">
+                                                <td data-label="User" t-esc="scope.user_id"/>
+                                                <td data-label="Dimension" t-esc="scope.dimension"/>
+                                                <td data-label="Code" t-esc="scope.ref_code"/>
+                                                <td data-label="Label" t-esc="scope.label || '—'"/>
+                                                <td data-label="Action"><button type="button" class="um-btn" t-on-click="() => this.deactivateScope(scope)">Deactivate</button></td>
+                                            </tr>
+                                            <tr t-if="!(state.data.scopes || []).length"><td colspan="5">No scope rows.</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <form class="um-form" t-on-submit.prevent="saveScope">
+                                    <label>User id<input type="number" name="user_id" t-on-change="onForm"/></label>
+                                    <label>Dimension
+                                        <select name="dimension" t-on-change="onForm">
+                                            <option value="property">Property</option>
+                                            <option value="site">Site</option>
+                                            <option value="department">Department</option>
+                                        </select>
+                                    </label>
+                                    <label>Reference code<input name="ref_code" t-on-change="onForm"/></label>
+                                    <label>Label<input name="label" t-on-change="onForm"/></label>
+                                    <button type="submit" class="um-btn">Save scope</button>
+                                </form>
+                            </section>
+                        </t>
+
+                        <t t-if="state.page === 'settings_audit'">
+                            <div class="um-toolbar">
+                                <button t-if="!state.recordId" type="button" class="um-btn" t-on-click="closeAudit">Back to settings</button>
+                                <button t-if="state.recordId" type="button" class="um-btn" t-on-click="closeAuditEvent">Back to audit log</button>
+                            </div>
+                            <section t-if="state.recordId &amp;&amp; state.data.event" class="um-panel" aria-label="Audit event">
+                                <h2>Audit event</h2>
+                                <ul class="um-list">
+                                    <li><span>Timestamp</span> <strong t-esc="state.data.event.occurred_at"/></li>
+                                    <li><span>Event</span> <strong class="um-badge" t-esc="state.data.event.event_type"/></li>
+                                    <li><span>Resource</span> <strong t-esc="state.data.event.model_name"/></li>
+                                    <li><span>Reference</span> <strong t-esc="state.data.event.res_id"/></li>
+                                    <li><span>User</span> <strong t-esc="state.data.event.user_name"/></li>
+                                    <li><span>Company</span> <strong t-esc="state.data.event.company_name"/></li>
+                                    <li><span>Outcome</span> <strong class="um-badge" t-esc="state.data.event.outcome"/></li>
+                                    <li><span>Description</span> <strong t-esc="state.data.event.summary"/></li>
+                                </ul>
+                                <h2>Before</h2>
+                                <ul class="um-list">
+                                    <li t-foreach="auditBefore" t-as="row" t-key="row.key">
+                                        <span t-esc="row.key"/> <strong t-esc="row.value"/>
+                                    </li>
+                                    <li t-if="!auditBefore.length" class="um-muted">No stored before values.</li>
+                                </ul>
+                                <h2>After</h2>
+                                <ul class="um-list">
+                                    <li t-foreach="auditAfter" t-as="row" t-key="row.key">
+                                        <span t-esc="row.key"/> <strong t-esc="row.value"/>
+                                    </li>
+                                    <li t-if="!auditAfter.length" class="um-muted">No stored after values.</li>
+                                </ul>
+                            </section>
+                        </t>
+
+                        <div t-att-class="state.page === 'meter_inventory' ? 'um-split' : ''">
+                            <div>
+                                <div class="um-table-wrap" t-if="table">
+                                    <table class="um-table">
+                                        <thead>
+                                            <tr>
+                                                <th t-if="table.selectable">Select</th>
+                                                <th t-foreach="table.columns" t-as="col" t-key="col.key" t-esc="col.label"/>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr t-if="!table.rows.length"><td t-att-colspan="table.selectable ? table.columns.length + 1 : table.columns.length">No records yet.</td></tr>
+                                            <tr t-foreach="table.rows" t-as="row" t-key="row.id" t-on-click="() => table.onOpen &amp;&amp; table.onOpen(row)">
+                                                <td t-if="table.selectable" data-label="Select">
+                                                    <input type="checkbox" t-att-data-id="row.id" t-att-checked="isSelected(row.id)" t-on-click.stop="toggleSelect"/>
+                                                </td>
+                                                <td t-foreach="table.columns" t-as="col" t-key="col.key" t-att-data-label="col.label">
+                                                    <span t-if="col.badge" class="um-badge" t-esc="cell(row, col.key)"/>
+                                                    <t t-else="" t-esc="cell(row, col.key)"/>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="um-pager" t-if="usesPager">
+                                    <p>Showing <t t-esc="pagerFrom"/> to <t t-esc="pagerTo"/> of <t t-esc="state.pager.total_count"/></p>
+                                    <p>Page <t t-esc="pagerPage"/> of <t t-esc="pagerPages"/></p>
+                                    <label>Page size
+                                        <select t-on-change="changePageSize">
+                                            <option value="5" t-att-selected="state.pager.limit === 5">5</option>
+                                            <option value="10" t-att-selected="state.pager.limit === 10">10</option>
+                                            <option value="20" t-att-selected="state.pager.limit === 20">20</option>
+                                        </select>
+                                    </label>
+                                    <button type="button" class="um-btn" t-att-disabled="state.pager.offset === 0" t-on-click="() => this.changePage(-1)">Previous</button>
+                                    <button type="button" class="um-btn" t-att-disabled="pagerTo &gt;= state.pager.total_count" t-on-click="() => this.changePage(1)">Next</button>
+                                </div>
+                            </div>
+                            <aside t-if="state.page === 'meter_inventory'" class="um-panel" aria-label="Inventory summary">
+                                <h2>Utility summary</h2>
+                                <ul class="um-list">
+                                    <li t-foreach="meterSummary" t-as="item" t-key="item.label">
+                                        <span t-esc="item.label"/>
+                                        <strong t-esc="item.value"/>
+                                    </li>
+                                </ul>
+                                <h2>Warnings</h2>
+                                <ul class="um-list">
+                                    <li t-foreach="state.data.warnings || []" t-as="row" t-key="row.id">
+                                        <t t-esc="row.meter_code"/> · <t t-esc="row.status"/>
+                                    </li>
+                                    <li t-if="!(state.data.warnings || []).length" class="um-muted">No warnings.</li>
+                                </ul>
+                            </aside>
+                        </div>
+                        <section t-if="showEmpty" class="um-empty" aria-live="polite">
+                            <h2 t-esc="pageInfo.title"/>
+                            <p>No records yet.</p>
+                        </section>
+                    </t>
+                </main>
+            </div>
+            <div t-if="state.confirm" class="um-modal" role="dialog" aria-modal="true" aria-labelledby="um-confirm-title">
+                <div class="um-modal-card">
+                    <h2 id="um-confirm-title">Deactivate meter</h2>
+                    <p>Deactivated meters cannot receive readings. You can connect the meter again later.</p>
+                    <div class="um-toolbar">
+                        <button type="button" class="um-btn um-btn-primary" t-on-click="confirmYes">Deactivate</button>
+                        <button type="button" class="um-btn" t-on-click="confirmNo">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

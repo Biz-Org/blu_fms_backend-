@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="video_analytics.App">
+        <div class="va-shell o_action" t-att-class="{ 'is-nav-open': state.menuOpen }" t-ref="root">
+            <style>
+                .va-shell .va-page, .va-shell .va-card, .va-shell .va-main { min-width:0 !important; }
+                .va-shell .va-page { width:100% !important; }
+                .va-shell .va-page-header { display:flex !important; flex-wrap:wrap !important; gap:8px 12px !important; align-items:flex-start !important; }
+                .va-shell .va-kpi-strip-4 { display:grid !important; grid-template-columns:repeat(4, minmax(0, 1fr)) !important; gap:12px !important; }
+                .va-shell .va-detect-layout { display:grid !important; grid-template-columns:minmax(0, 1fr) minmax(240px, 320px) !important; gap:12px !important; align-items:start !important; }
+                .va-shell .va-detect-main { display:flex !important; flex-direction:column !important; gap:12px !important; min-width:0 !important; }
+                .va-shell .va-live-stage { position:relative !important; width:100% !important; min-height:240px !important; aspect-ratio:16 / 9 !important; border-radius:10px !important; overflow:hidden !important; background:#12151c !important; }
+                .va-shell .va-ppe-break { display:grid !important; grid-template-columns:repeat(3, minmax(0, 1fr)) !important; gap:8px !important; }
+                .va-shell .va-table-wrap { overflow:auto !important; -webkit-overflow-scrolling:touch !important; max-width:100% !important; }
+                .va-shell .va-flow { display:flex !important; flex-wrap:wrap !important; align-items:center !important; justify-content:space-between !important; gap:8px 12px !important; margin:0 0 12px !important; padding:10px 12px !important; background:#fff !important; border:1px solid #e6e8ef !important; border-radius:10px !important; }
+                .va-shell .va-flow-track { display:flex !important; flex-wrap:wrap !important; align-items:center !important; min-width:0 !important; }
+                .va-shell .va-filter-item { display:inline-block !important; width:210px !important; max-width:100% !important; margin:0 14px 14px 0 !important; vertical-align:top !important; box-sizing:border-box !important; }
+                .va-shell .va-filter-item select, .va-shell .va-filter-item .va-input { width:100% !important; max-width:100% !important; height:38px !important; box-sizing:border-box !important; display:block !important; }
+                .va-shell .va-filter-item .va-date-chip { display:flex !important; width:100% !important; height:38px !important; box-sizing:border-box !important; }
+                .va-shell .va-filter-item-btn { width:auto !important; min-width:92px !important; margin:0 14px 14px 0 !important; }
+                .va-shell .va-filter-item-btn .va-btn { height:38px !important; min-width:92px !important; }
+                .va-shell .va-filters { display:block !important; margin-bottom:8px !important; }
+                .va-shell .va-play-toolbar, .va-shell .va-alert-toolbar, .va-shell .va-play-filters { display:flex !important; flex-wrap:nowrap !important; align-items:center !important; gap:10px !important; margin-bottom:12px !important; }
+                .va-shell .va-play-toolbar .va-filter-item, .va-shell .va-play-filters .va-filter-pill { width:auto !important; margin:0 !important; flex:0 0 auto !important; }
+                .va-shell .va-playback-page .va-play-filters .va-date-chip { position:relative !important; overflow:hidden !important; display:inline-flex !important; height:32px !important; min-width:160px !important; padding:0 12px !important; border:1px solid #E8E3F4 !important; border-radius:6px !important; background:#fff !important; gap:8px !important; align-items:center !important; }
+                .va-shell .va-playback-page .va-play-filters .va-date-label { font-size:13px !important; color:#7B7590 !important; white-space:nowrap !important; }
+                .va-shell .va-playback-page .va-play-filters .va-date-input { position:absolute !important; inset:0 !important; width:100% !important; height:100% !important; opacity:0 !important; cursor:pointer !important; min-width:0 !important; color:transparent !important; appearance:none !important; }
+                .va-shell .va-playback-page .va-play-filters .va-date-input::-webkit-calendar-picker-indicator { opacity:0 !important; position:absolute !important; inset:0 !important; width:100% !important; height:100% !important; cursor:pointer !important; }
+                .va-shell .va-playback-page .va-play-filters .va-select-pill { position:relative !important; }
+                .va-shell .va-playback-page .va-play-filters .va-select-pill select { appearance:none !important; -webkit-appearance:none !important; height:32px !important; min-width:168px !important; width:168px !important; padding:0 28px 0 12px !important; border:1px solid #E8E3F4 !important; border-radius:6px !important; background:#fff !important; color:#7B7590 !important; font-size:13px !important; }
+                .va-shell .va-playback-page .va-play-filters .va-select-pill:after { content:"" !important; position:absolute !important; right:12px !important; top:50% !important; margin-top:-2px !important; width:0 !important; height:0 !important; border-left:5px solid transparent !important; border-right:5px solid transparent !important; border-top:5px solid #B9B3C9 !important; pointer-events:none !important; }
+                .va-shell .va-playback-page .va-play-filters .va-btn-apply { display:inline-flex !important; align-items:center !important; gap:6px !important; height:32px !important; padding:0 12px !important; border-radius:6px !important; background:#5629CE !important; color:#fff !important; border:0 !important; font-size:13px !important; }
+                .va-shell .va-playback-page .va-play-filters .va-btn-clear { border:1px solid #E8E3F4 !important; background:#fff !important; color:#5629CE !important; box-shadow:none !important; height:32px !important; padding:0 12px !important; border-radius:6px !important; font-size:13px !important; }
+                .va-shell .va-main { display:flex !important; flex-direction:column !important; min-height:0 !important; }
+                .va-shell .va-playback-page { display:block !important; overflow:visible !important; height:auto !important; flex:none !important; }
+                .va-shell .va-play-toolbar-end, .va-shell .va-alert-toolbar-end { margin-left:auto !important; display:flex !important; gap:8px !important; flex:0 0 auto !important; }
+                .va-shell .va-play-layout { display:grid !important; grid-template-columns:minmax(200px, 240px) minmax(0, 1fr) minmax(260px, 300px) !important; gap:12px !important; align-items:start !important; flex:none !important; min-height:0 !important; height:auto !important; }
+                .va-shell .va-play-layout > .va-card, .va-shell .va-play-side > .va-card { margin-bottom:0 !important; min-width:0 !important; height:auto !important; max-height:none !important; overflow:visible !important; }
+                .va-shell .va-play-side { display:flex !important; flex-direction:column !important; gap:12px !important; min-width:0 !important; height:auto !important; overflow:visible !important; }
+                .va-shell .va-play-side .va-detail { position:static !important; top:auto !important; max-height:none !important; overflow:visible !important; }
+                .va-shell .va-info-card { flex:none !important; max-height:none !important; overflow:visible !important; height:auto !important; }
+                .va-shell .va-notes-card { flex:none !important; min-height:0 !important; overflow:visible !important; display:flex !important; flex-direction:column !important; height:auto !important; }
+                .va-shell .va-queue { min-height:320px !important; height:auto !important; overflow:visible !important; display:flex !important; flex-direction:column !important; }
+                .va-shell .va-player-card { display:flex !important; flex-direction:column !important; min-width:0 !important; height:auto !important; overflow:visible !important; }
+                .va-shell .va-player-stage { min-height:280px !important; height:280px !important; flex:none !important; }
+                .va-shell .va-decision-bar { display:flex !important; flex-wrap:wrap !important; gap:8px !important; flex:none !important; }
+                .va-shell .va-btn-fp { background:#ecfdf3 !important; color:#15803d !important; }
+                .va-shell .va-btn-review { background:#fffbeb !important; color:#b45309 !important; }
+                .va-shell .va-btn-confirm { background:#fef2f2 !important; color:#dc2626 !important; }
+                .va-shell .va-alert-layout { display:grid !important; grid-template-columns:minmax(0, 1fr) minmax(240px, 320px) !important; gap:12px !important; align-items:start !important; }
+                .va-shell .va-kpi-accent-purple { border-left:4px solid #5629CE !important; }
+                .va-shell .va-kpi-accent-danger { border-left:4px solid #dc2626 !important; }
+                .va-shell .va-kpi-accent-warn { border-left:4px solid #d97706 !important; }
+                .va-shell .va-kpi-accent-success { border-left:4px solid #16a34a !important; }
+                .va-shell .va-cctv-layout { display:grid !important; grid-template-columns:minmax(180px, 0.22fr) minmax(0, 1fr) minmax(240px, 0.34fr) !important; gap:12px !important; align-items:stretch !important; }
+                .va-shell .va-cctv-layout > .va-card { margin-bottom:0 !important; min-width:0 !important; }
+                .va-shell .va-cam-grid { display:grid !important; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)) !important; gap:10px !important; }
+                .va-shell .va-cam-preview { height:110px !important; }
+                .va-shell .va-cctv-grid-card { min-height:280px !important; display:flex !important; flex-direction:column !important; }
+                .va-shell .va-cctv-empty { flex:1 1 auto !important; display:flex !important; flex-direction:column !important; align-items:center !important; justify-content:center !important; text-align:center !important; padding:24px 12px !important; }
+                @media (max-width: 1320px) {
+                    .va-shell .va-cctv-layout { grid-template-columns:minmax(0, 1fr) minmax(240px, 320px) !important; }
+                    .va-shell .va-loc-list { grid-column:1 / -1 !important; display:flex !important; flex-wrap:wrap !important; gap:8px !important; align-items:center !important; }
+                    .va-shell .va-loc-list .va-card-title { width:100% !important; margin-bottom:4px !important; }
+                    .va-shell .va-loc-item { width:auto !important; }
+                }
+                @media (max-width: 1199px) {
+                    .va-shell .va-kpi-strip-4 { grid-template-columns:repeat(2, minmax(0, 1fr)) !important; }
+                    .va-shell .va-detect-layout { grid-template-columns:1fr !important; }
+                    .va-shell .va-alert-layout { grid-template-columns:1fr !important; }
+                    .va-shell .va-occ-layout { grid-template-columns:1fr !important; }
+                }
+                @media (max-width: 1180px) {
+                    .va-shell .va-play-layout { grid-template-columns:minmax(0, 1fr) minmax(240px, 300px) !important; }
+                    .va-shell .va-queue { grid-column:1 / -1 !important; min-height:180px !important; max-height:none !important; height:auto !important; }
+                }
+                @media (max-width: 1024px) {
+                    .va-shell .va-page-header { flex-direction:column !important; align-items:stretch !important; }
+                    .va-shell .va-page-actions { width:100% !important; display:flex !important; flex-wrap:wrap !important; }
+                    .va-shell .va-page-actions .va-input,
+                    .va-shell .va-page-actions .va-btn { flex:1 1 160px !important; min-width:0 !important; max-width:100% !important; }
+                    .va-shell .va-live-stage { min-height:200px !important; }
+                    .va-shell .va-detect-page .va-table-wrap { max-height:none !important; }
+                }
+                @media (max-width: 900px) {
+                    .va-shell .va-playback-page { overflow:auto !important; }
+                    .va-shell .va-cctv-layout, .va-shell .va-play-layout, .va-shell .va-alert-layout, .va-shell .va-detect-layout { grid-template-columns:1fr !important; height:auto !important; }
+                    .va-shell .va-loc-list, .va-shell .va-queue, .va-shell .va-live-detail, .va-shell .va-play-side { grid-column:auto !important; max-height:none !important; height:auto !important; }
+                    .va-shell .va-player-card, .va-shell .va-player-stage { height:auto !important; min-height:220px !important; }
+                    .va-shell .va-filter-item, .va-shell .va-play-toolbar .va-filter-item, .va-shell .va-alert-toolbar .va-filter-item { width:100% !important; max-width:100% !important; flex:1 1 100% !important; margin:0 0 10px 0 !important; }
+                    .va-shell .va-play-toolbar-end, .va-shell .va-alert-toolbar-end { margin-left:0 !important; width:100% !important; }
+                    .va-shell .va-cam-grid { grid-template-columns:1fr !important; }
+                    .va-shell .va-play-toolbar, .va-shell .va-alert-toolbar { flex-wrap:wrap !important; }
+                }
+                @media (max-width: 640px) {
+                    .va-shell .va-kpi-strip-4 { grid-template-columns:1fr !important; }
+                    .va-shell .va-ppe-break { grid-template-columns:1fr !important; }
+                    .va-shell .va-page-actions { flex-direction:column !important; align-items:stretch !important; }
+                    .va-shell .va-page-actions .va-input,
+                    .va-shell .va-page-actions .va-btn { width:100% !important; flex:1 1 auto !important; }
+                    .va-shell .va-live-stage { min-height:180px !important; }
+                    .va-shell .va-main { padding:12px !important; }
+                }
+                .va-shell.o_action .va-playback-page .va-play-filters { display:flex !important; flex-wrap:nowrap !important; align-items:center !important; gap:10px !important; margin:0 0 12px !important; }
+                .va-shell.o_action .va-playback-page .va-play-filter-group { display:flex !important; flex-wrap:nowrap !important; align-items:center !important; gap:10px !important; }
+                .va-shell.o_action .va-playback-page .va-play-filters .va-filter-item { width:auto !important; min-width:0 !important; max-width:none !important; margin:0 !important; flex:0 0 auto !important; }
+                .va-shell.o_action .va-playback-page .va-play-filters .va-date-chip,
+                .va-shell.o_action .va-playback-page .va-play-filters .va-select-pill select,
+                .va-shell.o_action .va-playback-page .va-play-filters .va-btn-apply,
+                .va-shell.o_action .va-playback-page .va-play-filters .va-btn-clear { height:32px !important; min-height:32px !important; max-height:32px !important; border-radius:6px !important; box-shadow:none !important; }
+                .va-shell.o_action .va-playback-page .va-play-filters .va-select-pill select { width:168px !important; min-width:168px !important; padding:0 28px 0 12px !important; border:1px solid #E8E3F4 !important; color:#7B7590 !important; font-size:13px !important; }
+                .va-shell.o_action .va-playback-page .va-play-filters .va-btn-apply { width:auto !important; padding:0 12px !important; background:#5629CE !important; color:#fff !important; border:0 !important; border-radius:6px !important; }
+                .va-shell.o_action .va-playback-page .va-play-filters .va-btn-clear { width:auto !important; padding:0 12px !important; border:1px solid #E8E3F4 !important; background:#fff !important; color:#5629CE !important; border-radius:6px !important; }
+                @media (max-width: 900px) {
+                    .va-shell.o_action .va-playback-page .va-play-filters,
+                    .va-shell.o_action .va-playback-page .va-play-filter-group { flex-wrap:wrap !important; }
+                    .va-shell.o_action .va-playback-page .va-play-filters .va-filter-item { width:100% !important; flex:1 1 100% !important; }
+                    .va-shell.o_action .va-playback-page .va-play-filters .va-select-pill select { width:100% !important; min-width:0 !important; }
+                }
+            </style>
+            <button type="button" class="va-nav-backdrop" aria-label="Close menu" t-on-click="closeMenu"/>
+            <aside class="va-sidebar" aria-label="Video Analytics">
+                <div class="va-sidebar-brand">
+                    <div class="va-brand-mark" aria-hidden="true">P</div>
+                    <div class="va-brand-text">
+                        <div class="va-brand-name">PrecastMPS</div>
+                        <div class="va-brand-sub">Planning Suite</div>
+                    </div>
+                    <button type="button" class="va-icon-btn va-sidebar-close" aria-label="Close menu" t-on-click="closeMenu">
+                        <i class="fa fa-times"/>
+                    </button>
+                </div>
+                <nav class="va-sidebar-nav">
+                    <t t-foreach="screens" t-as="item" t-key="item.id">
+                        <button type="button"
+                                class="va-nav-item"
+                                t-att-class="{ active: state.screen === item.id }"
+                                t-att-data-screen="item.id"
+                                t-att-aria-current="state.screen === item.id ? 'page' : false"
+                                t-att-title="item.title"
+                                t-on-click="onNavClick">
+                            <span class="va-nav-icon" aria-hidden="true">
+                                <i t-attf-class="fa {{item.icon}}"/>
+                            </span>
+                            <span class="va-nav-label" t-esc="item.label"/>
+                        </button>
+                    </t>
+                </nav>
+                <div class="va-sidebar-foot">
+                    <span class="va-nav-item va-nav-muted">
+                        <span class="va-nav-icon" aria-hidden="true"><i class="fa fa-cog"/></span>
+                        <span class="va-nav-label">Settings</span>
+                    </span>
+                </div>
+            </aside>
+            <div class="va-workspace">
+                <header class="va-topbar">
+                    <button type="button" class="va-icon-btn va-menu-btn" aria-label="Open menu" t-on-click="toggleMenu">
+                        <i class="fa fa-bars"/>
+                    </button>
+                    <div class="va-breadcrumbs">
+                        <span class="va-crumb-full">Utility Management</span>
+                        <span class="va-crumb-full va-crumb-sep">›</span>
+                        <span class="va-crumb-mid">Video Analytics</span>
+                        <span class="va-crumb-sep">›</span>
+                        <strong t-esc="current.crumb"/>
+                    </div>
+                    <div class="va-top-search">
+                        <i class="fa fa-search" aria-hidden="true"/>
+                        <input type="search" class="va-top-search-input" t-att-placeholder="current.searchPlaceholder" t-model="state.searchQuery"/>
+                    </div>
+                    <div class="va-top-links">
+                        <span>Home</span>
+                        <span>Reports</span>
+                        <span>Support</span>
+                    </div>
+                    <div class="va-top-utils">
+                        <button type="button" class="va-icon-btn" title="Location"><i class="fa fa-map-marker"/></button>
+                        <button type="button" class="va-icon-btn" title="Notifications"><i class="fa fa-bell-o"/></button>
+                        <div class="va-user-avatar va-top-avatar" t-esc="initials"/>
+                    </div>
+                </header>
+                <main class="va-main">
+                    <div t-if="state.sessionError" class="va-error" role="alert" t-esc="state.sessionError"/>
+                    <t t-if="state.screen === 'dashboard'">
+                        <VaDashboard session="state.session" searchQuery="state.searchQuery" onNavigate.bind="navigate"/>
+                    </t>
+                    <t t-elif="state.screen === 'cctv'">
+                        <VaCctv session="state.session" searchQuery="state.searchQuery"/>
+                    </t>
+                    <t t-elif="state.screen === 'playback'">
+                        <VaPlayback session="state.session" searchQuery="state.searchQuery"/>
+                    </t>
+                    <t t-elif="state.screen === 'detection'">
+                        <VaDetection session="state.session" searchQuery="state.searchQuery" onNavigate.bind="navigate"/>
+                    </t>
+                    <t t-elif="state.screen === 'occupancy'">
+                        <VaOccupancy session="state.session" searchQuery="state.searchQuery"/>
+                    </t>
+                    <t t-elif="state.screen === 'alerts'">
+                        <VaAlerts session="state.session" searchQuery="state.searchQuery" onNavigate.bind="navigate"/>
+                    </t>
+                </main>
+            </div>
+        </div>
+    </t>
+</templates>

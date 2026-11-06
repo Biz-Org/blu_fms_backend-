@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="seq_ei_integration" model="ir.sequence">
+        <field name="name">EI Integration</field>
+        <field name="code">ei.integration</field>
+        <field name="prefix">EI</field>
+        <field name="padding">4</field>
+    </record>
+    <record id="seq_ei_correlation" model="ir.sequence">
+        <field name="name">EI Correlation</field>
+        <field name="code">ei.correlation</field>
+        <field name="prefix">COR</field>
+        <field name="padding">6</field>
+    </record>
+</odoo>

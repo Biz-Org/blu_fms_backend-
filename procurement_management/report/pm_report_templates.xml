@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_pm_run" model="ir.actions.report">
+        <field name="name">Procurement Report</field>
+        <field name="model">procurement.management.report.run</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">procurement_management.report_pm_run</field>
+        <field name="report_file">procurement_management.report_pm_run</field>
+        <field name="print_report_name">'Procurement Report - %s' % (object.name)</field>
+    </record>
+
+    <template id="report_pm_run">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2 t-out="doc.name"/>
+                        <p t-out="doc.definition_id.name"/>
+                        <p t-out="doc.state"/>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_pm_purchase_order" model="ir.actions.report">
+        <field name="name">Procurement Purchase Order</field>
+        <field name="model">procurement.management.purchase.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">procurement_management.report_pm_purchase_order</field>
+        <field name="report_file">procurement_management.report_pm_purchase_order</field>
+        <field name="print_report_name">'Purchase Order - %s' % (object.name)</field>
+    </record>
+
+    <template id="report_pm_purchase_order">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2 t-out="doc.name"/>
+                        <p t-out="doc.partner_id.name"/>
+                        <p t-out="doc.display_status"/>
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Qty</th>
+                                    <th>Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="doc.line_ids" t-as="line">
+                                    <td t-out="line.description"/>
+                                    <td t-out="line.quantity"/>
+                                    <td t-out="line.price_unit"/>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

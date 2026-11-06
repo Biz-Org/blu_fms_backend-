@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- One OWL client action implementation: tag video_analytics_app. -->
+    <record id="action_va_dashboard" model="ir.actions.client">
+        <field name="name">Video Analytics Dashboard</field>
+        <field name="tag">video_analytics_app</field>
+        <field name="target">current</field>
+        <field name="context">{'va_screen': 'dashboard'}</field>
+        <field name="params" eval="{'screen': 'dashboard'}"/>
+    </record>
+
+    <record id="action_va_cctv" model="ir.actions.client">
+        <field name="name">CCTV Integration &amp; Live Streaming</field>
+        <field name="tag">video_analytics_app</field>
+        <field name="target">current</field>
+        <field name="context">{'va_screen': 'cctv'}</field>
+        <field name="params" eval="{'screen': 'cctv'}"/>
+    </record>
+
+    <record id="action_va_playback" model="ir.actions.client">
+        <field name="name">Video Event Playback &amp; Investigation</field>
+        <field name="tag">video_analytics_app</field>
+        <field name="target">current</field>
+        <field name="context">{'va_screen': 'playback'}</field>
+        <field name="params" eval="{'screen': 'playback'}"/>
+    </record>
+
+    <record id="action_va_detection" model="ir.actions.client">
+        <field name="name">AI Detection &amp; Zone Monitoring</field>
+        <field name="tag">video_analytics_app</field>
+        <field name="target">current</field>
+        <field name="context">{'va_screen': 'detection'}</field>
+        <field name="params" eval="{'screen': 'detection'}"/>
+    </record>
+
+    <record id="action_va_occupancy" model="ir.actions.client">
+        <field name="name">Occupancy &amp; Crowd Monitoring</field>
+        <field name="tag">video_analytics_app</field>
+        <field name="target">current</field>
+        <field name="context">{'va_screen': 'occupancy'}</field>
+        <field name="params" eval="{'screen': 'occupancy'}"/>
+    </record>
+
+    <record id="action_va_alerts" model="ir.actions.client">
+        <field name="name">Video-Based Alerts &amp; Event Management</field>
+        <field name="tag">video_analytics_app</field>
+        <field name="target">current</field>
+        <field name="context">{'va_screen': 'alerts'}</field>
+        <field name="params" eval="{'screen': 'alerts'}"/>
+    </record>
+</odoo>

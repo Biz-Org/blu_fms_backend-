@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="document_management.Dashboard">
+        <div class="dm-screen dm-dash" data-screen="dashboard">
+            <style>
+                .dm-dash .dm-dash-hero { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 0 0 1.15rem; }
+                .dm-dash .dm-dash-hero .dm-page-title { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.03em; color: #111827; }
+                .dm-dash .dm-hero-actions .dm-btn { background: #fff; color: #374151; border: 1px solid #e5e7eb; height: 34px; padding: 0 0.85rem; border-radius: 8px; font-size: 0.74rem; font-weight: 600; }
+                .dm-dash .dm-hero-actions .dm-btn-primary { background: #5629CE; border-color: #5629CE; color: #fff; }
+                .dm-dash .dm-dash-kpis { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 0 !important; margin: 0 0 1rem; background: #fff; border: 1px solid #c9c5d4; border-radius: 12px; overflow: hidden; }
+                .dm-dash .dm-dash-kpis .dm-kpi { border: 0; border-right: 1px solid #c9c5d4; border-radius: 0; box-shadow: none; padding: 1.05rem 1.2rem 0.95rem; background: #fff; min-width: 0; }
+                .dm-dash .dm-card, .dm-dash .dm-table-wrap { border-color: #c9c5d4; }
+                .dm-dash .dm-table th, .dm-dash .dm-table td { border-bottom-color: #c9c5d4; }
+                .dm-dash .dm-dash-kpis .dm-kpi:last-child { border-right: 0; }
+                .dm-dash .dm-dash-kpis .dm-kpi-warn { box-shadow: inset 0 3px 0 #f59e0b; }
+                .dm-dash .dm-dash-kpis .dm-kpi-danger { box-shadow: inset 0 3px 0 #ef4444; }
+                .dm-dash .dm-dash-kpis .dm-kpi-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; }
+                .dm-dash .dm-dash-kpis .dm-kpi-label { font-size: 0.78rem; font-weight: 500; letter-spacing: 0; text-transform: none; color: #8b92a3; }
+                .dm-dash .dm-dash-kpis .dm-kpi-icon { background: transparent; color: #c5c9d4; width: auto; height: auto; font-size: 1.05rem; }
+                .dm-dash .dm-dash-kpis .dm-kpi-metric { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; margin-top: 0.7rem; }
+                .dm-dash .dm-dash-kpis .dm-kpi-value { margin: 0; font-size: 2rem; font-weight: 700; letter-spacing: -0.03em; color: #111827; line-height: 1.05; }
+                .dm-dash .dm-dash-kpis .dm-kpi-hint { margin: 0; color: #d97706; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
+                .dm-dash .dm-dash-mid { display: grid !important; grid-template-columns: minmax(0, 1.4fr) minmax(240px, 0.82fr) minmax(250px, 0.88fr) !important; gap: 0.85rem !important; margin: 0 0 1rem; }
+                .dm-dash .dm-dash-mid .dm-card, .dm-dash .dm-dash-bottom .dm-card, .dm-dash .dm-dash-bottom .dm-table-wrap { box-shadow: none; }
+                .dm-dash .dm-card-title { margin: 0 0 0.85rem; font-size: 0.92rem; font-weight: 700; color: #111827; }
+                .dm-dash .dm-dash-mid .dm-chart { min-height: 198px; background: #f3f4f8; border-radius: 10px; padding: 1.15rem 0.85rem 0.4rem; position: relative; display: flex; align-items: flex-end; gap: 0.65rem; }
+                .dm-dash .dm-chart-bar { background: #8b5cf6; max-width: 34px; border-radius: 3px 3px 0 0; }
+                .dm-dash .dm-chart-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #9aa1b2; font-size: 0.76rem; }
+                .dm-dash .dm-status-row { padding: 0.72rem 0; font-size: 0.8rem; color: #4b5563; border-bottom: 0; }
+                .dm-dash .dm-status-row strong { font-size: 1.05rem; font-weight: 700; color: #111827; }
+                .dm-dash .dm-quick-item { border: 0; background: #faf9fc; border-radius: 10px; margin: 0 0 0.42rem; padding: 0.7rem 0.8rem; box-shadow: none; }
+                .dm-dash .dm-q-upload { box-shadow: inset 3px 0 0 #5629CE; }
+                .dm-dash .dm-q-search { box-shadow: inset 3px 0 0 #2563eb; }
+                .dm-dash .dm-q-pending { box-shadow: inset 3px 0 0 #f59e0b; }
+                .dm-dash .dm-q-expiring { box-shadow: inset 3px 0 0 #dc2626; }
+                .dm-dash .dm-quick-ico { background: transparent; width: auto; height: auto; color: inherit; }
+                .dm-dash .dm-q-upload .dm-quick-ico { color: #5629CE; }
+                .dm-dash .dm-q-search .dm-quick-ico { color: #64748b; }
+                .dm-dash .dm-q-pending .dm-quick-ico { color: #d97706; }
+                .dm-dash .dm-q-expiring .dm-quick-ico { color: #dc2626; }
+                .dm-dash .dm-quick-count, .dm-dash .dm-quick-go { color: #9aa1b2; font-weight: 700; margin-left: auto; }
+                .dm-dash .dm-dash-bottom { display: grid !important; grid-template-columns: minmax(0, 1.75fr) minmax(240px, 0.7fr) !important; gap: 0.85rem; }
+                .dm-dash .dm-dash-table-head { display: flex; align-items: center; justify-content: space-between; padding: 0.95rem 1rem 0.15rem; }
+                .dm-dash .dm-dash-table-head .dm-card-title { margin: 0; }
+                .dm-dash .dm-btn-ghost { color: #5629CE; font-weight: 600; }
+                .dm-dash .dm-sys-ok { display: flex; align-items: flex-start; gap: 0.55rem; padding: 0.2rem 0 0.4rem; }
+                .dm-dash .dm-sys-ok strong { display: block; font-size: 0.82rem; color: #111827; }
+                .dm-dash .dm-sys-ok .dm-page-sub { margin: 0.15rem 0 0; font-size: 0.72rem; }
+                @media (max-width: 1099px) {
+                    .dm-dash .dm-dash-kpis { grid-template-columns: 1fr 1fr !important; }
+                    .dm-dash .dm-dash-kpis .dm-kpi:nth-child(2) { border-right: 0; }
+                    .dm-dash .dm-dash-kpis .dm-kpi:nth-child(n+3) { border-top: 1px solid #c9c5d4; }
+                    .dm-dash .dm-dash-mid { grid-template-columns: 1fr !important; }
+                    .dm-dash .dm-dash-bottom { grid-template-columns: 1fr !important; }
+                    .dm-dash .dm-dash-hero { flex-wrap: wrap; }
+                }
+                @media (max-width: 720px) {
+                    .dm-dash .dm-dash-kpis { grid-template-columns: 1fr !important; }
+                    .dm-dash .dm-dash-kpis .dm-kpi { border-right: 0; border-bottom: 1px solid #c9c5d4; }
+                    .dm-dash .dm-dash-kpis .dm-kpi:last-child { border-bottom: 0; }
+                    .dm-dash .dm-page-title { font-size: 1.15rem; }
+                }
+            </style>
+            <div class="dm-page-hero dm-dash-hero">
+                <div>
+                    <h1 class="dm-page-title">Document Management Dashboard</h1>
+                </div>
+                <div class="dm-hero-actions">
+                    <button type="button" class="dm-btn" t-on-click="toggleFilters">
+                        <i class="fa fa-sliders"/> Filter
+                    </button>
+                    <button type="button" class="dm-btn dm-btn-primary" t-on-click="goUpload">
+                        <i class="fa fa-plus"/> Upload Document
+                    </button>
+                    <button type="button" class="dm-icon-btn" title="Refresh dashboard" t-on-click="refresh" aria-label="Refresh">
+                        <i class="fa fa-refresh"/>
+                    </button>
+                </div>
+            </div>
+            <div t-if="state.showFilters" class="dm-filters">
+                <input class="dm-input" type="search" placeholder="Search documents" t-model="state.query"/>
+                <button type="button" class="dm-btn dm-btn-primary" t-on-click="goSearch">Apply</button>
+            </div>
+            <div t-if="state.error" class="dm-error" role="alert">
+                <span t-esc="state.error"/>
+                <button type="button" class="dm-btn" t-on-click="refresh">Retry</button>
+            </div>
+            <div t-if="state.loading" class="dm-loading" aria-busy="true" aria-label="Loading dashboard">
+                Loading dashboard…
+            </div>
+            <t t-if="!state.loading and !state.error">
+                <div class="dm-kpi-grid dm-dash-kpis">
+                    <div class="dm-kpi">
+                        <div class="dm-kpi-head">
+                            <div class="dm-kpi-label">Total Documents</div>
+                            <span class="dm-kpi-icon"><i class="fa fa-file-text-o"/></span>
+                        </div>
+                        <div class="dm-kpi-metric">
+                            <div class="dm-kpi-value" t-esc="count((state.kpis and state.kpis.documents_total) or 0)"/>
+                        </div>
+                    </div>
+                    <div class="dm-kpi">
+                        <div class="dm-kpi-head">
+                            <div class="dm-kpi-label">Storage Used</div>
+                            <span class="dm-kpi-icon"><i class="fa fa-hdd-o"/></span>
+                        </div>
+                        <div class="dm-kpi-metric">
+                            <div class="dm-kpi-value" t-esc="storageLabel"/>
+                        </div>
+                    </div>
+                    <div class="dm-kpi dm-kpi-warn">
+                        <div class="dm-kpi-head">
+                            <div class="dm-kpi-label">Pending Approval</div>
+                            <span class="dm-kpi-icon"><i class="fa fa-clock-o"/></span>
+                        </div>
+                        <div class="dm-kpi-metric">
+                            <div class="dm-kpi-value" t-esc="count((state.kpis and state.kpis.pending_approval) or 0)"/>
+                            <div class="dm-kpi-hint"><i class="fa fa-exclamation-triangle"/> Action Req</div>
+                        </div>
+                    </div>
+                    <div class="dm-kpi dm-kpi-danger">
+                        <div class="dm-kpi-head">
+                            <div class="dm-kpi-label">Expiring Soon</div>
+                            <span class="dm-kpi-icon"><i class="fa fa-calendar-o"/></span>
+                        </div>
+                        <div class="dm-kpi-metric">
+                            <div class="dm-kpi-value" t-esc="count((state.kpis and state.kpis.expiring_soon) or 0)"/>
+                            <div class="dm-kpi-hint"><i class="fa fa-clock-o"/> 30 Days</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="dm-split-3 dm-dash-mid">
+                    <section class="dm-card">
+                        <h2 class="dm-card-title">Document Distribution</h2>
+                        <div class="dm-chart" aria-label="Document distribution">
+                            <div t-if="!state.distribution.length" class="dm-chart-empty">
+                                <p>No category distribution yet.</p>
+                            </div>
+                            <t t-foreach="state.distribution" t-as="row" t-key="row.id">
+                                <div class="dm-chart-col">
+                                    <div class="dm-chart-bar" t-att-style="barStyle(row.count)" t-att-title="row.name + ': ' + row.count"/>
+                                    <div class="dm-chart-label" t-esc="row.name"/>
+                                </div>
+                            </t>
+                        </div>
+                    </section>
+                    <section class="dm-card">
+                        <h2 class="dm-card-title">Status Summary</h2>
+                        <div class="dm-status-row"><span><span class="dm-dot dm-dot-ok"/>Active</span><strong t-esc="count(state.status_summary.active or 0)"/></div>
+                        <div class="dm-status-row"><span><span class="dm-dot dm-dot-muted"/>Archived</span><strong t-esc="count(state.status_summary.archived or 0)"/></div>
+                        <div class="dm-status-row"><span><span class="dm-dot dm-dot-info"/>Shared (Ext)</span><strong t-esc="count(state.status_summary.shared or 0)"/></div>
+                        <div class="dm-status-row"><span><span class="dm-dot dm-dot-danger"/>Restricted</span><strong t-esc="count(state.status_summary.restricted or 0)"/></div>
+                    </section>
+                    <section class="dm-card">
+                        <h2 class="dm-card-title">Quick Actions</h2>
+                        <button type="button" class="dm-quick-item dm-q-upload" t-on-click="goUpload">
+                            <span class="dm-quick-ico dm-quick-purple"><i class="fa fa-cloud-upload"/></span>
+                            <span>Upload Document</span>
+                            <i class="fa fa-angle-right dm-quick-go"/>
+                        </button>
+                        <button type="button" class="dm-quick-item dm-q-search" t-on-click="goSearch">
+                            <span class="dm-quick-ico dm-quick-blue"><i class="fa fa-search"/></span>
+                            <span>Advanced Search</span>
+                            <i class="fa fa-angle-right dm-quick-go"/>
+                        </button>
+                        <button type="button" class="dm-quick-item dm-q-pending" t-on-click="goApproval">
+                            <span class="dm-quick-ico dm-quick-warn"><i class="fa fa-check-square-o"/></span>
+                            <span>Pending Approvals</span>
+                            <span class="dm-quick-count" t-esc="count(state.quick_action_counts.pending_approvals or 0)"/>
+                        </button>
+                        <button type="button" class="dm-quick-item dm-q-expiring" t-on-click="goApproval">
+                            <span class="dm-quick-ico dm-quick-danger"><i class="fa fa-calendar"/></span>
+                            <span>Expiring Documents</span>
+                            <span class="dm-quick-count" t-esc="count(state.quick_action_counts.expiring or 0)"/>
+                        </button>
+                    </section>
+                </div>
+                <div class="dm-split dm-dash-bottom">
+                    <section class="dm-table-wrap">
+                        <div class="dm-dash-table-head">
+                            <h2 class="dm-card-title">Recent Documents</h2>
+                            <button type="button" class="dm-btn dm-btn-ghost" t-on-click="goRepository">View all</button>
+                        </div>
+                        <div t-if="isEmpty" class="dm-empty dm-empty-block">
+                            <h3>No documents yet</h3>
+                            <p>Upload a document to see dashboard activity.</p>
+                        </div>
+                        <table t-if="!isEmpty" class="dm-table">
+                            <thead>
+                                <tr>
+                                    <th>Document Name</th>
+                                    <th>Category</th>
+                                    <th>Owner</th>
+                                    <th>Version</th>
+                                    <th>Modified</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="state.recent" t-as="doc" t-key="doc.id">
+                                    <tr>
+                                        <td>
+                                            <button type="button" class="dm-table-link" t-att-data-id="doc.id" t-on-click="openRecent">
+                                                <i class="fa fa-file-o"/> <t t-esc="doc.name"/>
+                                            </button>
+                                        </td>
+                                        <td t-esc="display(doc.category)"/>
+                                        <td t-esc="display(doc.owner)"/>
+                                        <td t-esc="display(doc.current_version)"/>
+                                        <td t-esc="display(doc.write_date)"/>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </section>
+                    <section class="dm-card dm-sys-card">
+                        <h2 class="dm-card-title">System Status</h2>
+                        <div class="dm-sys-ok">
+                            <span class="dm-dot dm-dot-ok"/>
+                            <div>
+                                <strong>Sync Services operational</strong>
+                                <p class="dm-page-sub">Last synced: Just now</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_utility_dashboard" model="ir.actions.client">
+        <field name="name">Dashboard</field>
+        <field name="tag">utility_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'screen': 'utility_dashboard'}</field>
+        <field name="params" eval="{'screen': 'utility_dashboard'}"/>
+    </record>
+    <record id="action_utility_meter_inventory" model="ir.actions.client">
+        <field name="name">Meter Inventory</field>
+        <field name="tag">utility_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'screen': 'utility_meter_inventory'}</field>
+        <field name="params" eval="{'screen': 'utility_meter_inventory'}"/>
+    </record>
+    <record id="action_utility_electricity_monitoring" model="ir.actions.client">
+        <field name="name">Electricity Monitoring</field>
+        <field name="tag">utility_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'screen': 'utility_electricity_monitoring'}</field>
+        <field name="params" eval="{'screen': 'utility_electricity_monitoring'}"/>
+    </record>
+    <record id="action_utility_water_monitoring" model="ir.actions.client">
+        <field name="name">Water Monitoring</field>
+        <field name="tag">utility_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'screen': 'utility_water_monitoring'}</field>
+        <field name="params" eval="{'screen': 'utility_water_monitoring'}"/>
+    </record>
+    <record id="action_utility_gas_monitoring" model="ir.actions.client">
+        <field name="name">Gas Monitoring</field>
+        <field name="tag">utility_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'screen': 'utility_gas_monitoring'}</field>
+        <field name="params" eval="{'screen': 'utility_gas_monitoring'}"/>
+    </record>
+    <record id="action_utility_power_source" model="ir.actions.client">
+        <field name="name">Power Source</field>
+        <field name="tag">utility_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'screen': 'utility_power_source'}</field>
+        <field name="params" eval="{'screen': 'utility_power_source'}"/>
+    </record>
+    <record id="action_utility_overall_consumption" model="ir.actions.client">
+        <field name="name">Overall Consumption</field>
+        <field name="tag">utility_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'screen': 'utility_overall_consumption'}</field>
+        <field name="params" eval="{'screen': 'utility_overall_consumption'}"/>
+    </record>
+    <record id="action_utility_meter_reading" model="ir.actions.client">
+        <field name="name">Meter Reading</field>
+        <field name="tag">utility_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'screen': 'utility_meter_reading'}</field>
+        <field name="params" eval="{'screen': 'utility_meter_reading'}"/>
+    </record>
+    <record id="action_utility_leak_detection" model="ir.actions.client">
+        <field name="name">Leak Detection</field>
+        <field name="tag">utility_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'screen': 'utility_leak_detection'}</field>
+        <field name="params" eval="{'screen': 'utility_leak_detection'}"/>
+    </record>
+    <record id="action_utility_alerts" model="ir.actions.client">
+        <field name="name">Utility Alerts</field>
+        <field name="tag">utility_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'screen': 'utility_alerts'}</field>
+        <field name="params" eval="{'screen': 'utility_alerts'}"/>
+    </record>
+    <record id="action_utility_reports" model="ir.actions.client">
+        <field name="name">Utility Reports</field>
+        <field name="tag">utility_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'screen': 'utility_reports'}</field>
+        <field name="params" eval="{'screen': 'utility_reports'}"/>
+    </record>
+    <record id="action_utility_settings" model="ir.actions.client">
+        <field name="name">Settings</field>
+        <field name="tag">utility_management_app</field>
+        <field name="target">current</field>
+        <field name="context">{'screen': 'utility_settings'}</field>
+        <field name="params" eval="{'screen': 'utility_settings'}"/>
+    </record>
+</odoo>

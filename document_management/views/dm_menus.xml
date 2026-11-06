@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_dm_root"
+              name="Document Management"
+              web_icon="document_management,static/description/icon.png"
+              action="action_dm_dashboard"
+              sequence="60"
+              groups="document_management.group_dm_user"/>
+
+    <menuitem id="menu_dm_dashboard"
+              name="Document Management Dashboard"
+              parent="menu_dm_root"
+              action="action_dm_dashboard"
+              sequence="1"
+              groups="document_management.group_dm_user"/>
+
+    <menuitem id="menu_dm_repository"
+              name="Document Repository"
+              parent="menu_dm_root"
+              action="action_dm_repository"
+              sequence="2"
+              groups="document_management.group_dm_user"/>
+
+    <menuitem id="menu_dm_upload"
+              name="Document Upload"
+              parent="menu_dm_root"
+              action="action_dm_upload"
+              sequence="3"
+              groups="document_management.group_dm_user"/>
+
+    <menuitem id="menu_dm_details"
+              name="Document Details"
+              parent="menu_dm_root"
+              action="action_dm_details"
+              sequence="4"
+              groups="document_management.group_dm_user"/>
+
+    <menuitem id="menu_dm_access"
+              name="Access Control &amp; Sharing"
+              parent="menu_dm_root"
+              action="action_dm_access"
+              sequence="5"
+              groups="document_management.group_dm_user"/>
+
+    <menuitem id="menu_dm_approval"
+              name="Approval &amp; Expiry"
+              parent="menu_dm_root"
+              action="action_dm_approval"
+              sequence="6"
+              groups="document_management.group_dm_user"/>
+
+    <menuitem id="menu_dm_workflow"
+              name="Document Workflow"
+              parent="menu_dm_root"
+              action="action_dm_workflow"
+              sequence="7"
+              groups="document_management.group_dm_user"/>
+
+    <menuitem id="menu_dm_search"
+              name="Document Search"
+              parent="menu_dm_root"
+              action="action_dm_search"
+              sequence="8"
+              groups="document_management.group_dm_user"/>
+
+    <menuitem id="menu_dm_audit"
+              name="Activity &amp; Audit"
+              parent="menu_dm_root"
+              action="action_dm_audit"
+              sequence="9"
+              groups="document_management.group_dm_user"/>
+</odoo>

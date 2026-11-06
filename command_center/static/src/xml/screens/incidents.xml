@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="command_center.Incidents">
+        <div class="cc-screen" data-screen="incidents">
+            <button type="button" class="cc-sr-only" title="Refresh incidents" t-on-click="refresh">Refresh</button>
+            <div t-if="state.error" class="cc-error" role="alert">
+                <span t-esc="state.error"/>
+                <button type="button" class="cc-btn cc-btn-inline" t-on-click="refresh">Retry</button>
+            </div>
+            <div t-if="state.loading" class="cc-loading" aria-busy="true" aria-label="Loading incidents">
+                <div class="cc-skel-row">
+                    <div class="cc-skel-bar" t-foreach="[1,2,3,4,5,6]" t-as="n" t-key="n"/>
+                </div>
+                <div class="cc-skel-line"/>
+                <div class="cc-skel-line"/>
+            </div>
+            <t t-if="!state.loading and !state.error">
+                <t t-call="command_center.Workflow">
+                    <t t-set="steps" t-value="moduleWorkflowSteps"/>
+                </t>
+                <div class="cc-stat-grid cc-inc-stats">
+                    <div t-foreach="incidentKpis" t-as="kpi" t-key="kpi.key" class="cc-stat" t-att-class="kpi.className">
+                        <div class="cc-stat-top">
+                            <span class="cc-stat-ico"><i t-attf-class="fa {{kpi.icon}}"/></span>
+                            <span class="cc-stat-label" t-esc="kpi.label"/>
+                        </div>
+                        <div class="cc-stat-value" t-esc="kpi.value"/>
+                    </div>
+                </div>
+                <div class="cc-inc-board">
+                    <div class="cc-panel cc-inc-list">
+                        <div class="cc-inc-filters">
+                            <select t-model="state.filters.site_id" t-on-change="onFilterChange" aria-label="Site">
+                                <option value="">Site: All</option>
+                                <t t-foreach="state.sites" t-as="site" t-key="site.id">
+                                    <option t-att-value="site.id" t-esc="site.name"/>
+                                </t>
+                            </select>
+                            <select t-model="state.filters.category" t-on-change="onFilterChange" aria-label="Category">
+                                <option value="">Category: All</option>
+                                <t t-foreach="categories" t-as="item" t-key="item">
+                                    <option t-att-value="item" t-esc="item"/>
+                                </t>
+                            </select>
+                            <select t-model="state.filters.severity" t-on-change="onFilterChange" aria-label="Severity">
+                                <option value="">Severity: All</option>
+                                <t t-foreach="severities" t-as="item" t-key="item">
+                                    <option t-att-value="item" t-esc="item"/>
+                                </t>
+                            </select>
+                            <select t-model="state.filters.state" t-on-change="onFilterChange" aria-label="Status">
+                                <option value="active">Status: Active</option>
+                                <option value="">Status: All</option>
+                                <t t-foreach="states" t-as="item" t-key="item">
+                                    <option t-att-value="item" t-esc="item"/>
+                                </t>
+                            </select>
+                            <select t-model="state.filters.user_id" t-on-change="onFilterChange" aria-label="Owner">
+                                <option value="">Owner: All</option>
+                                <t t-foreach="state.assignable_users" t-as="user" t-key="user.id">
+                                    <option t-att-value="user.id" t-esc="user.name"/>
+                                </t>
+                            </select>
+                            <button t-if="canCreate" type="button" class="cc-icon-btn" title="Create incident" t-on-click="() => this.runAction('create')">
+                                <i class="fa fa-plus"/>
+                            </button>
+                        </div>
+                        <div t-if="!displayIncidents.length" class="cc-empty">
+                            <h3>No incidents</h3>
+                            <p>No operational records are currently available.</p>
+                        </div>
+                        <div t-else="" class="cc-table-wrap">
+                            <table class="cc-table">
+                                <thead>
+                                    <tr>
+                                        <th>Incident ID</th>
+                                        <th>Date/Time</th>
+                                        <th>Site</th>
+                                        <th>Category</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="pagedIncidents" t-as="incident" t-key="incident.id"
+                                        t-att-class="{ 'is-selected': state.selectedId === incident.id }"
+                                        t-on-click="() => this.selectIncident(incident.id)">
+                                        <td>
+                                            <span class="cc-dot" t-att-class="incident.severity === 'critical' ? 'cc-dot-on' : 'cc-dot-ok'"/>
+                                            <t t-esc="incident.name"/>
+                                        </td>
+                                        <td t-esc="formatWhen(incident)"/>
+                                        <td t-esc="display(incident.site_name)"/>
+                                        <td t-esc="categoryOf(incident)"/>
+                                        <td class="cc-desc" t-esc="display(incident.summary)"/>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="cc-pager">
+                            <span>Showing <t t-esc="pageStart"/> to <t t-esc="pageEnd"/> of <t t-esc="displayIncidents.length"/> entries</span>
+                            <div class="cc-page-nums">
+                                <button type="button" class="cc-icon-btn" t-att-disabled="state.page &lt;= 1" t-on-click="pagePrev" aria-label="Previous">
+                                    <i class="fa fa-chevron-left"/>
+                                </button>
+                                <button t-foreach="pageItems" t-as="item" t-key="item.key" type="button"
+                                        t-att-class="item.page === state.page ? 'cc-page-btn is-on' : 'cc-page-btn'"
+                                        t-att-disabled="!item.page"
+                                        t-on-click="() => this.goPage(item.page)"
+                                        t-esc="item.label"/>
+                                <button type="button" class="cc-icon-btn" t-att-disabled="state.page &gt;= pageCount" t-on-click="pageNext" aria-label="Next">
+                                    <i class="fa fa-chevron-right"/>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <aside class="cc-panel cc-inc-detail" aria-label="Incident detail">
+                        <div t-if="!displaySelected" class="cc-empty">
+                            <h3>Select an incident</h3>
+                            <p>Choose an incident to view details and actions.</p>
+                        </div>
+                        <t t-else="">
+                            <div class="cc-inc-detail-head">
+                                <div>
+                                    <div class="cc-inc-title-row">
+                                        <h2 t-esc="displaySelected.name"/>
+                                        <span class="cc-badge" t-attf-class="cc-sev-{{displaySelected.severity}}" t-esc="severityLabel(displaySelected.severity)"/>
+                                        <span class="cc-badge" t-attf-class="cc-state-{{displaySelected.state}}" t-esc="statusLabel(displaySelected.state)"/>
+                                    </div>
+                                    <p class="cc-inc-reported">Reported: <t t-esc="formatWhen(displaySelected)"/> by <t t-esc="fieldOf(displaySelected, 'reported_by', displaySelected.user_name || '—')"/></p>
+                                </div>
+                                <div class="cc-inc-detail-tools">
+                                    <button t-if="canCreate" type="button" class="cc-icon-btn" title="Create incident" t-on-click="() => this.runAction('create')">
+                                        <i class="fa fa-pencil"/>
+                                    </button>
+                                    <button type="button" class="cc-icon-btn" aria-label="Close" t-on-click="clearSelected">
+                                        <i class="fa fa-times"/>
+                                    </button>
+                                </div>
+                            </div>
+                            <t t-call="command_center.Workflow">
+                                <t t-set="steps" t-value="workflowSteps"/>
+                            </t>
+                            <section class="cc-section">
+                                <h3>Incident Summary</h3>
+                                <p t-esc="display(displaySelected.summary)"/>
+                            </section>
+                            <section class="cc-section">
+                                <h3>Affected Entities</h3>
+                                <dl class="cc-inc-entities">
+                                    <div>
+                                        <dt>Site</dt>
+                                        <dd t-esc="fieldOf(displaySelected, 'location', displaySelected.site_name || '—')"/>
+                                    </div>
+                                    <div>
+                                        <dt>Equipment</dt>
+                                        <dd t-esc="fieldOf(displaySelected, 'equipment')"/>
+                                    </div>
+                                    <div>
+                                        <dt>Category</dt>
+                                        <dd t-esc="categoryOf(displaySelected)"/>
+                                    </div>
+                                    <div>
+                                        <dt>Assigned Owner</dt>
+                                        <dd t-esc="display(displaySelected.user_name)"/>
+                                    </div>
+                                </dl>
+                            </section>
+                            <section class="cc-section">
+                                <div class="cc-panel-head-row">
+                                    <h3>Investigation Notes</h3>
+                                    <button type="button" class="cc-btn-link" t-on-click="() => this.runAction('add_note')">+ Add Note</button>
+                                </div>
+                                <div t-if="!(displaySelected.notes || []).length" class="cc-empty cc-empty-sm">
+                                    <p>No investigation notes.</p>
+                                </div>
+                                <ul t-else="" class="cc-inc-notes">
+                                    <li t-foreach="displaySelected.notes" t-as="note" t-key="note.id">
+                                        <div class="cc-note-meta">
+                                            <span t-esc="display(note.user_name)"/>
+                                            <span t-esc="note.time || formatTime(note.create_date)"/>
+                                        </div>
+                                        <div t-esc="note.body"/>
+                                    </li>
+                                </ul>
+                            </section>
+                            <section t-if="(displaySelected.actions || []).length" class="cc-section">
+                                <h3>Corrective Actions</h3>
+                                <ul class="cc-inc-actions">
+                                    <li t-foreach="displaySelected.actions" t-as="item" t-key="item.id">
+                                        <label>
+                                            <input type="checkbox" t-att-checked="item.done" disabled="disabled"/>
+                                            <span>
+                                                <span t-esc="item.label"/>
+                                                <small t-if="item.hint" t-esc="item.hint"/>
+                                            </span>
+                                        </label>
+                                    </li>
+                                </ul>
+                            </section>
+                            <div class="cc-inc-footer">
+                                <button t-if="canEscalate" type="button" class="cc-btn" t-att-disabled="state.busy" t-on-click="() => this.runAction('escalate')">Escalate</button>
+                                <button type="button" class="cc-btn" t-att-disabled="state.busy" t-on-click="() => this.runAction('assign')">Reassign</button>
+                                <button type="button" class="cc-btn cc-btn-primary" t-att-disabled="state.busy" t-on-click="updateStatus">Update Status</button>
+                            </div>
+                        </t>
+                    </aside>
+                </div>
+            </t>
+            <div t-if="state.modal" class="cc-modal-backdrop" t-on-click="closeModal">
+                <div class="cc-modal" role="dialog" aria-modal="true" t-on-click.stop="() => {}">
+                    <div class="cc-modal-head">
+                        <h3 t-esc="labelFor(state.modal)"/>
+                        <button type="button" class="cc-icon-btn" aria-label="Close" t-on-click="closeModal">
+                            <i class="fa fa-times"/>
+                        </button>
+                    </div>
+                    <t t-if="state.modal === 'create'">
+                        <label>Summary
+                            <textarea t-model="state.extra.summary"/>
+                        </label>
+                        <label>Severity
+                            <select t-model="state.extra.severity">
+                                <t t-foreach="severities" t-as="item" t-key="item">
+                                    <option t-att-value="item" t-esc="item"/>
+                                </t>
+                            </select>
+                        </label>
+                        <label>Site
+                            <select t-model="state.extra.site_id">
+                                <option value="">None</option>
+                                <t t-foreach="state.sites" t-as="site" t-key="site.id">
+                                    <option t-att-value="site.id" t-esc="site.name"/>
+                                </t>
+                            </select>
+                        </label>
+                    </t>
+                    <t t-if="state.modal === 'escalate'">
+                        <label>Note
+                            <textarea t-model="state.extra.body"/>
+                        </label>
+                    </t>
+                    <t t-if="state.modal === 'assign'">
+                        <label>Assignee
+                            <select t-model="state.extra.user_id">
+                                <t t-foreach="state.assignable_users" t-as="user" t-key="user.id">
+                                    <option t-att-value="user.id" t-esc="user.name"/>
+                                </t>
+                            </select>
+                        </label>
+                    </t>
+                    <t t-if="state.modal === 'resolve'">
+                        <p class="cc-confirm">Resolve this incident? The server remains the source of truth.</p>
+                        <label>Resolution
+                            <textarea t-model="state.extra.resolution"/>
+                        </label>
+                    </t>
+                    <t t-if="state.modal === 'add_note'">
+                        <label>Note
+                            <textarea t-model="state.extra.body"/>
+                        </label>
+                    </t>
+                    <t t-if="state.modal === 'close'">
+                        <p class="cc-confirm">Close this incident? An administrator is required to reopen it.</p>
+                    </t>
+                    <t t-if="state.modal === 'reopen'">
+                        <p class="cc-confirm">Reopen this incident? State will be reset by the server.</p>
+                    </t>
+                    <div class="cc-modal-actions">
+                        <button type="button" class="cc-btn cc-btn-primary" t-att-disabled="state.busy" t-on-click="() => this.runAction(state.modal)">Confirm</button>
+                        <button type="button" class="cc-btn" t-on-click="closeModal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

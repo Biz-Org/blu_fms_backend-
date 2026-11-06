@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="document_management.Repository">
+        <div class="dm-screen dm-repo-screen" data-screen="repository" data-ui="repo-ppt">
+            <style>
+                .dm-repo-screen { color: #111827; width: 100%; min-width: 0; }
+                .dm-repo-screen .dm-repo-hero { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 0 0 0.85rem; }
+                .dm-repo-screen .dm-repo-hero .dm-page-title { margin: 0; font-size: 1.45rem; font-weight: 700; letter-spacing: -0.03em; color: #111827; }
+                .dm-repo-screen .dm-hero-actions .dm-btn { background: #fff; color: #4b5563; border: 1px solid #eceaf3; height: 34px; padding: 0 0.9rem; border-radius: 10px; font-size: 0.74rem; font-weight: 600; }
+                .dm-repo-screen .dm-hero-actions .dm-btn i { color: #9aa1b2; }
+                .dm-repo-screen .dm-hero-actions .dm-btn-primary { background: #5629CE; border-color: #5629CE; color: #fff; }
+                .dm-repo-screen .dm-hero-actions .dm-btn-primary i { color: #fff; }
+                .dm-repo { display: grid !important; grid-template-columns: 208px minmax(0, 1fr) 292px !important; grid-template-rows: 52px minmax(0, 1fr) !important; gap: 0 !important; background: #fff; border: 1px solid #eeeaf3; border-radius: 16px; overflow: hidden; min-height: min(640px, 74vh); min-width: 0; }
+                .dm-repo-nav { grid-row: 1 / -1; padding: 1.05rem 0.8rem 1.1rem; border-right: 1px solid #eeeaf3; background: #fff; min-width: 0; }
+                .dm-repo-kicker { margin: 0 0 0.45rem; padding: 0 0.4rem; font-size: 0.66rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #9aa1b2; display: flex; align-items: center; }
+                .dm-repo-kicker.dm-repo-cats { margin-top: 1.35rem; }
+                .dm-repo-add { margin-left: auto; border: 0; background: transparent; color: #9aa1b2; cursor: pointer; padding: 0; font-size: 0.78rem; }
+                .dm-repo-view, .dm-repo-cat { display: flex; align-items: center; gap: 0.55rem; width: 100%; border: 0; background: transparent; border-radius: 8px; padding: 0.42rem 0.5rem; color: #4b5563; cursor: pointer; font-size: 0.78rem; font-family: inherit; text-align: left; box-shadow: none !important; }
+                .dm-repo-view i, .dm-repo-cat i { width: 14px; text-align: center; color: #9aa1b2; }
+                .dm-repo-view span:nth-child(2), .dm-repo-cat span { flex: 1 1 auto; min-width: 0; }
+                .dm-repo-view.active { background: transparent; color: #5629CE; font-weight: 700; }
+                .dm-repo-view.active i { color: #5629CE; }
+                .dm-repo-count { margin-left: auto; background: #f3f4f6; color: #6b7280; border-radius: 999px; padding: 0.08rem 0.48rem; font-size: 0.62rem; font-weight: 700; flex: 0 0 auto; }
+                .dm-repo-view.active .dm-repo-count { background: #EDE5FF; color: #5629CE; }
+                .dm-repo-cat.active { background: #F0EBFF; color: #5629CE; font-weight: 700; }
+                .dm-repo-cat.active i { color: #5629CE; }
+                .dm-repo-kids { padding: 0.05rem 0 0.15rem 1.35rem; display: flex; flex-direction: column; gap: 0.08rem; }
+                .dm-repo-toolbar { grid-column: 2; grid-row: 1; display: flex; align-items: center; gap: 0.85rem; min-height: 52px; padding: 0 0.9rem; border-bottom: 1px solid #eeeaf3; }
+                .dm-repo-filter { display: inline-flex; align-items: center; gap: 0.3rem; color: #6b7280; font-size: 0.72rem; }
+                .dm-repo-filter select, .dm-repo-filter .dm-input { width: auto; min-width: 52px; height: 26px; font-size: 0.74rem; font-weight: 700; color: #111827; background: transparent; border: 0; padding: 0; font-family: inherit; }
+                .dm-repo-viewing { margin-left: auto; color: #6b7280; font-size: 0.7rem; line-height: 1.35; text-align: right; max-width: 160px; }
+                .dm-repo-modes { display: inline-flex; align-items: center; gap: 0.15rem; color: #9aa1b2; }
+                .dm-repo-modes button { width: 26px; height: 26px; border: 0; background: transparent; color: #9aa1b2; cursor: pointer; border-radius: 6px; }
+                .dm-repo-modes button.is-on { color: #5629CE; background: #F0EBFF; }
+                .dm-repo-list { grid-column: 2; grid-row: 2; min-width: 0; min-height: 0; overflow: auto; background: #fff; }
+                .dm-repo-table { border: 0; border-radius: 0; box-shadow: none; background: transparent; overflow: visible; }
+                .dm-repo-table .dm-table { width: 100%; }
+                .dm-repo-table .dm-table th { background: transparent; font-size: 0.62rem; letter-spacing: 0.06em; color: #9aa1b2; font-weight: 700; border-bottom: 1px solid #eeeaf3; padding: 0.55rem 0.7rem; }
+                .dm-repo-table .dm-table td { border-bottom: 1px solid #f3f2f7; padding: 0.62rem 0.7rem; font-size: 0.78rem; }
+                .dm-repo-table .dm-table tr.is-selected td { background: #F3EEFF; }
+                .dm-repo-name { display: inline-flex; align-items: center; gap: 0.55rem; color: #111827; font-weight: 600; max-width: 100%; }
+                .dm-repo-name i { font-size: 0.95rem; }
+                .dm-file-pdf { color: #dc2626; }
+                .dm-file-doc { color: #16a34a; }
+                .dm-file-xls { color: #059669; }
+                .dm-file-generic { color: #9aa1b2; }
+                .dm-repo-catcell { color: #9aa1b2; max-width: 86px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+                .dm-repo-check { accent-color: #5629CE; width: 15px; height: 15px; }
+                .dm-repo-preview { grid-column: 3; grid-row: 1 / -1; display: flex; flex-direction: column; min-width: 0; border-left: 1px solid #eeeaf3; background: #fff; }
+                .dm-repo-filehead { min-height: 58px; padding: 0.7rem 0.95rem 0.55rem; display: flex; align-items: flex-start; gap: 0.55rem; }
+                .dm-repo-fileico { width: 28px; height: 28px; border-radius: 8px; background: #F0EBFF; color: #5629CE; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; margin-top: 0.05rem; }
+                .dm-repo-filehead-text { min-width: 0; }
+                .dm-repo-doc-title { border: 0; background: transparent; padding: 0; text-align: left; font: inherit; font-size: 0.8rem; font-weight: 700; color: #111827; cursor: pointer; display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+                .dm-repo-doc-title:hover { color: #5629CE; }
+                .dm-repo-filehead .dm-page-sub { margin: 0.18rem 0 0; font-size: 0.7rem; color: #9aa1b2; }
+                .dm-repo-thumb { position: relative; height: 148px; margin: 0 0.9rem 0.15rem; border-radius: 10px; background: #F3EEFF; display: flex; flex-direction: column; justify-content: flex-start; gap: 0.55rem; padding: 1.05rem 1.15rem; }
+                .dm-repo-thumb span { display: block; height: 9px; border-radius: 999px; background: #e4d9f8; }
+                .dm-repo-thumb span:nth-child(1) { width: 86%; }
+                .dm-repo-thumb span:nth-child(2) { width: 72%; }
+                .dm-repo-thumb span:nth-child(3) { width: 58%; }
+                .dm-repo-thumb span:nth-child(4) { width: 40%; }
+                .dm-repo-expand { position: absolute; right: 0.55rem; bottom: 0.5rem; width: 22px; height: 22px; border: 0; background: transparent; color: #c4b5fd; cursor: pointer; }
+                .dm-repo-preview .dm-tabs { margin: 0.15rem 0.95rem 0; padding: 0; gap: 1.05rem; border-bottom: 1px solid #f0eef5; }
+                .dm-repo-preview .dm-tab { font-size: 0.76rem; padding: 0.7rem 0 0.55rem; }
+                .dm-repo-preview-body { padding: 0.35rem 0.95rem 0.4rem; flex: 1 1 auto; min-height: 0; overflow: auto; }
+                .dm-repo-statrow { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; margin: 0.55rem 0 0.35rem; }
+                .dm-repo-stat { border: 1px solid #eeeaf3; border-radius: 10px; padding: 0.55rem 0.65rem 0.5rem; min-width: 0; }
+                .dm-repo-stat span { display: block; font-size: 0.6rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #9aa1b2; }
+                .dm-repo-stat strong { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.4rem; font-size: 0.78rem; color: #111827; font-weight: 700; }
+                .dm-repo-dot { width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; flex: 0 0 auto; }
+                .dm-repo-av { width: 18px; height: 18px; border-radius: 50%; background: #5629CE; color: #fff; font-size: 0.52rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+                .dm-repo-meta { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.48rem 0; border-bottom: 1px solid #f0eef5; }
+                .dm-repo-meta span { font-size: 0.72rem; color: #9aa1b2; }
+                .dm-repo-meta strong { font-size: 0.78rem; color: #111827; font-weight: 600; text-align: right; }
+                .dm-class-pill { display: inline-flex; align-items: center; border: 1px solid #e5e7eb; background: #fff; border-radius: 8px; padding: 0.12rem 0.5rem; font-size: 0.72rem; font-weight: 600; color: #111827; }
+                .dm-chip-row { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.4rem; }
+                .dm-chip { display: inline-flex; align-items: center; border-radius: 999px; padding: 0.16rem 0.55rem; background: #F0EBFF; color: #5629CE; font-size: 0.68rem; font-weight: 700; }
+                .dm-chip-add { border: 0; background: transparent; color: #5629CE; font-size: 0.72rem; font-weight: 700; cursor: pointer; padding: 0.16rem 0.2rem; font-family: inherit; }
+                .dm-repo-preview-foot { display: flex; gap: 0.5rem; margin-top: auto; padding: 0.75rem 0.95rem 0.95rem; }
+                .dm-repo-preview-foot .dm-btn { flex: 1 1 auto; justify-content: center; height: 36px; border-radius: 8px; }
+                .dm-repo-preview-foot .dm-btn-primary { background: #5629CE; border-color: #5629CE; color: #fff; }
+                @media (max-width: 1099px) {
+                    .dm-repo { grid-template-columns: 1fr !important; grid-template-rows: auto !important; min-height: 0 !important; }
+                    .dm-repo-nav { grid-row: auto; border-right: 0; border-bottom: 1px solid #eeeaf3; }
+                    .dm-repo-toolbar, .dm-repo-list { grid-column: 1; grid-row: auto; }
+                    .dm-repo-preview { grid-column: 1; grid-row: auto; border-left: 0; border-top: 1px solid #eeeaf3; }
+                    .dm-repo-screen .dm-repo-hero { flex-wrap: wrap; }
+                    .dm-repo-toolbar { flex-wrap: wrap; height: auto; min-height: 48px; padding: 0.55rem 0.85rem; }
+                    .dm-repo-viewing { margin-left: 0; width: 100%; text-align: left; max-width: none; }
+                }
+                @media (max-width: 720px) {
+                    .dm-repo-screen .dm-page-title { font-size: 1.15rem; }
+                    .dm-repo-statrow { grid-template-columns: 1fr; }
+                    .dm-repo-preview-foot { flex-wrap: wrap; }
+                }
+            </style>
+            <span class="o_hidden">Refresh</span>
+            <span class="o_hidden">No documents</span>
+            <div class="dm-page-hero dm-repo-hero">
+                <div>
+                    <h1 class="dm-page-title">Document Repository</h1>
+                </div>
+                <div class="dm-hero-actions">
+                    <button type="button" class="dm-btn" t-on-click="toggleFilters">
+                        <i class="fa fa-sliders"/> Filters
+                    </button>
+                    <button type="button" class="dm-btn dm-btn-primary" t-on-click="goUpload">
+                        <i class="fa fa-plus"/> Upload
+                    </button>
+                </div>
+            </div>
+            <div t-if="state.error" class="dm-error" role="alert">
+                <span t-esc="state.error"/>
+                <button type="button" class="dm-btn" t-on-click="refresh">Retry</button>
+            </div>
+            <div t-if="state.loading" class="dm-loading" aria-busy="true" aria-label="Loading repository">
+                Loading repository…
+            </div>
+            <t t-if="!state.loading and !state.error">
+                <div class="dm-repo">
+                    <aside class="dm-repo-nav">
+                        <h2 class="dm-repo-kicker">Views</h2>
+                        <button type="button" class="dm-repo-view" data-view="all" t-att-class="{ active: state.view === 'all' }" t-on-click="setView">
+                            <i class="fa fa-folder"/>
+                            <span>All Documents</span>
+                            <span class="dm-repo-count" t-esc="viewCount('all')"/>
+                        </button>
+                        <button type="button" class="dm-repo-view" data-view="my" t-att-class="{ active: state.view === 'my' }" t-on-click="setView">
+                            <i class="fa fa-user-o"/>
+                            <span>My Documents</span>
+                            <span class="dm-repo-count" t-esc="viewCount('my')"/>
+                        </button>
+                        <button type="button" class="dm-repo-view" data-view="shared" t-att-class="{ active: state.view === 'shared' }" t-on-click="setView">
+                            <i class="fa fa-share-alt"/>
+                            <span>Shared</span>
+                        </button>
+                        <button type="button" class="dm-repo-view" data-view="recent" t-att-class="{ active: state.view === 'recent' }" t-on-click="setView">
+                            <i class="fa fa-clock-o"/>
+                            <span>Recent</span>
+                        </button>
+                        <button type="button" class="dm-repo-view" data-view="favorites" t-att-class="{ active: state.view === 'favorites' }" t-on-click="setView">
+                            <i class="fa fa-star-o"/>
+                            <span>Favorites</span>
+                        </button>
+                        <button type="button" class="dm-repo-view" data-view="archived" t-att-class="{ active: state.view === 'archived' }" t-on-click="setView">
+                            <i class="fa fa-archive"/>
+                            <span>Archived</span>
+                        </button>
+                        <h2 class="dm-repo-kicker dm-repo-cats">
+                            Categories
+                            <button type="button" class="dm-repo-add" aria-label="Add category" t-on-click="goUpload"><i class="fa fa-plus"/></button>
+                        </h2>
+                        <button type="button" class="dm-repo-cat" data-id="policies" t-att-class="{ active: state.filters.category_id === 'policies' }" t-on-click="setCategory">
+                            <i class="fa fa-angle-right"/>
+                            <span>Policies</span>
+                        </button>
+                        <button type="button" class="dm-repo-cat" data-id="contracts" t-on-click="toggleContracts">
+                            <i t-att-class="state.contractsOpen ? 'fa fa-angle-down' : 'fa fa-angle-right'"/>
+                            <span>Contracts</span>
+                        </button>
+                        <div t-if="state.contractsOpen" class="dm-repo-kids">
+                            <button type="button" class="dm-repo-cat" data-id="vendors" t-att-class="{ active: state.filters.category_id === 'vendors' }" t-on-click="setCategory">
+                                <span>Vendors</span>
+                            </button>
+                            <button type="button" class="dm-repo-cat" data-id="municipal" t-att-class="{ active: state.filters.category_id === 'municipal' }" t-on-click="setCategory">
+                                <span>Municipal</span>
+                            </button>
+                            <button type="button" class="dm-repo-cat" data-id="labor" t-att-class="{ active: state.filters.category_id === 'labor' }" t-on-click="setCategory">
+                                <span>Labor</span>
+                            </button>
+                        </div>
+                        <button type="button" class="dm-repo-cat" data-id="invoices" t-att-class="{ active: state.filters.category_id === 'invoices' }" t-on-click="setCategory">
+                            <i class="fa fa-angle-right"/>
+                            <span>Invoices</span>
+                        </button>
+                        <button type="button" class="dm-repo-cat" data-id="reports" t-att-class="{ active: state.filters.category_id === 'reports' }" t-on-click="setCategory">
+                            <i class="fa fa-bar-chart"/>
+                            <span>Reports</span>
+                        </button>
+                        <button type="button" class="dm-repo-cat" data-id="certificates" t-att-class="{ active: state.filters.category_id === 'certificates' }" t-on-click="setCategory">
+                            <i class="fa fa-certificate"/>
+                            <span>Certificates</span>
+                        </button>
+                    </aside>
+                    <div class="dm-toolbar dm-repo-toolbar">
+                        <label class="dm-repo-filter">
+                            Department:
+                            <select class="dm-input" t-model="state.filters.department" t-on-change="onFilterChange">
+                                <option value="">All</option>
+                            </select>
+                        </label>
+                        <label class="dm-repo-filter">
+                            Status:
+                            <select class="dm-input" t-model="state.filters.status" t-on-change="onFilterChange">
+                                <option value="">Active</option>
+                                <option value="draft">Draft</option>
+                                <option value="pending_approval">Pending Approval</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                                <option value="returned">Returned</option>
+                                <option value="archived">Archived</option>
+                            </select>
+                        </label>
+                        <span class="dm-repo-viewing" t-esc="viewingLabel"/>
+                        <div class="dm-repo-modes">
+                            <button type="button" data-mode="list" t-att-class="{ 'is-on': state.listMode === 'list' }" t-on-click="setListMode" aria-label="List view">
+                                <i class="fa fa-th-list"/>
+                            </button>
+                            <button type="button" data-mode="grid" t-att-class="{ 'is-on': state.listMode === 'grid' }" t-on-click="setListMode" aria-label="Grid view">
+                                <i class="fa fa-th-large"/>
+                            </button>
+                        </div>
+                    </div>
+                    <section class="dm-repo-list">
+                        <div class="dm-table-wrap dm-repo-table">
+                            <table class="dm-table">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" class="dm-repo-check" aria-label="Select all"/></th>
+                                        <th>Document</th>
+                                        <th>Category</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="rows" t-as="doc" t-key="doc.id">
+                                        <tr t-att-class="{ 'is-selected': isRowOn(doc) }" t-att-data-id="doc.id" t-on-click="selectRow">
+                                            <td>
+                                                <input type="checkbox" class="dm-repo-check" t-att-data-id="doc.id" t-att-checked="isRowOn(doc) ? 'checked' : undefined" t-on-click.stop="stopClick" t-on-change="toggleSelect" aria-label="Select document"/>
+                                            </td>
+                                            <td>
+                                                <span class="dm-repo-name">
+                                                    <i t-att-class="fileIcon(doc)"/>
+                                                    <t t-esc="doc.name"/>
+                                                </span>
+                                            </td>
+                                            <td class="dm-repo-catcell" t-esc="display(doc.category)"/>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                    <aside class="dm-repo-preview">
+                        <div class="dm-repo-filehead">
+                            <span class="dm-repo-fileico"><i t-att-class="fileIcon(selectedDoc)"/></span>
+                            <div class="dm-repo-filehead-text">
+                                <button type="button" class="dm-repo-doc-title" t-on-click="openSelectedDetails" t-esc="selectedDoc.name"/>
+                                <p class="dm-page-sub" t-esc="fileMeta(selectedDoc)"/>
+                            </div>
+                        </div>
+                        <div class="dm-repo-thumb" aria-hidden="true">
+                            <span/><span/><span/><span/>
+                            <button type="button" class="dm-repo-expand" aria-label="Expand preview" t-on-click="openSelectedDetails">
+                                <i class="fa fa-expand"/>
+                            </button>
+                        </div>
+                        <div class="dm-tabs">
+                            <button type="button" class="dm-tab" data-tab="details" t-att-class="{ active: state.panelTab === 'details' }" t-on-click="setPanelTab">Details</button>
+                            <button type="button" class="dm-tab" data-tab="history" t-att-class="{ active: state.panelTab === 'history' }" t-on-click="setPanelTab">History</button>
+                            <button type="button" class="dm-tab" data-tab="comments" t-att-class="{ active: state.panelTab === 'comments' }" t-on-click="setPanelTab">
+                                Comments (<t t-esc="commentCount"/>)
+                            </button>
+                        </div>
+                        <div class="dm-repo-preview-body">
+                            <t t-if="state.panelTab === 'details'">
+                                <div class="dm-repo-statrow">
+                                    <div class="dm-repo-stat">
+                                        <span>Status</span>
+                                        <strong><i class="dm-repo-dot"/> <t t-esc="label(selectedDoc.state)"/></strong>
+                                    </div>
+                                    <div class="dm-repo-stat">
+                                        <span>Owner</span>
+                                        <strong>
+                                            <span class="dm-repo-av" t-esc="ownerInitials(selectedDoc.owner)"/>
+                                            <t t-esc="display(selectedDoc.owner)"/>
+                                        </strong>
+                                    </div>
+                                </div>
+                                <div class="dm-repo-meta">
+                                    <span>Department</span>
+                                    <strong t-esc="display(selectedDoc.department_label)"/>
+                                </div>
+                                <div class="dm-repo-meta">
+                                    <span>Created</span>
+                                    <strong t-esc="formatDate(selectedDoc.create_date)"/>
+                                </div>
+                                <div class="dm-repo-meta">
+                                    <span>Last Modified</span>
+                                    <strong t-esc="formatWhen(selectedDoc.write_date)"/>
+                                </div>
+                                <div class="dm-repo-meta">
+                                    <span>Classification</span>
+                                    <strong class="dm-class-pill" t-esc="display(selectedDoc.classification)"/>
+                                </div>
+                                <div class="dm-repo-meta" style="flex-direction:column;align-items:flex-start;border:0;">
+                                    <span>Tags</span>
+                                    <div class="dm-chip-row">
+                                        <t t-foreach="detailTags" t-as="tag" t-key="tag">
+                                            <span class="dm-chip" t-esc="tag"/>
+                                        </t>
+                                        <button type="button" class="dm-chip-add">+ Add</button>
+                                    </div>
+                                </div>
+                            </t>
+                            <t t-if="state.panelTab === 'history'">
+                                <t t-foreach="(selectedDoc and selectedDoc.versions) or []" t-as="version" t-key="version.id">
+                                    <div class="dm-repo-meta">
+                                        <strong t-esc="version.name"/>
+                                        <span t-esc="(version.is_current ? 'current · ' : '') + display(version.author)"/>
+                                    </div>
+                                </t>
+                            </t>
+                            <t t-if="state.panelTab === 'comments'">
+                                <t t-foreach="(selectedDoc and selectedDoc.comments) or []" t-as="comment" t-key="comment.id">
+                                    <p><strong t-esc="comment.user"/>: <t t-esc="comment.body"/></p>
+                                </t>
+                                <textarea t-if="!usePreview" class="dm-input" placeholder="Add a comment" t-model="state.comment"/>
+                                <button t-if="!usePreview" type="button" class="dm-btn" t-on-click="addComment">Add comment</button>
+                            </t>
+                        </div>
+                        <div class="dm-repo-preview-foot">
+                            <button type="button" class="dm-btn" t-on-click="shareSelected">Share</button>
+                            <button type="button" class="dm-btn dm-btn-primary" t-on-click="downloadSelected">Download</button>
+                        </div>
+                    </aside>
+                </div>
+            </t>
+            <t t-if="state.confirm">
+                <button type="button" class="dm-dialog-mask" aria-label="Cancel" t-on-click="cancelConfirm"/>
+                <div class="dm-dialog" role="dialog" aria-label="Confirm archive">
+                    <h3>Archive document</h3>
+                    <p>Archive the selected document(s)? This can be restored later.</p>
+                    <div class="dm-toolbar">
+                        <button type="button" class="dm-btn" t-on-click="cancelConfirm">Cancel</button>
+                        <button type="button" class="dm-btn dm-btn-primary" t-on-click="confirmArchive">Archive</button>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

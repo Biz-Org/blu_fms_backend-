@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Multi-company rules for User+ (inherited by Manager/Admin) -->
+    <record id="ei_rule_integration_company_user" model="ir.rule">
+        <field name="name">EI Integration multi-company</field>
+        <field name="model_id" ref="model_ei_integration"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_ei_user'))]"/>
+    </record>
+
+    <record id="ei_rule_endpoint_company_user" model="ir.rule">
+        <field name="name">EI API Endpoint multi-company</field>
+        <field name="model_id" ref="model_ei_api_endpoint"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_ei_user'))]"/>
+    </record>
+
+    <record id="ei_rule_webhook_company_user" model="ir.rule">
+        <field name="name">EI Webhook multi-company</field>
+        <field name="model_id" ref="model_ei_webhook"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_ei_user'))]"/>
+    </record>
+
+    <record id="ei_rule_connector_company_user" model="ir.rule">
+        <field name="name">EI Connector multi-company</field>
+        <field name="model_id" ref="model_ei_connector"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_ei_user'))]"/>
+    </record>
+
+    <record id="ei_rule_sync_job_company_user" model="ir.rule">
+        <field name="name">EI Sync Job multi-company</field>
+        <field name="model_id" ref="model_ei_sync_job"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_ei_user'))]"/>
+    </record>
+
+    <record id="ei_rule_master_mapping_company_user" model="ir.rule">
+        <field name="name">EI Master Mapping multi-company</field>
+        <field name="model_id" ref="model_ei_master_mapping"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_ei_user'))]"/>
+    </record>
+
+    <record id="ei_rule_log_company_user" model="ir.rule">
+        <field name="name">EI Log multi-company</field>
+        <field name="model_id" ref="model_ei_log"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_ei_user'))]"/>
+    </record>
+
+    <!-- Credentials: manager/admin only via ACL; explicit allow-all domain for those groups -->
+    <record id="ei_rule_api_credential_manager_only" model="ir.rule">
+        <field name="name">EI API Credential manager/admin</field>
+        <field name="model_id" ref="model_ei_api_credential"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_ei_manager'))]"/>
+    </record>
+
+    <record id="ei_rule_connector_credential_manager_only" model="ir.rule">
+        <field name="name">EI Connector Credential manager/admin</field>
+        <field name="model_id" ref="model_ei_connector_credential"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_ei_manager'))]"/>
+    </record>
+</odoo>

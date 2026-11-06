@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="mail_template_pm_approval_requested" model="mail.template">
+        <field name="name">Procurement: Approval Requested</field>
+        <field name="model_id" ref="model_procurement_management_approval_request"/>
+        <field name="subject">Procurement approval requested</field>
+        <field name="email_from">procurement@example.com</field>
+        <field name="body_html" type="html">
+            <p>An approval is waiting for <t t-out="object.name or ''"/>.</p>
+        </field>
+    </record>
+    <record id="mail_template_pm_approval_decided" model="mail.template">
+        <field name="name">Procurement: Approval Decided</field>
+        <field name="model_id" ref="model_procurement_management_approval_request"/>
+        <field name="subject">Procurement approval decided</field>
+        <field name="email_from">procurement@example.com</field>
+        <field name="body_html" type="html">
+            <p>Approval <t t-out="object.name or ''"/> is now <t t-out="object.state or ''"/>.</p>
+        </field>
+    </record>
+    <record id="mail_template_pm_report" model="mail.template">
+        <field name="name">Procurement: Scheduled Report</field>
+        <field name="model_id" ref="model_procurement_management_report_run"/>
+        <field name="subject">Procurement scheduled report</field>
+        <field name="email_from">procurement@example.com</field>
+        <field name="body_html" type="html">
+            <p>Report <t t-out="object.name or ''"/> is ready.</p>
+        </field>
+    </record>
+</odoo>

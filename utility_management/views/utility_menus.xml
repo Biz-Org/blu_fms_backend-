@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_utility_root"
+              name="Utility Management"
+              action="action_utility_dashboard"
+              sequence="80"
+              groups="utility_management.group_utility_staff"/>
+
+    <menuitem id="menu_utility_dashboard"
+              name="Dashboard"
+              parent="menu_utility_root"
+              action="action_utility_dashboard"
+              sequence="1"
+              groups="utility_management.group_utility_staff"/>
+
+    <menuitem id="menu_utility_meter_inventory"
+              name="Meter Inventory"
+              parent="menu_utility_root"
+              action="action_utility_meter_inventory"
+              sequence="2"
+              groups="utility_management.group_utility_staff"/>
+
+    <menuitem id="menu_utility_electricity_monitoring"
+              name="Electricity Monitoring"
+              parent="menu_utility_root"
+              action="action_utility_electricity_monitoring"
+              sequence="3"
+              groups="utility_management.group_utility_staff"/>
+
+    <menuitem id="menu_utility_water_monitoring"
+              name="Water Monitoring"
+              parent="menu_utility_root"
+              action="action_utility_water_monitoring"
+              sequence="4"
+              groups="utility_management.group_utility_staff"/>
+
+    <menuitem id="menu_utility_gas_monitoring"
+              name="Gas Monitoring"
+              parent="menu_utility_root"
+              action="action_utility_gas_monitoring"
+              sequence="5"
+              groups="utility_management.group_utility_staff"/>
+
+    <menuitem id="menu_utility_power_source"
+              name="Power Source"
+              parent="menu_utility_root"
+              action="action_utility_power_source"
+              sequence="6"
+              groups="utility_management.group_utility_staff"/>
+
+    <menuitem id="menu_utility_overall_consumption"
+              name="Overall Consumption"
+              parent="menu_utility_root"
+              action="action_utility_overall_consumption"
+              sequence="7"
+              groups="utility_management.group_utility_staff"/>
+
+    <menuitem id="menu_utility_meter_reading"
+              name="Meter Reading"
+              parent="menu_utility_root"
+              action="action_utility_meter_reading"
+              sequence="8"
+              groups="utility_management.group_utility_staff"/>
+
+    <menuitem id="menu_utility_leak_detection"
+              name="Leak Detection"
+              parent="menu_utility_root"
+              action="action_utility_leak_detection"
+              sequence="9"
+              groups="utility_management.group_utility_staff"/>
+
+    <menuitem id="menu_utility_alerts"
+              name="Utility Alerts"
+              parent="menu_utility_root"
+              action="action_utility_alerts"
+              sequence="10"
+              groups="utility_management.group_utility_staff"/>
+
+    <menuitem id="menu_utility_reports"
+              name="Utility Reports"
+              parent="menu_utility_root"
+              action="action_utility_reports"
+              sequence="11"
+              groups="utility_management.group_utility_staff"/>
+
+    <menuitem id="menu_utility_settings"
+              name="Settings"
+              parent="menu_utility_root"
+              action="action_utility_settings"
+              sequence="12"
+              groups="utility_management.group_utility_staff"/>
+</odoo>

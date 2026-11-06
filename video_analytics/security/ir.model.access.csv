@@ -1,0 +1,25 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_va_camera_user,va.camera user,model_va_camera,group_va_user,1,0,0,0
+access_va_camera_manager,va.camera manager,model_va_camera,group_va_manager,1,1,1,1
+access_va_camera_admin,va.camera admin,model_va_camera,group_va_admin,1,1,1,1
+access_va_zone_user,va.zone user,model_va_zone,group_va_user,1,0,0,0
+access_va_zone_manager,va.zone manager,model_va_zone,group_va_manager,1,1,1,0
+access_va_zone_admin,va.zone admin,model_va_zone,group_va_admin,1,1,1,1
+access_va_detection_rule_user,va.detection.rule user,model_va_detection_rule,group_va_user,1,0,0,0
+access_va_detection_rule_manager,va.detection.rule manager,model_va_detection_rule,group_va_manager,1,1,1,0
+access_va_detection_rule_admin,va.detection.rule admin,model_va_detection_rule,group_va_admin,1,1,1,1
+access_va_detection_user,va.detection user,model_va_detection,group_va_user,1,0,0,0
+access_va_detection_manager,va.detection manager,model_va_detection,group_va_manager,1,1,1,0
+access_va_detection_admin,va.detection admin,model_va_detection,group_va_admin,1,1,1,1
+access_va_event_user,va.event user,model_va_event,group_va_user,1,1,0,0
+access_va_event_manager,va.event manager,model_va_event,group_va_manager,1,1,1,0
+access_va_event_admin,va.event admin,model_va_event,group_va_admin,1,1,1,1
+access_va_investigation_note_user,va.investigation.note user,model_va_investigation_note,group_va_user,1,0,1,0
+access_va_investigation_note_manager,va.investigation.note manager,model_va_investigation_note,group_va_manager,1,0,1,0
+access_va_investigation_note_admin,va.investigation.note admin,model_va_investigation_note,group_va_admin,1,1,1,1
+access_va_occupancy_snapshot_user,va.occupancy.snapshot user,model_va_occupancy_snapshot,group_va_user,1,0,0,0
+access_va_occupancy_snapshot_manager,va.occupancy.snapshot manager,model_va_occupancy_snapshot,group_va_manager,1,0,1,0
+access_va_occupancy_snapshot_admin,va.occupancy.snapshot admin,model_va_occupancy_snapshot,group_va_admin,1,1,1,1
+access_va_ui_api_user,va.ui.api user,model_va_ui_api,group_va_user,1,0,0,0
+access_va_ui_api_manager,va.ui.api manager,model_va_ui_api,group_va_manager,1,0,0,0
+access_va_ui_api_admin,va.ui.api admin,model_va_ui_api,group_va_admin,1,0,0,0

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ir_cron_ei_sync_scheduled" model="ir.cron">
+        <field name="name">EI: Run Scheduled Sync Jobs</field>
+        <field name="model_id" ref="model_ei_sync_job"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_run_scheduled_jobs()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="active">True</field>
+    </record>
+
+    <record id="ir_cron_ei_webhook_outgoing" model="ir.cron">
+        <field name="name">EI: Process Outgoing Webhook Deliveries</field>
+        <field name="model_id" ref="model_ei_webhook"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_process_outgoing_deliveries()</field>
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
+
+    <record id="ir_cron_ei_sync_realtime" model="ir.cron">
+        <field name="name">EI: Realtime Sync Pickup</field>
+        <field name="model_id" ref="model_ei_sync_job"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_process_realtime_jobs()</field>
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
+
+    <record id="ir_cron_ei_connector_health" model="ir.cron">
+        <field name="name">EI: Connector Health Checks</field>
+        <field name="model_id" ref="model_ei_connector"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_health_checks()</field>
+        <field name="interval_number">15</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
+</odoo>

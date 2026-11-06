@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="command_center.Alerts">
+        <div class="cc-screen" data-screen="alerts">
+            <button type="button" class="cc-sr-only" title="Refresh alerts" t-on-click="refresh">Refresh</button>
+            <div t-if="state.error" class="cc-error" role="alert">
+                <span t-esc="state.error"/>
+                <button type="button" class="cc-btn cc-btn-inline" t-on-click="refresh">Retry</button>
+            </div>
+            <div t-if="state.notice" class="cc-notice" role="status" t-esc="state.notice"/>
+            <div t-if="state.loading" class="cc-loading" aria-busy="true" aria-label="Loading alerts">
+                <div class="cc-skel-row">
+                    <div class="cc-skel-bar" t-foreach="[1,2,3,4]" t-as="n" t-key="n"/>
+                </div>
+                <div class="cc-skel-line"/>
+                <div class="cc-skel-line"/>
+            </div>
+            <t t-if="!state.loading and !state.error">
+                <t t-call="command_center.Workflow">
+                    <t t-set="steps" t-value="moduleWorkflowSteps"/>
+                </t>
+                <div class="cc-stat-grid">
+                    <div t-foreach="alertKpis" t-as="kpi" t-key="kpi.key" class="cc-stat" t-att-class="kpi.className">
+                        <div class="cc-stat-top">
+                            <span class="cc-stat-ico"><i t-attf-class="fa {{kpi.icon}}"/></span>
+                            <span class="cc-stat-label" t-esc="kpi.label"/>
+                        </div>
+                        <div class="cc-stat-value" t-esc="kpi.value"/>
+                    </div>
+                </div>
+                <div class="cc-filter-bar">
+                    <div class="cc-filter-bar-left">
+                        <select t-model="state.filters.site_id" t-on-change="onFilterChange" aria-label="All Sites">
+                            <option value="">All Sites</option>
+                            <t t-foreach="state.sites" t-as="site" t-key="site.id">
+                                <option t-att-value="site.id" t-esc="site.name"/>
+                            </t>
+                        </select>
+                        <select t-model="state.filters.severity" t-on-change="onFilterChange" aria-label="All Severities">
+                            <option value="">All Severities</option>
+                            <t t-foreach="severities" t-as="item" t-key="item">
+                                <option t-att-value="item" t-esc="item"/>
+                            </t>
+                        </select>
+                        <select t-model="state.filters.source" t-on-change="onFilterChange" aria-label="All Types">
+                            <option value="">All Types</option>
+                            <t t-foreach="sources" t-as="item" t-key="item">
+                                <option t-att-value="item" t-esc="item"/>
+                            </t>
+                        </select>
+                        <select t-model="state.filters.state" t-on-change="onFilterChange" aria-label="All Statuses">
+                            <option value="">All Statuses</option>
+                            <t t-foreach="states" t-as="item" t-key="item">
+                                <option t-att-value="item" t-esc="item"/>
+                            </t>
+                        </select>
+                        <button type="button" class="cc-btn" t-on-click="toggleMoreFilters">
+                            <i class="fa fa-sliders" aria-hidden="true"/> Filters
+                        </button>
+                    </div>
+                    <button type="button" class="cc-btn cc-btn-primary" title="Acknowledge selected open alerts" t-att-disabled="state.busy" t-on-click="acknowledgeSelected">Acknowledge Selected</button>
+                </div>
+                <div t-if="state.showMoreFilters" class="cc-filters">
+                    <label>Type
+                        <input type="text" t-model="state.filters.alert_type" t-on-change="onFilterChange"/>
+                    </label>
+                    <label>Assignee
+                        <select t-model="state.filters.user_id" t-on-change="onFilterChange">
+                            <option value="">All</option>
+                            <t t-foreach="state.assignable_users" t-as="user" t-key="user.id">
+                                <option t-att-value="user.id" t-esc="user.name"/>
+                            </t>
+                        </select>
+                    </label>
+                    <label class="cc-check">
+                        <input type="checkbox" t-model="state.filters.is_emergency" t-on-change="onFilterChange"/>
+                        Emergency only
+                    </label>
+                    <label>From
+                        <input type="datetime-local" t-model="state.filters.date_from" t-on-change="onFilterChange"/>
+                    </label>
+                    <label>To
+                        <input type="datetime-local" t-model="state.filters.date_to" t-on-change="onFilterChange"/>
+                    </label>
+                    <label>Search
+                        <input type="search" t-model="state.filters.search" t-on-change="onFilterChange"/>
+                    </label>
+                </div>
+                <div t-if="!displayAlerts.length" class="cc-empty">
+                    <h3>No alerts</h3>
+                    <p>No operational records are currently available.</p>
+                </div>
+                <div t-else="" class="cc-panel cc-alert-board">
+                    <div class="cc-table-wrap">
+                        <table class="cc-table">
+                            <thead>
+                                <tr>
+                                    <th class="cc-check-col"></th>
+                                    <th>Alert ID</th>
+                                    <th>Time</th>
+                                    <th>Site</th>
+                                    <th>Source</th>
+                                    <th>Type</th>
+                                    <th>Severity</th>
+                                    <th>Status</th>
+                                    <th>Assigned To</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="pagedAlerts" t-as="alert" t-key="alert.id"
+                                    t-att-class="{ 'is-selected': state.selectedId === alert.id }"
+                                    t-on-click="() => this.selectAlert(alert.id)">
+                                    <td class="cc-check-col" t-on-click.stop="() => {}">
+                                        <input type="checkbox" t-att-checked="isChecked(alert.id)" t-on-change="(ev) => this.toggleCheck(alert.id, ev)"/>
+                                    </td>
+                                    <td t-esc="alert.name"/>
+                                    <td t-esc="formatTime(alert.create_date)"/>
+                                    <td t-esc="display(alert.site_name)"/>
+                                    <td t-esc="display(alert.source)"/>
+                                    <td t-esc="display(alert.alert_type)"/>
+                                    <td><span class="cc-badge" t-attf-class="cc-sev-{{alert.severity}}" t-esc="display(alert.severity)"/></td>
+                                    <td><span class="cc-badge" t-attf-class="cc-state-{{alert.state}}" t-esc="statusLabel(alert.state)"/></td>
+                                    <td t-esc="display(alert.user_name)"/>
+                                    <td t-on-click.stop="() => this.selectAlert(alert.id)">
+                                        <button type="button" class="cc-icon-btn cc-view-btn" title="View" t-on-click="() => this.selectAlert(alert.id)">
+                                            <i class="fa fa-eye"/>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="cc-pager">
+                        <span>Showing <t t-esc="pageStart"/> to <t t-esc="pageEnd"/> of <t t-esc="displayAlerts.length"/> entries</span>
+                        <div>
+                            <button type="button" class="cc-btn" t-att-disabled="state.page &lt;= 1" t-on-click="pagePrev">Previous</button>
+                            <span class="cc-pager-num" t-esc="state.page"/>
+                            <button type="button" class="cc-btn" t-att-disabled="state.page &gt;= pageCount" t-on-click="pageNext">Next</button>
+                        </div>
+                    </div>
+                </div>
+                <aside t-if="state.selected" class="cc-detail cc-alert-drawer" aria-label="Alert detail">
+                    <div t-if="!state.selected" class="cc-empty">
+                        <h3>Select an alert</h3>
+                        <p>Choose an alert to view details and actions.</p>
+                    </div>
+                    <t t-else="">
+                        <div class="cc-panel-head-row">
+                            <h2 t-esc="state.selected.name"/>
+                            <button type="button" class="cc-icon-btn" aria-label="Close" t-on-click="clearSelected">
+                                <i class="fa fa-times"/>
+                            </button>
+                        </div>
+                        <t t-call="command_center.Workflow">
+                            <t t-set="steps" t-value="workflowSteps"/>
+                        </t>
+                        <div class="cc-actions">
+                            <t t-foreach="visibleActions(state.selected)" t-as="action" t-key="action">
+                                <button type="button"
+                                        t-att-class="actionClass(action)"
+                                        t-att-title="labelFor(action)"
+                                        t-att-disabled="state.busy or isPreview"
+                                        t-on-click="() => this.runAction(action)"
+                                        t-esc="labelFor(action)"/>
+                            </t>
+                        </div>
+                        <section class="cc-section">
+                            <h3>Overview</h3>
+                            <dl class="cc-dl">
+                                <div><dt>Type</dt><dd t-esc="display(state.selected.alert_type)"/></div>
+                                <div><dt>Severity</dt><dd><span class="cc-badge" t-attf-class="cc-sev-{{state.selected.severity}}" t-esc="display(state.selected.severity)"/></dd></div>
+                                <div><dt>Source</dt><dd t-esc="display(state.selected.source)"/></div>
+                                <div><dt>Site</dt><dd t-esc="display(state.selected.site_name)"/></div>
+                            </dl>
+                        </section>
+                        <section class="cc-section">
+                            <h3>Status</h3>
+                            <dl class="cc-dl">
+                                <div><dt>State</dt><dd><span class="cc-badge" t-attf-class="cc-state-{{state.selected.state}}" t-esc="state.selected.state"/></dd></div>
+                            </dl>
+                        </section>
+                    </t>
+                </aside>
+            </t>
+            <div t-if="state.modal" class="cc-modal-backdrop" t-on-click="closeModal">
+                <div class="cc-modal" role="dialog" aria-modal="true" t-att-aria-label="labelFor(state.modal)" t-on-click.stop="() => {}">
+                    <div class="cc-modal-head">
+                        <h3 t-esc="labelFor(state.modal)"/>
+                        <button type="button" class="cc-icon-btn" aria-label="Close" t-on-click="closeModal">
+                            <i class="fa fa-times"/>
+                        </button>
+                    </div>
+                    <t t-if="state.modal === 'to_incident'">
+                        <label>Summary
+                            <textarea t-model="state.extra.summary"/>
+                        </label>
+                        <label>Severity
+                            <select t-model="state.extra.severity">
+                                <t t-foreach="severities" t-as="item" t-key="item">
+                                    <option t-att-value="item" t-esc="item"/>
+                                </t>
+                            </select>
+                        </label>
+                    </t>
+                    <t t-if="state.modal === 'assign'">
+                        <label>Assignee
+                            <select t-model="state.extra.user_id">
+                                <t t-foreach="state.assignable_users" t-as="user" t-key="user.id">
+                                    <option t-att-value="user.id" t-esc="user.name"/>
+                                </t>
+                            </select>
+                        </label>
+                    </t>
+                    <t t-if="state.modal === 'escalate'">
+                        <label>Note
+                            <textarea t-model="state.extra.note"/>
+                        </label>
+                    </t>
+                    <t t-if="state.modal === 'resolve'">
+                        <p class="cc-confirm">Resolve this alert? The server remains the source of truth.</p>
+                        <label>Resolution note
+                            <textarea t-model="state.extra.resolution_note"/>
+                        </label>
+                    </t>
+                    <t t-if="state.modal === 'add_note'">
+                        <label>Note
+                            <textarea t-model="state.extra.body"/>
+                        </label>
+                    </t>
+                    <t t-if="state.modal === 'close'">
+                        <p class="cc-confirm">Close this alert? This cannot be undone without an administrator reopen.</p>
+                    </t>
+                    <t t-if="state.modal === 'reopen'">
+                        <p class="cc-confirm">Reopen this alert? The current state will be reset by the server.</p>
+                    </t>
+                    <div class="cc-modal-actions">
+                        <button type="button" class="cc-btn cc-btn-primary" t-att-disabled="state.busy" t-on-click="() => this.runAction(state.modal)">Confirm</button>
+                        <button type="button" class="cc-btn" t-on-click="closeModal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

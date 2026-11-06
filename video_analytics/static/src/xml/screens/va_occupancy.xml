@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="video_analytics.Occupancy">
+        <div class="va-page">
+            <div class="va-page-header">
+                <div>
+                    <h1>Occupancy &amp; Crowd Monitoring</h1>
+                    <p class="va-page-subtitle">Real-time facility density from stored occupancy snapshots.</p>
+                </div>
+                <div class="va-page-actions">
+                    <button type="button" class="va-btn" t-on-click="load"><i class="fa fa-filter"/> Filters</button>
+                    <button type="button" class="va-btn va-btn-primary" disabled="disabled" title="Export is not available yet">Export Report</button>
+                </div>
+            </div>
+            <t t-call="video_analytics.Banner"/>
+            <t t-if="!state.loading">
+                <div class="va-kpi-strip va-kpi-strip-4">
+                    <div class="va-kpi">
+                        <i class="fa fa-users va-kpi-icon" aria-hidden="true"/>
+                        <div class="va-kpi-label">Total occupancy</div>
+                        <div class="va-kpi-value"><t t-esc="state.kpis.occupancy_current or 0"/> <span class="va-kpi-sub">/ <t t-esc="state.kpis.occupancy_capacity or 0"/> cap</span></div>
+                    </div>
+                    <div class="va-kpi">
+                        <i class="fa fa-map-marker va-kpi-icon" aria-hidden="true"/>
+                        <div class="va-kpi-label">Active zones</div>
+                        <div class="va-kpi-value" t-esc="state.kpis.zones_active or 0"/>
+                        <div class="va-kpi-hint">/ <t t-esc="state.kpis.zones_total or 0"/> monitored</div>
+                    </div>
+                    <div class="va-kpi">
+                        <i class="fa fa-exclamation-triangle va-kpi-icon" aria-hidden="true"/>
+                        <div class="va-kpi-label">Crowd events</div>
+                        <div class="va-kpi-value" t-esc="state.kpis.crowd_events or 0"/>
+                    </div>
+                    <div class="va-kpi">
+                        <i class="fa fa-percent va-kpi-icon" aria-hidden="true"/>
+                        <div class="va-kpi-label">Avg density</div>
+                        <div class="va-kpi-value" t-esc="formatPercent(state.kpis.avg_density)"/>
+                    </div>
+                </div>
+                <div class="va-occ-layout">
+                    <section class="va-card">
+                        <h2 class="va-card-title">Live occupancy overview</h2>
+                        <div class="va-floorplan">
+                            Interactive floorplan is not generated. Use the zone list for stored counts.
+                        </div>
+                    </section>
+                    <aside class="va-card">
+                        <h2 class="va-card-title">Zone occupancy</h2>
+                        <div t-if="!state.zones.length" class="va-empty va-empty-inline">
+                            <h3>No zones</h3>
+                            <p>Create zones before occupancy snapshots can appear.</p>
+                        </div>
+                        <div t-else="" class="va-table-wrap">
+                            <table class="va-table">
+                                <thead>
+                                    <tr>
+                                        <th>Zone</th>
+                                        <th>Count</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="state.zones" t-as="zone" t-key="zone.id">
+                                        <td t-esc="zone.name"/>
+                                        <td><t t-esc="zone.current_count"/> / <t t-esc="zone.capacity"/></td>
+                                        <td>
+                                            <span t-att-class="{
+                                                'va-badge': true,
+                                                'va-status-degraded': zone.over_threshold,
+                                                'va-status-online': !zone.over_threshold,
+                                            }">
+                                                <t t-if="zone.over_threshold">Over cap</t>
+                                                <t t-else="">Normal</t>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </aside>
+                    <section class="va-card">
+                        <h2 class="va-card-title">Occupancy trend</h2>
+                        <div t-if="!state.trend.length" class="va-empty va-empty-inline">
+                            <h3>No snapshots</h3>
+                            <p>Trend bars use stored snapshots only. None are invented.</p>
+                        </div>
+                        <div t-else="" class="va-chart">
+                            <div t-foreach="state.trend" t-as="bar" t-key="bar.id" class="va-chart-col">
+                                <div class="va-chart-bar" t-attf-style="height: {{meterWidth(bar.occupancy_pct)}}"/>
+                                <span t-esc="formatTime(bar.timestamp)"/>
+                            </div>
+                        </div>
+                    </section>
+                    <aside class="va-card">
+                        <h2 class="va-card-title">Recent crowd events</h2>
+                        <div t-if="!crowdSnapshots.length" class="va-empty va-empty-inline">
+                            <p>Crowd events appear when occupancy ingest creates them.</p>
+                        </div>
+                        <ul t-else="" class="va-notes">
+                            <li t-foreach="crowdSnapshots" t-as="row" t-key="row.id">
+                                <strong t-esc="row.event_name or row.zone_name"/>
+                                <div class="va-muted" t-esc="formatDatetime(row.timestamp)"/>
+                            </li>
+                        </ul>
+                    </aside>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

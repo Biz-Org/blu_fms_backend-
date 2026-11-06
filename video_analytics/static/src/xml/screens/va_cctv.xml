@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="video_analytics.Cctv">
+        <div class="va-page va-cctv-page">
+            <div class="va-page-header">
+                <div>
+                    <h1>CCTV Integration &amp; Live Streaming</h1>
+                </div>
+                <div class="va-page-actions">
+                    <button type="button" class="va-btn" t-on-click="toggleFilters">
+                        <i class="fa fa-filter" aria-hidden="true"/> Filters
+                    </button>
+                    <button type="button" class="va-btn va-btn-primary" disabled="disabled" title="Cameras are created by managers, not from this screen">
+                        <i class="fa fa-plus" aria-hidden="true"/> Add Camera
+                    </button>
+                </div>
+            </div>
+            <t t-call="video_analytics.Banner"/>
+            <t t-if="!state.loading">
+                <div t-if="state.filtersOpen" class="va-cctv-filters" role="search">
+                    <div class="va-filter-item">
+                        <select class="va-input" aria-label="Status" t-model="state.status" t-on-change="applyFilters">
+                            <option value="">All statuses</option>
+                            <option value="online">Online</option>
+                            <option value="offline">Offline</option>
+                            <option value="degraded">Degraded</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="va-kpi-strip va-kpi-strip-4">
+                    <div class="va-kpi">
+                        <div class="va-kpi-label">Total cameras</div>
+                        <div class="va-kpi-value" t-esc="state.kpis.cameras_total or 0"/>
+                        <div class="va-kpi-chip va-text-success"><t t-esc="state.kpis.cameras_online or 0"/> Online</div>
+                    </div>
+                    <div class="va-kpi">
+                        <div class="va-kpi-label">Offline cameras</div>
+                        <div class="va-kpi-value va-text-danger" t-esc="state.kpis.cameras_offline or 0"/>
+                        <div t-if="state.kpis.cameras_offline" class="va-kpi-chip va-text-warn">Action required</div>
+                    </div>
+                    <div class="va-kpi">
+                        <div class="va-kpi-label">Active AI alerts</div>
+                        <div class="va-kpi-value" t-esc="state.kpis.alerts_open or 0"/>
+                        <div class="va-kpi-hint"><t t-esc="state.kpis.alerts_24h or 0"/> last 24h</div>
+                    </div>
+                    <div class="va-kpi">
+                        <div class="va-kpi-label">Storage usage</div>
+                        <div class="va-kpi-value va-kpi-value-sm">—</div>
+                        <div class="va-kpi-hint">Not stored</div>
+                    </div>
+                </div>
+                <div class="va-cctv-layout">
+                    <aside class="va-card va-loc-list">
+                        <h2 class="va-card-title">Locations</h2>
+                        <button t-foreach="locations" t-as="loc" t-key="loc.key" type="button"
+                                class="va-loc-item"
+                                t-att-class="{ active: state.location === loc.name }"
+                                t-att-data-location="loc.name" t-on-click="selectLocation">
+                            <span class="va-loc-name">
+                                <i class="fa fa-building-o" aria-hidden="true"/>
+                                <t t-esc="loc.label"/>
+                            </span>
+                            <span class="va-loc-count" t-esc="loc.count"/>
+                        </button>
+                    </aside>
+                    <section class="va-card va-cctv-grid-card">
+                        <div t-if="!visibleCameras.length" class="va-cctv-empty">
+                            <i class="fa fa-video-camera" aria-hidden="true"/>
+                            <h3>No cameras</h3>
+                            <p>No camera records exist yet. Cameras are created by managers, not from this screen.</p>
+                        </div>
+                        <div t-elif="state.viewMode === 'grid'" class="va-cam-grid">
+                            <button t-foreach="pagedCameras" t-as="cam" t-key="cam.id" type="button"
+                                    class="va-cam-tile"
+                                    t-att-class="{ 'is-offline': cam.status === 'offline', active: state.selected and state.selected.id === cam.id }"
+                                    t-att-data-id="cam.id" t-on-click="selectCamera">
+                                <div class="va-cam-preview">
+                                    <i class="fa fa-video-camera"/>
+                                    <span t-if="cam.status === 'offline'" class="va-cam-lost">Signal Lost</span>
+                                </div>
+                                <div class="va-cam-name" t-esc="cam.code or cam.name"/>
+                            </button>
+                        </div>
+                        <div t-else="" class="va-cam-list">
+                            <button t-foreach="pagedCameras" t-as="cam" t-key="cam.id" type="button"
+                                    class="va-cam-list-item"
+                                    t-att-class="{ active: state.selected and state.selected.id === cam.id }"
+                                    t-att-data-id="cam.id" t-on-click="selectCamera">
+                                <strong t-esc="cam.code or cam.name"/>
+                                <span class="va-muted" t-esc="cam.location_label or 'Unassigned'"/>
+                                <span t-attf-class="va-badge va-status-{{cam.status}}" t-esc="cam.status_label"/>
+                            </button>
+                        </div>
+                        <div t-if="visibleCameras.length" class="va-cctv-pager">
+                            <div class="va-view-toggle">
+                                <button type="button" class="va-icon-btn" t-att-class="{ active: state.viewMode === 'grid' }" t-on-click="showGrid" aria-label="Grid view">
+                                    <i class="fa fa-th-large"/>
+                                </button>
+                                <button type="button" class="va-icon-btn" t-att-class="{ active: state.viewMode === 'list' }" t-on-click="showList" aria-label="List view">
+                                    <i class="fa fa-list"/>
+                                </button>
+                            </div>
+                            <span class="va-muted" t-esc="showingLabel"/>
+                            <div class="va-pager-btns">
+                                <button type="button" class="va-icon-btn" t-att-disabled="state.pageIndex &lt;= 0" t-on-click="prevPage" aria-label="Previous">
+                                    <i class="fa fa-chevron-left"/>
+                                </button>
+                                <button type="button" class="va-icon-btn" t-att-disabled="state.pageIndex &gt;= maxPage" t-on-click="nextPage" aria-label="Next">
+                                    <i class="fa fa-chevron-right"/>
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+                    <aside class="va-card va-detail va-live-detail">
+                        <h2 class="va-card-title">Live feed details</h2>
+                        <div class="va-video-stage va-live-stage">
+                            <div class="va-video-placeholder">
+                                <i class="fa fa-play-circle-o"/>
+                                <t t-if="state.selected">
+                                    <p>Live video is not played in the browser.</p>
+                                </t>
+                                <p t-else="">Select a camera to inspect stored stream metadata.</p>
+                            </div>
+                        </div>
+                        <t t-if="state.selected">
+                            <h3 class="va-cam-heading" t-esc="state.selected.code or state.selected.name"/>
+                            <p class="va-muted" t-esc="state.selected.name"/>
+                            <dl class="va-dl va-live-dl">
+                                <div><dt>Location</dt><dd t-esc="state.selected.location_label or '—'"/></div>
+                                <div><dt>Status</dt><dd><span t-attf-class="va-badge va-status-{{state.selected.status}}" t-esc="state.selected.status_label"/></dd></div>
+                                <div><dt>IP address</dt><dd>—</dd></div>
+                                <div><dt>Model</dt><dd>—</dd></div>
+                                <div><dt>Uptime</dt><dd>—</dd></div>
+                                <div><dt>Protocol</dt><dd t-esc="state.selected.stream_protocol_label or state.selected.stream_protocol or '—'"/></div>
+                                <div><dt>Stream URL</dt><dd class="va-clip" t-esc="state.selected.stream_url or 'Not stored'"/></div>
+                                <div><dt>Last seen</dt><dd t-esc="formatDatetime(state.selected.last_seen)"/></div>
+                            </dl>
+                            <p class="va-muted va-live-note">IP, model, and uptime are not stored on camera records.</p>
+                            <div class="va-ptz" aria-hidden="true">
+                                <div class="va-ptz-label">PTZ controls</div>
+                                <button type="button" class="va-icon-btn" disabled="disabled"><i class="fa fa-chevron-up"/></button>
+                                <div class="va-ptz-mid">
+                                    <button type="button" class="va-icon-btn" disabled="disabled"><i class="fa fa-chevron-left"/></button>
+                                    <button type="button" class="va-icon-btn" disabled="disabled"><i class="fa fa-circle-o"/></button>
+                                    <button type="button" class="va-icon-btn" disabled="disabled"><i class="fa fa-chevron-right"/></button>
+                                </div>
+                                <button type="button" class="va-icon-btn" disabled="disabled"><i class="fa fa-chevron-down"/></button>
+                                <div class="va-ptz-zoom">
+                                    <button type="button" class="va-icon-btn" disabled="disabled" aria-label="Zoom in"><i class="fa fa-search-plus"/></button>
+                                    <button type="button" class="va-icon-btn" disabled="disabled" aria-label="Zoom out"><i class="fa fa-search-minus"/></button>
+                                </div>
+                            </div>
+                            <div class="va-row-actions">
+                                <button t-if="props.session.can_test_connection" type="button" class="va-btn va-btn-primary" t-att-disabled="state.actionBusy" t-on-click="testConnection">Test connection</button>
+                                <button type="button" class="va-btn" t-att-disabled="state.actionBusy" t-on-click="resolveStream">Resolve stream</button>
+                            </div>
+                        </t>
+                    </aside>
+                </div>
+                <section class="va-card">
+                    <div class="va-card-head">
+                        <h2 class="va-card-title">Camera status log</h2>
+                    </div>
+                    <div class="va-table-wrap">
+                        <table class="va-table va-table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Camera ID</th>
+                                    <th>Location</th>
+                                    <th>Status</th>
+                                    <th>Last event</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-if="!state.cameras.length">
+                                    <td colspan="5" class="va-muted">No camera records exist yet.</td>
+                                </tr>
+                                <tr t-foreach="state.cameras" t-as="cam" t-key="cam.id"
+                                    t-att-class="{ 'va-row-active': state.selected and state.selected.id === cam.id }"
+                                    t-att-data-id="cam.id" t-on-click="selectCamera">
+                                    <td class="va-alert-id" t-esc="cam.code"/>
+                                    <td t-esc="cam.location_label or '—'"/>
+                                    <td><span t-attf-class="va-badge va-status-{{cam.status}}" t-esc="cam.status_label"/></td>
+                                    <td>
+                                        <t t-if="cam.last_event_label">
+                                            <t t-esc="cam.last_event_label"/>
+                                            <span class="va-muted"> · <t t-esc="formatDatetime(cam.last_event_at)"/></span>
+                                        </t>
+                                        <t t-else="">—</t>
+                                    </td>
+                                    <td>
+                                        <i class="fa fa-cog va-muted" aria-hidden="true"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </t>
+        </div>
+    </t>
+</templates>

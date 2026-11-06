@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- UI 6: Integration Monitoring & Logs -->
+    <record id="view_ei_log_search" model="ir.ui.view">
+        <field name="name">ei.log.search</field>
+        <field name="model">ei.log</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="correlation_id"/>
+                <field name="operation"/>
+                <field name="error_class"/>
+                <field name="source_system"/>
+                <field name="destination_system"/>
+                <field name="integration_id"/>
+                <field name="connector_id"/>
+                <filter string="API" name="cat_api" domain="[('category', '=', 'api')]"/>
+                <filter string="Webhook" name="cat_webhook" domain="[('category', '=', 'webhook')]"/>
+                <filter string="Connector" name="cat_connector" domain="[('category', '=', 'connector')]"/>
+                <filter string="Synchronization" name="cat_sync" domain="[('category', '=', 'sync')]"/>
+                <filter string="Master Data" name="cat_master" domain="[('category', '=', 'master_data')]"/>
+                <filter string="System" name="cat_system" domain="[('category', '=', 'system')]"/>
+                <separator/>
+                <filter string="Success" name="success" domain="[('level', '=', 'success')]"/>
+                <filter string="Failed" name="failed" domain="[('level', 'in', ('failed', 'timeout', 'rejected'))]"/>
+                <filter string="Warning" name="warning" domain="[('level', '=', 'warning')]"/>
+                <filter string="Retrying" name="retrying" domain="[('level', '=', 'retrying')]"/>
+                <filter string="Retryable" name="retryable" domain="[('retryable', '=', True)]"/>
+                <group>
+                    <filter string="Category" name="group_category" context="{'group_by': 'category'}"/>
+                    <filter string="Level" name="group_level" context="{'group_by': 'level'}"/>
+                    <filter string="Integration" name="group_integration" context="{'group_by': 'integration_id'}"/>
+                    <filter string="Connector" name="group_connector" context="{'group_by': 'connector_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_ei_log_list" model="ir.ui.view">
+        <field name="name">ei.log.list</field>
+        <field name="model">ei.log</field>
+        <field name="arch" type="xml">
+            <list string="Integration Monitoring &amp; Logs" create="0">
+                <header>
+                    <button name="action_export_wizard" type="object" string="Export Logs"
+                            groups="enterprise_integration.group_ei_manager"/>
+                </header>
+                <field name="create_date" string="Timestamp"/>
+                <field name="level" widget="badge"
+                         decoration-success="level == 'success'"
+                         decoration-danger="level in ('failed', 'rejected', 'timeout')"
+                         decoration-warning="level in ('warning', 'retrying')"/>
+                <field name="integration_id"/>
+                <field name="connector_id"/>
+                <field name="category" string="System"/>
+                <field name="operation"/>
+                <field name="name"/>
+                <field name="status"/>
+                <field name="duration_ms" string="Duration (ms)"/>
+                <field name="correlation_id"/>
+                <field name="source_system" optional="hide"/>
+                <field name="destination_system" optional="hide"/>
+                <field name="retryable"/>
+                <button name="action_retry" type="object" string="Retry" icon="fa-refresh"
+                        groups="enterprise_integration.group_ei_manager"
+                        invisible="not retryable"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_ei_log_form" model="ir.ui.view">
+        <field name="name">ei.log.form</field>
+        <field name="model">ei.log</field>
+        <field name="arch" type="xml">
+            <form string="Log Details" create="0" edit="0">
+                <header>
+                    <button name="action_retry" type="object" string="Retry"
+                            class="btn-primary"
+                            groups="enterprise_integration.group_ei_manager"
+                            invisible="not retryable"/>
+                    <button name="action_export_wizard" type="object" string="Export Logs"
+                            groups="enterprise_integration.group_ei_manager"/>
+                    <field name="level" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="ei-page-banner">
+                        <h1>Integration Monitoring &amp; Logs</h1>
+                        <p>Real-time performance and error tracking across all enterprise connections.</p>
+                    </div>
+                    <div class="ei-section-note">
+                        Sensitive values (passwords, API keys, tokens, OAuth secrets, private keys) are scrubbed and never shown.
+                    </div>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="category"/>
+                            <field name="operation"/>
+                            <field name="status"/>
+                            <field name="correlation_id"/>
+                            <field name="external_ref"/>
+                            <field name="error_class"/>
+                            <field name="retryable"/>
+                        </group>
+                        <group>
+                            <field name="duration_ms"/>
+                            <field name="bytes_transferred"/>
+                            <field name="source_system"/>
+                            <field name="destination_system"/>
+                            <field name="integration_id"/>
+                            <field name="endpoint_id"/>
+                            <field name="webhook_id"/>
+                            <field name="connector_id"/>
+                            <field name="sync_run_id"/>
+                            <field name="master_mapping_id"/>
+                            <field name="create_uid"/>
+                            <field name="create_date"/>
+                        </group>
+                    </group>
+                    <group string="Request / Response Metadata">
+                        <field name="request_summary"/>
+                        <field name="response_summary"/>
+                        <field name="error_message"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_ei_monitoring_legacy_window" model="ir.actions.act_window">
+        <field name="name">Integration Monitoring &amp; Logs (Records)</field>
+        <field name="res_model">ei.log</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_ei_log_search"/>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No integration logs yet</p>
+            <p>API, webhook, connector, sync and master-data logs are filtered here — not separate menus.</p>
+        </field>
+    </record>
+</odoo>

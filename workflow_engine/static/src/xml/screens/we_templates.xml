@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="workflow_engine.Templates">
+        <div class="we-page we-templates">
+            <div class="we-page-header">
+                <div>
+                    <h1>Workflow Templates</h1>
+                </div>
+                <div class="we-page-actions">
+                    <button type="button" class="we-btn we-btn-primary" t-on-click="() => this.openCreate()">
+                        <i class="fa fa-plus"/> Create Template
+                    </button>
+                </div>
+            </div>
+
+            <div class="we-kpi-grid we-kpi-grid-4 we-tpl-kpis">
+                <div class="we-kpi-tile">
+                    <div class="we-kpi-head">
+                        <i class="fa fa-clone we-kpi-glyph we-kpi-glyph-primary"/>
+                        <span class="we-kpi-label">Total Templates</span>
+                    </div>
+                    <div class="we-kpi-value" t-esc="stats.total"/>
+                </div>
+                <div class="we-kpi-tile">
+                    <div class="we-kpi-head">
+                        <i class="fa fa-check-circle we-kpi-glyph we-kpi-glyph-success"/>
+                        <span class="we-kpi-label">Active</span>
+                    </div>
+                    <div class="we-kpi-value" t-esc="stats.active"/>
+                </div>
+                <div class="we-kpi-tile">
+                    <div class="we-kpi-head">
+                        <i class="fa fa-file-text-o we-kpi-glyph we-kpi-glyph-info"/>
+                        <span class="we-kpi-label">Draft</span>
+                    </div>
+                    <div class="we-kpi-value" t-esc="stats.draft"/>
+                </div>
+                <div class="we-kpi-tile">
+                    <div class="we-kpi-head">
+                        <i class="fa fa-star we-kpi-glyph we-kpi-glyph-warning"/>
+                        <span class="we-kpi-label">Most Used</span>
+                    </div>
+                    <div class="we-kpi-value we-kpi-value-sm" t-esc="stats.mostUsed"/>
+                </div>
+            </div>
+
+            <div class="we-toolbar we-toolbar-card we-tpl-toolbar">
+                <div class="we-search-wrap we-tpl-search">
+                    <i class="fa fa-search"/>
+                    <input class="we-input" type="search" placeholder="Search templates..."
+                           t-model="state.search"/>
+                </div>
+                <select class="we-input" t-model="state.moduleFilter">
+                    <option value="">All Modules</option>
+                    <t t-foreach="modules" t-as="mod" t-key="mod">
+                        <option t-att-value="mod" t-esc="mod"/>
+                    </t>
+                </select>
+                <select class="we-input" t-model="state.categoryFilter">
+                    <option value="">All Categories</option>
+                    <t t-foreach="categories" t-as="cat" t-key="cat">
+                        <option t-att-value="cat" t-esc="cat"/>
+                    </t>
+                </select>
+                <select class="we-input" t-model="state.stateFilter">
+                    <option value="">Status: All</option>
+                    <option value="draft">Draft</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+                <div class="we-view-toggle">
+                    <button type="button" class="we-icon-btn" t-att-class="{ active: state.viewMode === 'grid' }"
+                            t-on-click="() => state.viewMode = 'grid'"><i class="fa fa-th-large"/></button>
+                    <button type="button" class="we-icon-btn" t-att-class="{ active: state.viewMode === 'list' }"
+                            t-on-click="() => state.viewMode = 'list'"><i class="fa fa-list"/></button>
+                </div>
+            </div>
+
+            <t t-if="state.loading">
+                <div class="we-loading">Loading templates…</div>
+            </t>
+            <t t-elif="state.error">
+                <div class="we-error">
+                    <p t-esc="state.error"/>
+                    <button type="button" class="we-btn we-btn-primary" t-on-click="() => this.load()">Retry</button>
+                </div>
+            </t>
+            <t t-elif="!filtered.length">
+                <div class="we-empty">
+                    <p>No templates match your filters.</p>
+                    <button t-if="canManage" type="button" class="we-btn we-btn-primary" t-on-click="() => this.openCreate()">
+                        Create the first template
+                    </button>
+                </div>
+            </t>
+            <t t-else="">
+                <div class="we-template-grid" t-att-class="{ 'we-template-list': state.viewMode === 'list' }">
+                    <t t-foreach="filtered" t-as="rec" t-key="rec.id">
+                        <article class="we-template-card" t-on-click="() => this.preview(rec)">
+                            <div class="we-template-card-top">
+                                <div class="we-template-icon" t-att-class="rec.alert ? 'we-template-icon-warn' : ''">
+                                    <i t-attf-class="fa {{ rec.icon or 'fa-file-text-o' }}"/>
+                                </div>
+                                <span t-attf-class="we-badge {{statusClass(rec.state)}}">
+                                    <t t-esc="rec.state === 'active' ? 'Active' : (rec.state === 'draft' ? 'Draft' : rec.state)"/>
+                                </span>
+                            </div>
+                            <h3 t-esc="rec.name"/>
+                            <p class="we-muted" t-esc="rec.description || rec.category || 'Reusable workflow blueprint.'"/>
+                            <div class="we-template-meta">
+                                <span><i class="fa fa-sitemap"/> <t t-esc="rec.steps or rec.version or '1'"/> Steps</span>
+                            </div>
+                        </article>
+                    </t>
+                </div>
+            </t>
+
+            <div t-if="state.drawerOpen" class="we-drawer-backdrop" t-on-click="() => this.closeDrawer()"/>
+            <aside t-if="state.drawerOpen" class="we-drawer">
+                <div class="we-drawer-header">
+                    <h2 t-esc="state.preview ? 'Template preview' : (state.form.id ? 'Edit template' : 'New template')"/>
+                    <button type="button" class="we-btn we-btn-ghost" t-on-click="() => this.closeDrawer()">×</button>
+                </div>
+                <div class="we-drawer-body">
+                    <t t-if="state.preview">
+                        <p><strong t-esc="state.preview.name"/></p>
+                        <p class="we-muted" t-esc="state.preview.description || 'No description.'"/>
+                        <p>Category: <t t-esc="state.preview.category || '—'"/></p>
+                        <p>Version: <t t-esc="state.preview.version || '—'"/></p>
+                        <p>State: <t t-esc="state.preview.state"/></p>
+                        <p>Usage: <t t-esc="state.preview.usage_count"/></p>
+                        <p>Graph: <t t-esc="state.preview.has_graph ? 'included' : 'default start/end'"/></p>
+                    </t>
+                    <t t-else="">
+                    <label class="we-field">
+                        <span>Name</span>
+                        <input class="we-input" type="text" t-model="state.form.name"/>
+                    </label>
+                    <label class="we-field">
+                        <span>Category</span>
+                        <input class="we-input" type="text" t-model="state.form.category"/>
+                    </label>
+                    <label class="we-field">
+                        <span>Version</span>
+                        <input class="we-input" type="text" t-model="state.form.version"/>
+                    </label>
+                    <label class="we-field">
+                        <span>Required modules</span>
+                        <input class="we-input" type="text" t-model="state.form.required_modules"
+                               placeholder="comma-separated technical names"/>
+                    </label>
+                    <label class="we-field">
+                        <span>Description</span>
+                        <textarea class="we-input" rows="4" t-model="state.form.description"/>
+                    </label>
+                    </t>
+                </div>
+                <div class="we-drawer-footer">
+                    <button type="button" class="we-btn we-btn-ghost" t-on-click="() => this.closeDrawer()">Cancel</button>
+                    <button t-if="!state.preview" type="button" class="we-btn we-btn-primary" t-att-disabled="state.saving"
+                            t-on-click="() => this.save()">
+                        <t t-esc="state.saving ? 'Saving…' : 'Save'"/>
+                    </button>
+                </div>
+            </aside>
+        </div>
+    </t>
+</templates>

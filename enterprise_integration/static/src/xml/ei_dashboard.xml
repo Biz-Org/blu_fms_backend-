@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="enterprise_integration.Dashboard">
+        <div class="ei-dashboard o_action">
+            <div class="ei-page-header">
+                <div>
+                    <h1>Enterprise Integration</h1>
+                    <p class="ei-page-subtitle">Real-time overview of system connectivity and synchronization.</p>
+                </div>
+                <div class="ei-btn-row">
+                    <button class="ei-btn ei-btn-outline" t-on-click="openMonitoring" t-att-disabled="state.loading">
+                        <i class="fa fa-clock-o"/> View Logs
+                    </button>
+                    <button class="ei-btn ei-btn-outline" t-on-click="openSync" t-att-disabled="state.loading">
+                        <i class="fa fa-refresh"/> Run Sync
+                    </button>
+                    <button class="ei-btn ei-btn-primary" t-on-click="openApiWebhook" t-att-disabled="state.loading">
+                        <i class="fa fa-plus"/> Add Integration
+                    </button>
+                </div>
+            </div>
+
+            <div t-if="state.error" class="ei-error" t-esc="state.error"/>
+            <div t-if="state.loading" class="ei-empty">Loading dashboard…</div>
+
+            <t t-if="!state.loading and !state.error">
+                <div class="ei-kpi-row">
+                    <div class="ei-kpi-card">
+                        <div class="ei-kpi-label">Active Int.</div>
+                        <div class="ei-kpi-value" t-esc="state.kpis.activeIntegrations"/>
+                        <span class="ei-kpi-icon"><i class="fa fa-star"/></span>
+                    </div>
+                    <div class="ei-kpi-card ei-kpi-success">
+                        <div class="ei-kpi-label">Connected</div>
+                        <div class="ei-kpi-value" t-esc="state.kpis.connectedConnectors"/>
+                        <span class="ei-kpi-icon"><i class="fa fa-check"/></span>
+                    </div>
+                    <div class="ei-kpi-card">
+                        <div class="ei-kpi-label">API Req (Today)</div>
+                        <div class="ei-kpi-value" t-esc="formatCount(state.api.requests)"/>
+                        <span class="ei-kpi-icon"><i class="fa fa-exchange"/></span>
+                    </div>
+                    <div class="ei-kpi-card ei-kpi-success">
+                        <div class="ei-kpi-label">Success Syncs</div>
+                        <div class="ei-kpi-value" t-esc="formatCount(state.kpis.syncSuccess)"/>
+                        <span class="ei-kpi-icon"><i class="fa fa-check-square-o"/></span>
+                    </div>
+                    <div class="ei-kpi-card ei-kpi-danger">
+                        <div class="ei-kpi-label">Failed Syncs</div>
+                        <div class="ei-kpi-value" t-esc="state.sync.failed"/>
+                        <span class="ei-kpi-icon"><i class="fa fa-exclamation-triangle"/></span>
+                    </div>
+                    <div class="ei-kpi-card ei-kpi-warning">
+                        <div class="ei-kpi-label">Pending Syncs</div>
+                        <div class="ei-kpi-value" t-esc="state.kpis.syncPending"/>
+                        <span class="ei-kpi-icon"><i class="fa fa-clock-o"/></span>
+                    </div>
+                    <div class="ei-kpi-card">
+                        <div class="ei-kpi-label">Webhook Evts</div>
+                        <div class="ei-kpi-value" t-esc="formatCount(state.api.webhookDeliveries)"/>
+                        <span class="ei-kpi-icon"><i class="fa fa-sitemap"/></span>
+                    </div>
+                    <div class="ei-kpi-card ei-kpi-danger">
+                        <div class="ei-kpi-label">Int. Errors</div>
+                        <div class="ei-kpi-value" t-esc="state.kpis.failedOps"/>
+                        <span class="ei-kpi-icon"><i class="fa fa-bell"/></span>
+                    </div>
+                </div>
+
+                <div class="ei-dashboard-grid">
+                    <div class="ei-panel">
+                        <div class="ei-panel-head">
+                            <h2>Connector Health</h2>
+                            <a class="ei-link" href="#" t-on-click.prevent="openConnectors">View All</a>
+                        </div>
+                        <t t-if="!state.connectors.length">
+                            <div class="ei-empty">No connectors yet. Create MOCK adapters from Enterprise Connectors.</div>
+                        </t>
+                        <table t-else="" class="ei-table">
+                            <thead>
+                                <tr>
+                                    <th>Connector</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Last Sync</th>
+                                    <th>Health</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="state.connectors" t-as="c" t-key="c.id">
+                                    <tr>
+                                        <td>
+                                            <div class="ei-conn-name">
+                                                <span t-attf-class="ei-avatar {{c.category}}" t-esc="avatarLetter(c)"/>
+                                                <span>
+                                                    <div t-esc="c.name"/>
+                                                    <span t-if="c.is_mock" class="ei-badge-mock">MOCK / DEMO</span>
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td t-esc="categoryLabel(c.category)"/>
+                                        <td><span t-attf-class="ei-status-pill {{c.state}}" t-esc="c.state"/></td>
+                                        <td t-esc="c.last_health_at or '—'"/>
+                                        <td>
+                                            <div t-attf-class="ei-health-bar {{healthClass(c.health_state)}}">
+                                                <span t-att-style="healthWidth(c.health_state)"/>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="ei-side-stack">
+                        <div class="ei-panel">
+                            <div class="ei-panel-head">
+                                <h2>Integration Health</h2>
+                            </div>
+                            <div class="ei-health-list">
+                                <div class="ei-health-row">
+                                    <span class="ei-health-label">Connected</span>
+                                    <span class="ei-health-count" t-esc="state.health.healthy"/>
+                                    <div class="ei-meter ok"><span t-att-style="meterWidth(state.health.healthy)"/></div>
+                                </div>
+                                <div class="ei-health-row">
+                                    <span class="ei-health-label">Warning</span>
+                                    <span class="ei-health-count" t-esc="state.health.warning"/>
+                                    <div class="ei-meter warn"><span t-att-style="meterWidth(state.health.warning)"/></div>
+                                </div>
+                                <div class="ei-health-row">
+                                    <span class="ei-health-label">Disconnected</span>
+                                    <span class="ei-health-count" t-esc="state.health.disconnected"/>
+                                    <div class="ei-meter bad"><span t-att-style="meterWidth(state.health.disconnected)"/></div>
+                                </div>
+                                <div class="ei-health-row">
+                                    <span class="ei-health-label">Error State</span>
+                                    <span class="ei-health-count" t-esc="state.health.error"/>
+                                    <div class="ei-meter crit"><span t-att-style="meterWidth(state.health.error)"/></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ei-panel">
+                            <div class="ei-panel-head">
+                                <h2>Error Summary</h2>
+                            </div>
+                            <div class="ei-error-grid">
+                                <div class="ei-error-tile api">
+                                    <div class="ei-error-n" t-esc="state.api.failed"/>
+                                    <div class="ei-error-l">API Errors</div>
+                                </div>
+                                <div class="ei-error-tile webhook">
+                                    <div class="ei-error-n" t-esc="state.api.webhookFailed"/>
+                                    <div class="ei-error-l">Webhook Drops</div>
+                                </div>
+                                <div class="ei-error-tile conn">
+                                    <div class="ei-error-n" t-esc="state.health.error"/>
+                                    <div class="ei-error-l">Conn. Failures</div>
+                                </div>
+                                <div class="ei-error-tile sync">
+                                    <div class="ei-error-n" t-esc="state.sync.conflicts"/>
+                                    <div class="ei-error-l">Sync Conflicts</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ei-panel">
+                    <div class="ei-panel-head">
+                        <h2>Recent Integration Activity</h2>
+                        <a class="ei-link" href="#" t-on-click.prevent="refresh"><i class="fa fa-filter"/> Refresh</a>
+                    </div>
+                    <t t-if="!state.recentLogs.length">
+                        <div class="ei-empty">No integration activity logged yet.</div>
+                    </t>
+                    <table t-else="" class="ei-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>System</th>
+                                <th>Integration</th>
+                                <th>Event</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="state.recentLogs" t-as="log" t-key="log.id">
+                                <tr>
+                                    <td t-esc="log.create_date"/>
+                                    <td t-esc="log.category"/>
+                                    <td>
+                                        <div t-esc="log.name"/>
+                                        <div class="text-muted small" t-esc="log.correlation_id or ''"/>
+                                    </td>
+                                    <td t-esc="log.operation or '—'"/>
+                                    <td><span t-attf-class="ei-status-pill {{log.level}}" t-esc="log.level"/></td>
+                                    <td>
+                                        <a class="ei-link" href="#" t-on-click.prevent="openMonitoring">Details</a>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

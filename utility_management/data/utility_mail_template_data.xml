@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="mail_template_utility_alert" model="mail.template">
+        <field name="name">Utility: Alert Notification</field>
+        <field name="model_id" ref="model_utility_management_alert"/>
+        <field name="subject">Utility alert {{ object.name }}</field>
+        <field name="body_html" type="html">
+            <p>Alert <t t-out="object.name or ''"/> is <t t-out="object.state or ''"/>.</p>
+        </field>
+    </record>
+    <record id="mail_template_utility_report" model="mail.template">
+        <field name="name">Utility: Scheduled Report</field>
+        <field name="model_id" ref="model_utility_management_report_run"/>
+        <field name="subject">Utility report {{ object.name }}</field>
+        <field name="body_html" type="html">
+            <p>Report <t t-out="object.name or ''"/> finished as <t t-out="object.execution_state or ''"/>.</p>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+      Phase UI shell: primary destinations moved from act_window → client.
+      Odoo forbids model change on the same xmlid; delete legacy windows first.
+    -->
+    <delete model="ir.actions.act_window" id="action_ei_api_webhook"/>
+    <delete model="ir.actions.act_window" id="action_ei_connectors"/>
+    <delete model="ir.actions.act_window" id="action_ei_sync"/>
+    <delete model="ir.actions.act_window" id="action_ei_master"/>
+    <delete model="ir.actions.act_window" id="action_ei_monitoring"/>
+</odoo>

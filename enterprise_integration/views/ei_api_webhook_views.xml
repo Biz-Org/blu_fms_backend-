@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- UI 2: API & Webhook Management — single primary action -->
+    <record id="view_ei_api_webhook_integration_search" model="ir.ui.view">
+        <field name="name">ei.integration.api.webhook.search</field>
+        <field name="model">ei.integration</field>
+        <field name="arch" type="xml">
+            <search string="API &amp; Webhook Management">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="provider_system"/>
+                <filter string="Active" name="active_state" domain="[('state', '=', 'active')]"/>
+                <filter string="Inactive" name="inactive_state" domain="[('state', 'in', ('inactive', 'paused', 'draft'))]"/>
+                <group>
+                    <filter string="State" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Environment" name="group_env" context="{'group_by': 'environment'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_ei_api_webhook_integration_list" model="ir.ui.view">
+        <field name="name">ei.integration.api.webhook.list</field>
+        <field name="model">ei.integration</field>
+        <field name="arch" type="xml">
+            <list string="API &amp; Webhook Management">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="provider_system"/>
+                <field name="environment"/>
+                <field name="auth_method"/>
+                <field name="state" widget="badge"
+                         decoration-success="state == 'active'"
+                         decoration-warning="state == 'paused'"
+                         decoration-danger="state == 'inactive'"/>
+                <field name="health_state" widget="badge"/>
+                <field name="endpoint_count" string="APIs"/>
+                <field name="webhook_count" string="Webhooks"/>
+                <field name="site_ref" optional="hide"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_ei_api_webhook_integration_form" model="ir.ui.view">
+        <field name="name">ei.integration.api.webhook.form</field>
+        <field name="model">ei.integration</field>
+        <field name="arch" type="xml">
+            <form string="API &amp; Webhook Management">
+                <header>
+                    <button name="action_activate" type="object" string="Activate" class="btn-primary"
+                            invisible="state == 'active'" groups="enterprise_integration.group_ei_manager"/>
+                    <button name="action_deactivate" type="object" string="Deactivate"
+                            invisible="state == 'inactive'" groups="enterprise_integration.group_ei_manager"/>
+                    <button name="action_pause" type="object" string="Pause"
+                            groups="enterprise_integration.group_ei_manager"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,active,paused,inactive"/>
+                </header>
+                <sheet>
+                    <div class="ei-page-banner">
+                        <h1>API &amp; Webhook Management</h1>
+                        <p>Register endpoints, manage authentication, configure webhooks and track delivery history.</p>
+                    </div>
+                    <div class="ei-section-note">
+                        Tabs inside this screen: APIs · Webhooks · API Keys · Delivery History — not separate sidebar menus.
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Integration name"/></h1>
+                        <h3><field name="code" placeholder="CODE"/></h3>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="integration_type"/>
+                            <field name="provider_system"/>
+                            <field name="environment"/>
+                            <field name="auth_method"/>
+                            <field name="base_url"/>
+                        </group>
+                        <group>
+                            <field name="health_state"/>
+                            <field name="last_health_at"/>
+                            <field name="site_ref"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="endpoint_count"/>
+                            <field name="webhook_count"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="APIs" name="apis">
+                            <field name="endpoint_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="method"/>
+                                    <field name="path"/>
+                                    <field name="version"/>
+                                    <field name="auth_type"/>
+                                    <field name="rate_limit"/>
+                                    <field name="usage_count"/>
+                                    <field name="last_called_at"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                                <form>
+                                    <header>
+                                        <button name="action_test_endpoint" type="object" string="Test API"
+                                                groups="enterprise_integration.group_ei_manager"/>
+                                        <button name="action_activate" type="object" string="Activate"
+                                                groups="enterprise_integration.group_ei_manager"/>
+                                        <button name="action_deactivate" type="object" string="Deactivate"
+                                                groups="enterprise_integration.group_ei_manager"/>
+                                        <field name="state" widget="statusbar"/>
+                                    </header>
+                                    <sheet>
+                                        <group>
+                                            <group>
+                                                <field name="name"/>
+                                                <field name="method"/>
+                                                <field name="path"/>
+                                                <field name="version"/>
+                                            </group>
+                                            <group>
+                                                <field name="auth_type"/>
+                                                <field name="rate_limit"/>
+                                                <field name="usage_count"/>
+                                                <field name="last_called_at"/>
+                                                <field name="last_test_at"/>
+                                                <field name="last_test_result"/>
+                                                <field name="permission_group_ids" widget="many2many_tags"/>
+                                                <field name="pipeline_sync_job_id"/>
+                                                <field name="active"/>
+                                            </group>
+                                        </group>
+                                        <notebook>
+                                            <page string="Documentation">
+                                                <field name="request_schema" placeholder="Request notes / schema"/>
+                                                <field name="response_schema" placeholder="Response notes / schema"/>
+                                                <field name="doc_notes"/>
+                                            </page>
+                                            <page string="API Credentials" groups="enterprise_integration.group_ei_manager">
+                                                <div class="ei-section-note">Secrets are hashed/masked. Never logged.</div>
+                                                <field name="credential_ids">
+                                                    <list>
+                                                        <field name="name"/>
+                                                        <field name="secret_display"/>
+                                                        <field name="expiry_date"/>
+                                                        <field name="state" widget="badge"/>
+                                                        <field name="last_used_at"/>
+                                                        <button name="action_revoke" type="object" string="Revoke"
+                                                                groups="enterprise_integration.group_ei_manager"/>
+                                                    </list>
+                                                    <form>
+                                                        <group>
+                                                            <field name="name"/>
+                                                            <field name="plaintext_key" password="True"/>
+                                                            <field name="secret_display"/>
+                                                            <field name="expiry_date"/>
+                                                            <field name="state"/>
+                                                            <field name="active"/>
+                                                        </group>
+                                                    </form>
+                                                </field>
+                                            </page>
+                                        </notebook>
+                                    </sheet>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="OAuth" name="oauth" groups="enterprise_integration.group_ei_manager">
+                            <field name="oauth_config_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="client_id"/>
+                                    <field name="client_secret_display"/>
+                                    <field name="grant_type"/>
+                                    <field name="scopes"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                                <form>
+                                    <group>
+                                        <field name="name"/>
+                                        <field name="client_id"/>
+                                        <field name="client_secret" password="True"/>
+                                        <field name="client_secret_display"/>
+                                        <field name="grant_type"/>
+                                        <field name="token_url"/>
+                                        <field name="auth_url"/>
+                                        <field name="scopes"/>
+                                        <field name="redirect_uris"/>
+                                        <field name="state"/>
+                                        <field name="active"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="Webhooks" name="webhooks">
+                            <field name="webhook_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="code"/>
+                                    <field name="direction"/>
+                                    <field name="url"/>
+                                    <field name="auth_type"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                                <form>
+                                    <header>
+                                        <button name="action_test_endpoint" type="object" string="Test"
+                                                class="btn-secondary"
+                                                groups="enterprise_integration.group_ei_manager"/>
+                                        <button name="action_enqueue_outgoing" type="object"
+                                                string="Enqueue Outgoing (MOCK)"
+                                                groups="enterprise_integration.group_ei_manager"
+                                                invisible="direction != 'outgoing'"/>
+                                        <button name="action_activate" type="object" string="Activate"
+                                                groups="enterprise_integration.group_ei_manager"/>
+                                        <button name="action_deactivate" type="object" string="Deactivate"
+                                                groups="enterprise_integration.group_ei_manager"/>
+                                        <field name="state" widget="statusbar"/>
+                                    </header>
+                                    <sheet>
+                                        <group>
+                                            <group>
+                                                <field name="name"/>
+                                                <field name="code"/>
+                                                <field name="direction"/>
+                                                <field name="url"/>
+                                            </group>
+                                            <group>
+                                                <field name="auth_type"/>
+                                                <field name="secret" password="True" groups="enterprise_integration.group_ei_manager"/>
+                                                <field name="secret_display"/>
+                                                <field name="retry_max"/>
+                                                <field name="retry_backoff"/>
+                                                <field name="timeout"/>
+                                                <field name="pipeline_sync_job_id"/>
+                                                <field name="active"/>
+                                            </group>
+                                        </group>
+                                        <notebook>
+                                            <page string="Event Subscriptions">
+                                                <field name="subscription_ids">
+                                                    <list editable="bottom">
+                                                        <field name="event_type"/>
+                                                        <field name="active"/>
+                                                        <field name="filter_expr"/>
+                                                        <field name="payload_template"/>
+                                                    </list>
+                                                </field>
+                                            </page>
+                                            <page string="Delivery History">
+                                                <field name="delivery_ids">
+                                                    <list>
+                                                        <field name="create_date"/>
+                                                        <field name="status" widget="badge"
+                                                                 decoration-success="status == 'delivered'"
+                                                                 decoration-danger="status == 'failed'"
+                                                                 decoration-warning="status == 'retrying'"/>
+                                                        <field name="attempt"/>
+                                                        <field name="http_status"/>
+                                                        <field name="correlation_id"/>
+                                                        <field name="error_message"/>
+                                                        <button name="action_retry" type="object" string="Retry"
+                                                                groups="enterprise_integration.group_ei_manager"/>
+                                                    </list>
+                                                    <form>
+                                                        <group>
+                                                            <field name="status"/>
+                                                            <field name="attempt"/>
+                                                            <field name="http_status"/>
+                                                            <field name="correlation_id"/>
+                                                            <field name="idempotency_key"/>
+                                                            <field name="payload_summary"/>
+                                                            <field name="response_summary"/>
+                                                            <field name="error_message"/>
+                                                            <field name="next_retry_at"/>
+                                                            <field name="delivered_at"/>
+                                                        </group>
+                                                    </form>
+                                                </field>
+                                            </page>
+                                        </notebook>
+                                    </sheet>
+                                </form>
+                            </field>
+                        </page>
+                    </notebook>
+                    <field name="description" placeholder="Description"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_ei_api_webhook_legacy_window" model="ir.actions.act_window">
+        <field name="name">API &amp; Webhook Management (Records)</field>
+        <field name="res_model">ei.integration</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_ei_api_webhook_integration_search"/>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_ei_api_webhook_integration_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_ei_api_webhook_integration_form')})]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Configure Open APIs and Webhooks</p>
+            <p>Manage endpoints, API keys, OAuth, webhooks, subscriptions and deliveries in this single screen.</p>
+        </field>
+    </record>
+</odoo>

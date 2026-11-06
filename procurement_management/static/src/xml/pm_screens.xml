@@ -1,0 +1,1106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="procurement_management.Chips">
+        <div class="pm-chips">
+            <button type="button" class="pm-chip" t-att-class="{ active: !state.filter }" data-state="" data-status="all" t-on-click="setChip"><span>All</span><strong t-esc="state.total"/></button>
+            <t t-foreach="countEntries(state.counts)" t-as="chip" t-key="chip.key">
+                <button type="button" class="pm-chip" t-att-class="{ active: state.filter === chip.key }" t-att-data-state="chip.key" t-att-data-status="chip.key" t-on-click="setChip">
+                    <span t-esc="label(chip.key)"/><strong t-esc="chip.value"/>
+                </button>
+            </t>
+        </div>
+    </t>
+
+    <t t-name="procurement_management.SearchBar">
+        <div class="pm-toolbar">
+            <input class="pm-input" placeholder="Search" t-model="state.query" t-on-keydown="onSearchKey"/>
+            <button type="button" class="pm-btn" t-on-click="search" t-att-disabled="state.busy">Search</button>
+            <button type="button" class="pm-btn" t-on-click="reload" t-att-disabled="state.busy">Refresh</button>
+            <span class="pm-page-label" t-if="state.total">Showing <t t-esc="pageFrom"/>–<t t-esc="pageTo"/> of <t t-esc="state.total"/></span>
+            <button type="button" class="pm-btn" t-on-click="() => this.page(-1)" t-att-disabled="state.busy or state.offset === 0">Previous</button>
+            <button type="button" class="pm-btn" t-on-click="() => this.page(1)" t-att-disabled="state.busy or pageTo >= state.total">Next</button>
+        </div>
+    </t>
+
+    <t t-name="procurement_management.Dashboard">
+        <div class="pm-dash">
+        <div class="pm-kpi-grid">
+            <article class="pm-card pm-stat"><span>Total Spend</span><strong t-esc="money(state.data.total_spend, state.data.currency)"/></article>
+            <article class="pm-card pm-stat"><span>Pending Requisitions</span><strong t-esc="state.data.pending_requisitions or 0"/></article>
+            <article class="pm-card pm-stat"><span>Open RFQs</span><strong t-esc="state.data.open_rfqs or 0"/></article>
+            <article class="pm-card pm-stat"><span>Open POs</span><strong t-esc="state.data.open_purchase_orders or 0"/></article>
+            <article class="pm-card pm-stat"><span>Pending Receipts</span><strong t-esc="state.data.pending_receipts or 0"/></article>
+            <article class="pm-card pm-stat pm-card-alert"><span>Invoice Exceptions</span><strong t-esc="state.data.invoice_exceptions or 0"/></article>
+        </div>
+        <div class="pm-split">
+            <section class="pm-card pm-grow">
+                <h2>Spend Overview (YTD)</h2>
+                <div class="pm-chart-panel">
+                    <div t-if="!(state.data.spend_series or []).length" class="pm-chart-empty">[Bar Chart Visualization: Monthly Spend vs Budget]</div>
+                    <div t-else="" class="pm-chart">
+                        <t t-foreach="state.data.spend_series" t-as="bar" t-key="bar.label">
+                            <div class="pm-bar-col">
+                                <div class="pm-bar" t-att-style="'height:' + chartHeight(bar.spend) + '%'"/>
+                                <span t-esc="bar.label"/>
+                                <small t-esc="money(bar.spend, state.data.currency)"/>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </section>
+            <section class="pm-card">
+                <h2>Priority Actions</h2>
+                <div t-if="!(state.data.priority or []).length" class="pm-priority-empty">No priority actions</div>
+                <div t-else="" class="pm-priority-list">
+                    <button t-foreach="state.data.priority" t-as="item" t-key="item.kind + '-' + item.id" type="button" class="pm-priority" t-att-data-kind="item.kind" t-att-data-screen="item.screen" t-att-data-id="item.target_id" t-on-click="openPriority">
+                        <span class="pm-priority-mark" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <t t-if="item.kind === 'approval'">
+                                    <path d="M12 4.5l8 14H4z"/>
+                                    <path d="M12 10v4"/>
+                                    <path d="M12 16.5h.01"/>
+                                </t>
+                                <t t-elif="item.kind === 'receipt_hold'">
+                                    <path d="M12 8v5"/>
+                                    <path d="M12 16h.01"/>
+                                    <circle cx="12" cy="12" r="8"/>
+                                </t>
+                                <t t-else="">
+                                    <path d="M7 4h10v16H7z"/>
+                                    <path d="M10 9h4"/>
+                                    <path d="M10 13h4"/>
+                                </t>
+                            </svg>
+                        </span>
+                        <span class="pm-priority-copy">
+                            <strong t-esc="item.reference"/>
+                            <span t-esc="item.label"/>
+                        </span>
+                    </button>
+                </div>
+            </section>
+        </div>
+        <section class="pm-card pm-recent">
+            <div class="pm-card-head"><h2>Recent Purchase Orders</h2><button type="button" class="pm-text-link" t-on-click="() => this.openScreen('purchase_orders')">View All</button></div>
+            <table class="pm-table">
+                <thead><tr><th>PO Number</th><th>Supplier</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr t-if="!state.rows.length"><td class="pm-empty-cell" colspan="5">No purchase orders yet</td></tr>
+                    <tr t-foreach="state.rows" t-as="row" t-key="row.id">
+                        <td t-esc="row.name"/>
+                        <td t-esc="row.supplier"/>
+                        <td t-esc="row.date"/>
+                        <td t-esc="money(row.amount, state.data.currency)"/>
+                        <td><span class="pm-badge" t-att-data-status="row.display_status" t-esc="label(row.display_status)"/></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        </div>
+    </t>
+
+    <t t-name="procurement_management.Requisitions">
+        <t t-call="procurement_management.Chips"/>
+        <section class="pm-panel">
+        <div class="pm-card-head"><h2>Requisitions</h2></div>
+        <t t-call="procurement_management.SearchBar"/>
+        <div t-if="!state.rows.length" class="pm-state">No requisitions yet</div>
+        <table t-else="" class="pm-table">
+            <thead><tr><th>Requisition</th><th>Title</th><th>Requester</th><th>Department</th><th>Amount</th><th>Status</th></tr></thead>
+            <tbody>
+                <tr t-foreach="state.rows" t-as="row" t-key="row.id" t-att-data-id="row.id" t-on-click="openRecord">
+                    <td t-esc="row.name"/>
+                    <td t-esc="row.title"/>
+                    <td t-esc="row.requester"/>
+                    <td t-esc="row.department"/>
+                    <td t-esc="money(row.amount_total)"/>
+                    <td><span class="pm-badge" t-att-data-status="row.state" t-esc="label(row.state)"/></td>
+                </tr>
+            </tbody>
+        </table>
+        </section>
+    </t>
+
+    <t t-name="procurement_management.Rfqs">
+        <div class="pm-rfq-stats">
+            <button t-foreach="rfqStatuses" t-as="chip" t-key="chip.key" type="button" class="pm-chip" t-att-class="{ active: state.filter === chip.key }" t-att-data-state="chip.key" t-att-data-status="chip.key" t-on-click="setChip">
+                <span t-esc="chip.label"/><strong t-esc="countFor(chip.key)"/>
+            </button>
+        </div>
+        <section class="pm-panel">
+            <div class="pm-card-head">
+                <h2>Active RFQs</h2>
+                <input class="pm-input pm-rfq-search" placeholder="Search RFQs..." t-model="state.query" t-on-keydown="onSearchKey"/>
+            </div>
+            <table class="pm-table pm-rfq-table">
+                <thead>
+                    <tr>
+                        <th>RFQ Number</th>
+                        <th>Requisition</th>
+                        <th>Suppliers</th>
+                        <th>Deadline</th>
+                        <th>Responses</th>
+                        <th>Est. Total Value</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr t-if="!state.rows.length"><td class="pm-empty-cell" colspan="8">No RFQs yet</td></tr>
+                    <tr t-foreach="state.rows" t-as="row" t-key="row.id" t-att-data-id="row.id" t-on-click="openRecord">
+                        <td class="pm-rfq-no" t-esc="row.name"/>
+                        <td t-esc="row.requisition"/>
+                        <td t-esc="row.supplier_count"/>
+                        <td t-esc="row.deadline"/>
+                        <td><span class="pm-count-pill" t-att-data-count="row.response_count" t-esc="row.response_count"/></td>
+                        <td t-esc="money(row.estimated_value)"/>
+                        <td><span class="pm-badge" t-att-data-status="row.state" t-esc="label(row.state)"/></td>
+                        <td><button type="button" class="pm-icon-btn" t-att-data-id="row.id" t-on-click.stop="openRecord" aria-label="Open RFQ">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.5"/></svg>
+                        </button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="pm-table-foot" t-if="state.total">
+                <span>Showing <t t-esc="pageFrom"/> to <t t-esc="pageTo"/> of <t t-esc="state.total"/> entries</span>
+                <span class="pm-pager">
+                    <button type="button" class="pm-btn" t-on-click="() => this.page(-1)" t-att-disabled="state.busy or state.offset === 0">Prev</button>
+                    <span class="pm-page-current" t-esc="pageNumber"/>
+                    <button type="button" class="pm-btn" t-on-click="() => this.page(1)" t-att-disabled="state.busy or pageTo >= state.total">Next</button>
+                </span>
+            </div>
+        </section>
+    </t>
+
+    <t t-name="procurement_management.Comparison">
+        <div class="pm-compare-bar">
+            <label class="pm-field pm-rfq-pick">Select RFQ to compare
+                <select class="pm-input" t-on-change="selectComparisonRfq">
+                    <option value="">Select an RFQ</option>
+                    <t t-foreach="state.data.options or []" t-as="option" t-key="option.id">
+                        <option t-att-value="option.id" t-att-selected="option.id === state.data.rfq_id" t-esc="option.name"/>
+                    </t>
+                </select>
+            </label>
+            <span t-if="state.data.state" class="pm-badge" t-att-data-status="state.data.state" t-esc="label(state.data.state)"/>
+        </div>
+        <div class="pm-compare">
+            <section class="pm-card pm-matrix">
+                <h2>Commercial Comparison</h2>
+                <div t-if="!state.rows.length" class="pm-state">No quotations to compare yet</div>
+                <table t-else="" class="pm-table pm-compare-table">
+                    <thead>
+                        <tr>
+                            <th>Criteria</th>
+                            <th t-foreach="state.form.rows" t-as="row" t-key="row.id" t-att-class="{ 'pm-col-rec': row.id === state.data.recommended_quotation_id }">
+                                <button type="button" class="pm-supplier-pick" t-att-class="{ active: state.form.focusId === row.id }" t-on-click="() => { this.state.form.focusId = row.id; }">
+                                    <t t-esc="row.supplier"/>
+                                </button>
+                                <span t-if="row.id === state.data.recommended_quotation_id" class="pm-rec-tag">Recommended</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>Base price</th>
+                            <td t-foreach="state.form.rows" t-as="row" t-key="'b'+row.id" t-att-class="{ 'pm-col-rec': row.id === state.data.recommended_quotation_id }" t-esc="money(row.amount_untaxed, state.data.currency)"/>
+                        </tr>
+                        <tr>
+                            <th>Total quantity</th>
+                            <td t-foreach="state.form.rows" t-as="row" t-key="'q'+row.id" t-att-class="{ 'pm-col-rec': row.id === state.data.recommended_quotation_id }" t-esc="lineQty(row)"/>
+                        </tr>
+                        <tr>
+                            <th>Taxes &amp; duties</th>
+                            <td t-foreach="state.form.rows" t-as="row" t-key="'t'+row.id" t-att-class="{ 'pm-col-rec': row.id === state.data.recommended_quotation_id }" t-esc="money(row.amount_tax, state.data.currency)"/>
+                        </tr>
+                        <tr>
+                            <th>Freight &amp; logistics</th>
+                            <td t-foreach="state.form.rows" t-as="row" t-key="'f'+row.id" t-att-class="{ 'pm-col-rec': row.id === state.data.recommended_quotation_id }" t-esc="money(row.freight_amount, state.data.currency)"/>
+                        </tr>
+                        <tr class="pm-landed">
+                            <th>Total landed cost</th>
+                            <td t-foreach="state.form.rows" t-as="row" t-key="'l'+row.id" t-att-class="{ 'pm-col-rec': row.id === state.data.recommended_quotation_id }" t-esc="money(row.amount_total, state.data.currency)"/>
+                        </tr>
+                        <tr class="pm-section-row"><th t-att-colspan="state.form.rows.length + 1">Evaluation scores</th></tr>
+                        <tr>
+                            <th>Commercial score (<t t-esc="state.form.commercial_weight"/>%)</th>
+                            <td t-foreach="state.form.rows" t-as="row" t-key="'c'+row.id" t-att-class="{ 'pm-col-rec': row.id === state.data.recommended_quotation_id }">
+                                <input class="pm-input" type="number" t-model.number="row.commercial_score"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Technical score (<t t-esc="state.form.technical_weight"/>%)</th>
+                            <td t-foreach="state.form.rows" t-as="row" t-key="'s'+row.id" t-att-class="{ 'pm-col-rec': row.id === state.data.recommended_quotation_id }">
+                                <input class="pm-input" type="number" t-model.number="row.technical_score"/>
+                            </td>
+                        </tr>
+                        <tr class="pm-landed">
+                            <th>Weighted total</th>
+                            <td t-foreach="state.form.rows" t-as="row" t-key="'w'+row.id" t-att-class="{ 'pm-col-rec': row.id === state.data.recommended_quotation_id }" t-esc="row.weighted_score"/>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="pm-weights">
+                    <label>Commercial weight <input class="pm-input" type="number" t-model.number="state.form.commercial_weight"/></label>
+                    <label>Technical weight <input class="pm-input" type="number" t-model.number="state.form.technical_weight"/></label>
+                </div>
+            </section>
+            <div class="pm-compare-side">
+                <section class="pm-card pm-recommend">
+                    <h2>System Recommendation</h2>
+                    <p t-if="!recommendedRow()">No recommendation yet</p>
+                    <t t-else="">
+                        <p>Based on the lowest landed cost.</p>
+                        <p class="pm-rec-kicker">Selected</p>
+                        <p class="pm-rec-name"><t t-esc="recommendedRow().supplier"/></p>
+                        <p>Landed cost <strong t-esc="money(recommendedRow().amount_total, state.data.currency)"/></p>
+                    </t>
+                    <p>Status: <t t-esc="label(state.data.selection_status)"/></p>
+                </section>
+                <section class="pm-card">
+                    <h2>Technical Evaluation Notes</h2>
+                    <article t-foreach="state.form.rows" t-as="row" t-key="'n'+row.id" class="pm-note" t-att-class="{ 'pm-note-rec': row.id === state.data.recommended_quotation_id }">
+                        <strong>
+                            <t t-esc="row.supplier"/>
+                            <t t-if="row.id === state.data.recommended_quotation_id"> (Recommended)</t>
+                        </strong>
+                        <textarea class="pm-input" t-model="row.evaluation_notes" placeholder="Evaluation notes"/>
+                    </article>
+                </section>
+                <section class="pm-card">
+                    <h2>Decision Justification</h2>
+                    <p class="pm-preview-note">Procurement manager comments</p>
+                    <textarea class="pm-input" t-model="state.form.justification" placeholder="Enter justification for the supplier selection"/>
+                </section>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="procurement_management.Matrix">
+        <div class="pm-matrix-stats">
+            <article class="pm-card pm-stat pm-matrix-stat" data-status="active"><span>Active</span><strong t-esc="countFor('active')"/></article>
+            <article class="pm-card pm-stat pm-matrix-stat" data-status="draft"><span>Draft</span><strong t-esc="countFor('draft')"/></article>
+            <article class="pm-card pm-stat pm-matrix-stat" data-status="review"><span>Under Review</span><strong t-esc="countFor('review')"/></article>
+            <article class="pm-card pm-stat pm-matrix-stat" data-status="inactive"><span>Inactive</span><strong t-esc="countFor('inactive')"/></article>
+        </div>
+        <section class="pm-panel">
+            <div class="pm-card-head pm-matrix-head">
+                <h2>Configured Matrices</h2>
+                <input class="pm-input pm-matrix-search" placeholder="Search matrices..." t-model="state.query"/>
+            </div>
+            <table class="pm-table">
+                <thead><tr><th>Name</th><th>Value range</th><th>Department</th><th>Levels</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr t-if="!matrixRows.length"><td class="pm-empty-cell" colspan="5">No approval matrices yet</td></tr>
+                    <tr t-foreach="matrixRows" t-as="row" t-key="row.id" t-att-data-id="row.id" t-on-click="openRecord" t-att-class="{ 'pm-row-on': state.detail and state.detail.id === row.id }">
+                        <td t-esc="row.name"/>
+                        <td t-esc="band(row)"/>
+                        <td t-esc="row.department or 'Any'"/>
+                        <td t-esc="row.levels.length"/>
+                        <td><span class="pm-badge" t-att-data-status="row.state" t-esc="matrixStatus(row.state)"/></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </t>
+
+    <t t-name="procurement_management.Orders">
+        <div class="pm-order-stats">
+            <button type="button" class="pm-order-stat" data-status="draft" t-att-class="{ active: state.filter === 'draft' }" data-state="draft" t-on-click="setChip"><span>Draft</span><strong t-esc="countFor('draft')"/></button>
+            <button type="button" class="pm-order-stat" data-status="pending" t-att-class="{ active: state.filter === 'pending' }" data-state="pending" t-on-click="setChip"><span>Pending</span><strong t-esc="countFor('pending')"/></button>
+            <button type="button" class="pm-order-stat" data-status="approved" t-att-class="{ active: state.filter === 'approved' }" data-state="approved" t-on-click="setChip"><span>Approved</span><strong t-esc="countFor('approved')"/></button>
+            <button type="button" class="pm-order-stat" data-status="issued" t-att-class="{ active: state.filter === 'issued' }" data-state="issued" t-on-click="setChip"><span>Issued</span><strong t-esc="countFor('issued')"/></button>
+            <button type="button" class="pm-order-stat" data-status="partial" t-att-class="{ active: state.filter === 'partial' }" data-state="partial" t-on-click="setChip"><span>Partial</span><strong t-esc="countFor('partial')"/></button>
+            <button type="button" class="pm-order-stat" data-status="overdue" t-att-class="{ active: state.filter === 'overdue' }" data-state="overdue" t-on-click="setChip"><span>Overdue</span><strong t-esc="countFor('overdue')"/></button>
+        </div>
+        <div class="pm-order-layout">
+            <section class="pm-panel">
+                <div class="pm-card-head pm-matrix-head">
+                    <h2>Active Orders</h2>
+                    <input class="pm-input pm-order-search" placeholder="Search orders..." t-model="state.query" t-on-keydown="onSearchKey"/>
+                </div>
+                <table class="pm-table pm-order-table">
+                    <thead><tr><th>Number</th><th>Supplier</th><th>Property / Project</th><th>Total</th><th>Delivery</th><th>Status</th></tr></thead>
+                    <tbody>
+                        <tr t-if="!state.rows.length"><td class="pm-empty-cell" colspan="6">No purchase orders yet</td></tr>
+                        <tr t-foreach="state.rows" t-as="row" t-key="row.id" t-att-data-id="row.id" t-on-click="openRecord" t-att-class="{ 'pm-row-on': state.detail and state.detail.id === row.id }">
+                            <td class="pm-order-no" t-esc="row.name"/>
+                            <td t-esc="row.supplier"/>
+                            <td t-esc="row.property_project"/>
+                            <td t-esc="money(row.amount_total)"/>
+                            <td t-esc="row.delivery_date"/>
+                            <td><span class="pm-badge" t-att-data-status="row.display_status" t-esc="orderStatus(row.display_status)"/></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="pm-table-foot" t-if="state.total">
+                    <span>Showing <t t-esc="pageFrom"/>–<t t-esc="pageTo"/> of <t t-esc="state.total"/> Orders</span>
+                    <span class="pm-pager">
+                        <button type="button" class="pm-btn" t-on-click="() => this.page(-1)" t-att-disabled="state.busy or state.offset === 0">Prev</button>
+                        <button type="button" t-foreach="pageButtons" t-as="pageNo" t-key="pageNo" class="pm-btn" t-att-class="{ 'pm-page-current': pageNo === pageNumber }" t-on-click="() => this.goPage(pageNo)" t-esc="pageNo"/>
+                        <button type="button" class="pm-btn" t-on-click="() => this.page(1)" t-att-disabled="state.busy or pageTo >= state.total">Next</button>
+                    </span>
+                </div>
+            </section>
+            <aside class="pm-order-side">
+                <t t-if="state.detail" t-call="procurement_management.OrderDrawer"/>
+                <p t-else="" class="pm-state">Select a purchase order.</p>
+            </aside>
+        </div>
+    </t>
+
+    <t t-name="procurement_management.Receipts">
+        <div class="pm-receipt-stats">
+            <button type="button" class="pm-order-stat" data-status="expected" t-att-class="{ active: state.filter === 'expected' }" data-state="expected" t-on-click="setChip"><span>Expected</span><strong t-esc="countFor('expected')"/></button>
+            <button type="button" class="pm-order-stat" data-status="pending_receipt" t-att-class="{ active: state.filter === 'pending_receipt' }" data-state="pending_receipt" t-on-click="setChip"><span>Pending Receipt</span><strong t-esc="countFor('pending_receipt')"/></button>
+            <button type="button" class="pm-order-stat" data-status="pending_inspection" t-att-class="{ active: state.filter === 'pending_inspection' }" data-state="pending_inspection" t-on-click="setChip"><span>Pending Inspection</span><strong t-esc="countFor('pending_inspection')"/></button>
+            <button type="button" class="pm-order-stat" data-status="completed" t-att-class="{ active: state.filter === 'completed' }" data-state="completed" t-on-click="setChip"><span>Completed</span><strong t-esc="countFor('completed')"/></button>
+        </div>
+        <div class="pm-order-layout">
+            <section class="pm-panel">
+                <div class="pm-card-head pm-matrix-head">
+                    <h2>Recent Receipts</h2>
+                    <button type="button" class="pm-btn" t-on-click="focusReceiptSearch">Filter</button>
+                </div>
+                <table class="pm-table pm-receipt-table">
+                    <thead><tr><th>Receipt ID</th><th>PO</th><th>Supplier</th><th>Date</th><th>Status</th></tr></thead>
+                    <tbody>
+                        <tr t-if="!state.rows.length"><td class="pm-empty-cell" colspan="5">No receipts yet</td></tr>
+                        <tr t-foreach="state.rows" t-as="row" t-key="row.id" t-att-data-id="row.id" t-on-click="openRecord" t-att-class="{ 'pm-row-on': state.detail and state.detail.id === row.id }">
+                            <td class="pm-order-no" t-esc="row.name"/>
+                            <td class="pm-order-no" t-esc="row.purchase_order"/>
+                            <td t-esc="row.supplier"/>
+                            <td t-esc="row.date"/>
+                            <td><span class="pm-badge" t-att-data-status="row.state" t-esc="label(row.state)"/></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+            <aside class="pm-order-side">
+                <t t-call="procurement_management.ReceiptDrawer"/>
+            </aside>
+        </div>
+    </t>
+
+    <t t-name="procurement_management.Invoices">
+        <div class="pm-inv-stats">
+            <button type="button" class="pm-order-stat pm-inv-stat" data-status="pending" t-att-class="{ active: state.filter === 'pending' }" data-state="pending" t-on-click="setChip"><span>Pending</span><strong t-esc="countFor('pending')"/></button>
+            <button type="button" class="pm-order-stat pm-inv-stat" data-status="matched" t-att-class="{ active: state.filter === 'matched' }" data-state="matched" t-on-click="setChip"><span>Matched</span><strong t-esc="countFor('matched')"/></button>
+            <button type="button" class="pm-order-stat pm-inv-stat" data-status="mismatch" t-att-class="{ active: state.filter === 'mismatch' }" data-state="mismatch" t-on-click="setChip"><span>Mismatch</span><strong t-esc="countFor('mismatch')"/></button>
+            <button type="button" class="pm-order-stat pm-inv-stat" data-status="under_review" t-att-class="{ active: state.filter === 'under_review' }" data-state="under_review" t-on-click="setChip"><span>Under Review</span><strong t-esc="countFor('under_review')"/></button>
+        </div>
+        <div class="pm-inv-layout">
+            <section class="pm-panel pm-inv-queue">
+                <h2>Matching Queue</h2>
+                <p t-if="!state.rows.length" class="pm-state">No invoice matches yet</p>
+                <button type="button" t-foreach="state.rows" t-as="row" t-key="row.id" class="pm-inv-item" t-att-data-id="row.id" t-on-click="openRecord" t-att-class="{ active: state.detail and state.detail.id === row.id }">
+                    <span class="pm-inv-item-top">
+                        <strong t-esc="row.name"/>
+                        <span class="pm-badge" t-att-data-status="row.state" t-esc="label(row.state)"/>
+                    </span>
+                    <span t-esc="row.supplier"/>
+                    <span class="pm-inv-amount" t-esc="money(row.invoice_amount)"/>
+                </button>
+            </section>
+            <section class="pm-panel pm-inv-detail">
+                <t t-call="procurement_management.InvoiceDrawer"/>
+            </section>
+        </div>
+    </t>
+
+    <t t-name="procurement_management.Suppliers">
+        <div class="pm-supplier-layout">
+            <div class="pm-supplier-col">
+                <div class="pm-supplier-stats">
+                    <button type="button" class="pm-order-stat" data-state="" t-on-click="setChip"><span>Total Suppliers</span><strong t-esc="supplierTotal"/></button>
+                    <button type="button" class="pm-order-stat pm-sup-active" data-state="active" t-on-click="setChip"><span>Active</span><strong t-esc="countFor('active')"/></button>
+                </div>
+                <section class="pm-panel pm-supplier-directory">
+                    <div class="pm-card-head">
+                        <h2>Supplier Directory</h2>
+                        <button type="button" class="pm-filter-ico" t-on-click="focusSupplierSearch" aria-label="Filter">
+                            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 5h16l-6 7v6l-4 2v-8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                        </button>
+                    </div>
+                    <table class="pm-table pm-supplier-table">
+                        <thead><tr><th>Supplier name</th><th>Category</th><th>Status</th><th class="pm-score">Score</th></tr></thead>
+                        <tbody>
+                            <tr t-if="!state.rows.length"><td class="pm-empty-cell" colspan="4">No suppliers yet</td></tr>
+                            <tr t-foreach="state.rows" t-as="row" t-key="row.id" t-att-data-id="row.id" t-on-click="openRecord" t-att-class="{ 'pm-row-on': state.detail and state.detail.id === row.id }">
+                                <td class="pm-order-no" t-esc="row.partner"/>
+                                <td t-esc="row.category"/>
+                                <td><span class="pm-badge" t-att-data-status="row.state" t-esc="label(row.state)"/></td>
+                                <td class="pm-score" t-esc="supplierScore(row.score)"/>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+            <div class="pm-supplier-col">
+                <div class="pm-supplier-stats">
+                    <button type="button" class="pm-order-stat pm-sup-pref" data-state="preferred" t-on-click="setChip"><span>Preferred</span><strong t-esc="countFor('preferred')"/></button>
+                    <button type="button" class="pm-order-stat pm-sup-stop" data-state="suspended" t-on-click="setChip"><span>Suspended</span><strong t-esc="countFor('suspended')"/></button>
+                </div>
+                <aside class="pm-order-side pm-supplier-side">
+                    <t t-call="procurement_management.SupplierDrawer"/>
+                </aside>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="procurement_management.Reports">
+        <div class="pm-report-grid">
+            <article t-foreach="state.data.categories or []" t-as="category" t-key="category.key" class="pm-card pm-report-card" t-att-data-status="category.key">
+                <span t-esc="category.title"/>
+                <strong t-esc="category.count"/>
+                <p t-if="category.key === 'spend'">Breakdown of expenditure by department, category, and time period.</p>
+                <p t-if="category.key === 'performance'">Supplier delivery, quality scores, and compliance from saved runs.</p>
+                <p t-if="category.key === 'requisitions'">Status of requisitions created in this company.</p>
+                <p t-if="category.key === 'rfq'">RFQs, quotations, and evaluation activity.</p>
+                <p t-if="category.key === 'custom'">Saved custom report configurations.</p>
+                <button type="button" class="pm-link" t-att-data-type="category.key" t-on-click="goBuilder">View Reports</button>
+            </article>
+        </div>
+        <section class="pm-card">
+            <h2>Recent reports</h2>
+            <div t-if="!(state.data.recent or []).length" class="pm-state">No reports yet</div>
+            <table t-else="" class="pm-table">
+                <thead><tr><th>Report</th><th>Format</th><th>Status</th><th>Detail</th></tr></thead>
+                <tbody>
+                    <tr t-foreach="state.data.recent" t-as="row" t-key="row.id">
+                        <td t-esc="row.name"/><td t-esc="row.file_format"/><td t-esc="label(row.state)"/><td t-esc="row.error_detail"/>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section class="pm-card">
+            <h2>Scheduled email</h2>
+            <div t-if="!(state.data.scheduled or []).length" class="pm-state">No scheduled reports</div>
+            <ul t-else="" class="pm-list">
+                <li t-foreach="state.data.scheduled" t-as="row" t-key="row.id">
+                    <strong t-esc="row.name"/> — <t t-esc="row.schedule"/>
+                    <span t-if="row.recipient_emails"> to <t t-esc="row.recipient_emails"/></span>
+                    <span t-if="row.last_run_on"> last run <t t-esc="row.last_run_on"/></span>
+                </li>
+            </ul>
+        </section>
+    </t>
+
+    <t t-name="procurement_management.Builder">
+        <div class="pm-builder">
+            <section class="pm-card pm-config">
+                <h2>Configuration</h2>
+                <label class="pm-field">Name
+                    <input class="pm-input" t-model="state.form.name" placeholder="Report name"/>
+                </label>
+                <label class="pm-field">Report Type
+                    <select class="pm-input" t-model="state.form.report_type">
+                        <option t-foreach="state.data.report_types or []" t-as="kind" t-key="kind" t-att-value="kind" t-esc="reportTypeLabel(kind)"/>
+                    </select>
+                </label>
+                <div class="pm-config-block">
+                    <h3>Filters</h3>
+                    <label class="pm-field">Date Range
+                        <span class="pm-date-pair">
+                            <input class="pm-input" type="date" t-model="state.form.date_from"/>
+                            <input class="pm-input" type="date" t-model="state.form.date_to"/>
+                        </span>
+                    </label>
+                    <label class="pm-field">Department
+                        <input class="pm-input" t-model="state.form.department" placeholder="All Departments"/>
+                    </label>
+                    <label class="pm-field">Supplier
+                        <input class="pm-input" type="number" t-model.number="state.form.partner_id" placeholder="Search suppliers..."/>
+                    </label>
+                    <label class="pm-field">Category
+                        <input class="pm-input" t-model="state.form.category"/>
+                    </label>
+                    <label class="pm-field">Status
+                        <input class="pm-input" t-model="state.form.status"/>
+                    </label>
+                </div>
+                <div class="pm-config-block">
+                    <h3>Metrics (Select Columns)</h3>
+                    <label class="pm-check"><input type="checkbox" data-metric="reference" t-att-checked="metricOn('reference')" t-on-change="toggleMetric"/> Reference</label>
+                    <label class="pm-check"><input type="checkbox" data-metric="partner" t-att-checked="metricOn('partner')" t-on-change="toggleMetric"/> Supplier Name</label>
+                    <label class="pm-check"><input type="checkbox" data-metric="amount" t-att-checked="metricOn('amount')" t-on-change="toggleMetric"/> Total Spend</label>
+                    <label class="pm-check"><input type="checkbox" data-metric="status" t-att-checked="metricOn('status')" t-on-change="toggleMetric"/> Status</label>
+                    <label class="pm-check"><input type="checkbox" data-metric="date" t-att-checked="metricOn('date')" t-on-change="toggleMetric"/> Date</label>
+                </div>
+                <div class="pm-config-block">
+                    <h3>Grouping &amp; Sorting</h3>
+                    <label class="pm-field">Group By
+                        <select class="pm-input" t-model="state.form.group_by">
+                            <option value="">None</option>
+                            <option value="department">Department</option>
+                            <option value="partner">Supplier</option>
+                            <option value="status">Status</option>
+                            <option value="date">Date</option>
+                        </select>
+                    </label>
+                    <label class="pm-field">Sort By
+                        <select class="pm-input" t-model="state.form.sort_by">
+                            <option value="">Default</option>
+                            <option value="amount">Total Spend</option>
+                            <option value="amount desc">Total Spend (high to low)</option>
+                            <option value="date">Date</option>
+                            <option value="partner">Supplier</option>
+                        </select>
+                    </label>
+                    <label class="pm-field">Schedule
+                        <select class="pm-input" t-model="state.form.schedule">
+                            <option t-foreach="state.data.schedules or []" t-as="kind" t-key="kind" t-att-value="kind" t-esc="kind"/>
+                        </select>
+                    </label>
+                    <label class="pm-field">Recipients
+                        <input class="pm-input" t-model="state.form.recipient_emails" placeholder="name@company.com"/>
+                    </label>
+                </div>
+                <button t-if="state.nav.reports_run" type="button" class="pm-btn pm-btn-block" t-on-click="() => this.saveReport(true)" t-att-disabled="state.busy">Generate Preview</button>
+                <p t-else="" class="pm-state">Report preview and export are available to a procurement manager.</p>
+            </section>
+            <section class="pm-card pm-preview-card">
+                <h2>Live Preview: <t t-esc="reportTypeLabel(state.form.report_type)"/></h2>
+                <div t-if="!state.form.preview" class="pm-state">Generate a preview to see rows here</div>
+                <div t-elif="!(state.form.preview.rows or []).length" class="pm-state">The preview returned no rows</div>
+                <table t-else="" class="pm-table">
+                    <thead><tr><th t-foreach="state.form.preview.columns" t-as="column" t-key="column" t-esc="column"/></tr></thead>
+                    <tbody>
+                        <tr t-foreach="state.form.preview.rows" t-as="line" t-key="line_index">
+                            <td t-foreach="line" t-as="cell" t-key="cell_index" t-esc="cell"/>
+                        </tr>
+                    </tbody>
+                </table>
+                <p t-if="state.form.preview and state.form.preview.rows" class="pm-preview-note">
+                    Showing preview of <t t-esc="state.form.preview.rows.length"/> rows.
+                </p>
+            </section>
+        </div>
+    </t>
+
+    <t t-name="procurement_management.Audit">
+        <div class="pm-kpi-grid pm-audit-kpis">
+            <article class="pm-card pm-stat"><span>Total Events</span><strong t-esc="state.data.total or 0"/></article>
+            <article class="pm-card pm-stat"><span>Today</span><strong t-esc="state.data.today or 0"/></article>
+            <article class="pm-card pm-stat"><span>Approval Events</span><strong t-esc="state.data.approvals or 0"/></article>
+        </div>
+        <section class="pm-panel">
+            <div class="pm-card-head">
+                <input class="pm-input pm-log-search" placeholder="Search logs..." t-model="state.query" t-on-keydown="onSearchKey"/>
+                <span class="pm-page-label" t-if="state.total">Showing <t t-esc="pageFrom"/>–<t t-esc="pageTo"/> of <t t-esc="state.total"/></span>
+            </div>
+            <table class="pm-table">
+                <thead><tr><th>Date / Time</th><th>User</th><th>Action</th><th>Entity</th><th>Reference</th><th>Status</th><th>Detail</th></tr></thead>
+                <tbody>
+                    <tr t-if="!state.rows.length"><td class="pm-empty-cell" colspan="7">No audit activity yet</td></tr>
+                    <tr t-foreach="state.rows" t-as="row" t-key="row.id">
+                        <td t-esc="row.timestamp"/>
+                        <td t-esc="row.user"/>
+                        <td t-esc="label(row.action)"/>
+                        <td class="pm-clip" t-esc="row.model"/>
+                        <td class="pm-clip" t-esc="row.reference"/>
+                        <td><span class="pm-badge" t-att-data-status="row.status" t-esc="label(row.status)"/></td>
+                        <td class="pm-clip" t-att-title="row.detail" t-esc="row.detail"/>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </t>
+
+    <t t-name="procurement_management.Drawer">
+        <div class="pm-drawer-backdrop" t-on-click="closeDrawer"/>
+        <t t-if="state.screen === 'approval_matrix'" t-call="procurement_management.MatrixDrawer"/>
+        <aside t-else="" class="pm-drawer" role="dialog">
+            <header class="pm-drawer-head">
+                <h2 t-esc="state.detail and state.detail.name or 'New'"/>
+                <button type="button" class="pm-btn" t-on-click="closeDrawer">Close</button>
+            </header>
+            <t t-if="state.screen === 'requisitions'" t-call="procurement_management.RequisitionDrawer"/>
+            <t t-if="state.screen === 'rfqs'" t-call="procurement_management.RfqDrawer"/>
+        </aside>
+    </t>
+
+    <t t-name="procurement_management.RequisitionDrawer">
+        <div class="pm-tabs">
+            <button type="button" data-tab="details" t-on-click="setTab" t-att-class="{ active: state.drawerTab === 'details' }">Details</button>
+            <button type="button" data-tab="items" t-on-click="setTab" t-att-class="{ active: state.drawerTab === 'items' }">Items</button>
+            <button type="button" data-tab="approval" t-on-click="setTab" t-att-class="{ active: state.drawerTab === 'approval' }">Approval</button>
+            <button type="button" data-tab="attachments" t-on-click="setTab" t-att-class="{ active: state.drawerTab === 'attachments' }">Attachments</button>
+        </div>
+        <div t-if="state.drawerTab === 'details'" class="pm-form-grid">
+            <label>Title <input class="pm-input" t-model="state.form.title"/></label>
+            <label>Department <input class="pm-input" t-model="state.form.department"/></label>
+            <label>Property / Project <input class="pm-input" t-model="state.form.property_project"/></label>
+            <label>Category <input class="pm-input" t-model="state.form.category"/></label>
+            <label>Cost center <input class="pm-input" t-model="state.form.cost_center"/></label>
+            <label>Required date <input class="pm-input" type="date" t-model="state.form.required_date"/></label>
+            <label>Description <textarea class="pm-input" t-model="state.form.description"/></label>
+            <label>Justification <textarea class="pm-input" t-model="state.form.justification"/></label>
+            <p t-if="state.detail">Requester <t t-esc="state.detail.requester"/> · <span class="pm-badge" t-esc="label(state.detail.state)"/></p>
+        </div>
+        <div t-if="state.drawerTab === 'items'">
+            <p t-if="!(state.form.lines or []).length" class="pm-state">No items yet</p>
+            <div t-foreach="state.form.lines" t-as="line" t-key="line_index" class="pm-line">
+                <input class="pm-input" placeholder="Description" t-model="line.description"/>
+                <input class="pm-input" type="number" t-model.number="line.quantity"/>
+                <input class="pm-input" placeholder="Unit" t-model="line.unit_text"/>
+                <input class="pm-input" type="number" t-model.number="line.price_unit"/>
+                <button type="button" class="pm-btn" t-att-data-index="line_index" t-on-click="removeLine">Remove</button>
+            </div>
+            <button type="button" class="pm-btn" t-on-click="addLine">Add item</button>
+        </div>
+        <div t-if="state.drawerTab === 'approval'">
+            <p t-if="!(state.detail and state.detail.approval and state.detail.approval.decisions.length)" class="pm-state">No approval chain yet</p>
+            <ul t-else="" class="pm-list">
+                <li t-foreach="state.detail.approval.decisions" t-as="decision" t-key="decision_index">
+                    <strong t-esc="decision.group"/> · <t t-esc="label(decision.decision)"/> <span t-esc="decision.comment"/>
+                </li>
+            </ul>
+            <label>Comment <textarea class="pm-input" t-model="state.form.comment"/></label>
+        </div>
+        <div t-if="state.drawerTab === 'attachments'">
+            <p t-if="!(state.detail and state.detail.attachments and state.detail.attachments.length)" class="pm-state">No attachments yet</p>
+            <ul t-else="" class="pm-list"><li t-foreach="state.detail.attachments" t-as="file" t-key="file.id" t-esc="file.name"/></ul>
+            <input t-if="state.detail" type="file" t-on-change="onAttachment"/>
+        </div>
+        <footer class="pm-actions">
+            <button type="button" class="pm-btn" t-on-click="closeDrawer">Cancel</button>
+            <button t-if="!state.detail or (state.detail.actions and state.detail.actions.edit)" type="button" class="pm-btn" t-on-click="() => this.saveRequisition(false)" t-att-disabled="state.busy">Save as Draft</button>
+            <button t-if="!state.detail or (state.detail.actions and state.detail.actions.submit)" type="button" class="pm-btn pm-btn-primary" t-on-click="() => this.saveRequisition(true)" t-att-disabled="state.busy">Submit</button>
+            <button t-if="state.detail and state.detail.actions and state.detail.actions.approve" type="button" class="pm-btn pm-btn-primary" data-command="approve" t-on-click="requisitionAction" t-att-disabled="state.busy">Approve</button>
+            <button t-if="state.detail and state.detail.actions and state.detail.actions.reject" type="button" class="pm-btn" data-command="reject" t-on-click="requisitionAction" t-att-disabled="state.busy">Reject</button>
+            <button t-if="state.detail and state.detail.actions and state.detail.actions.return" type="button" class="pm-btn" data-command="return" t-on-click="requisitionAction" t-att-disabled="state.busy">Return</button>
+            <button t-if="state.detail and state.detail.actions and state.detail.actions.cancel" type="button" class="pm-btn" data-command="cancel" t-on-click="requisitionAction" t-att-disabled="state.busy">Cancel</button>
+            <button t-if="state.detail and state.detail.actions and state.detail.actions.convert" type="button" class="pm-btn pm-btn-primary" data-command="convert_rfq" t-on-click="requisitionAction" t-att-disabled="state.busy">Convert to RFQ</button>
+        </footer>
+    </t>
+
+    <t t-name="procurement_management.RfqDrawer">
+        <div class="pm-tabs">
+            <button type="button" data-tab="details" t-on-click="setTab">Details</button>
+            <button type="button" data-tab="suppliers" t-on-click="setTab">Suppliers</button>
+            <button type="button" data-tab="quotations" t-on-click="setTab">Quotations</button>
+        </div>
+        <div t-if="state.drawerTab === 'details'" class="pm-form-grid">
+            <label>Description <textarea class="pm-input" t-model="state.form.description"/></label>
+            <label>Department <input class="pm-input" t-model="state.form.department"/></label>
+            <label>Property / Project <input class="pm-input" t-model="state.form.property_project"/></label>
+            <label>Category <input class="pm-input" t-model="state.form.category"/></label>
+            <label>Deadline <input class="pm-input" type="date" t-model="state.form.deadline"/></label>
+            <label>Estimated value <input class="pm-input" type="number" t-model.number="state.form.estimated_value"/></label>
+            <p t-if="state.detail"><span class="pm-badge" t-esc="label(state.detail.state)"/></p>
+        </div>
+        <div t-if="state.drawerTab === 'suppliers'">
+            <input class="pm-input" placeholder="Search supplier" t-on-input="findPartners"/>
+            <ul class="pm-list">
+                <li t-foreach="state.partnerHits" t-as="hit" t-key="hit.id"><button type="button" class="pm-link" t-att-data-id="hit.id" t-on-click="pickPartner" t-esc="hit.name"/></li>
+            </ul>
+            <p>Selected supplier ids: <t t-esc="(state.form.partner_ids or []).join(', ')"/></p>
+            <ul t-if="state.detail" class="pm-list">
+                <li t-foreach="state.detail.suppliers" t-as="invitation" t-key="invitation.id"><t t-esc="invitation.partner"/> · <t t-esc="label(invitation.response_status)"/></li>
+            </ul>
+        </div>
+        <div t-if="state.drawerTab === 'quotations'">
+            <div t-if="!(state.detail and state.detail.quotations.length)" class="pm-state">No quotations yet</div>
+            <table t-else="" class="pm-table">
+                <thead><tr><th>Quotation</th><th>Supplier</th><th>Landed cost</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr t-foreach="state.detail.quotations" t-as="quote" t-key="quote.id">
+                        <td t-esc="quote.name"/><td t-esc="quote.supplier"/><td t-esc="money(quote.amount_total)"/><td t-esc="label(quote.state)"/>
+                    </tr>
+                </tbody>
+            </table>
+            <div t-if="state.detail and state.detail.actions and state.detail.actions.quote" class="pm-form-grid">
+                <h3>Record quotation</h3>
+                <label>Tax <input class="pm-input" type="number" t-model.number="state.form.amount_tax"/></label>
+                <label>Freight <input class="pm-input" type="number" t-model.number="state.form.freight_amount"/></label>
+                <div t-foreach="state.form.quote_lines or []" t-as="line" t-key="line_index">
+                    <input class="pm-input" placeholder="Description" t-model="line.description"/>
+                    <input class="pm-input" type="number" t-model.number="line.quantity"/>
+                    <input class="pm-input" type="number" t-model.number="line.price_unit"/>
+                </div>
+                <button type="button" class="pm-btn" t-on-click="saveQuotation" t-att-disabled="state.busy">Save quotation</button>
+            </div>
+        </div>
+        <footer class="pm-actions">
+            <button t-if="!state.detail or (state.detail.actions and state.detail.actions.edit)" type="button" class="pm-btn" t-on-click="saveRfq" t-att-disabled="state.busy">Save</button>
+            <button t-if="state.detail and state.detail.actions and state.detail.actions.issue" type="button" class="pm-btn pm-btn-primary" data-command="issue" t-on-click="rfqAction" t-att-disabled="state.busy">Issue</button>
+            <button t-if="state.detail and state.detail.actions and state.detail.actions.evaluate" type="button" class="pm-btn" data-command="evaluate" t-on-click="rfqAction" t-att-disabled="state.busy">Start evaluation</button>
+            <button t-if="state.detail and state.detail.actions and state.detail.actions.close" type="button" class="pm-btn" data-command="close" t-on-click="rfqAction" t-att-disabled="state.busy">Close</button>
+            <button t-if="state.detail and state.detail.actions and state.detail.actions.cancel" type="button" class="pm-btn" data-command="cancel" t-on-click="rfqAction" t-att-disabled="state.busy">Cancel</button>
+        </footer>
+    </t>
+
+    <t t-name="procurement_management.MatrixDrawer">
+        <aside class="pm-matrix-pop" role="dialog" aria-label="Matrix Configuration">
+            <header class="pm-config-head">
+                <div class="pm-config-title">
+                    <h2>Matrix Configuration</h2>
+                    <input class="pm-input" t-model="state.form.name" placeholder="Matrix name"/>
+                </div>
+                <button type="button" class="pm-icon-btn" aria-label="Close" t-on-click="closeDrawer">×</button>
+            </header>
+            <div class="pm-config-body">
+                <section>
+                    <h3 class="pm-kicker">Triggers &amp; scope</h3>
+                    <div class="pm-pair">
+                        <label class="pm-field">Min Value ($)
+                            <input class="pm-input" type="number" t-model.number="state.form.min_value"/>
+                        </label>
+                        <label class="pm-field">Max Value ($)
+                            <input class="pm-input" type="number" t-model.number="state.form.max_value"/>
+                        </label>
+                    </div>
+                    <label class="pm-field">Department
+                        <input class="pm-input" t-model="state.form.department" placeholder="Department"/>
+                    </label>
+                    <label class="pm-field">Property / Location
+                        <input class="pm-input" t-model="state.form.property_location" placeholder="Property / Location"/>
+                    </label>
+                </section>
+                <section>
+                    <div class="pm-section-head">
+                        <h3 class="pm-kicker">Approval chain</h3>
+                        <button type="button" class="pm-text-link" t-on-click="addLevel">+ Add Level</button>
+                    </div>
+                    <article t-foreach="state.form.levels or []" t-as="level" t-key="level_index" class="pm-level">
+                        <span class="pm-level-no" t-esc="level_index + 1"/>
+                        <div class="pm-level-body">
+                            <label class="pm-field">Approver Role / Group
+                                <select class="pm-input" t-model.number="level.approver_group_id">
+                                    <option value="">Select a group</option>
+                                    <option t-foreach="state.form.groups or []" t-as="group" t-key="group.id" t-att-value="group.id" t-esc="group.name"/>
+                                </select>
+                            </label>
+                            <label class="pm-check"><input type="checkbox" t-model="level.required_signoff"/> Required Sign-off</label>
+                        </div>
+                    </article>
+                    <div class="pm-mode">
+                        <label class="pm-radio"><input type="radio" name="pm-matrix-mode" value="sequential" t-model="state.form.mode"/> Sequential</label>
+                        <label class="pm-radio"><input type="radio" name="pm-matrix-mode" value="parallel" t-model="state.form.mode"/> Parallel</label>
+                    </div>
+                </section>
+                <section>
+                    <h3 class="pm-kicker">Escalation policy</h3>
+                    <div class="pm-escalate">
+                        <div class="pm-section-head">
+                            <span>Auto-Escalate after inactivity</span>
+                            <label class="pm-switch">
+                                <input type="checkbox" t-model="state.form.escalate"/>
+                                <span class="pm-switch-ui"/>
+                            </label>
+                        </div>
+                        <div class="pm-pair">
+                            <label class="pm-field">Duration (Hours)
+                                <input class="pm-input" type="number" t-model.number="state.form.escalation_hours" t-att-disabled="!state.form.escalate"/>
+                            </label>
+                            <label class="pm-field">Escalate To
+                                <select class="pm-input" t-model.number="state.form.escalation_group_id" t-att-disabled="!state.form.escalate">
+                                    <option value="">Select a group</option>
+                                    <option t-foreach="state.form.groups or []" t-as="group" t-key="'esc'+group.id" t-att-value="group.id" t-esc="group.name"/>
+                                </select>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            <footer class="pm-config-foot">
+                <button type="button" class="pm-btn" t-on-click="closeDrawer" t-att-disabled="state.busy">Cancel</button>
+                <button t-if="state.detail and state.detail.actions and state.detail.actions.review" type="button" class="pm-btn" t-on-click="() => this.saveMatrix('review')" t-att-disabled="state.busy">Submit for review</button>
+                <button t-if="state.detail and state.detail.actions and state.detail.actions.deactivate" type="button" class="pm-btn" t-on-click="() => this.saveMatrix('deactivate')" t-att-disabled="state.busy">Deactivate</button>
+                <button t-if="state.detail and state.data.actions and state.data.actions.activate and state.detail.actions.activate" type="button" class="pm-btn" t-on-click="() => this.saveMatrix('activate')" t-att-disabled="state.busy">Activate</button>
+                <button type="button" class="pm-btn pm-btn-primary" t-on-click="() => this.saveMatrix(false)" t-att-disabled="state.busy">Save Configuration</button>
+            </footer>
+        </aside>
+    </t>
+
+    <t t-name="procurement_management.OrderDrawer">
+        <header class="pm-order-head">
+            <div>
+                <h2>
+                    <t t-esc="state.detail.name"/>
+                    <span class="pm-badge" t-att-data-status="state.detail.display_status" t-esc="orderStatus(state.detail.display_status)"/>
+                </h2>
+                <p class="pm-config-name"><t t-esc="state.detail.supplier"/> · <t t-esc="state.detail.property_project"/></p>
+            </div>
+        </header>
+        <div class="pm-tabs pm-order-tabs">
+            <button type="button" data-tab="details" t-on-click="setTab" t-att-class="{ active: state.drawerTab === 'details' }">PO Lines</button>
+            <button type="button" data-tab="approval" t-on-click="setTab" t-att-class="{ active: state.drawerTab === 'approval' }">Approvals</button>
+            <button type="button" data-tab="receipts" t-on-click="setTab" t-att-class="{ active: state.drawerTab === 'receipts' }">Receipts</button>
+            <button type="button" data-tab="invoices" t-on-click="setTab" t-att-class="{ active: state.drawerTab === 'invoices' }">Invoices</button>
+            <button type="button" data-tab="amendments" t-on-click="setTab" t-att-class="{ active: state.drawerTab === 'amendments' }">Amendments</button>
+        </div>
+        <div class="pm-order-body">
+            <div t-if="state.drawerTab === 'details'">
+                <p t-if="!(state.form.lines or []).length" class="pm-preview-note">No lines yet</p>
+                <article t-foreach="state.form.lines or []" t-as="line" t-key="line.id" class="pm-po-line">
+                    <div class="pm-po-line-top">
+                        <strong>Item <t t-esc="line_index + 1"/></strong>
+                        <strong t-esc="money(line.price_subtotal, state.detail.currency)"/>
+                    </div>
+                    <input class="pm-input" t-model="line.description" t-att-readonly="!(state.detail.actions and state.detail.actions.edit_lines)"/>
+                    <p class="pm-po-meta">Qty <t t-esc="line.quantity"/> <t t-esc="line.unit_text"/> · Unit Price <t t-esc="money(line.price_unit, state.detail.currency)"/></p>
+                    <p class="pm-po-meta" t-if="line.cost_center">Cost Center <t t-esc="line.cost_center"/></p>
+                    <p class="pm-po-meta" t-if="state.detail.delivery_date">Delivery <t t-esc="state.detail.delivery_date"/></p>
+                    <div t-if="state.detail.actions and state.detail.actions.edit_lines" class="pm-pair">
+                        <input class="pm-input" type="number" t-model.number="line.quantity"/>
+                        <input class="pm-input" type="number" t-model.number="line.price_unit"/>
+                    </div>
+                </article>
+                <button t-if="state.detail.actions and state.detail.actions.edit_lines" type="button" class="pm-btn" t-on-click="saveOrderLines" t-att-disabled="state.busy">Save lines</button>
+            </div>
+            <div t-if="state.drawerTab === 'approval'">
+                <p t-if="!(state.detail.approval and state.detail.approval.decisions and state.detail.approval.decisions.length)" class="pm-preview-note">No approval decisions yet</p>
+                <ul class="pm-list">
+                    <li t-foreach="(state.detail.approval and state.detail.approval.decisions) or []" t-as="decision" t-key="decision_index">
+                        <t t-esc="decision.group"/> · <t t-esc="label(decision.decision)"/>
+                    </li>
+                </ul>
+                <textarea t-if="state.detail.actions and (state.detail.actions.approve or state.detail.actions.reject)" class="pm-input" t-model="state.form.comment" placeholder="Comment"/>
+            </div>
+            <ul t-if="state.drawerTab === 'receipts'" class="pm-list">
+                <li t-if="!(state.detail.receipts or []).length">No receipts yet</li>
+                <li t-foreach="state.detail.receipts" t-as="receipt" t-key="receipt.id"><t t-esc="receipt.name"/> · <t t-esc="label(receipt.state)"/></li>
+            </ul>
+            <ul t-if="state.drawerTab === 'invoices'" class="pm-list">
+                <li t-if="!(state.detail.invoices or []).length">No invoices yet</li>
+                <li t-foreach="state.detail.invoices" t-as="match" t-key="match.id"><t t-esc="match.name"/> · <t t-esc="label(match.state)"/> · <t t-esc="money(match.variance)"/></li>
+            </ul>
+            <p t-if="state.drawerTab === 'amendments'" class="pm-preview-note">No amendments yet</p>
+        </div>
+        <footer class="pm-config-foot">
+            <button t-if="state.detail.actions.submit" type="button" class="pm-btn" data-command="submit" t-on-click="purchaseAction" t-att-disabled="state.busy">Submit</button>
+            <button t-if="state.detail.actions.approve" type="button" class="pm-btn" data-command="approve" t-on-click="purchaseAction" t-att-disabled="state.busy">Approve</button>
+            <button t-if="state.detail.actions.reject" type="button" class="pm-btn" data-command="reject" t-on-click="purchaseAction" t-att-disabled="state.busy">Reject</button>
+            <button t-if="state.detail.actions.return" type="button" class="pm-btn" data-command="return" t-on-click="purchaseAction" t-att-disabled="state.busy">Return</button>
+            <button t-if="state.detail.actions.issue" type="button" class="pm-btn" data-command="issue" t-on-click="purchaseAction" t-att-disabled="state.busy">Issue</button>
+            <button t-if="state.detail.actions.acknowledge" type="button" class="pm-btn" data-command="acknowledge" t-on-click="purchaseAction" t-att-disabled="state.busy">Acknowledge</button>
+            <button t-if="state.detail.actions.close" type="button" class="pm-btn" data-command="close" t-on-click="purchaseAction" t-att-disabled="state.busy">Close</button>
+            <button t-if="state.detail.actions.cancel" type="button" class="pm-btn" data-command="cancel" t-on-click="purchaseAction" t-att-disabled="state.busy">Cancel</button>
+            <button t-if="state.detail.actions.print" type="button" class="pm-btn" t-on-click="printOrder" t-att-disabled="state.busy">Print PDF</button>
+            <button t-if="state.detail.actions.receive" type="button" class="pm-btn pm-btn-primary" t-on-click="receiveOrder" t-att-disabled="state.busy">Receive Goods</button>
+        </footer>
+    </t>
+
+    <t t-name="procurement_management.ReceiptDrawer">
+        <header class="pm-order-head pm-receipt-head">
+            <div class="pm-receipt-title">
+                <h2>Process Receipt<t t-if="state.detail">: <t t-esc="state.detail.name"/></t></h2>
+                <p class="pm-config-name" t-esc="receiptSubtitle or 'Select a receipt'"/>
+            </div>
+            <span t-if="state.detail and state.detail.purchase_order" class="pm-badge pm-po-pill" t-esc="state.detail.purchase_order"/>
+        </header>
+        <div class="pm-order-body">
+            <t t-if="(state.form.lines or []).length">
+                <t t-foreach="state.form.lines" t-as="line" t-key="line.id">
+                    <h3 class="pm-kicker">Quantities</h3>
+                    <div class="pm-pair">
+                        <label class="pm-field">Ordered
+                            <input class="pm-input pm-qty-locked" t-att-value="line.ordered_qty" readonly="readonly"/>
+                        </label>
+                        <label class="pm-field">Received
+                            <input class="pm-input" type="number" t-att-data-id="line.id" t-att-value="state.form.quantities[line.id]" t-on-change="setQuantity"/>
+                        </label>
+                    </div>
+                    <h3 class="pm-kicker">Item details</h3>
+                    <label class="pm-field">Batch / Lot Number
+                        <input class="pm-input" t-model="line.batch_lot" placeholder="e.g. B-7782-A"/>
+                    </label>
+                </t>
+            </t>
+            <t t-else="">
+                <h3 class="pm-kicker">Quantities</h3>
+                <div class="pm-pair">
+                    <label class="pm-field">Ordered
+                        <input class="pm-input pm-qty-locked" readonly="readonly"/>
+                    </label>
+                    <label class="pm-field">Received
+                        <input class="pm-input" type="number" readonly="readonly"/>
+                    </label>
+                </div>
+                <h3 class="pm-kicker">Item details</h3>
+                <label class="pm-field">Batch / Lot Number
+                    <input class="pm-input" placeholder="e.g. B-7782-A" readonly="readonly"/>
+                </label>
+            </t>
+            <label class="pm-field">Delivery Notes
+                <textarea class="pm-input pm-notes" t-model="state.form.delivery_notes" t-att-readonly="!state.detail"/>
+            </label>
+            <h3 class="pm-kicker">Initial inspection</h3>
+            <div class="pm-mode pm-inspect">
+                <label class="pm-radio"><input type="radio" name="pm-inspect" value="pass" t-model="state.form.inspection" t-att-disabled="!state.detail"/> Pass</label>
+                <label class="pm-radio"><input type="radio" name="pm-inspect" value="hold_qa" t-model="state.form.inspection" t-att-disabled="!state.detail"/> Hold for QA</label>
+                <label class="pm-radio pm-radio-reject"><input type="radio" name="pm-inspect" value="reject" t-model="state.form.inspection" t-att-disabled="!state.detail"/> Reject</label>
+            </div>
+        </div>
+        <footer class="pm-config-foot">
+            <button t-if="state.detail and state.detail.actions and state.detail.actions.start" type="button" class="pm-btn" data-command="start" t-on-click="receiptAction" t-att-disabled="state.busy">Start</button>
+            <button t-if="state.detail and state.detail.actions and state.detail.actions.inspect" type="button" class="pm-btn" data-command="inspect" t-on-click="receiptAction" t-att-disabled="state.busy">Record inspection</button>
+            <button type="button" class="pm-btn" data-command="save" t-on-click="receiptAction" t-att-disabled="state.busy or !(state.detail and state.detail.actions and state.detail.actions.save)">Save Draft</button>
+            <button type="button" class="pm-btn pm-btn-primary" data-command="confirm" t-on-click="receiptAction" t-att-disabled="state.busy or !(state.detail and state.detail.actions and state.detail.actions.confirm)">Confirm Receipt</button>
+            <t t-if="state.detail and state.detail.actions and state.detail.actions.invoice">
+                <input class="pm-input" placeholder="Supplier invoice number" t-model="state.form.supplier_invoice_number"/>
+                <button type="button" class="pm-btn pm-btn-primary" t-on-click="receiptInvoice" t-att-disabled="state.busy">Create invoice</button>
+            </t>
+        </footer>
+    </t>
+
+    <t t-name="procurement_management.InvoiceDrawer">
+        <header class="pm-inv-head">
+            <div>
+                <h2>
+                    <t t-esc="state.detail and state.detail.name or 'Invoice'"/>
+                    <span t-if="state.detail" class="pm-badge" t-att-data-status="state.detail.state" t-esc="invoiceStatus(state.detail)"/>
+                </h2>
+                <p class="pm-config-name" t-if="state.detail"><t t-esc="state.detail.supplier"/> · <t t-esc="state.detail.invoice_date"/> · <t t-esc="state.detail.supplier_invoice_number"/></p>
+                <p class="pm-config-name" t-else="">Select an invoice from the queue.</p>
+            </div>
+            <div class="pm-actions">
+                <button type="button" class="pm-btn" data-command="reject" t-on-click="invoiceAction" t-att-disabled="state.busy or !(state.detail and state.detail.actions and state.detail.actions.reject)">Reject</button>
+                <button type="button" class="pm-btn" data-command="resolve" t-on-click="invoiceAction" t-att-disabled="state.busy or !(state.detail and state.detail.actions and state.detail.actions.resolve)">Resolve Exception</button>
+                <button type="button" class="pm-btn pm-btn-primary" data-command="approve" t-on-click="invoiceAction" t-att-disabled="state.busy or !(state.detail and state.detail.actions and state.detail.actions.approve)">Approve Match</button>
+            </div>
+        </header>
+        <div class="pm-match-board">
+            <div class="pm-match-h">Line item</div>
+            <div class="pm-match-h">Purchase order</div>
+            <div class="pm-match-h">Goods receipt</div>
+            <div class="pm-match-h">Invoice</div>
+            <t t-if="state.detail and (state.detail.lines or []).length">
+                <t t-foreach="state.detail.lines" t-as="line" t-key="line.id">
+                    <div class="pm-match-cell">
+                        <strong t-esc="line.description"/>
+                    </div>
+                    <div class="pm-match-cell pm-col-po">
+                        <span t-esc="state.detail.purchase_order"/>
+                        <span>Qty <t t-esc="line.po_qty"/></span>
+                        <span t-esc="money(line.po_price, state.detail.currency)"/>
+                    </div>
+                    <div class="pm-match-cell pm-col-gr" t-att-data-match="lineMatch(line, 'qty')">
+                        <span t-esc="state.detail.receipt or 'No receipt'"/>
+                        <span>Qty <t t-esc="line.receipt_qty"/></span>
+                        <span t-if="!line.variance_qty" class="pm-match-ok">Match</span>
+                        <span t-else="" class="pm-match-bad">Qty variance <t t-esc="line.variance_qty"/></span>
+                    </div>
+                    <div class="pm-match-cell pm-col-inv" t-att-data-match="lineMatch(line, 'amount')">
+                        <span t-esc="state.detail.supplier_invoice_number"/>
+                        <span>Qty <t t-esc="line.invoice_qty"/></span>
+                        <span t-esc="money(line.invoice_price, state.detail.currency)"/>
+                        <span t-if="!line.variance_amount" class="pm-match-ok">Match</span>
+                        <span t-else="" class="pm-match-bad">Price variance <t t-esc="money(line.variance_amount, state.detail.currency)"/></span>
+                    </div>
+                </t>
+            </t>
+            <div t-else="" class="pm-match-empty">No lines to compare yet</div>
+        </div>
+        <p t-if="state.detail" class="pm-inv-total">Total variance <strong t-esc="money(state.detail.variance, state.detail.currency)"/></p>
+        <p t-if="state.detail and state.detail.duplicate_flag" class="pm-match-bad">Duplicate invoice</p>
+        <p t-if="state.detail and state.detail.exception_reason" class="pm-config-name" t-esc="state.detail.exception_reason"/>
+    </t>
+
+    <t t-name="procurement_management.SupplierDrawer">
+        <t t-if="state.drawer and !state.detail">
+            <header class="pm-order-head"><h2>Add Supplier</h2></header>
+            <div class="pm-order-body pm-form-grid">
+                <label class="pm-field">Supplier name <input class="pm-input" t-model="state.form.partner_name"/></label>
+                <label class="pm-field">Email <input class="pm-input" t-model="state.form.email"/></label>
+                <label class="pm-field">Phone <input class="pm-input" t-model="state.form.phone"/></label>
+                <label class="pm-field">Vendor code <input class="pm-input" t-model="state.form.vendor_code"/></label>
+                <label class="pm-field">Category <input class="pm-input" t-model="state.form.category"/></label>
+                <label class="pm-field">Score <input class="pm-input" type="number" t-model.number="state.form.score"/></label>
+                <label class="pm-field">Status
+                    <select class="pm-input" t-model="state.form.state">
+                        <option value="active">Active</option>
+                        <option value="preferred">Preferred</option>
+                        <option value="suspended">Suspended</option>
+                    </select>
+                </label>
+                <div class="pm-actions">
+                    <button type="button" class="pm-btn" t-on-click="closeDrawer">Cancel</button>
+                    <button type="button" class="pm-btn pm-btn-primary" t-on-click="saveSupplier" t-att-disabled="state.busy">Save</button>
+                </div>
+            </div>
+        </t>
+        <t t-else="">
+            <header class="pm-supplier-hero" t-if="state.detail">
+                <span class="pm-supplier-mark" t-esc="supplierInitials(state.detail.partner)"/>
+                <div class="pm-supplier-id">
+                    <h2>
+                        <t t-esc="state.detail.partner"/>
+                        <span t-if="state.detail.state === 'preferred' or state.detail.preferred" class="pm-pref-pill">Preferred Vendor</span>
+                    </h2>
+                    <p class="pm-vendor-line">Vendor ID: <t t-esc="state.detail.vendor_code or '—'"/><t t-if="state.detail.category"> · <t t-esc="state.detail.category"/></t></p>
+                    <p class="pm-supplier-meta">
+                        <span t-if="supplierPlace(state.detail)"><t t-esc="supplierPlace(state.detail)"/></span>
+                        <span t-if="state.detail.email" t-esc="state.detail.email"/>
+                        <span t-if="state.detail.phone" t-esc="state.detail.phone"/>
+                        <span><t t-esc="supplierScore(state.detail.score)"/> Score</span>
+                    </p>
+                </div>
+            </header>
+            <div class="pm-tabs pm-supplier-tabs">
+                <button type="button" data-tab="details" t-on-click="setTab" t-att-class="{ active: state.drawerTab === 'details' }">Information</button>
+                <button type="button" data-tab="qualification" t-on-click="setTab" t-att-class="{ active: state.drawerTab === 'qualification' }">Qualification</button>
+                <button type="button" data-tab="compliance" t-on-click="setTab" t-att-class="{ active: state.drawerTab === 'compliance' }">Compliance</button>
+                <button type="button" data-tab="orders" t-on-click="setTab" t-att-class="{ active: state.drawerTab === 'orders' }">PO History</button>
+                <button type="button" data-tab="performance" t-on-click="setTab" t-att-class="{ active: state.drawerTab === 'performance' }">Performance</button>
+            </div>
+            <div class="pm-order-body" t-if="state.drawerTab === 'details'">
+                <h3 class="pm-kicker">Key Contacts</h3>
+                <p t-if="!state.detail or !(state.detail.contacts or []).length" class="pm-preview-note">No contacts yet</p>
+                <div class="pm-contact-grid" t-if="state.detail">
+                    <article t-foreach="state.detail.contacts" t-as="contact" t-key="contact.id" class="pm-contact-card">
+                        <strong t-esc="contact.name"/>
+                        <p t-if="contact.function" class="pm-contact-role" t-esc="contact.function"/>
+                        <p t-if="contact.email" class="pm-contact-line" t-esc="contact.email"/>
+                        <p t-if="contact.phone" class="pm-contact-line" t-esc="contact.phone"/>
+                    </article>
+                </div>
+                <div t-if="state.detail and state.detail.actions and state.detail.actions.edit" class="pm-contact-add">
+                    <input class="pm-input" placeholder="Contact name" t-model="state.form.contact_name"/>
+                    <input class="pm-input" placeholder="Job title" t-model="state.form.contact_function"/>
+                    <input class="pm-input" placeholder="Email" t-model="state.form.contact_email"/>
+                    <input class="pm-input" placeholder="Phone" t-model="state.form.contact_phone"/>
+                    <button type="button" class="pm-btn" t-on-click="saveContact" t-att-disabled="state.busy">Add contact</button>
+                </div>
+                <h3 class="pm-kicker">Active Contracts</h3>
+                <p t-if="!activeContracts.length" class="pm-preview-note">No active contracts yet</p>
+                <article t-foreach="activeContracts" t-as="contract" t-key="contract.id" class="pm-contract-card">
+                    <div class="pm-po-line-top">
+                        <strong t-esc="contract.reference"/>
+                        <span class="pm-exp" t-esc="contractExpiry(contract.date_end)"/>
+                    </div>
+                    <div class="pm-contract-meta">
+                        <span>Payment Terms<strong t-esc="contract.payment_terms or '—'"/></span>
+                        <span>Incoterms<strong t-esc="contract.incoterms or '—'"/></span>
+                        <span>Credit Limit<strong t-esc="supplierMoney(contract.credit_limit, state.detail.currency)"/></span>
+                    </div>
+                </article>
+            </div>
+            <div class="pm-order-body" t-if="state.detail and state.drawerTab === 'qualification'">
+                <p>Category <strong t-esc="state.detail.category or '—'"/></p>
+                <p>Status <strong t-esc="label(state.detail.state)"/></p>
+                <p>Score <strong t-esc="supplierScore(state.detail.score)"/></p>
+            </div>
+            <div class="pm-order-body" t-if="state.detail and state.drawerTab === 'compliance'">
+                <p class="pm-preview-note">No compliance records yet</p>
+            </div>
+            <div class="pm-order-body" t-if="state.detail and state.drawerTab === 'orders'">
+                <p t-if="!(state.detail.orders or []).length" class="pm-preview-note">No purchase orders yet</p>
+                <table t-else="" class="pm-table">
+                    <thead><tr><th>PO</th><th>Amount</th><th>Status</th></tr></thead>
+                    <tbody>
+                        <tr t-foreach="state.detail.orders" t-as="order" t-key="order.id">
+                            <td t-esc="order.name"/><td t-esc="money(order.amount_total)"/><td t-esc="label(order.display_status)"/>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pm-order-body" t-if="state.detail and state.drawerTab === 'performance'">
+                <p>Score <strong t-esc="supplierScore(state.detail.score)"/></p>
+                <p>Purchase orders <strong t-esc="(state.detail.orders or []).length"/></p>
+            </div>
+        </t>
+    </t>
+</templates>

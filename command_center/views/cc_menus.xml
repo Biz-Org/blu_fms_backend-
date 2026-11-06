@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- CRITICAL: Exactly one root + seven primary menus only. -->
+    <menuitem id="menu_cc_root"
+              name="Command Center"
+              web_icon="command_center,static/description/icon.png"
+              action="action_cc_dashboard"
+              sequence="55"
+              groups="command_center.group_cc_user"/>
+
+    <menuitem id="menu_cc_dashboard"
+              name="Command Center Dashboard"
+              parent="menu_cc_root"
+              action="action_cc_dashboard"
+              sequence="1"
+              groups="command_center.group_cc_user"/>
+
+    <menuitem id="menu_cc_alerts"
+              name="Central Alert Management"
+              parent="menu_cc_root"
+              action="action_cc_alerts"
+              sequence="2"
+              groups="command_center.group_cc_user"/>
+
+    <menuitem id="menu_cc_monitoring"
+              name="Multi-Site &amp; Real-Time Monitoring"
+              parent="menu_cc_root"
+              action="action_cc_monitoring"
+              sequence="3"
+              groups="command_center.group_cc_user"/>
+
+    <menuitem id="menu_cc_incidents"
+              name="Incident Dashboard"
+              parent="menu_cc_root"
+              action="action_cc_incidents"
+              sequence="4"
+              groups="command_center.group_cc_user"/>
+
+    <menuitem id="menu_cc_emergency"
+              name="Emergency Alerts &amp; Escalation"
+              parent="menu_cc_root"
+              action="action_cc_emergency"
+              sequence="5"
+              groups="command_center.group_cc_user"/>
+
+    <menuitem id="menu_cc_reports"
+              name="Command Center Reports"
+              parent="menu_cc_root"
+              action="action_cc_reports"
+              sequence="6"
+              groups="command_center.group_cc_user"/>
+
+    <menuitem id="menu_cc_report_builder"
+              name="Command Center Report Builder &amp; Export"
+              parent="menu_cc_root"
+              action="action_cc_report_builder"
+              sequence="7"
+              groups="command_center.group_cc_user"/>
+</odoo>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- CRITICAL: Exactly one root + six primary menus only. -->
+    <menuitem id="menu_va_root"
+              name="Video Analytics"
+              web_icon="video_analytics,static/description/icon.png"
+              action="action_va_dashboard"
+              sequence="50"
+              groups="video_analytics.group_va_user"/>
+
+    <menuitem id="menu_va_dashboard"
+              name="Video Analytics Dashboard"
+              parent="menu_va_root"
+              action="action_va_dashboard"
+              sequence="1"
+              groups="video_analytics.group_va_user"/>
+
+    <menuitem id="menu_va_cctv"
+              name="CCTV Integration &amp; Live Streaming"
+              parent="menu_va_root"
+              action="action_va_cctv"
+              sequence="2"
+              groups="video_analytics.group_va_user"/>
+
+    <menuitem id="menu_va_playback"
+              name="Video Event Playback &amp; Investigation"
+              parent="menu_va_root"
+              action="action_va_playback"
+              sequence="3"
+              groups="video_analytics.group_va_user"/>
+
+    <menuitem id="menu_va_detection"
+              name="AI Detection &amp; Zone Monitoring"
+              parent="menu_va_root"
+              action="action_va_detection"
+              sequence="4"
+              groups="video_analytics.group_va_user"/>
+
+    <menuitem id="menu_va_occupancy"
+              name="Occupancy &amp; Crowd Monitoring"
+              parent="menu_va_root"
+              action="action_va_occupancy"
+              sequence="5"
+              groups="video_analytics.group_va_user"/>
+
+    <menuitem id="menu_va_alerts"
+              name="Video-Based Alerts &amp; Event Management"
+              parent="menu_va_root"
+              action="action_va_alerts"
+              sequence="6"
+              groups="video_analytics.group_va_user"/>
+</odoo>

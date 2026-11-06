@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ei_connection_test_wizard_form" model="ir.ui.view">
+        <field name="name">ei.connection.test.wizard.form</field>
+        <field name="model">ei.connection.test.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Test Connection">
+                <group>
+                    <field name="test_type"/>
+                    <field name="connector_id" invisible="test_type != 'connector'"/>
+                    <field name="webhook_id" invisible="test_type != 'webhook'"/>
+                    <field name="endpoint_id" invisible="test_type != 'api'"/>
+                    <field name="api_key" password="True" invisible="test_type != 'api'"
+                            placeholder="Optional — never stored after test"/>
+                    <field name="result_ok" readonly="1"/>
+                    <field name="result_message" readonly="1"/>
+                </group>
+                <footer>
+                    <button name="action_run_test" type="object" string="Run Test" class="btn-primary"/>
+                    <button string="Close" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_ei_sync_run_wizard_form" model="ir.ui.view">
+        <field name="name">ei.sync.run.wizard.form</field>
+        <field name="model">ei.sync.run.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Run Synchronization">
+                <group>
+                    <field name="job_id" readonly="1"/>
+                    <field name="note"/>
+                </group>
+                <footer>
+                    <button name="action_confirm_run" type="object" string="Run" class="btn-primary"/>
+                    <button string="Cancel" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_ei_credential_rotate_wizard_form" model="ir.ui.view">
+        <field name="name">ei.credential.rotate.wizard.form</field>
+        <field name="model">ei.credential.rotate.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Rotate Credential">
+                <group>
+                    <field name="credential_type"/>
+                    <field name="api_credential_id" invisible="credential_type != 'api'"/>
+                    <field name="connector_credential_id" invisible="credential_type != 'connector'"/>
+                    <field name="new_secret" password="True"/>
+                    <field name="one_time_display"/>
+                </group>
+                <footer>
+                    <button name="action_rotate" type="object" string="Rotate" class="btn-primary"/>
+                    <button string="Close" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_ei_conflict_resolve_wizard_form" model="ir.ui.view">
+        <field name="name">ei.conflict.resolve.wizard.form</field>
+        <field name="model">ei.conflict.resolve.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Resolve Conflict">
+                <group>
+                    <field name="mapping_id"/>
+                    <field name="conflict_id"/>
+                    <field name="resolution"/>
+                </group>
+                <footer>
+                    <button name="action_resolve" type="object" string="Resolve" class="btn-primary"/>
+                    <button string="Cancel" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_ei_log_export_wizard_form" model="ir.ui.view">
+        <field name="name">ei.log.export.wizard.form</field>
+        <field name="model">ei.log.export.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Export Logs">
+                <group>
+                    <field name="category"/>
+                    <field name="date_from"/>
+                    <field name="date_to"/>
+                    <field name="export_format"/>
+                    <field name="export_data"/>
+                </group>
+                <footer>
+                    <button name="action_export" type="object" string="Export" class="btn-primary"/>
+                    <button string="Close" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
