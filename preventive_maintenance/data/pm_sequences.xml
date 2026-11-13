@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="seq_pm_plan" model="ir.sequence">
+        <field name="name">PM Plan</field>
+        <field name="code">pm.plan</field>
+        <field name="prefix">PM/PLAN/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="seq_pm_work_order" model="ir.sequence">
+        <field name="name">PM Work Order</field>
+        <field name="code">pm.work.order</field>
+        <field name="prefix">PM/WO/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

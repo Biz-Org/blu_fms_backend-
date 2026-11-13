@@ -1,0 +1,960 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- ==================================================================
+         ROOT: Preventive Maintenance OWL Client
+         ================================================================== -->
+    <t t-name="preventive_maintenance.PmApp">
+        <div class="o_pm_app">
+            <aside class="o_pm_sidebar">
+                <div class="o_pm_brand">
+                    <span class="o_pm_brand_title">Preventive Maintenance</span>
+                    <span class="o_pm_brand_sub">FMS · Module 12</span>
+                </div>
+                <nav class="o_pm_nav">
+                    <button t-att-class="{'o_pm_nav_item': true, 'active': state.screen === 'dashboard'}"
+                        t-on-click="() => this.setScreen('dashboard')">Dashboard</button>
+                    <button t-if="state.isManager" t-att-class="{'o_pm_nav_item': true, 'active': state.screen === 'plans'}"
+                        t-on-click="() => this.setScreen('plans')">PM Plans</button>
+                    <button t-if="state.isManager" t-att-class="{'o_pm_nav_item': true, 'active': state.screen === 'schedule'}"
+                        t-on-click="() => this.setScreen('schedule')">Schedule &amp; Calendar</button>
+                    <button t-att-class="{'o_pm_nav_item': true, 'active': state.screen === 'tasks'}"
+                        t-on-click="() => this.setScreen('tasks')">PM Tasks</button>
+                    <button t-if="state.isManager" t-att-class="{'o_pm_nav_item': true, 'active': state.screen === 'maint_requests' or state.screen === 'maint_request'}"
+                        t-on-click="() => this.setScreen('maint_requests')">Maintenance Requests</button>
+                    <button t-att-class="{'o_pm_nav_item': true, 'active': state.screen === 'workorders'}"
+                        t-on-click="() => this.setScreen('workorders')">
+                        <t t-if="state.isTechnicianOnly">My Work Orders</t>
+                        <t t-else="">Work Orders</t>
+                    </button>
+                    <button t-att-class="{'o_pm_nav_item': true, 'active': state.screen === 'execution'}"
+                        t-on-click="() => this.setScreen('execution')">Work Order Execution</button>
+                    <button t-if="state.isManager" t-att-class="{'o_pm_nav_item': true, 'active': state.screen === 'inspection'}"
+                        t-on-click="() => this.setScreen('inspection')">Inspection</button>
+                    <button t-if="state.isTechnicianOnly" t-att-class="{'o_pm_nav_item': true, 'active': state.screen === 'completed'}"
+                        t-on-click="() => this.setScreen('completed')">My Completed Work</button>
+                    <button t-if="state.isManager" t-att-class="{'o_pm_nav_item': true, 'active': state.screen === 'history'}"
+                        t-on-click="() => this.setScreen('history')">History &amp; Cost</button>
+                    <button t-if="state.isManager" t-att-class="{'o_pm_nav_item': true, 'active': state.screen === 'reports'}"
+                        t-on-click="() => this.setScreen('reports')">Reports &amp; Analytics</button>
+                    <button t-if="state.isManager" t-att-class="{'o_pm_nav_item': true, 'active': state.screen === 'config'}"
+                        t-on-click="() => this.setScreen('config')">Configuration</button>
+                    <button t-if="state.isAdmin" t-att-class="{'o_pm_nav_item': true, 'active': state.screen === 'users'}"
+                        t-on-click="() => this.setScreen('users')">User Management</button>
+                </nav>
+            </aside>
+
+            <main class="o_pm_main">
+                <header class="o_pm_header">
+                    <div class="o_pm_header_titles">
+                        <nav class="o_pm_breadcrumbs" aria-label="Breadcrumb">
+                            <span t-foreach="state.breadcrumbs" t-as="bc" t-key="bc_index">
+                                <span t-if="bc_index > 0" class="o_pm_bc_sep">›</span>
+                                <span t-esc="bc"/>
+                            </span>
+                        </nav>
+                        <h1 class="o_pm_header_title" t-esc="state.title"/>
+                    </div>
+                    <div class="o_pm_header_actions">
+                        <span class="o_pm_badge" t-if="state.loading">Loading…</span>
+                        <span class="o_pm_error" t-if="state.error" t-esc="state.error"/>
+                    </div>
+                </header>
+
+                <t t-if="state.screen === 'dashboard'">
+                    <t t-call="preventive_maintenance.PmScreenDashboard"/>
+                </t>
+                <t t-if="state.screen === 'plans' and state.isManager">
+                    <t t-call="preventive_maintenance.PmScreenPlans"/>
+                </t>
+                <t t-if="state.screen === 'schedule'">
+                    <t t-call="preventive_maintenance.PmScreenSchedule"/>
+                </t>
+                <t t-if="state.screen === 'tasks'">
+                    <t t-call="preventive_maintenance.PmScreenTasks"/>
+                </t>
+                <t t-if="state.screen === 'maint_requests' and state.isManager">
+                    <t t-call="preventive_maintenance.PmScreenMaintRequests"/>
+                </t>
+                <t t-if="state.screen === 'maint_request' and state.isManager">
+                    <t t-call="preventive_maintenance.PmScreenMaintRequestDetail"/>
+                </t>
+                <t t-if="state.screen === 'workorders'">
+                    <t t-call="preventive_maintenance.PmScreenWorkOrders"/>
+                </t>
+                <t t-if="state.screen === 'execution'">
+                    <t t-call="preventive_maintenance.PmScreenExecution"/>
+                </t>
+                <t t-if="state.screen === 'history'">
+                    <t t-call="preventive_maintenance.PmScreenHistory"/>
+                </t>
+                <t t-if="state.screen === 'reports' and state.isManager">
+                    <t t-call="preventive_maintenance.PmScreenReports"/>
+                </t>
+                <t t-if="state.screen === 'config' and state.isManager">
+                    <t t-call="preventive_maintenance.PmScreenConfig"/>
+                </t>
+                <t t-if="state.screen === 'inspection' and state.isManager">
+                    <t t-call="preventive_maintenance.PmScreenInspection"/>
+                </t>
+                <t t-if="state.screen === 'completed' and state.isTechnicianOnly">
+                    <t t-call="preventive_maintenance.PmScreenCompleted"/>
+                </t>
+                <t t-if="state.screen === 'users' and state.isAdmin">
+                    <t t-call="preventive_maintenance.PmScreenUsers"/>
+                </t>
+            </main>
+
+            <!-- Modal confirmations -->
+            <div t-if="state.dialog" class="o_pm_modal_backdrop" t-on-click="this.clearDialog">
+                <div class="o_pm_modal" t-on-click.stop="">
+                    <h3 t-esc="state.dialog.title"/>
+                    <p t-if="state.dialog.body" t-esc="state.dialog.body"/>
+                    <textarea t-if="state.dialog.askReason" class="o_pm_input" rows="3"
+                        placeholder="Reason" t-model="state.dialogReason"/>
+                    <div class="o_pm_modal_actions">
+                        <button type="button" class="btn btn-secondary" t-on-click="this.clearDialog">Cancel</button>
+                        <button type="button" class="btn btn-primary" t-on-click="this.confirmDialog">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <!-- ======================= SCREEN 1: Dashboard ======================= -->
+    <t t-name="preventive_maintenance.PmScreenDashboard">
+        <section class="o_pm_screen">
+            <div class="o_pm_filters">
+                <label>Property / location (contains)
+                    <input class="o_pm_input" placeholder="Filter by site or area" t-model="state.filters.property_location" t-on-change="loadDashboard"/>
+                </label>
+            </div>
+            <div class="o_pm_kpi_row">
+                <t t-foreach="state.kpiCards" t-as="k" t-key="k.key">
+                    <div class="o_pm_kpi_card">
+                        <div class="o_pm_kpi_label" t-esc="k.label"/>
+                        <div class="o_pm_kpi_value" t-esc="k.value"/>
+                    </div>
+                </t>
+            </div>
+            <div class="o_pm_kpi_row" t-if="state.dashChartBars.length">
+                <t t-foreach="state.dashChartBars" t-as="bar" t-key="bar.key">
+                    <div class="o_pm_kpi_card o_pm_kpi_sm">
+                        <div class="o_pm_kpi_label" t-esc="bar.label"/>
+                        <div class="o_pm_kpi_value" t-esc="bar.value"/>
+                    </div>
+                </t>
+            </div>
+            <div class="o_pm_grid_2">
+                <div class="o_pm_panel">
+                    <h3>Alerts</h3>
+                    <table class="o_pm_table" t-if="state.dashAlerts.length">
+                        <thead><tr><th>Asset</th><th>Date</th><th>Status</th></tr></thead>
+                        <tbody>
+                            <tr t-foreach="state.dashAlerts" t-as="al" t-key="al.id">
+                                <td t-esc="al.equipment_id and al.equipment_id[1]"/>
+                                <td t-esc="al.date_planned or al.date_due"/>
+                                <td><span t-att-class="'o_pm_status o_pm_status_' + al.state" t-esc="al.state"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p t-if="!state.dashAlerts.length" class="o_pm_empty">No active alerts.</p>
+                </div>
+                <div class="o_pm_panel">
+                    <h3>Recent activity</h3>
+                    <ul class="o_pm_activity" t-if="state.dashActivity.length">
+                        <li t-foreach="state.dashActivity" t-as="ev" t-key="ev.id">
+                            <span class="o_pm_muted" t-esc="ev.create_date"/> —
+                            <t t-esc="ev.action_type"/>: <t t-esc="ev.details"/>
+                        </li>
+                    </ul>
+                    <p t-if="!state.dashActivity.length" class="o_pm_empty">No recent activity.</p>
+                </div>
+            </div>
+            <div class="o_pm_grid_2">
+                <div class="o_pm_panel">
+                    <h3>Due maintenance</h3>
+                    <table class="o_pm_table">
+                        <thead><tr><th>Plan</th><th>Date</th><th>Status</th></tr></thead>
+                        <tbody>
+                            <tr t-foreach="state.dashSchedules" t-as="row" t-key="row.id">
+                                <td t-esc="row.plan_id and row.plan_id[1]"/>
+                                <td t-esc="row.date_planned"/>
+                                <td><span t-att-class="'o_pm_status o_pm_status_' + row.state" t-esc="row.state"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p t-if="!state.dashSchedules.length" class="o_pm_empty">No schedule lines yet.</p>
+                </div>
+                <div class="o_pm_panel">
+                    <h3>Quick actions</h3>
+                    <div class="o_pm_quick">
+                        <button t-if="state.isManager" type="button" class="btn btn-primary" t-on-click="() => this.setScreen('plans')">Create PM plan</button>
+                        <button type="button" class="btn btn-secondary" t-on-click="() => this.setScreen('schedule')">Open schedule</button>
+                        <button type="button" class="btn btn-secondary" t-on-click="() => this.setScreen('workorders')">Work orders</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </t>
+
+    <!-- ======================= SCREEN 2: Plans ======================= -->
+    <t t-name="preventive_maintenance.PmScreenPlans">
+        <section class="o_pm_screen">
+            <div class="o_pm_kpi_row" t-if="state.planKpis">
+                <div class="o_pm_kpi_card"><div class="o_pm_kpi_label">Total plans</div><div class="o_pm_kpi_value" t-esc="state.planKpis.total"/></div>
+                <div class="o_pm_kpi_card"><div class="o_pm_kpi_label">Active</div><div class="o_pm_kpi_value" t-esc="state.planKpis.active"/></div>
+                <div class="o_pm_kpi_card"><div class="o_pm_kpi_label">Draft</div><div class="o_pm_kpi_value" t-esc="state.planKpis.draft"/></div>
+                <div class="o_pm_kpi_card"><div class="o_pm_kpi_label">Inactive / review</div><div class="o_pm_kpi_value" t-esc="state.planKpis.inactive"/></div>
+            </div>
+            <div class="o_pm_toolbar">
+                <input class="o_pm_input" placeholder="Search name / reference" t-model="state.planSearch" t-on-keyup="onPlanSearchKey"/>
+                <select class="o_pm_select" t-model="state.planFilterPriority" t-on-change="loadPlans">
+                    <option value="">All priorities</option>
+                    <option value="0">Low</option>
+                    <option value="1">Normal</option>
+                    <option value="2">High</option>
+                    <option value="3">Very High</option>
+                </select>
+                <button type="button" class="btn btn-primary" t-on-click="newPlan">New plan</button>
+                <button type="button" class="btn btn-secondary" t-on-click="loadPlans">Refresh</button>
+            </div>
+            <div class="o_pm_split">
+                <div class="o_pm_panel o_pm_table_wrap">
+                    <table class="o_pm_table">
+                        <thead>
+                            <tr>
+                                <th>Reference</th><th>Name</th><th>Scope</th><th>State</th><th>Frequency</th><th/>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="state.plans" t-as="p" t-key="p.id"
+                                t-att-class="{'o_pm_row_selected': state.selectedPlanId === p.id}"
+                                t-on-click="() => this.selectPlan(p.id)">
+                                <td t-esc="p.reference"/>
+                                <td t-esc="p.name"/>
+                                <td>
+                                    <t t-if="p.equipment_id" t-esc="p.equipment_id[1]"/>
+                                    <t t-if="!p.equipment_id and p.category_id" t-esc="p.category_id[1]"/>
+                                    <t t-if="!p.equipment_id and !p.category_id">—</t>
+                                </td>
+                                <td><span t-att-class="'o_pm_status o_pm_status_' + p.state" t-esc="p.state"/></td>
+                                <td t-esc="p.frequency_time"/>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-link" t-on-click.stop="() => this.duplicatePlan(p.id)">Duplicate</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p t-if="!state.plans.length" class="o_pm_empty">No plans. Create one to get started.</p>
+                </div>
+                <div class="o_pm_panel" t-if="state.planForm">
+                    <h3>Plan details</h3>
+                    <div class="o_pm_form_grid">
+                        <label>Name<input class="o_pm_input" t-model="state.planForm.name"/></label>
+                        <label>Maintenance type
+                            <select class="o_pm_select" t-model="state.planForm.maintenance_type">
+                                <option value="inspection">Inspection</option>
+                                <option value="servicing">Servicing</option>
+                                <option value="calibration">Calibration</option>
+                                <option value="cleaning">Cleaning</option>
+                                <option value="lubrication">Lubrication</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </label>
+                        <label>Asset (equipment)
+                            <select class="o_pm_select" t-model.number="state.planForm.equipment_id">
+                                <option value="">—</option>
+                                <t t-foreach="state.optionEquipment" t-as="eq" t-key="eq.id">
+                                    <option t-att-value="eq.id" t-esc="eq.display_name"/>
+                                </t>
+                            </select>
+                        </label>
+                        <label>Or asset category (multi-asset plan)
+                            <select class="o_pm_select" t-model.number="state.planForm.asset_category_id">
+                                <option value="">—</option>
+                                <t t-foreach="state.optionCategories" t-as="cat" t-key="cat.id">
+                                    <option t-att-value="cat.id" t-esc="cat.name"/>
+                                </t>
+                            </select>
+                        </label>
+                        <label class="o_pm_span2">Property / location
+                            <input class="o_pm_input" placeholder="Site, building or area" t-model="state.planForm.property_location"/>
+                        </label>
+                        <label>Team
+                            <select class="o_pm_select" t-model.number="state.planForm.team_id">
+                                <option value="">—</option>
+                                <t t-foreach="state.optionTeams" t-as="tm" t-key="tm.id">
+                                    <option t-att-value="tm.id" t-esc="tm.name"/>
+                                </t>
+                            </select>
+                        </label>
+                        <label>Technician
+                            <select class="o_pm_select" t-model.number="state.planForm.user_id">
+                                <option value="">—</option>
+                                <t t-foreach="state.optionUsers" t-as="u" t-key="u.id">
+                                    <option t-att-value="u.id" t-esc="u.name"/>
+                                </t>
+                            </select>
+                        </label>
+                        <label>Supervisor
+                            <select class="o_pm_select" t-model.number="state.planForm.supervisor_id">
+                                <option value="">—</option>
+                                <t t-foreach="state.optionUsers" t-as="u" t-key="'sup-' + u.id">
+                                    <option t-att-value="u.id" t-esc="u.name"/>
+                                </t>
+                            </select>
+                        </label>
+                        <label>Priority
+                            <select class="o_pm_select" t-model="state.planForm.priority">
+                                <option value="0">Low</option>
+                                <option value="1">Normal</option>
+                                <option value="2">High</option>
+                                <option value="3">Very high</option>
+                            </select>
+                        </label>
+                        <label>Frequency basis
+                            <select class="o_pm_select" t-model="state.planForm.frequency_basis">
+                                <option value="time">Time-based</option>
+                                <option value="meter">Meter-based</option>
+                            </select>
+                        </label>
+                        <label t-if="state.planForm.frequency_basis === 'time'">Frequency
+                            <select class="o_pm_select" t-model="state.planForm.frequency_time">
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="quarterly">Quarterly</option>
+                                <option value="half_yearly">Half-yearly</option>
+                                <option value="yearly">Yearly</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </label>
+                        <label t-if="state.planForm.frequency_basis === 'time' and state.planForm.frequency_time === 'custom'">Custom days
+                            <input type="number" class="o_pm_input" t-model.number="state.planForm.custom_interval_days"/>
+                        </label>
+                        <label t-if="state.planForm.frequency_basis === 'meter'">Meter type
+                            <select class="o_pm_select" t-model="state.planForm.meter_type">
+                                <option value="hours">Running hours</option>
+                                <option value="km">Kilometres</option>
+                                <option value="cycles">Cycles</option>
+                            </select>
+                        </label>
+                        <label t-if="state.planForm.frequency_basis === 'meter'">Meter interval
+                            <input type="number" step="0.1" class="o_pm_input" t-model.number="state.planForm.meter_interval"/>
+                        </label>
+                        <label>Start date<input type="date" class="o_pm_input" t-model="state.planForm.start_date"/></label>
+                        <label>End date<input type="date" class="o_pm_input" t-model="state.planForm.end_date"/></label>
+                        <label>Reminder before due (days)<input type="number" class="o_pm_input" t-model.number="state.planForm.reminder_before_days"/></label>
+                        <label>Est. duration (h)<input type="number" step="0.25" class="o_pm_input" t-model.number="state.planForm.duration_hours"/></label>
+                        <label>Checklist
+                            <select class="o_pm_select" t-model.number="state.planForm.checklist_template_id">
+                                <option value="">—</option>
+                                <t t-foreach="state.optionTemplates" t-as="ct" t-key="ct.id">
+                                    <option t-att-value="ct.id" t-esc="ct.name"/>
+                                </t>
+                            </select>
+                        </label>
+                        <label class="o_pm_span2"><input type="checkbox" t-model="state.planForm.auto_generate_work_orders"/> Auto-generate work orders</label>
+                        <label class="o_pm_span2"><input type="checkbox" t-model="state.planForm.auto_next_schedule"/> Auto next schedule</label>
+                        <label class="o_pm_span2"><input type="checkbox" t-model="state.planForm.mandatory_checklist"/> Mandatory checklist</label>
+                    </div>
+                    <div class="o_pm_toolbar">
+                        <button type="button" class="btn btn-primary" t-on-click="savePlan">Save</button>
+                        <button type="button" class="btn btn-secondary" t-if="state.selectedPlanId" t-on-click="activatePlan">Activate</button>
+                        <button type="button" class="btn btn-secondary" t-if="state.selectedPlanId" t-on-click="deactivatePlan">Deactivate</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </t>
+
+    <!-- ======================= SCREEN 3: Schedule ======================= -->
+    <t t-name="preventive_maintenance.PmScreenSchedule">
+        <section class="o_pm_screen">
+            <div class="o_pm_toolbar">
+                <button type="button" class="btn btn-secondary" t-on-click="calPrevMonth">‹ Prev</button>
+                <button type="button" class="btn btn-secondary" t-on-click="calToday">Today</button>
+                <button type="button" class="btn btn-secondary" t-on-click="calNextMonth">Next ›</button>
+                <button type="button" class="btn btn-secondary" t-att-class="{'active': state.calView === 'list'}" t-on-click="toggleScheduleView">
+                    <t t-if="state.calView === 'calendar'">List view</t>
+                    <t t-else="">Calendar view</t>
+                </button>
+                <button type="button" class="btn btn-primary" t-if="state.isManager" t-on-click="openScheduleForm">Create schedule</button>
+                <button type="button" class="btn btn-secondary" t-att-class="{'active': state.calMode === 'month'}" t-on-click="() => this.setCalMode('month')">Month</button>
+                <button type="button" class="btn btn-secondary" t-att-class="{'active': state.calMode === 'week'}" t-on-click="() => this.setCalMode('week')">Week</button>
+                <button type="button" class="btn btn-secondary" t-att-class="{'active': state.calMode === 'day'}" t-on-click="() => this.setCalMode('day')">Day</button>
+                <button type="button" class="btn btn-secondary" t-on-click="loadSchedules">Refresh</button>
+                <button type="button" class="btn btn-primary" t-if="state.isManager" t-on-click="generateFromPlans">Generate from active plans</button>
+            </div>
+            <div class="o_pm_panel" t-if="state.scheduleForm">
+                <h3>Create schedule</h3>
+                <div class="o_pm_form_grid">
+                    <label>PM plan
+                        <select class="o_pm_select" t-model.number="state.scheduleForm.plan_id">
+                            <option value="">—</option>
+                            <t t-foreach="state.plans" t-as="p" t-key="p.id">
+                                <option t-att-value="p.id" t-esc="p.name"/>
+                            </t>
+                        </select>
+                    </label>
+                    <label>Asset
+                        <select class="o_pm_select" t-model.number="state.scheduleForm.equipment_id">
+                            <option value="">From plan</option>
+                            <t t-foreach="state.optionEquipment" t-as="eq" t-key="eq.id">
+                                <option t-att-value="eq.id" t-esc="eq.display_name"/>
+                            </t>
+                        </select>
+                    </label>
+                    <label>Planned date<input type="date" class="o_pm_input" t-model="state.scheduleForm.date_planned"/></label>
+                    <label class="o_pm_check"><input type="checkbox" t-model="state.scheduleForm.create_work_order"/> Create work order</label>
+                </div>
+                <div class="o_pm_toolbar">
+                    <button type="button" class="btn btn-primary" t-on-click="saveScheduleForm">Save</button>
+                    <button type="button" class="btn btn-secondary" t-on-click="() => state.scheduleForm = null">Cancel</button>
+                </div>
+            </div>
+            <div class="o_pm_calendar" t-if="state.calMode === 'month' and state.calView === 'calendar'">
+                <div class="o_pm_cal_header" t-esc="state.calLabel"/>
+                <div class="o_pm_cal_grid">
+                    <div class="o_pm_cal_cell" t-foreach="state.calCells" t-as="c" t-key="c.key">
+                        <div class="o_pm_cal_day" t-esc="c.day"/>
+                        <div class="o_pm_cal_items">
+                            <span t-foreach="c.items" t-as="it" t-key="it.id" class="o_pm_cal_pill" t-esc="it.plan_id[1]"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="o_pm_panel o_pm_table_wrap" t-if="state.calView === 'list'">
+                <table class="o_pm_table">
+                    <thead>
+                        <tr>
+                            <th>Planned</th><th>Due</th><th>Asset</th><th>Status</th><th>WO</th><th/>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="state.schedules" t-as="s" t-key="s.id">
+                            <td t-esc="s.date_planned"/>
+                            <td t-esc="s.date_due"/>
+                            <td t-esc="s.equipment_id and s.equipment_id[1]"/>
+                            <td><span t-att-class="'o_pm_status o_pm_status_' + s.state" t-esc="s.state"/></td>
+                            <td t-esc="s.work_order_id and s.work_order_id[1]"/>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-link" t-if="s.work_order_id" t-on-click="() => this.openExecution(s.work_order_id[0])">Open WO</button>
+                                <button type="button" class="btn btn-sm btn-link" t-if="state.isManager" t-on-click="() => this.promptReschedule(s.id)">Reschedule</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </t>
+
+    <!-- ======================= SCREEN 4: Work Orders ======================= -->
+    <t t-name="preventive_maintenance.PmScreenWorkOrders">
+        <section class="o_pm_screen">
+            <div class="o_pm_toolbar">
+                <select class="o_pm_select" t-model="state.woFilterState" t-on-change="loadWorkOrders">
+                    <option value="">All states</option>
+                    <option value="scheduled">Scheduled</option>
+                    <option value="assigned">Assigned</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="pending_inspection">Pending Inspection</option>
+                    <option value="completed">Completed</option>
+                    <option value="overdue">Overdue</option>
+                </select>
+                <button type="button" class="btn btn-secondary" t-on-click="loadWorkOrders">Refresh</button>
+            </div>
+            <table class="o_pm_table">
+                <thead>
+                    <tr>
+                        <th>Ref</th><th>Asset</th><th>Scheduled</th><th>Due</th><th>Tech</th><th>Status</th><th/>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr t-foreach="state.workOrders" t-as="w" t-key="w.id">
+                        <td t-esc="w.name"/>
+                        <td t-esc="w.equipment_id and w.equipment_id[1]"/>
+                        <td t-esc="w.date_scheduled"/>
+                        <td t-esc="w.date_due"/>
+                        <td t-esc="w.user_id and w.user_id[1]"/>
+                        <td><span t-att-class="'o_pm_status o_pm_status_' + w.state" t-esc="w.state"/></td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-link" t-on-click="() => this.openExecution(w.id)">Details</button>
+                            <button type="button" class="btn btn-sm btn-link" t-if="state.isManager" t-on-click="() => this.assignWoPrompt(w.id)">Assign</button>
+                            <button type="button" class="btn btn-sm btn-link" t-on-click="() => this.ormStartWo(w.id)">Start</button>
+                            <button type="button" class="btn btn-sm btn-link" t-if="state.isManager" t-on-click="() => this.promptSkipWo(w.id)">Skip</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <p t-if="!state.workOrders.length" class="o_pm_empty">No work orders.</p>
+        </section>
+    </t>
+
+    <!-- ======================= SCREEN 5: Execution & Inspection ======================= -->
+    <t t-name="preventive_maintenance.PmScreenExecution">
+        <section class="o_pm_screen">
+            <div class="o_pm_toolbar">
+                <label>Work order
+                    <select class="o_pm_select" t-model.number="state.execWoId" t-on-change="loadExecution">
+                        <option value="">— Select —</option>
+                        <t t-foreach="state.workOrders" t-as="w" t-key="w.id">
+                            <option t-att-value="w.id" t-esc="w.name"/>
+                        </t>
+                    </select>
+                </label>
+                <button type="button" class="btn btn-secondary" t-on-click="loadWorkOrders">Refresh list</button>
+            </div>
+            <div class="o_pm_panel" t-if="state.execDetail">
+                <div class="o_pm_exec_head">
+                    <div>
+                        <strong t-esc="state.execDetail.work_order.name"/>
+                        <span t-att-class="'o_pm_status o_pm_status_' + state.execDetail.work_order.state" t-esc="state.execDetail.work_order.state"/>
+                    </div>
+                    <div class="o_pm_muted" t-if="state.execDetail.work_order.corrective_request_id">
+                        Corrective request:
+                        <span t-esc="state.execDetail.work_order.corrective_request_id[1]"/>
+                    </div>
+                </div>
+                <div class="o_pm_grid_2">
+                    <div>
+                        <h4>Asset &amp; schedule</h4>
+                        <p>Asset: <t t-esc="state.execDetail.work_order.equipment_id and state.execDetail.work_order.equipment_id[1]"/></p>
+                        <p>Scheduled: <t t-esc="state.execDetail.work_order.date_scheduled"/> · Due: <t t-esc="state.execDetail.work_order.date_due"/></p>
+                        <p t-if="state.execDetail.supervisor">Supervisor: <t t-esc="state.execDetail.supervisor.name"/></p>
+                    </div>
+                    <div>
+                        <h4>Instructions</h4>
+                        <div class="o_pm_html" t-out="state.execDetail.work_order.instruction_snapshot"/>
+                    </div>
+                </div>
+                <h4>Checklist</h4>
+                <table class="o_pm_table">
+                    <thead><tr><th>Item</th><th>Mandatory</th><th>Result</th><th>Observation</th></tr></thead>
+                    <tbody>
+                        <tr t-foreach="state.execDetail.checklist" t-as="cl" t-key="cl.id">
+                            <td t-esc="cl.item_id and cl.item_id[1]"/>
+                            <td t-esc="cl.item_mandatory ? 'Yes' : 'No'"/>
+                            <td>
+                                <select class="o_pm_select" t-att-disabled="!state.canEditExecution"
+                                    t-att-value="cl.result || ''"
+                                    t-on-change="(ev) => this.updateChecklistResult(cl.id, ev)">
+                                    <option value="">—</option>
+                                    <option value="pass">Pass</option>
+                                    <option value="fail">Fail</option>
+                                    <option value="na">N/A</option>
+                                    <option value="obs">Observation</option>
+                                </select>
+                            </td>
+                            <td><input class="o_pm_input" t-att-disabled="!state.canEditExecution" t-att-value="cl.observation || ''" t-on-change="(ev) => this.setChecklistObs(cl.id, ev)"/></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h4 t-if="state.execDetail.readings and state.execDetail.readings.length">Asset readings</h4>
+                <table class="o_pm_table" t-if="state.execDetail.readings and state.execDetail.readings.length">
+                    <thead><tr><th>Parameter</th><th>Min</th><th>Max</th><th>Value</th></tr></thead>
+                    <tbody>
+                        <tr t-foreach="state.execDetail.readings" t-as="rd" t-key="rd.id" t-att-class="rd.is_out_of_range ? 'o_pm_row_warn' : ''">
+                            <td t-esc="rd.name"/>
+                            <td t-esc="rd.min_value"/>
+                            <td t-esc="rd.max_value"/>
+                            <td><input class="o_pm_input" type="number" t-att-value="rd.value" t-att-disabled="!state.canEditExecution" t-on-change="(ev) => this.saveReadingLine(rd.id, ev)"/></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h4 t-if="state.execDetail.timeline and state.execDetail.timeline.length">Timeline</h4>
+                <ul class="o_pm_activity" t-if="state.execDetail.timeline and state.execDetail.timeline.length">
+                    <li t-foreach="state.execDetail.timeline" t-as="tl" t-key="tl.id">
+                        <span class="o_pm_muted" t-esc="tl.create_date"/> — <t t-esc="tl.action_type"/>: <t t-esc="tl.details"/>
+                    </li>
+                </ul>
+                <h4>Materials</h4>
+                <table class="o_pm_table" t-if="state.execDetail.materials.length">
+                    <thead><tr><th>Product</th><th>Qty</th><th>Subtotal</th></tr></thead>
+                    <tbody>
+                        <tr t-foreach="state.execDetail.materials" t-as="ml" t-key="ml.id">
+                            <td t-esc="ml.product_id and ml.product_id[1]"/>
+                            <td t-esc="ml.quantity"/>
+                            <td t-esc="ml.subtotal"/>
+                        </tr>
+                    </tbody>
+                </table>
+                <h4>Execution</h4>
+                <div class="o_pm_form_grid">
+                    <label>Work performed<textarea class="o_pm_input" rows="3" t-model="state.execDetail.work_order.work_performed" t-att-readonly="!state.canEditExecution" t-on-blur="saveExecWo"/></label>
+                    <label>Remarks<textarea class="o_pm_input" rows="2" t-model="state.execDetail.work_order.technician_remarks" t-att-readonly="!state.canEditExecution" t-on-blur="saveExecWo"/></label>
+                    <label>Meter reading<input class="o_pm_input" type="number" t-model.number="state.execDetail.work_order.meter_reading" t-att-readonly="!state.canEditExecution" t-on-blur="saveExecWo"/></label>
+                </div>
+                <div class="o_pm_toolbar">
+                    <button type="button" class="btn btn-primary" t-if="state.canEditExecution" t-on-click="submitInspection">Submit for inspection</button>
+                    <p t-if="state.isManager and state.execDetail.work_order.state === 'pending_inspection'" class="text-muted o_pm_hint">
+                        Pending inspection — use the Inspection screen to approve or reject.
+                    </p>
+                </div>
+            </div>
+            <p t-if="!state.execWoId" class="o_pm_empty">Select a work order.</p>
+        </section>
+    </t>
+
+    <!-- ======================= SCREEN 6: History ======================= -->
+    <t t-name="preventive_maintenance.PmScreenTasks">
+        <section class="o_pm_screen">
+            <div class="o_pm_kpi_row" t-if="state.taskKpis">
+                <div class="o_pm_kpi_card"><div class="o_pm_kpi_label">Open</div><div class="o_pm_kpi_value" t-esc="state.taskKpis.open"/></div>
+                <div class="o_pm_kpi_card"><div class="o_pm_kpi_label">In progress</div><div class="o_pm_kpi_value" t-esc="state.taskKpis.in_progress"/></div>
+                <div class="o_pm_kpi_card"><div class="o_pm_kpi_label">Overdue</div><div class="o_pm_kpi_value" t-esc="state.taskKpis.overdue"/></div>
+                <div class="o_pm_kpi_card"><div class="o_pm_kpi_label">Due today</div><div class="o_pm_kpi_value" t-esc="state.taskKpis.due_today"/></div>
+            </div>
+            <div class="o_pm_toolbar">
+                <button type="button" class="btn btn-primary" t-if="state.isManager" t-on-click="newTaskForm">Create task</button>
+                <button type="button" class="btn btn-secondary" t-on-click="loadTasks">Refresh</button>
+            </div>
+            <div class="o_pm_panel" t-if="state.taskForm">
+                <h3>Create PM task</h3>
+                <div class="o_pm_form_grid">
+                    <label>Plan<select class="o_pm_select" t-model.number="state.taskForm.plan_id">
+                        <option value="">—</option>
+                        <t t-foreach="state.plans.length ? state.plans : []" t-as="p" t-key="p.id">
+                            <option t-att-value="p.id" t-esc="p.name"/>
+                        </t>
+                    </select></label>
+                    <label>Technician<select class="o_pm_select" t-model.number="state.taskForm.user_id">
+                        <option value="">—</option>
+                        <t t-foreach="state.optionUsers" t-as="u" t-key="u.id">
+                            <option t-att-value="u.id" t-esc="u.name"/>
+                        </t>
+                    </select></label>
+                    <label>Scheduled<input type="date" class="o_pm_input" t-model="state.taskForm.date_scheduled"/></label>
+                </div>
+                <button type="button" class="btn btn-primary" t-on-click="saveTaskForm">Save</button>
+            </div>
+            <table class="o_pm_table">
+                <thead><tr><th>Ref</th><th>Asset</th><th>Due</th><th>Tech</th><th>Status</th><th/></tr></thead>
+                <tbody>
+                    <tr t-foreach="state.tasks" t-as="t" t-key="t.id">
+                        <td t-esc="t.name"/>
+                        <td t-esc="t.equipment_id and t.equipment_id[1]"/>
+                        <td t-esc="t.date_due"/>
+                        <td t-esc="t.user_id and t.user_id[1]"/>
+                        <td><span t-att-class="'o_pm_status o_pm_status_' + t.state" t-esc="t.state"/></td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-link" t-on-click="() => this.openExecution(t.id)">Open</button>
+                            <button type="button" class="btn btn-sm btn-link" t-on-click="() => this.openIssueForm(t.id)">Report issue</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="o_pm_panel" t-if="state.issueForm">
+                <h3>Report issue</h3>
+                <div class="o_pm_form_grid">
+                    <label>Title<input class="o_pm_input" t-model="state.issueForm.name"/></label>
+                    <label>Category<select class="o_pm_select" t-model="state.issueForm.issue_category">
+                        <option value="mechanical">Mechanical</option>
+                        <option value="electrical">Electrical</option>
+                        <option value="other">Other</option>
+                    </select></label>
+                    <label>Severity<select class="o_pm_select" t-model="state.issueForm.severity">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="critical">Critical</option>
+                    </select></label>
+                    <label class="o_pm_span2">Description<textarea class="o_pm_input" rows="3" t-model="state.issueForm.description"/></label>
+                </div>
+                <button type="button" class="btn btn-primary" t-on-click="submitIssueForm">Submit</button>
+                <button type="button" class="btn btn-secondary" t-on-click="() => state.issueForm = null">Cancel</button>
+            </div>
+        </section>
+    </t>
+
+    <t t-name="preventive_maintenance.PmScreenMaintRequests">
+        <section class="o_pm_screen">
+            <div class="o_pm_toolbar">
+                <button type="button" class="btn btn-secondary" t-on-click="loadMaintRequests">Refresh</button>
+            </div>
+            <table class="o_pm_table">
+                <thead><tr><th>Title</th><th>Asset</th><th>Category</th><th>Severity</th><th>Stage</th><th/></tr></thead>
+                <tbody>
+                    <tr t-foreach="state.maintRequests" t-as="r" t-key="r.id">
+                        <td t-esc="r.name"/>
+                        <td t-esc="r.equipment_id and r.equipment_id[1]"/>
+                        <td t-esc="r.issue_category"/>
+                        <td t-esc="r.severity"/>
+                        <td t-esc="r.stage_id and r.stage_id[1]"/>
+                        <td><button type="button" class="btn btn-sm btn-link" t-on-click="() => this.openMaintRequest(r.id)">Open</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </t>
+
+    <t t-name="preventive_maintenance.PmScreenMaintRequestDetail">
+        <section class="o_pm_screen" t-if="state.maintRequestDetail">
+            <div class="o_pm_toolbar">
+                <button type="button" class="btn btn-secondary" t-on-click="() => this.setScreen('maint_requests')">Back to list</button>
+                <button type="button" class="btn btn-primary" t-on-click="saveMaintRequestDetail">Save</button>
+            </div>
+            <div class="o_pm_panel">
+                <h3 t-esc="state.maintRequestDetail.name"/>
+                <div class="o_pm_form_grid">
+                    <label>Category<select class="o_pm_select" t-model="state.maintRequestDetail.issue_category">
+                        <option value="mechanical">Mechanical</option>
+                        <option value="electrical">Electrical</option>
+                        <option value="other">Other</option>
+                    </select></label>
+                    <label>Severity<select class="o_pm_select" t-model="state.maintRequestDetail.severity">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="critical">Critical</option>
+                    </select></label>
+                    <label class="o_pm_span2">Description<textarea class="o_pm_input" rows="4" t-model="state.maintRequestDetail.description"/></label>
+                </div>
+                <p t-if="state.maintRequestDetail.work_order">Linked WO: <button type="button" class="btn btn-sm btn-link" t-on-click="() => this.openExecution(state.maintRequestDetail.work_order.id)" t-esc="state.maintRequestDetail.work_order.name"/></p>
+            </div>
+        </section>
+    </t>
+
+    <t t-name="preventive_maintenance.PmScreenHistory">
+        <section class="o_pm_screen">
+            <div class="o_pm_kpi_row" t-if="state.historyKpis">
+                <div class="o_pm_kpi_card"><div class="o_pm_kpi_label">Completed</div><div class="o_pm_kpi_value" t-esc="state.historyKpis.completed_count"/></div>
+                <div class="o_pm_kpi_card"><div class="o_pm_kpi_label">Total cost</div><div class="o_pm_kpi_value" t-esc="state.historyKpis.total_cost"/></div>
+                <div class="o_pm_kpi_card"><div class="o_pm_kpi_label">Avg duration (h)</div><div class="o_pm_kpi_value" t-esc="state.historyKpis.avg_duration"/></div>
+            </div>
+            <div class="o_pm_toolbar">
+                <button type="button" class="btn btn-secondary" t-if="state.isManager" t-on-click="exportHistory">Export CSV</button>
+                <button type="button" class="btn btn-secondary" t-on-click="loadHistory">Refresh</button>
+            </div>
+            <table class="o_pm_table">
+                <thead>
+                    <tr>
+                        <th>Ref</th><th>Asset</th><th>Scheduled</th><th>State</th><th>Duration (plan/act)</th><th>Total cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr t-foreach="state.historyRows" t-as="h" t-key="h.id">
+                        <td t-esc="h.name"/>
+                        <td t-esc="h.equipment_id and h.equipment_id[1]"/>
+                        <td t-esc="h.date_scheduled"/>
+                        <td><span t-att-class="'o_pm_status o_pm_status_' + h.state" t-esc="h.state"/></td>
+                        <td><t t-esc="h.duration_planned"/> / <t t-esc="h.duration_actual"/></td>
+                        <td t-esc="h.total_cost"/>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </t>
+
+    <!-- ======================= SCREEN 7: Reports ======================= -->
+    <t t-name="preventive_maintenance.PmScreenReports">
+        <section class="o_pm_screen">
+            <div class="o_pm_toolbar">
+                <label>From <input type="date" class="o_pm_input" t-model="state.repDateFrom" t-on-change="loadReports"/></label>
+                <label>To <input type="date" class="o_pm_input" t-model="state.repDateTo" t-on-change="loadReports"/></label>
+                <button type="button" class="btn btn-secondary" t-on-click="loadReports">Refresh</button>
+            </div>
+            <div class="o_pm_kpi_row">
+                <div class="o_pm_kpi_card"><div class="o_pm_kpi_label">Total WOs</div><div class="o_pm_kpi_value" t-esc="state.reportTotal"/></div>
+                <div class="o_pm_kpi_card" t-if="state.reportsExt.cost_total_completed !== undefined">
+                    <div class="o_pm_kpi_label">Completed cost</div>
+                    <div class="o_pm_kpi_value" t-esc="state.reportsExt.cost_total_completed"/>
+                </div>
+            </div>
+            <div class="o_pm_panel">
+                <h3>By status</h3>
+                <div class="o_pm_chart_bars">
+                    <t t-foreach="state.reportStatusKeys" t-as="sk" t-key="sk">
+                        <div class="o_pm_bar_row">
+                            <span class="o_pm_bar_label" t-esc="sk"/>
+                            <div class="o_pm_bar_track">
+                                <div class="o_pm_bar_fill" t-att-style="'width:' + (state.reportMax ? (state.reports.by_status[sk] / state.reportMax * 100) : 0) + '%'"/>
+                            </div>
+                            <span class="o_pm_bar_val" t-esc="state.reports.by_status[sk]"/>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </section>
+    </t>
+
+    <!-- ======================= SCREEN 8: Config & Audit ======================= -->
+    <t t-name="preventive_maintenance.PmScreenConfig">
+        <section class="o_pm_screen">
+            <div class="o_pm_tabs" t-if="state.configTabsData">
+                <button type="button" t-att-class="{'o_pm_tab': true, 'active': state.configTab === 'general'}" t-on-click="() => this.setConfigTab('general')">General</button>
+                <button type="button" t-att-class="{'o_pm_tab': true, 'active': state.configTab === 'notifications'}" t-on-click="() => this.setConfigTab('notifications')">Notifications</button>
+                <button type="button" t-att-class="{'o_pm_tab': true, 'active': state.configTab === 'escalation'}" t-on-click="() => this.setConfigTab('escalation')">Escalation</button>
+                <button type="button" t-att-class="{'o_pm_tab': true, 'active': state.configTab === 'sequences'}" t-on-click="() => this.setConfigTab('sequences')">Sequences</button>
+                <button type="button" t-att-class="{'o_pm_tab': true, 'active': state.configTab === 'defaults'}" t-on-click="() => this.setConfigTab('defaults')">Defaults</button>
+                <button type="button" t-att-class="{'o_pm_tab': true, 'active': state.configTab === 'templates'}" t-on-click="() => this.setConfigTab('templates')">Templates</button>
+            </div>
+            <div class="o_pm_split">
+                <div class="o_pm_panel" t-if="state.configTabsData and state.configTab === 'notifications'">
+                    <h3>Notification toggles</h3>
+                    <div class="o_pm_form_grid">
+                        <label class="o_pm_check"><input type="checkbox" t-model="state.configTabsData.notifications.notification_email"/> Email</label>
+                        <label class="o_pm_check"><input type="checkbox" t-model="state.configTabsData.notifications.notification_activity"/> Activities</label>
+                        <label class="o_pm_check"><input type="checkbox" t-model="state.configTabsData.notifications.notify_on_overdue"/> On overdue</label>
+                        <label class="o_pm_check"><input type="checkbox" t-model="state.configTabsData.notifications.notify_on_completion"/> On completion</label>
+                    </div>
+                </div>
+                <div class="o_pm_panel" t-if="state.configTabsData and state.configTab === 'escalation'">
+                    <h3>Escalation rules</h3>
+                    <textarea class="o_pm_input" rows="2" t-model="state.configTabsData.escalation.notes" placeholder="Matrix notes"/>
+                    <table class="o_pm_table" t-if="state.configTabsData.escalation.rules.length">
+                        <thead><tr><th>Name</th><th>Severity</th><th>Days overdue</th></tr></thead>
+                        <tbody>
+                            <tr t-foreach="state.configTabsData.escalation.rules" t-as="rule" t-key="rule.id">
+                                <td t-esc="rule.name"/>
+                                <td t-esc="rule.severity"/>
+                                <td t-esc="rule.days_overdue"/>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="o_pm_panel" t-if="state.configTabsData and state.configTab === 'templates'">
+                    <h3>Checklist templates</h3>
+                    <ul>
+                        <li t-foreach="state.configTabsData.checklist_templates" t-as="ct" t-key="ct.id" t-esc="ct.name"/>
+                    </ul>
+                    <h3>Reading templates</h3>
+                    <ul>
+                        <li t-foreach="state.configTabsData.reading_templates" t-as="rt" t-key="rt.id" t-esc="rt.name"/>
+                    </ul>
+                </div>
+                <div class="o_pm_panel" t-if="(!state.configTabsData or state.configTab === 'general') and state.configForm">
+                    <h3>General settings</h3>
+                    <div class="o_pm_form_grid" t-if="state.configForm">
+                        <label>Default lead (days)<input type="number" class="o_pm_input" t-model.number="state.configForm.default_lead_days" t-on-blur="saveConfig"/></label>
+                        <label>Default duration (h)<input type="number" step="0.25" class="o_pm_input" t-model.number="state.configForm.default_task_duration" t-on-blur="saveConfig"/></label>
+                        <label>Reminder (days)<input type="number" class="o_pm_input" t-model.number="state.configForm.reminder_days" t-on-blur="saveConfig"/></label>
+                        <label>Escalation after overdue (days)<input type="number" class="o_pm_input" t-model.number="state.configForm.escalation_overdue_days" t-on-blur="saveConfig"/></label>
+                        <label t-if="state.configTabsData">Overdue grace (days)<input type="number" class="o_pm_input" t-model.number="state.configTabsData.general.overdue_grace_days"/></label>
+                    </div>
+                    <button type="button" class="btn btn-primary" t-on-click="saveConfig">Save configuration</button>
+                </div>
+                <div class="o_pm_panel o_pm_table_wrap">
+                    <h3>Audit trail</h3>
+                    <table class="o_pm_table">
+                        <thead><tr><th>When</th><th>User</th><th>Action</th><th>Details</th></tr></thead>
+                        <tbody>
+                            <tr t-foreach="state.auditRows" t-as="a" t-key="a.id">
+                                <td t-esc="a.create_date"/>
+                                <td t-esc="a.user_id and a.user_id[1]"/>
+                                <td t-esc="a.action_type"/>
+                                <td t-esc="a.details"/>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </t>
+
+    <!-- ======================= SCREEN: Inspection queue ======================= -->
+    <t t-name="preventive_maintenance.PmScreenInspection">
+        <section class="o_pm_screen">
+            <div class="o_pm_toolbar">
+                <button type="button" class="btn btn-secondary" t-on-click="loadInspectionQueue">Refresh</button>
+            </div>
+            <table class="o_pm_table">
+                <thead>
+                    <tr><th>Ref</th><th>Asset</th><th>Technician</th><th>Due</th><th>Work performed</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    <tr t-foreach="state.inspectionQueue" t-as="w" t-key="w.id">
+                        <td t-esc="w.name"/>
+                        <td t-esc="w.equipment_id and w.equipment_id[1]"/>
+                        <td t-esc="w.user_id and w.user_id[1]"/>
+                        <td t-esc="w.date_due"/>
+                        <td class="o_pm_cell_clip" t-esc="w.work_performed || w.technician_remarks"/>
+                        <td class="o_pm_actions">
+                            <button type="button" class="btn btn-sm btn-link" t-on-click="() => this.openInspectionWo(w.id)">Review</button>
+                            <button type="button" class="btn btn-sm btn-success" t-on-click="() => this.approveInspectionWo(w.id)">Approve &amp; close</button>
+                            <button type="button" class="btn btn-sm btn-warning" t-on-click="() => this.rejectInspectionWoPrompt(w.id)">Reject</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <p t-if="!state.inspectionQueue.length" class="o_pm_empty">No work orders pending inspection.</p>
+        </section>
+    </t>
+
+    <!-- ======================= SCREEN: Technician completed ======================= -->
+    <t t-name="preventive_maintenance.PmScreenCompleted">
+        <section class="o_pm_screen">
+            <button type="button" class="btn btn-secondary" t-on-click="loadCompletedWork">Refresh</button>
+            <table class="o_pm_table">
+                <thead>
+                    <tr><th>Ref</th><th>Asset</th><th>Scheduled</th><th>Duration (act)</th></tr>
+                </thead>
+                <tbody>
+                    <tr t-foreach="state.historyRows" t-as="h" t-key="h.id">
+                        <td t-esc="h.name"/>
+                        <td t-esc="h.equipment_id and h.equipment_id[1]"/>
+                        <td t-esc="h.date_scheduled"/>
+                        <td t-esc="h.duration_actual"/>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </t>
+
+    <!-- ======================= SCREEN: User management ======================= -->
+    <t t-name="preventive_maintenance.PmScreenUsers">
+        <section class="o_pm_screen">
+            <div class="o_pm_toolbar">
+                <label>Role
+                    <select class="o_pm_select" t-model="state.userRoleFilter" t-on-change="loadPmUsers">
+                        <option value="">All</option>
+                        <option value="manager">Maintenance Manager</option>
+                        <option value="technician">Technician</option>
+                        <option value="admin">Administrator</option>
+                    </select>
+                </label>
+                <label class="o_pm_check"><input type="checkbox" t-model="state.userActiveOnly" t-on-change="loadPmUsers"/> Active only</label>
+                <button type="button" class="btn btn-primary" t-on-click="newPmUser">New user</button>
+                <button type="button" class="btn btn-secondary" t-on-click="loadPmUsers">Refresh</button>
+            </div>
+            <table class="o_pm_table">
+                <thead>
+                    <tr><th>Name</th><th>Login</th><th>Email</th><th>Role</th><th>Active</th><th></th></tr>
+                </thead>
+                <tbody>
+                    <tr t-foreach="state.pmUsers" t-as="u" t-key="u.id">
+                        <td t-esc="u.name"/>
+                        <td t-esc="u.login"/>
+                        <td t-esc="u.email"/>
+                        <td t-esc="u.role || u.pm_role"/>
+                        <td t-esc="u.active ? 'Yes' : 'No'"/>
+                        <td><button type="button" class="btn btn-sm btn-link" t-on-click="() => this.editPmUser(u)">Edit</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="o_pm_panel" t-if="state.userForm">
+                <h3><t t-if="state.userForm.id">Edit user</t><t t-else="">Create user</t></h3>
+                <div class="o_pm_form_grid">
+                    <label>Name<input class="o_pm_input" t-model="state.userForm.name"/></label>
+                    <label t-if="!state.userForm.id">Login<input class="o_pm_input" t-model="state.userForm.login"/></label>
+                    <label>Email<input class="o_pm_input" type="email" t-model="state.userForm.email"/></label>
+                    <label>Role
+                        <select class="o_pm_select" t-model="state.userForm.role" t-att-disabled="state.userForm.readOnlyRole">
+                            <option value="manager">Maintenance Manager</option>
+                            <option value="technician">Technician</option>
+                        </select>
+                    </label>
+                    <label t-if="!state.userForm.id or state.userForm.password">Password<input class="o_pm_input" type="password" autocomplete="new-password" t-model="state.userForm.password" placeholder="Min. 6 characters"/></label>
+                    <label t-if="state.userForm.id">New password (optional)<input class="o_pm_input" type="password" autocomplete="new-password" t-model="state.userForm.password"/></label>
+                    <label class="o_pm_check"><input type="checkbox" t-model="state.userForm.active"/> Active</label>
+                </div>
+                <div class="o_pm_toolbar">
+                    <button type="button" class="btn btn-primary" t-on-click="savePmUser">Save</button>
+                    <button type="button" class="btn btn-secondary" t-on-click="clearUserForm">Cancel</button>
+                </div>
+            </div>
+        </section>
+    </t>
+
+</templates>

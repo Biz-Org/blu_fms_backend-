@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem
+        id="menu_pm_root"
+        name="Preventive Maintenance"
+        web_icon="preventive_maintenance,static/description/icon.png"
+        sequence="50"
+    />
+
+    <menuitem
+        id="menu_pm_app"
+        name="PM Application"
+        parent="menu_pm_root"
+        action="action_preventive_maintenance_app"
+        sequence="10"
+    />
+</odoo>
